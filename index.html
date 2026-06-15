@@ -9,14 +9,20 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; }
         .card { background: white; padding: 25px; border-radius: 12px; max-width: 800px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h2 { color: #1e293b; margin-top: 0; }
-        .form-group { margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; position: relative; }
         label { display: block; margin-bottom: 5px; color: #64748b; font-weight: 600; }
         input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        input:disabled, select:disabled { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         button { background: #10b981; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
         button:hover { background: #059669; }
         #status { margin-top: 15px; text-align: center; font-weight: bold; }
         
+        /* NACE Arama Öneri Kutusu */
+        .suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #cbd5e1; border-top: none; border-radius: 0 0 6px 6px; z-index: 10; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin: 0; padding: 0; list-style: none; display: none; }
+        .suggestions-list li { padding: 10px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
+        .suggestions-list li:hover { background-color: #f1f5f9; }
+
         /* Tablo Tasarımı */
         .table-container { margin-top: 35px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
@@ -38,12 +44,12 @@
         <a href="medical.html" style="background:#16a34a; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">🩺 Hekim Sağlık Kartı</a>
     </div>
 
-    <h2>🏢 Canlı Firma Ekleme Testi</h2>
-    <p style="color: #64748b; font-size: 14px;">Bu formdan girilen veriler anında Frankfurt'taki Supabase veritabanınıza yazılacaktır.</p>
+    <h2>🏢 Akıllı Firma Yönetim Paneli</h2>
+    <p style="color: #64748b; font-size: 14px;">NACE kodunu yazmaya başladığınızda sistem tehlike sınıfını otomatik atayacaktır.</p>
     
     <div class="form-group">
         <label>Firma Adı</label>
-        <input type="text" id="comp_name" placeholder="Örn: Vardar İnşaat A.Ş.">
+        <input type="text" id="comp_name" placeholder="Örn: Vardar Lojistik A.Ş.">
     </div>
     
     <div class="grid-2">
@@ -52,21 +58,18 @@
             <input type="text" id="tax_no" placeholder="Örn: 12345678901">
         </div>
         <div class="form-group">
-            <label>NACE Kodu</label>
-            <input type="text" id="nace" placeholder="Örn: 41.20.02">
+            <label>NACE Kodu / Faaliyet Arayın</label>
+            <input type="text" id="nace_search" oninput="searchNace()" placeholder="Kod veya kelime girin... (Örn: İnşaat, 41)">
+            <ul id="suggestions" class="suggestions-list"></ul>
         </div>
     </div>
     
     <div class="form-group">
-        <label>Tehlike Sınıfı</label>
-        <select id="danger">
-            <option value="Az Tehlikeli">Az Tehlikeli</option>
-            <option value="Tehlikeli">Tehlikeli</option>
-            <option value="Çok Tehlikeli">Çok Tehlikeli</option>
-        </select>
+        <label>Sistem Tarafından Belirlenen Tehlike Sınıfı</label>
+        <input type="text" id="danger_display" disabled placeholder="NACE seçildiğinde otomatik belirlenir">
     </div>
     
-    <button onclick="saveToSupabase()">Veritabanına Gönder (Canlı)</button>
+    <button onclick="saveToSupabase()">Veritabanına Günder (Canlı)</button>
     <div id="status"></div>
 
     <div class="table-container">
@@ -94,29 +97,73 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // SAYFA AÇILDIĞINDA VERİLERİ ÇEK
+    let selectedNaceCode = "";
+    let selectedDangerClass = "";
+
     window.onload = function() {
         fetchCompanies();
     };
 
-    // SUPABASE'DEN FİRMALARI ÇEKEN FONKSİYON
+    // CANLI NACE ARAMA FONKSİYONU
+    async function searchNace() {
+        const query = document.getElementById('nace_search').value;
+        const list = document.getElementById('suggestions');
+        
+        if (query.length < 2) {
+            list.style.display = 'none';
+            return;
+        }
+
+        // Supabase kılavuz tablosundan arama yapıyoruz (Kodda veya açıklamada geçiyorsa)
+        const { data, error } = await dbClient
+            .from('nace_codes')
+            .select('*')
+            .or(`nace_code.ilike.%${query}%,description.ilike.%${query}%`)
+            .limit(5);
+
+        if (data && data.length > 0) {
+            list.innerHTML = '';
+            list.style.display = 'block';
+            data.forEach(item => {
+                list.innerHTML += `<li onclick="selectNace('${item.nace_code}', '${item.danger_class}')"><strong>${item.nace_code}</strong> - ${item.description} (${item.danger_class})</li>`;
+            });
+        } else {
+            list.style.display = 'none';
+        }
+    }
+
+    // NACE SEÇİLDİĞİNDE TETİKLENEN FONKSİYON
+    function selectNace(code, dangerClass) {
+        selectedNaceCode = code;
+        selectedDangerClass = dangerClass;
+        
+        document.getElementById('nace_search').value = code;
+        const dangerInput = document.getElementById('danger_display');
+        dangerInput.value = dangerClass;
+        
+        // Tehlike sınıfına göre görsel renklendirme yapalım
+        if(dangerClass === 'Az Tehlikeli') dangerInput.style.color = 'green';
+        else if(dangerClass === 'Tehlikeli') dangerInput.style.color = 'orange';
+        else dangerInput.style.color = 'red';
+        
+        document.getElementById('suggestions').style.display = 'none';
+    }
+
+    // TABLOYU ÇEKME FONKSİYONU
     async function fetchCompanies() {
         const tbody = document.getElementById('company_table_body');
-        
         try {
             const { data, error } = await dbClient
                 .from('customer_companies')
                 .select('*')
-                .order('created_at', { ascending: false }); // En yeni eklenen en üstte görünsün
+                .order('created_at', { ascending: false });
 
             if (error) throw error;
-
             if (!data || data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Henüz kayıtlı firma bulunmuyor.</td></tr>`;
                 return;
             }
 
-            // Tabloyu temizle ve doldur
             tbody.innerHTML = '';
             data.forEach(company => {
                 let badgeClass = 'badge-az';
@@ -125,14 +172,13 @@
 
                 tbody.innerHTML += `
                     <tr>
-                        <strong><td>${company.company_name}</td></strong>
+                        <td><strong>${company.company_name}</strong></td>
                         <td>${company.tax_number || '-'}</td>
                         <td>${company.nace_code || '-'}</td>
                         <td><span class="badge ${badgeClass}">${company.danger_class}</span></td>
                     </tr>
                 `;
             });
-
         } catch (err) {
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Veri çekme hatası: ${err.message}</td></tr>`;
         }
@@ -142,13 +188,11 @@
     async function saveToSupabase() {
         const name = document.getElementById('comp_name').value;
         const tax = document.getElementById('tax_no').value;
-        const nace = document.getElementById('nace').value;
-        const danger = document.getElementById('danger').value;
         const statusDiv = document.getElementById('status');
 
-        if(!name || !tax || !nace) {
+        if(!name || !tax || !selectedNaceCode) {
             statusDiv.style.color = "red";
-            statusDiv.innerText = "Lütfen boş alan bırakmayın!";
+            statusDiv.innerText = "Lütfen unvan, vergi no alanlarını doldurun ve listeden bir NACE kodu seçin!";
             return;
         }
 
@@ -159,7 +203,7 @@
             const { data, error } = await dbClient
                 .from('customer_companies')
                 .insert([
-                    { company_name: name, tax_number: tax, nace_code: nace, danger_class: danger }
+                    { company_name: name, tax_number: tax, nace_code: selectedNaceCode, danger_class: selectedDangerClass }
                 ]);
 
             if (error) {
@@ -167,12 +211,13 @@
                 statusDiv.innerText = "Hata: " + error.message;
             } else {
                 statusDiv.style.color = "green";
-                statusDiv.innerText = "🚀 Başarılı! Veri Supabase'e tık diye yazıldı.";
+                statusDiv.innerText = "🚀 Başarılı! Akıllı veri girişiyle firma kaydedildi.";
                 document.getElementById('comp_name').value = '';
                 document.getElementById('tax_no').value = '';
-                document.getElementById('nace').value = '';
-                
-                // VERİ BAŞARIYLA EKLENDİKTEN SONRA TABLOYU ANINDA GÜNCELLE
+                document.getElementById('nace_search').value = '';
+                document.getElementById('danger_display').value = '';
+                selectedNaceCode = "";
+                selectedDangerClass = "";
                 fetchCompanies();
             }
         } catch (err) {
