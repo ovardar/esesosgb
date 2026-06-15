@@ -3,18 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSGB SaaS - Canlı Test Paneli</title>
+    <title>OSGB SaaS - Canlı Yönetim Paneli</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; }
-        .card { background: white; padding: 25px; border-radius: 12px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 25px; border-radius: 12px; max-width: 800px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h2 { color: #1e293b; margin-top: 0; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #64748b; font-weight: 600; }
         input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-        button { background: #10b981; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        button { background: #10b981; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
         button:hover { background: #059669; }
         #status { margin-top: 15px; text-align: center; font-weight: bold; }
+        
+        /* Tablo Tasarımı */
+        .table-container { margin-top: 35px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+        tr:hover { background-color: #f8fafc; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .badge-az { background: #dcfce7; color: #15803d; }
+        .badge-tehlike { background: #ffedd5; color: #c2410c; }
+        .badge-cok { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
@@ -33,14 +45,18 @@
         <label>Firma Adı</label>
         <input type="text" id="comp_name" placeholder="Örn: Vardar İnşaat A.Ş.">
     </div>
-    <div class="form-group">
-        <label>Vergi Numarası (11 Haneli)</label>
-        <input type="text" id="tax_no" placeholder="Örn: 12345678901">
+    
+    <div class="grid-2">
+        <div class="form-group">
+            <label>Vergi Numarası (11 Haneli)</label>
+            <input type="text" id="tax_no" placeholder="Örn: 12345678901">
+        </div>
+        <div class="form-group">
+            <label>NACE Kodu</label>
+            <input type="text" id="nace" placeholder="Örn: 41.20.02">
+        </div>
     </div>
-    <div class="form-group">
-        <label>NACE Kodu</label>
-        <input type="text" id="nace" placeholder="Örn: 41.20.02">
-    </div>
+    
     <div class="form-group">
         <label>Tehlike Sınıfı</label>
         <select id="danger">
@@ -49,18 +65,80 @@
             <option value="Çok Tehlikeli">Çok Tehlikeli</option>
         </select>
     </div>
+    
     <button onclick="saveToSupabase()">Veritabanına Gönder (Canlı)</button>
     <div id="status"></div>
+
+    <div class="table-container">
+        <h3>📋 Kayıtlı Müşteri Firmalar (Supabase Canlı)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Firma Unvanı</th>
+                    <th>Vergi No</th>
+                    <th>NACE Kodu</th>
+                    <th>Tehlike Sınıfı</th>
+                </tr>
+            </thead>
+            <tbody id="company_table_body">
+                <tr>
+                    <td colspan="4" style="text-align:center; color:#94a3b8;">Veriler yükleniyor...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    // Supabase Bağlantı Ayarları
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-    
-    // dbClient nesnesini burada pürüzsüzce tanımlıyoruz
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // SAYFA AÇILDIĞINDA VERİLERİ ÇEK
+    window.onload = function() {
+        fetchCompanies();
+    };
+
+    // SUPABASE'DEN FİRMALARI ÇEKEN FONKSİYON
+    async function fetchCompanies() {
+        const tbody = document.getElementById('company_table_body');
+        
+        try {
+            const { data, error } = await dbClient
+                .from('customer_companies')
+                .select('*')
+                .order('created_at', { ascending: false }); // En yeni eklenen en üstte görünsün
+
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Henüz kayıtlı firma bulunmuyor.</td></tr>`;
+                return;
+            }
+
+            // Tabloyu temizle ve doldur
+            tbody.innerHTML = '';
+            data.forEach(company => {
+                let badgeClass = 'badge-az';
+                if(company.danger_class === 'Tehlikeli') badgeClass = 'badge-tehlike';
+                if(company.danger_class === 'Çok Tehlikeli') badgeClass = 'badge-cok';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <strong><td>${company.company_name}</td></strong>
+                        <td>${company.tax_number || '-'}</td>
+                        <td>${company.nace_code || '-'}</td>
+                        <td><span class="badge ${badgeClass}">${company.danger_class}</span></td>
+                    </tr>
+                `;
+            });
+
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Veri çekme hatası: ${err.message}</td></tr>`;
+        }
+    }
+
+    // VERİ KAYDETME FONKSİYONU
     async function saveToSupabase() {
         const name = document.getElementById('comp_name').value;
         const tax = document.getElementById('tax_no').value;
@@ -78,7 +156,6 @@
         statusDiv.innerText = "Buluta gönderiliyor...";
 
         try {
-            // Tanımladığımız dbClient'ı burada çağırıyoruz
             const { data, error } = await dbClient
                 .from('customer_companies')
                 .insert([
@@ -94,6 +171,9 @@
                 document.getElementById('comp_name').value = '';
                 document.getElementById('tax_no').value = '';
                 document.getElementById('nace').value = '';
+                
+                // VERİ BAŞARIYLA EKLENDİKTEN SONRA TABLOYU ANINDA GÜNCELLE
+                fetchCompanies();
             }
         } catch (err) {
             statusDiv.style.color = "red";
