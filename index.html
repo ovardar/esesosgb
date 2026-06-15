@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OSGB SaaS - Canlı Test Paneli</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; }
         .card { background: white; padding: 25px; border-radius: 12px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -21,10 +21,11 @@
 
 <div class="card">
     <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
-    <a href="index.html" style="background:#1e293b; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">🏢 Firma Yönetimi</a>
-    <a href="risk.html" style="background:#0284c7; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">🦺 Uzman Risk Motoru</a>
-    <a href="medical.html" style="background:#16a34a; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">🩺 Hekim Sağlık Kartı</a>
-</div>
+        <a href="index.html" style="background:#1e293b; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">🏢 Firma Yönetimi</a>
+        <a href="risk.html" style="background:#0284c7; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">🦺 Uzman Risk Motoru</a>
+        <a href="medical.html" style="background:#16a34a; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">🩺 Hekim Sağlık Kartı</a>
+    </div>
+
     <h2>🏢 Canlı Firma Ekleme Testi</h2>
     <p style="color: #64748b; font-size: 14px;">Bu formdan girilen veriler anında Frankfurt'taki Supabase veritabanınıza yazılacaktır.</p>
     
@@ -53,13 +54,12 @@
 </div>
 
 <script>
+    // Supabase Bağlantı Ayarları
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     
-    // Doğrudan global objeden güvenli başlatma yapıyoruz
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: { persistSession: false } // Tarayıcı çerez çakışmalarını ve CORS bloklarını esnetir
-    });
+    // dbClient nesnesini burada pürüzsüzce tanımlıyoruz
+    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function saveToSupabase() {
         const name = document.getElementById('comp_name').value;
@@ -78,17 +78,16 @@
         statusDiv.innerText = "Buluta gönderiliyor...";
 
         try {
+            // Tanımladığımız dbClient'ı burada çağırıyoruz
             const { data, error } = await dbClient
                 .from('customer_companies')
                 .insert([
                     { company_name: name, tax_number: tax, nace_code: nace, danger_class: danger }
-                ])
-                .select(); // Yeni mimaride geriye veri dönülmesini zorunlu tutarak isteği tetikliyoruz
+                ]);
 
             if (error) {
                 statusDiv.style.color = "red";
                 statusDiv.innerText = "Hata: " + error.message;
-                console.error(error);
             } else {
                 statusDiv.style.color = "green";
                 statusDiv.innerText = "🚀 Başarılı! Veri Supabase'e tık diye yazıldı.";
