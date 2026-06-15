@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OSGB SaaS - Canlı Test Paneli</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; }
         .card { background: white; padding: 25px; border-radius: 12px; max-width: 500px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
@@ -51,10 +51,8 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     
-    // Doğrudan global objeden güvenli başlatma yapıyoruz
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-        auth: { persistSession: false } // Tarayıcı çerez çakışmalarını ve CORS bloklarını esnetir
-    });
+    // Çakışmayı önlemek için pencere objesi üzerinden client'ı güvenli şekilde kuruyoruz
+    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function saveToSupabase() {
         const name = document.getElementById('comp_name').value;
@@ -73,17 +71,15 @@
         statusDiv.innerText = "Buluta gönderiliyor...";
 
         try {
-            const { data, error } = await supabase
+            const { data, error } = await dbClient
                 .from('customer_companies')
                 .insert([
                     { company_name: name, tax_number: tax, nace_code: nace, danger_class: danger }
-                ])
-                .select(); // Yeni mimaride geriye veri dönülmesini zorunlu tutarak isteği tetikliyoruz
+                ]);
 
             if (error) {
                 statusDiv.style.color = "red";
                 statusDiv.innerText = "Hata: " + error.message;
-                console.error(error);
             } else {
                 statusDiv.style.color = "green";
                 statusDiv.innerText = "🚀 Başarılı! Veri Supabase'e tık diye yazıldı.";
