@@ -6,24 +6,26 @@
     <title>OSGB SaaS - Canlı Yönetim Paneli</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; display: none; } /* Giriş kontrolü yapılana kadar sayfayı gizliyoruz */
         .card { background: white; padding: 25px; border-radius: 12px; max-width: 800px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h2 { color: #1e293b; margin-top: 0; }
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; }
+        h2 { color: #1e293b; margin: 0; }
+        .user-info { font-size: 14px; color: #475569; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .logout-btn:hover { background: #dc2626; }
         .form-group { margin-bottom: 15px; position: relative; }
         label { display: block; margin-bottom: 5px; color: #64748b; font-weight: 600; }
         input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
         input:disabled, select:disabled { background-color: #f1f5f9; color: #64748b; cursor: not-allowed; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        button { background: #10b981; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        button:hover { background: #059669; }
+        button.submit-btn { background: #10b981; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button.submit-btn:hover { background: #059669; }
         #status { margin-top: 15px; text-align: center; font-weight: bold; }
         
-        /* NACE Arama Öneri Kutusu */
         .suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #cbd5e1; border-top: none; border-radius: 0 0 6px 6px; z-index: 10; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin: 0; padding: 0; list-style: none; display: none; }
         .suggestions-list li { padding: 10px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
         .suggestions-list li:hover { background-color: #f1f5f9; }
 
-        /* Tablo Tasarımı */
         .table-container { margin-top: 35px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
@@ -38,6 +40,13 @@
 <body>
 
 <div class="card">
+    <div class="header-bar">
+        <div class="user-info">
+            👤 Giriş Yapan: <span id="current_user_email" style="color: #2563eb;">Yükleniyor...</span>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+    </div>
+
     <div style="display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;">
         <a href="index.html" style="background:#1e293b; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">🏢 Firma Yönetimi</a>
         <a href="risk.html" style="background:#0284c7; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">🦺 Uzman Risk Motoru</a>
@@ -45,7 +54,7 @@
     </div>
 
     <h2>🏢 Akıllı Firma Yönetim Paneli</h2>
-    <p style="color: #64748b; font-size: 14px;">NACE kodunu yazmaya başladığınızda sistem tehlike sınıfını otomatik atayacaktır.</p>
+    <p style="color: #64748b; font-size: 14px;">Sistem aktif koruma altındadır. Veriler güvenle kaydedilir.</p>
     
     <div class="form-group">
         <label>Firma Adı</label>
@@ -59,7 +68,7 @@
         </div>
         <div class="form-group">
             <label>NACE Kodu / Faaliyet Arayın</label>
-            <input type="text" id="nace_search" oninput="searchNace()" placeholder="Kod veya kelime girin... (Örn: İnşaat, 41)">
+            <input type="text" id="nace_search" oninput="searchNace()" placeholder="Kod veya kelime girin...">
             <ul id="suggestions" class="suggestions-list"></ul>
         </div>
     </div>
@@ -69,7 +78,7 @@
         <input type="text" id="danger_display" disabled placeholder="NACE seçildiğinde otomatik belirlenir">
     </div>
     
-    <button onclick="saveToSupabase()">Veritabanına Günder (Canlı)</button>
+    <button class="submit-btn" onclick="saveToSupabase()">Veritabanına Gönder (Canlı)</button>
     <div id="status"></div>
 
     <div class="table-container">
@@ -100,130 +109,88 @@
     let selectedNaceCode = "";
     let selectedDangerClass = "";
 
-    window.onload = function() {
-        fetchCompanies();
+    // 🛡️ KRİTİK GÜVENLİK KONTROLÜ
+    window.onload = async function() {
+        // Oturum açmış aktif kullanıcı var mı kontrol et
+        const { data: { session } } = await dbClient.auth.getSession();
+        
+        if (!session) {
+            // Giriş yapılmadıysa login sayfasına postala
+            window.location.href = "login.html";
+        } else {
+            // Giriş yapıldıysa sayfayı göster ve e-postayı yaz
+            document.body.style.display = "block";
+            document.getElementById('current_user_email').innerText = session.user.email;
+            fetchCompanies();
+        }
     };
 
-    // CANLI NACE ARAMA FONKSİYONU
+    // GÜVENLİ ÇIKIŞ FONKSİYONU
+    async function handleLogout() {
+        await dbClient.auth.signOut();
+        window.location.href = "login.html";
+    }
+
     async function searchNace() {
         const query = document.getElementById('nace_search').value;
         const list = document.getElementById('suggestions');
-        
-        if (query.length < 2) {
-            list.style.display = 'none';
-            return;
-        }
+        if (query.length < 2) { list.style.display = 'none'; return; }
 
-        // Supabase kılavuz tablosundan arama yapıyoruz (Kodda veya açıklamada geçiyorsa)
-        const { data, error } = await dbClient
+        const { data } = await dbClient
             .from('nace_codes')
             .select('*')
             .or(`nace_code.ilike.%${query}%,description.ilike.%${query}%`)
             .limit(5);
 
         if (data && data.length > 0) {
-            list.innerHTML = '';
-            list.style.display = 'block';
+            list.innerHTML = ''; list.style.display = 'block';
             data.forEach(item => {
-                list.innerHTML += `<li onclick="selectNace('${item.nace_code}', '${item.danger_class}')"><strong>${item.nace_code}</strong> - ${item.description} (${item.danger_class})</li>`;
+                list.innerHTML += `<li onclick="selectNace('${item.nace_code}', '${item.danger_class}')"><strong>${item.nace_code}</strong> - ${item.description}</li>`;
             });
-        } else {
-            list.style.display = 'none';
-        }
+        } else { list.style.display = 'none'; }
     }
 
-    // NACE SEÇİLDİĞİNDE TETİKLENEN FONKSİYON
     function selectNace(code, dangerClass) {
-        selectedNaceCode = code;
-        selectedDangerClass = dangerClass;
-        
+        selectedNaceCode = code; selectedDangerClass = dangerClass;
         document.getElementById('nace_search').value = code;
         const dangerInput = document.getElementById('danger_display');
         dangerInput.value = dangerClass;
-        
-        // Tehlike sınıfına göre görsel renklendirme yapalım
-        if(dangerClass === 'Az Tehlikeli') dangerInput.style.color = 'green';
-        else if(dangerClass === 'Tehlikeli') dangerInput.style.color = 'orange';
-        else dangerInput.style.color = 'red';
-        
         document.getElementById('suggestions').style.display = 'none';
     }
 
-    // TABLOYU ÇEKME FONKSİYONU
     async function fetchCompanies() {
         const tbody = document.getElementById('company_table_body');
         try {
-            const { data, error } = await dbClient
-                .from('customer_companies')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
+            const { data } = await dbClient.from('customer_companies').select('*').order('created_at', { ascending: false });
             if (!data || data.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Henüz kayıtlı firma bulunmuyor.</td></tr>`;
                 return;
             }
-
             tbody.innerHTML = '';
             data.forEach(company => {
-                let badgeClass = 'badge-az';
-                if(company.danger_class === 'Tehlikeli') badgeClass = 'badge-tehlike';
-                if(company.danger_class === 'Çok Tehlikeli') badgeClass = 'badge-cok';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${company.company_name}</strong></td>
-                        <td>${company.tax_number || '-'}</td>
-                        <td>${company.nace_code || '-'}</td>
-                        <td><span class="badge ${badgeClass}">${company.danger_class}</span></td>
-                    </tr>
-                `;
+                let badgeClass = company.danger_class === 'Tehlikeli' ? 'badge-tehlike' : (company.danger_class === 'Çok Tehlikeli' ? 'badge-cok' : 'badge-az');
+                tbody.innerHTML += `<tr><td><strong>${company.company_name}</strong></td><td>${company.tax_number || '-'}</td><td>${company.nace_code || '-'}</td><td><span class="badge ${badgeClass}">${company.danger_class}</span></td></tr>`;
             });
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Veri çekme hatası: ${err.message}</td></tr>`;
-        }
+        } catch (err) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`; }
     }
 
-    // VERİ KAYDETME FONKSİYONU
     async function saveToSupabase() {
         const name = document.getElementById('comp_name').value;
         const tax = document.getElementById('tax_no').value;
         const statusDiv = document.getElementById('status');
 
-        if(!name || !tax || !selectedNaceCode) {
-            statusDiv.style.color = "red";
-            statusDiv.innerText = "Lütfen unvan, vergi no alanlarını doldurun ve listeden bir NACE kodu seçin!";
-            return;
-        }
-
-        statusDiv.style.color = "blue";
-        statusDiv.innerText = "Buluta gönderiliyor...";
+        if(!name || !tax || !selectedNaceCode) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen alanları eksiksiz doldurun!"; return; }
+        statusDiv.style.color = "blue"; statusDiv.innerText = "Buluta gönderiliyor...";
 
         try {
-            const { data, error } = await dbClient
-                .from('customer_companies')
-                .insert([
-                    { company_name: name, tax_number: tax, nace_code: selectedNaceCode, danger_class: selectedDangerClass }
-                ]);
-
-            if (error) {
-                statusDiv.style.color = "red";
-                statusDiv.innerText = "Hata: " + error.message;
-            } else {
-                statusDiv.style.color = "green";
-                statusDiv.innerText = "🚀 Başarılı! Akıllı veri girişiyle firma kaydedildi.";
-                document.getElementById('comp_name').value = '';
-                document.getElementById('tax_no').value = '';
-                document.getElementById('nace_search').value = '';
-                document.getElementById('danger_display').value = '';
-                selectedNaceCode = "";
-                selectedDangerClass = "";
-                fetchCompanies();
+            const { error } = await dbClient.from('customer_companies').insert([{ company_name: name, tax_number: tax, nace_code: selectedNaceCode, danger_class: selectedDangerClass }]);
+            if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
+            else {
+                statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Başarılı! Firma kaydedildi.";
+                document.getElementById('comp_name').value = ''; document.getElementById('tax_no').value = ''; document.getElementById('nace_search').value = ''; document.getElementById('danger_display').value = '';
+                selectedNaceCode = ""; selectedDangerClass = ""; fetchCompanies();
             }
-        } catch (err) {
-            statusDiv.style.color = "red";
-            statusDiv.innerText = "Bağlantı Hatası: " + err.message;
-        }
+        } catch (err) { statusDiv.style.color = "red"; statusDiv.innerText = "Bağlantı Hatası: " + err.message; }
     }
 </script>
 </body>
