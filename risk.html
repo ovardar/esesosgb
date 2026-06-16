@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f1f5f9; padding: 30px; display: none; }
-        .card { background: white; padding: 25px; border-radius: 12px; max-width: 800px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 25px; border-radius: 12px; max-width: 850px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h2 { color: #0f172a; margin-top: 0; display: flex; align-items: center; gap: 10px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #475569; font-weight: 600; }
@@ -15,8 +15,14 @@
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .score-box { background: #f8fafc; border: 2px dashed #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
         .score-value { font-size: 24px; font-weight: bold; color: #0f172a; }
-        button { background: #0284c7; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button:hover { background: #0369a1; }
+        button.save-btn { background: #0284c7; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        button.save-btn:hover { background: #0369a1; }
+        
+        /* Aksiyon (Kapatma) Butonu Tasarımı */
+        .close-btn { background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { background: #059669; }
+        .status-closed { background-color: #f0fdf4; color: #15803d; opacity: 0.8; }
+
         .nav-link { display: block; text-align: center; margin-top: 15px; color: #64748b; text-decoration: none; font-size: 14px; }
         #status { margin-top: 15px; text-align: center; font-weight: bold; }
 
@@ -31,7 +37,7 @@
 
 <div class="card">
     <h2>🦺 Fine-Kinney Risk Analiz Motoru</h2>
-    <p style="color: #64748b; font-size: 14px;">Sahada tespit edilen tehlikeyi girin ve ilgili firmayla ilişkilendirin.</p>
+    <p style="color: #64748b; font-size: 14px;">Sahada tespit edilen tehlikeleri girin veya mevcut açık riskleri kapatın.</p>
     
     <div class="form-group">
         <label>İlgili Müşteri Firma</label>
@@ -42,7 +48,7 @@
 
     <div class="form-group">
         <label>Tehlike Tanımı / Bulgusu</label>
-        <textarea id="hazard_title" rows="2" placeholder="Örn: Yüksekte çalışma alanında yaşam hattının bulunmaması..."></textarea>
+        <textarea id="hazard_title" rows="2" placeholder="Örn: Yangın tüplerinin periyodik kontrol tarihi geçmiş..."></textarea>
     </div>
 
     <div class="grid-3">
@@ -89,11 +95,11 @@
         <input type="date" id="target_date">
     </div>
 
-    <button onclick="saveRisk()">Risk Analizini Kaydet (Canlı)</button>
+    <button class="save-btn" onclick="saveRisk()">Risk Analizini Kaydet (Canlı)</button>
     <div id="status"></div>
 
     <div class="table-container">
-        <h3>📋 Sahada Açık Olan Risk Bulguları (Canlı)</h3>
+        <h3>📋 Sahadaki Risk Bulguları Takip Matrisi (Canlı)</h3>
         <table>
             <thead>
                 <tr>
@@ -102,11 +108,12 @@
                     <th>Skor</th>
                     <th>Risk Seviyesi</th>
                     <th>Termin</th>
+                    <th>Aksiyon</th>
                 </tr>
             </thead>
             <tbody id="risk_table_body">
                 <tr>
-                    <td colspan="5" style="text-align:center; color:#94a3b8;">Veriler yükleniyor...</td>
+                    <td colspan="6" style="text-align:center; color:#94a3b8;">Veriler yükleniyor...</td>
                 </tr>
             </tbody>
         </table>
@@ -131,24 +138,19 @@
         } else {
             document.body.style.display = "block";
             calculateFineKinney();
-            await fetchCompaniesToSelect(); // Önce firmaları yükle
-            fetchRisks(); // Sonra riskleri listele
+            await fetchCompaniesToSelect();
+            fetchRisks();
         }
     };
 
-    // FİRMALARI SEÇİM KUTUSUNA DOLDURAN FONKSİYON
     async function fetchCompaniesToSelect() {
         const select = document.getElementById('company_select');
         try {
             const { data } = await dbClient.from('customer_companies').select('id, company_name').order('company_name');
             if (data && data.length > 0) {
                 select.innerHTML = '<option value="">-- Lütfen Firma Seçin --</option>';
-                data.forEach(c => {
-                    select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
-                });
-            } else {
-                select.innerHTML = '<option value="">Sistemde kayıtlı firma yok!</option>';
-            }
+                data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; });
+            } else { select.innerHTML = '<option value="">Sistemde kayıtlı firma yok!</option>'; }
         } catch (err) { console.error(err.message); }
     }
 
@@ -165,20 +167,12 @@
         else { lvl.innerText = "ESASLI RİSK (İŞİ DURDUR)"; lvl.style.color = "red"; }
     }
 
-    // İLİŞKİSEL OLARAK RİSKLERİ FİRMA ADIYLA BERABER ÇEKEN FONKSİYON
     async function fetchRisks() {
         const tbody = document.getElementById('risk_table_body');
         try {
-            // Supabase Join yapısı: customer_companies tablosundan unvanı otomatik bağlıyoruz
-            const { data } = await dbClient
-                .from('risk_assessments')
-                .select('*, customer_companies(company_name)')
-                .order('created_at', { ascending: false });
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Kayıtlı risk bulgusu yok.</td></tr>`;
-                return;
-            }
+            const { data } = await dbClient.from('risk_assessments').select('*, customer_companies(company_name)').order('status', { ascending: false }).order('created_at', { ascending: false });
+            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">Kayıtlı risk bulgusu yok.</td></tr>`; return; }
+            
             tbody.innerHTML = '';
             data.forEach(r => {
                 let badgeColor = '#dcfce7', textColor = '#15803d', lvlText = 'Düşük';
@@ -187,18 +181,41 @@
                 else if(r.risk_score >= 200) { badgeColor = '#f87171'; textColor = '#ffffff'; lvlText = 'ESASLI'; }
 
                 const compName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
+                const isClosed = r.status === 'Kapalı';
+                const rowClass = isClosed ? 'status-closed' : '';
+                
+                // Eğer risk kapandıysa buton yerine "Giderildi" yazacağız
+                const actionCell = isClosed 
+                    ? '<span style="color:#16a34a; font-weight:bold;">✓ Giderildi</span>' 
+                    : `<button class="close-btn" onclick="closeRisk('${r.id}')">Riski Kapat</button>`;
 
                 tbody.innerHTML += `
-                    <tr>
+                    <tr class="${rowClass}">
                         <td><strong>${compName}</strong></td>
-                        <td>${r.hazard_title}</td>
+                        <td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td>
                         <td>${r.risk_score}</td>
                         <td><span class="badge" style="background:${badgeColor}; color:${textColor};">${lvlText}</span></td>
                         <td>${r.target_date}</td>
+                        <td>${actionCell}</td>
                     </tr>
                 `;
             });
-        } catch (err) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`; }
+        } catch (err) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`; }
+    }
+
+    // 🎯 RİSKİ KAPATAN CANLI AKSİYON FONKSİYONU
+    async function closeRisk(id) {
+        if(!confirm("Bu risk bulgusunun sahada giderildiğini onaylıyor musunuz?")) return;
+        
+        try {
+            const { error } = await dbClient
+                .from('risk_assessments')
+                .update({ status: 'Kapalı' })
+                .eq('id', id);
+
+            if (error) throw error;
+            fetchRisks(); // Risk tablosunu anında yenile
+        } catch (err) { alert("Hata oluştu: " + err.message); }
     }
 
     async function saveRisk() {
@@ -211,23 +228,14 @@
         const target = document.getElementById('target_date').value;
         const statusDiv = document.getElementById('status');
 
-        if(!compId || !hazard || !target) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen firma dahil tüm alanları doldurun!"; return; }
+        if(!compId || !hazard || !target) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen tüm alanları doldurun!"; return; }
         statusDiv.style.color = "blue"; statusDiv.innerText = "Risk raporu buluta yazılıyor...";
 
-        const { error } = await dbClient.from('risk_assessments').insert([{ 
-            company_id: compId,
-            hazard_title: hazard, 
-            probability_o: o, 
-            frequency_f: f, 
-            severity_s: s, 
-            risk_score: score, 
-            target_date: target, 
-            status: 'Açık' 
-        }]);
+        const { error } = await dbClient.from('risk_assessments').insert([{ company_id: compId, hazard_title: hazard, probability_o: o, frequency_f: f, severity_s: s, risk_score: score, target_date: target, status: 'Açık' }]);
 
         if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
         else {
-            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Risk Raporu İlgili Firmaya Bağlanarak Kaydedildi!";
+            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Risk Raporu Başarıyla Eklendi!";
             document.getElementById('hazard_title').value = ''; document.getElementById('target_date').value = '';
             fetchRisks();
         }
