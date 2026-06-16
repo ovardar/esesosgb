@@ -64,6 +64,10 @@
         .offline-panel { background: var(--table-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin: 15px 0; font-size: 13px; }
         .offline-panel strong { color: var(--text-main); }
         .sync-btn { background: var(--text-main); color: var(--bg-card); border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
+        .company-cache-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+        .company-cache-btn { background: var(--table-header); color: var(--text-main); border: 1px solid var(--border-color); padding: 7px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
+        .company-cache-btn:hover { background: var(--border-color); }
+        #company_cache_status { font-size: 12px; color: var(--text-muted); }
     </style>
 </head>
 <body>
@@ -96,6 +100,10 @@
     <div class="form-group">
         <label>İlgili Müşteri Firma</label>
         <select id="company_select"><option value="">Firmalar yükleniyor...</option></select>
+        <div class="company-cache-line">
+            <button type="button" class="company-cache-btn" onclick="manualRefreshCompanyCache()">Firma Listesini Cihaza Güncelle</button>
+            <span id="company_cache_status">Firma listesi kontrol ediliyor...</span>
+        </div>
     </div>
 
     <div class="form-group">
@@ -233,11 +241,84 @@
         else { lvl.innerText = "ESASLI RİSK (İŞİ DURDUR)"; lvl.style.color = "red"; }
     }
 
-    async function fetchCompaniesToSelect() {
+    function renderCompanyOptions(companies, placeholderText) {
         const select = document.getElementById('company_select');
-        const { data } = await dbClient.from('customer_companies').select('id, company_name').order('company_name');
-        select.innerHTML = '<option value="">-- Lütfen Firma Seçin --</option>';
-        if (data) { data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; }); }
+        select.innerHTML = `<option value="">${placeholderText || '-- Lütfen Firma Seçin --'}</option>`;
+        (companies || []).forEach(c => {
+            select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
+        });
+    }
+
+    function formatCacheDate(isoString) {
+        if (!isoString) return '-';
+        try { return new Date(isoString).toLocaleString('tr-TR'); }
+        catch (err) { return isoString; }
+    }
+
+    function setCompanyCacheStatus(message, color) {
+        const el = document.getElementById('company_cache_status');
+        if (!el) return;
+        el.innerText = message;
+        el.style.color = color || 'var(--text-muted)';
+    }
+
+    async function loadCompaniesFromCache() {
+        if (!window.OSGBOfflineDB || !window.OSGBOfflineDB.getCompanies) return false;
+        const cachedCompanies = await window.OSGBOfflineDB.getCompanies();
+        const meta = await window.OSGBOfflineDB.getCompanyCacheMeta();
+
+        if (cachedCompanies && cachedCompanies.length > 0) {
+            renderCompanyOptions(cachedCompanies, '-- Offline firma listesinden seçim yapın --');
+            setCompanyCacheStatus(`Firma listesi cihazdan yüklendi. ${cachedCompanies.length} firma. Son güncelleme: ${formatCacheDate(meta && meta.updated_at)}`, '#c2410c');
+            return true;
+        }
+
+        renderCompanyOptions([], '-- Firma listesi cihazda yok --');
+        setCompanyCacheStatus('Firma listesi cihazda bulunamadı. Sahaya çıkmadan önce internet varken bu listeyi güncelleyin.', '#b91c1c');
+        return false;
+    }
+
+    async function fetchCompaniesToSelect() {
+        if (!navigator.onLine) {
+            await loadCompaniesFromCache();
+            return;
+        }
+
+        try {
+            const { data, error } = await dbClient
+                .from('customer_companies')
+                .select('id, company_name')
+                .order('company_name');
+
+            if (error) throw error;
+
+            renderCompanyOptions(data || [], '-- Lütfen Firma Seçin --');
+
+            if (window.OSGBOfflineDB && window.OSGBOfflineDB.saveCompanies) {
+                await window.OSGBOfflineDB.saveCompanies(data || []);
+                setCompanyCacheStatus(`Firma listesi Supabase’den güncellendi ve cihaza kaydedildi. ${(data || []).length} firma.`, 'var(--accent-green)');
+            } else {
+                setCompanyCacheStatus('Firma listesi yüklendi; ancak offline veritabanı hazır olmadığı için cihaza kaydedilemedi.', '#c2410c');
+            }
+        } catch (err) {
+            console.warn('Firma listesi Supabase’den çekilemedi, cihaz önbelleği deneniyor:', err.message);
+            await loadCompaniesFromCache();
+        }
+    }
+
+    async function manualRefreshCompanyCache() {
+        const statusEl = document.getElementById('company_cache_status');
+        if (!navigator.onLine) {
+            await loadCompaniesFromCache();
+            alert('Şu anda internet yok. Varsa cihazdaki son firma listesi kullanılacak.');
+            return;
+        }
+
+        if (statusEl) {
+            statusEl.style.color = 'var(--text-muted)';
+            statusEl.innerText = 'Firma listesi Supabase’den güncelleniyor...';
+        }
+        await fetchCompaniesToSelect();
     }
 
     async function fetchRisks() {
@@ -325,7 +406,7 @@
         }
     }
 
-    window.addEventListener('online', function() { updateConnectionStatus(); manualSyncRisks(); });
+    window.addEventListener('online', function() { updateConnectionStatus(); fetchCompaniesToSelect(); manualSyncRisks(); });
     window.addEventListener('offline', updateConnectionStatus);
 
     async function saveRisk() {
