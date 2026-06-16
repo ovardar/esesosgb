@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; display: none; }
-        .card { background: white; padding: 25px; border-radius: 12px; max-width: 850px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 25px; border-radius: 12px; max-width: 900px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; }
         h2 { color: #1e293b; margin: 0; }
         .user-info { font-size: 14px; color: #475569; font-weight: 600; display: flex; align-items: center; gap: 10px; }
@@ -24,7 +24,7 @@
         .metric-title { font-size: 12px; font-weight: 600; opacity: 0.9; }
         .metric-value { font-size: 26px; font-weight: bold; margin-top: 3px; }
 
-        /* 🚨 OPERASYONEL RİSK METRİĞİ (BAĞIMSIZ BANT) */
+        /* 🚨 OPERASYONEL RİSK METRİĞİ */
         .operational-banner { background: #1e293b; color: white; padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
         .op-text h4 { margin: 0; font-size: 15px; color: #f8fafc; }
         .op-text p { margin: 3px 0 0 0; font-size: 12px; color: #94a3b8; }
@@ -52,6 +52,10 @@
         .badge-az { background: #dcfce7; color: #15803d; }
         .badge-tehlike { background: #ffedd5; color: #c2410c; }
         .badge-cok { background: #fee2e2; color: #b91c1c; }
+        
+        /* Çalışan Sayısı Link Tasarımı */
+        .worker-count-link { color: #6366f1; text-decoration: none; font-weight: bold; border-bottom: 1px dashed #6366f1; padding-bottom: 2px; }
+        .worker-count-link:hover { color: #4f46e5; border-bottom: 1px solid #4f46e5; }
     </style>
 </head>
 <body>
@@ -64,13 +68,15 @@
         <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
     </div>
 
-   <div style="display: flex; gap: 10px; margin-bottom: 25px; justify-content: center;">
+    <!-- Sayfalar arası geçiş butonları -->
+    <div style="display: flex; gap: 10px; margin-bottom: 25px; justify-content: center;">
         <a href="index.html" style="background:#1e293b; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">🏢 Firma Yönetimi</a>
         <a href="workers.html" style="background:#6366f1; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px;">👥 Kadro Yönetimi</a>
         <a id="menu_risk" href="risk.html" style="background:#0284c7; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px; display:none;">🦺 Uzman Risk Motoru</a>
         <a id="menu_medical" href="medical.html" style="background:#16a34a; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px; display:none;">🩺 Hekim Sağlık Kartı</a>
     </div>
 
+    <!-- 📊 MÜŞTERİ FİRMA TEHLİKE DAĞILIMI -->
     <div class="distribution-title">📋 Portföy Tehlike Dağılımı</div>
     <div class="dashboard-grid">
         <div class="metric-box metric-red">
@@ -87,6 +93,7 @@
         </div>
     </div>
 
+    <!-- 🚨 OPERASYONEL NABIZ -->
     <div class="operational-banner">
         <div class="op-text">
             <h4>🚨 Sahadaki Aktif Risk ve Bulgular</h4>
@@ -132,11 +139,13 @@
                     <th>Vergi No</th>
                     <th>NACE Kodu</th>
                     <th>Tehlike Sınıfı</th>
+                    <!-- 👥 YENİ EKLENEN SÜTUN -->
+                    <th>Çalışan Sayısı</th> 
                 </tr>
             </thead>
             <tbody id="company_table_body">
                 <tr>
-                    <td colspan="4" style="text-align:center; color:#94a3b8;">Veriler yükleniyor...</td>
+                    <td colspan="5" style="text-align:center; color:#94a3b8;">Veriler yükleniyor...</td>
                 </tr>
             </tbody>
         </table>
@@ -166,7 +175,6 @@
         fetchDashboardStats();
     };
 
-    // CANLI MANTIKSAL DAĞILIM VE SAYAÇ FONKSİYONU
     async function fetchDashboardStats() {
         try {
             const { data: companies } = await dbClient.from('customer_companies').select('danger_class');
@@ -180,7 +188,6 @@
                 document.getElementById('stat_danger_az').innerText = azCount;
             }
 
-            // Sadece statüsü "Açık" olan riskleri saydırıyoruz
             const { data: risks } = await dbClient.from('risk_assessments').select('id').eq('status', 'Açık');
             if (risks) {
                 document.getElementById('stat_total_risks').innerText = risks.length;
@@ -208,16 +215,27 @@
         document.getElementById('suggestions').style.display = 'none';
     }
 
-    // 🔗 DETAY SAYFASI BAĞLANTISI ENTEGRE EDİLMİŞ ŞEFFAF FETCH FONKSİYONU
+    // FİRMALARI VE ONLARIN DİNAMİK PERSONEL SAYILARINI GETİREN ANA FONKSİYON
     async function fetchCompanies() {
         const tbody = document.getElementById('company_table_body');
         try {
-            const { data } = await dbClient.from('customer_companies').select('*').order('created_at', { ascending: false });
-            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Henüz kayıtlı firma bulunmuyor.</td></tr>`; return; }
+            const { data: companies } = await dbClient.from('customer_companies').select('*').order('created_at', { ascending: false });
+            if (!companies || companies.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Henüz kayıtlı firma bulunmuyor.</td></tr>`; return; }
+            
             tbody.innerHTML = '';
-            data.forEach(company => {
+            
+            // Her firma için asenkron olarak çalışan sayısını buluttan saydırıyoruz
+            for (const company of companies) {
                 let badgeClass = company.danger_class === 'Tehlikeli' ? 'badge-tehlike' : (company.danger_class === 'Çok Tehlikeli' ? 'badge-cok' : 'badge-az');
                 
+                // 🧠 Supabase Canlı Sayma Filtresi (Workers tablosundan o firmanın id'sine ait kaç satır var?)
+                const { count, error } = await dbClient
+                    .from('workers')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('company_id', company.id);
+                
+                const workerCount = error ? 0 : (count || 0);
+
                 tbody.innerHTML += `
                     <tr>
                         <td>
@@ -228,10 +246,16 @@
                         <td>${company.tax_number || '-'}</td>
                         <td>${company.nace_code || '-'}</td>
                         <td><span class="badge ${badgeClass}">${company.danger_class}</span></td>
+                        <!-- 👥 DİNAMİK SAYI VE TIKLANABİLİR KADRO YÖNETİMİ LİNKİ -->
+                        <td>
+                            <a href="workers.html" class="worker-count-link">
+                                👥 ${workerCount} Personel
+                            </a>
+                        </td>
                     </tr>
                 `;
-            });
-        } catch (err) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`; }
+            }
+        } catch (err) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`; }
     }
 
     async function saveToSupabase() {
