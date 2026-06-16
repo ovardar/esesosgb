@@ -1,5 +1,6 @@
 (function () {
   const RISK_PHOTO_BUCKET = 'risk-photos';
+  let syncInProgress = false;
 
   function getDbClient() {
     return window.dbClient || null;
@@ -61,8 +62,68 @@
     return data && data.publicUrl ? data.publicUrl : null;
   }
 
+  async function findExistingRiskByLocalId(localId) {
+    const dbClient = getDbClient();
+    const { data, error } = await dbClient
+      .from('risk_assessments')
+      .select('id, image_url')
+      .eq('local_id', localId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error('local_id kontrolü yapılamadı. risk_assessments tablosuna local_id alanını eklediğinizden emin olun. Detay: ' + error.message);
+    }
+
+    return data || null;
+  }
+
+  async function insertOrReuseRisk(risk, imageUrl) {
+    const dbClient = getDbClient();
+
+    const existing = await findExistingRiskByLocalId(risk.local_id);
+    if (existing) {
+      return existing.id;
+    }
+
+    const payload = {
+      local_id: risk.local_id,
+      created_offline_at: risk.created_at || new Date().toISOString(),
+      company_id: risk.company_id,
+      hazard_title: risk.hazard_title,
+      probability_o: risk.probability_o,
+      frequency_f: risk.frequency_f,
+      severity_s: risk.severity_s,
+      risk_score: risk.risk_score,
+      target_date: risk.target_date,
+      status: 'Açık'
+    };
+
+    if (imageUrl) payload.image_url = imageUrl;
+
+    const { data, error } = await dbClient
+      .from('risk_assessments')
+      .insert([payload])
+      .select('id')
+      .single();
+
+    if (error) {
+      if (error.message && error.message.toLowerCase().includes('duplicate')) {
+        const afterDuplicate = await findExistingRiskByLocalId(risk.local_id);
+        if (afterDuplicate) return afterDuplicate.id;
+      }
+      throw new Error('Risk kaydı Supabase tablosuna yazılamadı. Detay: ' + error.message);
+    }
+
+    return data ? data.id : null;
+  }
+
   async function syncPendingRisks() {
     clearError();
+
+    if (syncInProgress) {
+      setText('offline_status', 'Senkronizasyon zaten devam ediyor. Lütfen birkaç saniye bekleyin.', 'var(--text-muted)');
+      return { ok: true, synced: 0, failed: 0, message: 'already-running' };
+    }
 
     if (!navigator.onLine) {
       updateSyncMessage('offline');
@@ -89,83 +150,67 @@
       return { ok: false, synced: 0, failed: 0, message: msg };
     }
 
-    const pendingRisks = await window.OSGBOfflineDB.getPendingRisks();
-    if (!pendingRisks.length) {
-      updateSyncMessage('empty');
-      if (window.updateOfflineRiskCount) await window.updateOfflineRiskCount();
-      return { ok: true, synced: 0, failed: 0, message: 'empty' };
-    }
+    syncInProgress = true;
 
-    setText('offline_status', `${pendingRisks.length} bekleyen kayıt gönderiliyor...`, 'var(--text-muted)');
-
-    let synced = 0;
-    let failed = 0;
-    let lastError = '';
-
-    for (const risk of pendingRisks) {
-      try {
-        await window.OSGBOfflineDB.updateRisk(risk.local_id, {
-          sync_status: 'syncing',
-          last_sync_attempt_at: new Date().toISOString(),
-          last_error: null
-        });
-
-        const imageUrl = await uploadRiskPhoto(risk);
-
-        const payload = {
-          company_id: risk.company_id,
-          hazard_title: risk.hazard_title,
-          probability_o: risk.probability_o,
-          frequency_f: risk.frequency_f,
-          severity_s: risk.severity_s,
-          risk_score: risk.risk_score,
-          target_date: risk.target_date,
-          status: 'Açık'
-        };
-
-        if (imageUrl) payload.image_url = imageUrl;
-
-        const { data, error } = await dbClient
-          .from('risk_assessments')
-          .insert([payload])
-          .select('id')
-          .single();
-
-        if (error) {
-          throw new Error('Risk kaydı Supabase tablosuna yazılamadı. Detay: ' + error.message);
-        }
-
-        await window.OSGBOfflineDB.updateRisk(risk.local_id, {
-          sync_status: 'synced',
-          server_id: data ? data.id : null,
-          synced_at: new Date().toISOString(),
-          image_url: imageUrl || null,
-          photo_blob: null,
-          last_error: null
-        });
-        synced += 1;
-      } catch (err) {
-        failed += 1;
-        lastError = err.message || String(err);
-        await window.OSGBOfflineDB.updateRisk(risk.local_id, {
-          sync_status: 'error',
-          last_error: lastError,
-          last_sync_attempt_at: new Date().toISOString()
-        });
+    try {
+      const pendingRisks = await window.OSGBOfflineDB.getPendingRisks();
+      if (!pendingRisks.length) {
+        updateSyncMessage('empty');
+        if (window.updateOfflineRiskCount) await window.updateOfflineRiskCount();
+        return { ok: true, synced: 0, failed: 0, message: 'empty' };
       }
+
+      setText('offline_status', `${pendingRisks.length} bekleyen kayıt gönderiliyor...`, 'var(--text-muted)');
+
+      let synced = 0;
+      let failed = 0;
+      let lastError = '';
+
+      for (const risk of pendingRisks) {
+        try {
+          await window.OSGBOfflineDB.updateRisk(risk.local_id, {
+            sync_status: 'syncing',
+            last_sync_attempt_at: new Date().toISOString(),
+            last_error: null
+          });
+
+          const imageUrl = await uploadRiskPhoto(risk);
+          const serverId = await insertOrReuseRisk(risk, imageUrl);
+
+          await window.OSGBOfflineDB.updateRisk(risk.local_id, {
+            sync_status: 'synced',
+            server_id: serverId || null,
+            synced_at: new Date().toISOString(),
+            image_url: imageUrl || null,
+            photo_blob: null,
+            last_error: null
+          });
+          synced += 1;
+        } catch (err) {
+          failed += 1;
+          lastError = err.message || String(err);
+          await window.OSGBOfflineDB.updateRisk(risk.local_id, {
+            sync_status: 'error',
+            last_error: lastError,
+            last_sync_attempt_at: new Date().toISOString()
+          });
+        }
+      }
+
+      if (window.updateOfflineRiskCount) await window.updateOfflineRiskCount();
+      if (window.fetchRisks) await window.fetchRisks();
+
+      if (failed > 0) {
+        setText('offline_status', `${synced} kayıt gönderildi, ${failed} kayıt gönderilemedi.`, '#c2410c');
+        showError(lastError);
+        return { ok: false, synced, failed, message: lastError };
+      }
+
+      updateSyncMessage('done', synced);
+      return { ok: true, synced, failed: 0, message: 'done' };
+    } finally {
+      syncInProgress = false;
     }
-
-    if (window.updateOfflineRiskCount) await window.updateOfflineRiskCount();
-    if (window.fetchRisks) await window.fetchRisks();
-
-    if (failed > 0) {
-      setText('offline_status', `${synced} kayıt gönderildi, ${failed} kayıt gönderilemedi.`, '#c2410c');
-      showError(lastError);
-      return { ok: false, synced, failed, message: lastError };
-    }
-
-    updateSyncMessage('done', synced);
-    return { ok: true, synced, failed: 0, message: 'done' };
   }
 
   function updateSyncMessage(state, syncedCount) {

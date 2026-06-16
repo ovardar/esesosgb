@@ -49,6 +49,8 @@
         
         .close-btn { background: var(--accent-green); color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .close-btn:hover { background: var(--accent-green-hover); }
+        .delete-risk-btn { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-top: 6px; display: inline-block; }
+        .delete-risk-btn:hover { background: #b91c1c; }
         .status-closed { opacity: 0.6; }
 
         .table-container { margin-top: 35px; border-top: 2px solid var(--border-color); padding-top: 20px; }
@@ -252,7 +254,8 @@
 
             const compName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
             const isClosed = r.status === 'Kapalı';
-            const actionCell = isClosed ? '<span style="color:var(--accent-green); font-weight:bold;">✓ Giderildi</span>' : `<button class="close-btn" onclick="closeRisk('${r.id}')">Riski Kapat</button>`;
+            const closeButton = isClosed ? '<span style="color:var(--accent-green); font-weight:bold; display:block; margin-bottom:6px;">✓ Giderildi</span>' : `<button class="close-btn" onclick="closeRisk('${r.id}')">Riski Kapat</button>`;
+            const actionCell = `${closeButton}<button class="delete-risk-btn" onclick="deleteRisk('${r.id}')">Sil</button>`;
             const photoCell = r.image_url
                 ? `<a href="${r.image_url}" target="_blank" style="color:var(--primary); font-weight:bold; text-decoration:none;">📷 Var</a>`
                 : '<span style="color:var(--text-muted);">Yok</span>';
@@ -264,6 +267,13 @@
     async function closeRisk(id) {
         if(!confirm("Bu risk bulgusunun sahada giderildiğini onaylıyor musunuz?")) return;
         await dbClient.from('risk_assessments').update({ status: 'Kapalı' }).eq('id', id); fetchRisks();
+    }
+
+    async function deleteRisk(id) {
+        if(!confirm("Bu risk kaydı kalıcı olarak silinsin mi?")) return;
+        const { error } = await dbClient.from('risk_assessments').delete().eq('id', id);
+        if (error) { alert("Silme hatası: " + error.message); return; }
+        fetchRisks();
     }
 
     function makeLocalId() {
