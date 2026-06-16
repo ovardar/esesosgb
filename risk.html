@@ -6,7 +6,7 @@
     <title>İSG Uzman Modülü - Risk Değerlendirmesi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f1f5f9; padding: 30px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f1f5f9; padding: 30px; display: none; }
         .card { background: white; padding: 25px; border-radius: 12px; max-width: 550px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h2 { color: #0f172a; margin-top: 0; display: flex; align-items: center; gap: 10px; }
         .form-group { margin-bottom: 15px; }
@@ -87,14 +87,30 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // 🛡️ SADECE UZMAN ERİŞEBİLİR KONTROLÜ
+    window.onload = async function() {
+        const { data: { session } } = await dbClient.auth.getSession();
+        if (!session) {
+            window.location.href = "login.html";
+            return;
+        }
+        
+        const email = session.user.email;
+        if (!email.includes('uzman') && !email.includes('admin')) {
+            alert("⚠️ Bu sayfaya erişim yetkiniz yoktur! Sadece İSG Uzmanları girebilir.");
+            window.location.href = "index.html";
+        } else {
+            document.body.style.display = "block";
+            calculateFineKinney();
+        }
+    };
+
     function calculateFineKinney() {
         const o = parseFloat(document.getElementById('prob').value);
         const f = parseFloat(document.getElementById('freq').value);
         const s = parseFloat(document.getElementById('sev').value);
         const score = o * f * s;
-        
         document.getElementById('risk_score_display').innerText = score.toFixed(1);
-        
         const lvl = document.getElementById('risk_level_display');
         if(score < 20) { lvl.innerText = "Düşük Risk"; lvl.style.color = "green"; }
         else if(score < 70) { lvl.innerText = "Olası Risk (İzlenmeli)"; lvl.style.color = "orange"; }
@@ -111,42 +127,17 @@
         const target = document.getElementById('target_date').value;
         const statusDiv = document.getElementById('status');
 
-        if(!hazard || !target) {
-            statusDiv.style.color = "red";
-            statusDiv.innerText = "Lütfen tüm alanları doldurun!";
-            return;
-        }
+        if(!hazard || !target) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen tüm alanları doldurun!"; return; }
+        statusDiv.style.color = "blue"; statusDiv.innerText = "Risk raporu buluta yazılıyor...";
 
-        statusDiv.style.color = "blue";
-        statusDiv.innerText = "Risk raporu buluta yazılıyor...";
+        const { error } = await dbClient.from('risk_assessments').insert([{ hazard_title: hazard, probability_o: o, frequency_f: f, severity_s: s, risk_score: score, target_date: target, status: 'Açık' }]);
 
-        const { data, error } = await dbClient
-            .from('risk_assessments')
-            .insert([
-                { 
-                    hazard_title: hazard, 
-                    probability_o: o, 
-                    frequency_f: f, 
-                    severity_s: s, 
-                    risk_score: score, 
-                    target_date: target,
-                    status: 'Açık'
-                }
-            ]);
-
-        if (error) {
-            statusDiv.style.color = "red";
-            statusDiv.innerText = "Hata: " + error.message;
-        } else {
-            statusDiv.style.color = "green";
-            statusDiv.innerText = "🚀 Risk Raporu Başarıyla Veritabanına Eklendi!";
-            document.getElementById('hazard_title').value = '';
-            document.getElementById('target_date').value = '';
+        if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
+        else {
+            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Risk Raporu Başarıyla Veritabanına Eklendi!";
+            document.getElementById('hazard_title').value = ''; document.getElementById('target_date').value = '';
         }
     }
-    
-    // İlk açılışta bir kere hesaplasın
-    calculateFineKinney();
 </script>
 </body>
 </html>
