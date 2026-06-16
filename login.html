@@ -133,6 +133,38 @@
         return new URLSearchParams(hash.substring(1));
     }
 
+    function hasInviteMarkers() {
+        const hashParams = parseHashParams();
+        const queryParams = new URLSearchParams(window.location.search || '');
+        const type = hashParams.get('type') || queryParams.get('type');
+        return Boolean(
+            hashParams.get('access_token') ||
+            hashParams.get('refresh_token') ||
+            queryParams.get('code') ||
+            type === 'invite' ||
+            type === 'recovery'
+        );
+    }
+
+    async function getStaffInviteStatus(email) {
+        if (!email) return null;
+        try {
+            const { data, error } = await dbClient
+                .from('osgb_staff')
+                .select('auth_invite_status, can_login, is_active_manual, access_role')
+                .ilike('email', email)
+                .maybeSingle();
+            if (error) {
+                console.warn('Davet durumu okunamadı:', error.message);
+                return null;
+            }
+            return data;
+        } catch (err) {
+            console.warn('Davet durumu okunamadı:', err.message);
+            return null;
+        }
+    }
+
     async function detectInviteOrRecoverySession() {
         const hashParams = parseHashParams();
         const errorDescription = hashParams.get('error_description');
@@ -141,25 +173,35 @@
             return;
         }
 
-        const type = hashParams.get('type');
-        const accessToken = hashParams.get('access_token');
-
-        if (accessToken || type === 'invite' || type === 'recovery') {
+        const inviteMarkers = hasInviteMarkers();
+        if (inviteMarkers) {
             setMessage('Davet bağlantısı kontrol ediliyor...', 'blue');
-            const { data, error } = await dbClient.auth.getSession();
-            if (error) {
-                setMessage('Davet oturumu okunamadı: ' + error.message, 'red');
-                return;
-            }
-            if (data && data.session) {
-                const invitedEmail = data.session.user && data.session.user.email ? data.session.user.email : '';
-                if (invitedEmail) document.getElementById('email').value = invitedEmail;
-                showInviteForm();
-                setMessage(invitedEmail ? ('Davet doğrulandı: ' + invitedEmail) : 'Davet doğrulandı.', 'green');
-                return;
-            }
+        }
+
+        // Supabase JS bazen davet token'ını otomatik işler ve URL'deki hash/code bilgisini temizler.
+        // Bu nedenle sadece URL'ye değil, oluşan oturuma ve osgb_staff davet durumuna da bakıyoruz.
+        const { data, error } = await dbClient.auth.getSession();
+        if (error) {
+            if (inviteMarkers) setMessage('Davet oturumu okunamadı: ' + error.message, 'red');
+            return;
+        }
+
+        const session = data && data.session ? data.session : null;
+        const invitedEmail = session && session.user && session.user.email ? session.user.email : '';
+        const staffInfo = invitedEmail ? await getStaffInviteStatus(invitedEmail) : null;
+        const inviteStillPending = staffInfo && (staffInfo.auth_invite_status === 'sent' || staffInfo.auth_invite_status === 'not_sent' || !staffInfo.auth_invite_status);
+
+        if (session && (inviteMarkers || inviteStillPending)) {
+            if (invitedEmail) document.getElementById('email').value = invitedEmail;
             showInviteForm();
-            setMessage('Davet bağlantısı algılandı. Lütfen şifrenizi oluşturmayı deneyin.', 'blue');
+            setMessage(invitedEmail ? ('Davet doğrulandı: ' + invitedEmail) : 'Davet doğrulandı.', 'green');
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+            return;
+        }
+
+        if (inviteMarkers) {
+            showInviteForm();
+            setMessage('Davet bağlantısı algılandı. Şifre oluşturma için lütfen birkaç saniye bekleyip tekrar deneyin.', 'blue');
         }
     }
 
@@ -191,6 +233,19 @@
             button.innerText = 'Şifremi Oluştur ve Devam Et';
             setMessage('Şifre oluşturulamadı: ' + error.message, 'red');
             return;
+        }
+
+        try {
+            const session = await dbClient.auth.getSession();
+            const email = session && session.data && session.data.session && session.data.session.user ? session.data.session.user.email : '';
+            if (email) {
+                await dbClient
+                    .from('osgb_staff')
+                    .update({ auth_invite_status: 'accepted' })
+                    .ilike('email', email);
+            }
+        } catch (err) {
+            console.warn('Davet kabul durumu güncellenemedi:', err.message);
         }
 
         setMessage('Şifreniz oluşturuldu. Panele yönlendiriliyorsunuz...', 'green');
