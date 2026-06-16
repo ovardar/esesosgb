@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OSGB SaaS - Firma Detay Raporu</title>
-    <!-- 📄 PDF ÜRETİM KÜTÜPHANELERİ ENTEGRASYONU -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
@@ -30,7 +29,6 @@
         .badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
         .status-closed { background-color: #f0fdf4; opacity: 0.7; }
         
-        /* PDF Buton Tasarımı */
         .pdf-btn { background: #16a34a; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .pdf-btn:hover { background: #15803d; }
     </style>
@@ -64,7 +62,7 @@
 
     <div class="detail-grid">
         
-        <!-- SOL PANEL: RİSK Bulguları -->
+        <!-- SOL PANEL -->
         <div class="panel">
             <h3 class="panel-title-uzman">🦺 Uzman Risk Bulguları</h3>
             <table>
@@ -82,13 +80,13 @@
             </table>
         </div>
 
-        <!-- SAĞ PANEL: SAĞLIK KARTLARI & YASAL PDF BUTONU -->
+        <!-- SAĞ PANEL -->
         <div class="panel">
             <h3 class="panel-title-hekim">🩺 Hekim Sağlık Kartları</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Çalan (Yaş/Cins)</th>
+                        <th>Çalışan (Yaş/Cins)</th>
                         <th>Hekim Kararı</th>
                         <th>Aksiyon</th>
                     </tr>
@@ -109,6 +107,18 @@
     
     let currentCompanyName = "";
 
+    // 🧠 TÜRKÇE KARAKTERLERİ TEMİZLEYEN AKILLI SÜZGEÇ
+    function clearTurkishChars(str) {
+        if(!str) return "-";
+        return str.toString()
+            .replace(/Ş/g, "S").replace(/ş/g, "s")
+            .replace(/Ç/g, "C").replace(/ç/g, "c")
+            .replace(/Ğ/g, "G").replace(/ğ/g, "g")
+            .replace(/İ/g, "I").replace(/ı/g, "i")
+            .replace(/Ö/g, "O").replace(/ö/g, "o")
+            .replace(/Ü/g, "U").replace(/ü/g, "u");
+    }
+
     window.onload = async function() {
         const { data: { session } } = await dbClient.auth.getSession();
         if (!session) { window.location.href = "login.html"; return; }
@@ -117,11 +127,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const companyId = urlParams.get('id');
 
-        if (!companyId) {
-            alert("Hatalı istek!");
-            window.location.href = "index.html";
-            return;
-        }
+        if (!companyId) { window.location.href = "index.html"; return; }
 
         await fetchCompanyProfile(companyId);
         fetchCompanyRisks(companyId);
@@ -130,8 +136,7 @@
 
     async function fetchCompanyProfile(id) {
         try {
-            const { data, error } = await dbClient.from('customer_companies').select('*').eq('id', id).single();
-            if (error) throw error;
+            const { data } = await dbClient.from('customer_companies').select('*').eq('id', id).single();
             if (data) {
                 currentCompanyName = data.company_name;
                 document.getElementById('lbl_company_name').innerText = data.company_name;
@@ -146,21 +151,11 @@
         const tbody = document.getElementById('company_risk_tbody');
         try {
             const { data } = await dbClient.from('risk_assessments').select('*').eq('company_id', id).order('created_at', { ascending: false });
-            if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Bu firmaya ait kayıtlı risk yok.</td></tr>`;
-                return;
-            }
+            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Kayıtlı risk yok.</td></tr>`; return; }
             tbody.innerHTML = '';
             data.forEach(r => {
                 const isClosed = r.status === 'Kapalı';
-                tbody.innerHTML += `
-                    <tr class="${isClosed ? 'status-closed' : ''}">
-                        <td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td>
-                        <td><strong>${r.risk_score}</strong></td>
-                        <td>${r.target_date}</td>
-                        <td><span class="badge" style="background:${isClosed ? '#dcfce7' : '#fee2e2'}; color:${isClosed ? '#15803d' : '#b91c1c'};">${r.status}</span></td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr class="${isClosed ? 'status-closed' : ''}"><td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td><td><strong>${r.risk_score}</strong></td><td>${r.target_date}</td><td><span class="badge" style="background:${isClosed ? '#dcfce7' : '#fee2e2'}; color:${isClosed ? '#15803d' : '#b91c1c'};">${r.status}</span></td></tr>`;
             });
         } catch (err) { console.error(err.message); }
     }
@@ -169,14 +164,10 @@
         const tbody = document.getElementById('company_medical_tbody');
         try {
             const { data } = await dbClient.from('worker_medical_records').select('*').eq('company_id', id).order('created_at', { ascending: false });
-            if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Bu firmaya ait sağlık kaydı yok.</td></tr>`;
-                return;
-            }
+            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Sağlık kaydı yok.</td></tr>`; return; }
             tbody.innerHTML = '';
-            data.forEach((m, index) => {
-                // Güvenli şifresiz string dönüştürme ve kaçış karakteri temizliği
-                const safeName = (m.worker_name || 'İsimsiz').replace(/'/g, "\\'");
+            data.forEach(m => {
+                const safeName = (m.worker_name || 'Isimsiz').replace(/'/g, "\\'");
                 const safeGoz = (m.goz_secure || '-').replace(/'/g, "\\'");
                 const safeKalp = (m.kalp_secure || '-').replace(/'/g, "\\'");
                 const safeKas = (m.kas_secure || '-').replace(/'/g, "\\'");
@@ -197,85 +188,77 @@
         } catch (err) { console.error(err.message); }
     }
 
-    // 🧠 YASAL EK-2 PDF FORMU ÜRETEN MOTOR FONKSİYON
+    // 🎯 SÜZGEÇ ENTEGRE EDİLMİŞ PDF MOTORU
     function generateEk2PDF(name, age, gender, goz, kalp, kas, decision) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        // Türkçe karakterlerin PDF çıktısında kırılmaması için standart font ayarı yapıyoruz
         doc.setFont("Helvetica", "bold");
         doc.setFontSize(14);
-        doc.text("T.C. ÇALIŞMA VE SOSYAL GÜVENLİK BAKANLIĞI", 105, 15, { align: "center" });
-        doc.setFontSize(12);
-        doc.text("İŞ SAĞLIĞI VE GÜVENLİĞİ MEVZUATI GEREĞİ", 105, 22, { align: "center" });
-        doc.text("EK-2 ÇALIŞAN PERİYODİK SAĞLIK MUAYENE KARTI", 105, 29, { align: "center" });
+        doc.text(clearTurkishChars("T.C. CALISMA VE SOSYAL GUVENLIK BAKANLIGI"), 105, 15, { align: "center" });
+        doc.setFontSize(11);
+        doc.text(clearTurkishChars("IS SAGLIGI VE GUVENLIGI MEVZUATI GEREGI"), 105, 22, { align: "center" });
+        doc.text(clearTurkishChars("EK-2 CALISAN PERIYODIK SAGLIK MUAYENE KARTI"), 105, 29, { align: "center" });
 
         doc.setLineWidth(0.5);
         doc.line(15, 33, 195, 33);
 
-        // 1. Bölüm: Çalışan Kimlik Bilgileri Tablosu
-        doc.setFont("Helvetica", "bold");
         doc.setFontSize(11);
-        doc.text("1. ÇALIŞAN VE İŞYERİ KÜNYE BİLGİLERİ", 15, 41);
+        doc.text(clearTurkishChars("1. CALISAN VE ISYERI KUNYE BILGILERI"), 15, 41);
         
         doc.autoTable({
             startY: 44,
             theme: 'grid',
-            headStyles: { fillColor: [22, 101, 52] }, // Kurumsal koyu yeşil başlık
+            headStyles: { fillColor: [22, 101, 52] },
             body: [
-                ["İlgili Şirket / İşyeri Ünvanı", currentCompanyName],
-                ["Çalışanın Adı Soyadı", name],
-                ["Yaş / Cinsiyet", age + " Yaş / " + gender]
+                [clearTurkishChars("Ilgili Sirket / Isyeri Unvani"), clearTurkishChars(currentCompanyName)],
+                [clearTurkishChars("Calisanin Adi Soyadi"), clearTurkishChars(name)],
+                [clearTurkishChars("Yas / Cinsiyet"), age + " Yas / " + clearTurkishChars(gender)]
             ],
             styles: { font: "Helvetica", fontSize: 10 }
         });
 
-        // 2. Bölüm: Klinik Tıbbi Bulgular Tablosu
-        doc.text("2. PERİYODİK KLİNİK MUAYENE BULGULARI", 15, doc.lastAutoTable.finalY + 10);
+        doc.text(clearTurkishChars("2. PERIYODIK KLINIK MUAYENE BULGULARI"), 15, doc.lastAutoTable.finalY + 10);
         
         doc.autoTable({
             startY: doc.lastAutoTable.finalY + 13,
             theme: 'grid',
-            headStyles: { fillColor: [30, 41, 59] }, // Koyu gri tonları
-            head: [["Muayene Edilen Sistem", "Klinik Rapor ve Teşhis Bulguları"]],
+            headStyles: { fillColor: [30, 41, 59] },
+            head: [[clearTurkishChars("Muayene Edilen Sistem"), clearTurkishChars("Klinik Rapor ve Tehis Bulgulari")]],
             body: [
-                ["Göz ve Görme Sistemi Bulguları (Ek-2)", goz],
-                ["Kardiyovasküler Sistem (Kalp / Tansiyon)", kalp],
-                ["Kas-İskelet Sistemi Kontrolü", kas]
+                [clearTurkishChars("Goz ve Gorme Sistemi Bulgulari (Ek-2)"), clearTurkishChars(goz)],
+                [clearTurkishChars("Kardiyovaskuler Sistem (Kalp / Tansiyon)"), clearTurkishChars(kalp)],
+                [clearTurkishChars("Kas-Iskelet Sistemi Kontrolu"), clearTurkishChars(kas)]
             ],
             styles: { font: "Helvetica", fontSize: 10 }
         });
 
-        // 3. Bölüm: Hekim Nihai Kanaat Kararı
         let finalY = doc.lastAutoTable.finalY + 10;
-        doc.text("3. HEKİM KANAAT VE SONUÇ RAPORU", 15, finalY);
+        doc.text(clearTurkishChars("3. HEKIM KANAAT VE SONUC RAPORU"), 15, finalY);
         
         doc.autoTable({
             startY: finalY + 3,
             theme: 'plain',
             body: [
-                ["Yapılan fiziki muayene ve tetkikler sonucunda çalışanın;"]
+                [clearTurkishChars("Yapilan fiziki muayene ve tetkikler sonucunda calisanin;")]
             ],
             styles: { font: "Helvetica", fontSize: 10, fontStyle: "italic" }
         });
 
-        // Karar Kutusu Tasarımı
         doc.setDrawColor(22, 163, 74);
         doc.setFillColor(240, 253, 244);
         doc.rect(15, doc.lastAutoTable.finalY + 2, 180, 15, 'FD');
         
         doc.setFont("Helvetica", "bold");
-        doc.setFontSize(11);
-        doc.text("NİHAİ KARAR: " + decision, 20, doc.lastAutoTable.finalY + 11);
+        doc.setFontSize(10);
+        doc.text(clearTurkishChars("NIHAI KARAR: " + decision), 20, doc.lastAutoTable.finalY + 11);
 
-        // Hekim İmza Alanı
         doc.setFont("Helvetica", "normal");
         doc.setFontSize(9);
-        doc.text("İşyeri Hekimi Kaşe / İmza", 150, doc.lastAutoTable.finalY + 30);
+        doc.text(clearTurkishChars("Isyeri Hekimi Kase / Imza"), 150, doc.lastAutoTable.finalY + 30);
         doc.line(140, doc.lastAutoTable.finalY + 32, 190, doc.lastAutoTable.finalY + 32);
 
-        // PDF Dosyasını çalışanın adıyla bilgisayara indiriyoruz
-        doc.save("EK_2_Sağlık_Karti_" + name.replace(/\s+/g, '_') + ".pdf");
+        doc.save("EK_2_Saglik_Karti_" + clearTurkishChars(name).replace(/\s+/g, '_') + ".pdf");
     }
 </script>
 </body>
