@@ -155,6 +155,7 @@
     <div class="offline-panel">
         <strong>Offline Durum:</strong> <span id="connection_status">Kontrol ediliyor...</span><br>
         <strong>Cihazda bekleyen risk kaydı:</strong> <span id="pending_risk_count">0</span>
+        <div id="offline_error" style="margin-top:6px; color:#b91c1c; display:none; font-weight:600;"></div>
         <div id="offline_status" style="margin-top:6px; color:var(--text-muted);">Henüz işlem yapılmadı.</div>
         <button class="sync-btn" onclick="manualSyncRisks()">Bekleyenleri Şimdi Gönder</button>
     </div>
@@ -169,13 +170,14 @@
                 <tr>
                     <th>Firma Unvanı</th>
                     <th>Tehlike Tanımı</th>
+                    <th>Foto</th>
                     <th>Skor</th>
                     <th>Risk Seviyesi</th>
                     <th>Termin</th>
                     <th>Aksiyon</th>
                 </tr>
             </thead>
-            <tbody id="risk_table_body"><tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Veriler yükleniyor...</td></tr></tbody>
+            <tbody id="risk_table_body"><tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Veriler yükleniyor...</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -240,7 +242,7 @@
         const tbody = document.getElementById('risk_table_body');
         const { data } = await dbClient.from('risk_assessments').select('*, customer_companies(company_name)').order('status', { ascending: false }).order('created_at', { ascending: false });
         tbody.innerHTML = '';
-        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Kayıtlı risk bulgusu yok.</td></tr>`; return; }
+        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Kayıtlı risk bulgusu yok.</td></tr>`; return; }
         
         data.forEach(r => {
             let badgeColor = '#dcfce7', textColor = '#15803d', lvlText = 'Düşük';
@@ -251,8 +253,11 @@
             const compName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
             const isClosed = r.status === 'Kapalı';
             const actionCell = isClosed ? '<span style="color:var(--accent-green); font-weight:bold;">✓ Giderildi</span>' : `<button class="close-btn" onclick="closeRisk('${r.id}')">Riski Kapat</button>`;
+            const photoCell = r.image_url
+                ? `<a href="${r.image_url}" target="_blank" style="color:var(--primary); font-weight:bold; text-decoration:none;">📷 Var</a>`
+                : '<span style="color:var(--text-muted);">Yok</span>';
 
-            tbody.innerHTML += `<tr class="${isClosed ? 'status-closed' : ''}"><td><strong>${compName}</strong></td><td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td><td>${r.risk_score}</td><td><span class="badge" style="background:${badgeColor}; color:${textColor};">${lvlText}</span></td><td>${r.target_date}</td><td>${actionCell}</td></tr>`;
+            tbody.innerHTML += `<tr class="${isClosed ? 'status-closed' : ''}"><td><strong>${compName}</strong></td><td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td><td>${photoCell}</td><td>${r.risk_score}</td><td><span class="badge" style="background:${badgeColor}; color:${textColor};">${lvlText}</span></td><td>${r.target_date}</td><td>${actionCell}</td></tr>`;
         });
     }
 
@@ -291,8 +296,16 @@
 
     async function manualSyncRisks() {
         updateConnectionStatus();
+        const statusEl = document.getElementById('offline_status');
+        const errorEl = document.getElementById('offline_error');
+        if (errorEl) { errorEl.style.display = 'none'; errorEl.innerText = ''; }
         if (!navigator.onLine) { alert('Şu anda internet yok. Kayıtlar cihazda beklemeye devam edecek.'); return; }
-        if (window.OSGBRiskSync) await window.OSGBRiskSync.syncPendingRisks();
+        if (statusEl) { statusEl.style.color = 'var(--text-muted)'; statusEl.innerText = 'Bekleyen kayıtlar gönderiliyor...'; }
+        if (window.OSGBRiskSync) {
+            const result = await window.OSGBRiskSync.syncPendingRisks();
+            await updateOfflineRiskCount();
+            return result;
+        }
     }
 
     async function registerServiceWorker() {
