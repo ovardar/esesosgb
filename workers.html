@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSGB SaaS - Çalışan Kadro Yönetimi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; display: none; }
+        .card { background: white; padding: 25px; border-radius: 12px; max-width: 850px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { color: #1e293b; margin-top: 0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #64748b; font-weight: 600; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        .grid-4 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; }
+        button.submit-btn { background: #2563eb; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button.submit-btn:hover { background: #1d4ed8; }
+        .nav-link { display: block; text-align: center; margin-top: 15px; color: #64748b; text-decoration: none; font-size: 14px; }
+        #status { margin-top: 15px; text-align: center; font-weight: bold; }
+
+        .table-container { margin-top: 35px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>👥 Çalışan Personel Kadro Yönetimi</h2>
+    <p style="color: #64748b; font-size: 14px;">Firmalara ait çalışan listelerini buradan ekleyebilir ve güncelleyebilirsiniz.</p>
+    
+    <div class="form-group">
+        <label>İşlem Yapılacak Müşteri Firma</label>
+        <select id="company_select" onchange="fetchWorkers()">
+            <option value="">Firmalar yükleniyor...</option>
+        </select>
+    </div>
+
+    <div class="grid-4">
+        <div class="form-group">
+            <label>Personel Adı Soyadı</label>
+            <input type="text" id="worker_name" placeholder="Örn: Ali Can">
+        </div>
+        <div class="form-group">
+            <label>Yaş</label>
+            <input type="number" id="worker_age" placeholder="25">
+        </div>
+        <div class="form-group">
+            <label>Cinsiyet</label>
+            <select id="worker_gender">
+                <option value="Erkek">Erkek</option>
+                <option value="Kadın">Kadın</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Görev / Unvan</label>
+            <input type="text" id="worker_job" placeholder="Örn: Kaynakçı">
+        </div>
+    </div>
+
+    <button class="submit-btn" onclick="saveWorker()">Yeni Çalışanı Kadroya Ekle</button>
+    <div id="status"></div>
+
+    <div class="table-container">
+        <h3>📋 Firmaya Kayıtlı Aktif Çalışan Listesi (Canlı)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Adı Soyadı</th>
+                    <th>Yaş</th>
+                    <th>Cinsiyet</th>
+                    <th>Görevi / Unvanı</th>
+                </tr>
+            </thead>
+            <tbody id="worker_table_body">
+                <tr>
+                    <td colspan="4" style="text-align:center; color:#94a3b8;">Lütfen yukarıdan bir firma seçin...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <a href="index.html" class="nav-link">← Ana Yönetim Paneline Dön</a>
+</div>
+
+<script>
+    const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
+    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    window.onload = async function() {
+        const { data: { session } } = await dbClient.auth.getSession();
+        if (!session) { window.location.href = "login.html"; return; }
+        document.body.style.display = "block";
+        await fetchCompaniesToSelect();
+    };
+
+    async function fetchCompaniesToSelect() {
+        const select = document.getElementById('company_select');
+        try {
+            const { data } = await dbClient.from('customer_companies').select('id, company_name').order('company_name');
+            if (data && data.length > 0) {
+                select.innerHTML = '<option value="">-- Lütfen Liste İçin Firma Seçin --</option>';
+                data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; });
+            }
+        } catch (err) { console.error(err.message); }
+    }
+
+    // SEÇİLEN FİRMANIN PERSONEL KADROSUNU GETİREN FONKSİYON
+    async function fetchWorkers() {
+        const compId = document.getElementById('company_select').value;
+        const tbody = document.getElementById('worker_table_body');
+        if(!compId) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Lütfen yukarıdan bir firma seçin...</td></tr>`; return; }
+
+        try {
+            const { data } = await dbClient.from('workers').select('*').eq('company_id', compId).order('created_at', { ascending: false });
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Bu firmaya kayıtlı personel kadrosu bulunmuyor.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            data.forEach(w => {
+                tbody.innerHTML += `<tr><td><strong>${w.full_name}</strong></td><td>${w.age}</td><td>${w.gender}</td><td>${w.job_title || '-'}</td></tr>`;
+            });
+        } catch (err) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`; }
+    }
+
+    async function saveWorker() {
+        const compId = document.getElementById('company_select').value;
+        const name = document.getElementById('worker_name').value;
+        const age = document.getElementById('worker_age').value;
+        const gender = document.getElementById('worker_gender').value;
+        const job = document.getElementById('worker_job').value;
+        const statusDiv = document.getElementById('status');
+
+        if(!compId || !name || !age) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen Firma, İsim ve Yaş alanlarını doldurun!"; return; }
+        statusDiv.style.color = "blue"; statusDiv.innerText = "Kadroya işleniyor...";
+
+        const { error } = await dbClient.from('workers').insert([{ company_id: compId, full_name: name, age: parseInt(age), gender: gender, job_title: job }]);
+
+        if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
+        else {
+            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Başarılı! Personel firma kadrosuna eklendi.";
+            document.getElementById('worker_name').value = '';
+            document.getElementById('worker_age').value = '';
+            document.getElementById('worker_job').value = '';
+            fetchWorkers(); // Listeyi anlık tazele
+        }
+    }
+</script>
+</body>
+</html>
