@@ -3,73 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSGB SaaS - Merkezi Aksiyon Havuzu</title>
+    <title>OSGB SaaS - DÖF Aksiyon Havuzu</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; display: none; }
-        .card { background: white; padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        :root {
+            --bg-main: #f4f6f9;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent-green: #10b981;
+            --accent-green-hover: #059669;
+            --border-color: #e2e8f0;
+            --table-header: #f8fafc;
+            --danger: #ef4444;
+            --warning: #f97316;
+            --info: #0ea5e9;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; }
+        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1200px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px; }
         .back-btn { background: #1e293b; color: white; border: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; }
         .back-btn:hover { background: #0f172a; }
-        
-        .grid-sections { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; margin-top: 25px; }
-        .panel { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .panel-title { margin-top: 0; padding-bottom: 8px; border-bottom: 2px solid #ef4444; color: #b91c1c; display: flex; justify-content: space-between; align-items: center; }
-        .panel-title-blue { border-bottom: 2px solid #2563eb; color: #1d4ed8; }
+        .title-block h2 { margin: 0; font-size: 21px; }
+        .title-block p { margin: 4px 0 0 0; color: var(--text-muted); font-size: 13px; }
+        .user-info { color: var(--text-muted); font-size: 13px; font-weight: 600; }
+        .logout-btn { background: #ef4444; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .header-actions { display:flex; gap:10px; align-items:center; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-        th { background-color: #f8fafc; color: #475569; font-weight: 600; }
-        
-        .badge { padding: 3px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        .badge-danger { background: #fee2e2; color: #b91c1c; }
-        .badge-warning { background: #ffedd5; color: #c2410c; }
-        
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 20px 0; }
+        .stat-box { color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
+        .stat-label { font-size: 12px; font-weight: 700; opacity: 0.92; }
+        .stat-value { font-size: 28px; font-weight: 900; margin-top: 4px; }
+        .stat-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .stat-orange { background: linear-gradient(135deg, #f97316, #c2410c); }
+        .stat-blue { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
+        .stat-green { background: linear-gradient(135deg, #10b981, #047857); }
+
+        .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--table-header); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+        .filters { display:flex; gap:8px; flex-wrap:wrap; }
+        .filter-btn { border: 1px solid var(--border-color); background: white; color: var(--text-main); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 12px; }
+        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .refresh-btn { background: var(--accent-green); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 12px; }
+        .refresh-btn:hover { background: var(--accent-green-hover); }
+        .search-input { min-width: 230px; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
+
+        .grid-sections { display: grid; grid-template-columns: 1.6fr 0.9fr; gap: 18px; margin-top: 8px; }
+        .panel { background: white; border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); overflow: hidden; }
+        .panel-title { margin: 0 0 8px 0; padding-bottom: 8px; border-bottom: 2px solid var(--primary); color: var(--primary); display: flex; justify-content: space-between; align-items: center; }
+        .panel-help { color: var(--text-muted); font-size: 12px; margin: 4px 0 12px 0; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        th { background-color: var(--table-header); color: var(--text-muted); font-weight: 700; }
+        tr:hover { background: #f8fafc; }
         .overdue-row { background-color: #fff5f5; }
-        .close-action-btn { background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .close-action-btn:hover { background: #059669; }
+        .closed-row { opacity: 0.68; background: #f8fafc; }
+        .risk-title { font-weight: 800; color: var(--text-main); }
+        .action-plan { margin-top: 4px; color: var(--text-muted); font-size: 11px; line-height: 1.35; }
+        .close-note { margin-top: 5px; color: #047857; font-size: 11px; line-height: 1.35; }
+        .badge { padding: 4px 7px; border-radius: 999px; font-size: 10px; font-weight: 800; display:inline-block; white-space: nowrap; }
+        .badge-open { background: #fee2e2; color: #b91c1c; }
+        .badge-progress { background: #ffedd5; color: #c2410c; }
+        .badge-closed { background: #dcfce7; color: #15803d; }
+        .badge-overdue { background: #7f1d1d; color: white; margin-left: 4px; }
+        .photo-link { color: var(--primary); font-weight: 800; text-decoration: none; }
+        .photo-none { color: #94a3b8; }
+        .score { font-weight: 900; color: #b91c1c; }
+
+        .btn-sm { border: none; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-weight: 800; font-size: 11px; margin: 2px; }
+        .btn-progress { background: #f97316; color: white; }
+        .btn-close { background: #10b981; color: white; }
+        .btn-detail { background: #2563eb; color: white; }
+        .btn-disabled { background: #e2e8f0; color: #64748b; cursor: not-allowed; }
+        .muted { color: var(--text-muted); }
+        .empty-state { text-align:center; color:#16a34a; font-weight:bold; padding: 20px; }
+        .status-line { margin-top: 10px; font-weight: 700; font-size: 12px; }
+
+        .visit-table td, .visit-table th { padding: 9px; }
+        .visit-date { font-weight: 800; color: #ea580c; }
+
+        @media (max-width: 900px) {
+            body { padding: 12px; }
+            .card { padding: 15px; }
+            .topbar { align-items: flex-start; flex-direction: column; }
+            .header-actions { width:100%; justify-content:space-between; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .grid-sections { grid-template-columns: 1fr; }
+            .toolbar { align-items: stretch; }
+            .search-input { width: 100%; min-width: 0; box-sizing: border-box; }
+            table { font-size: 11px; }
+            th, td { padding: 8px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div class="topbar">
         <a href="dashboard.html" class="back-btn">← Yönetim Paneline Dön</a>
-        <span style="font-size: 14px; font-weight: bold; color: #ef4444;">🚨 MERKEZİ GÖREV, TERMİN VE AKSİYON HAVUZU</span>
+        <div class="title-block">
+            <h2>🚨 DÖF Aksiyon Havuzu</h2>
+            <p>Açık, devam eden, geciken ve kapatılan risk/DÖF kayıtlarını tek merkezden takip edin.</p>
+        </div>
+        <div class="header-actions">
+            <span class="user-info">👤 <span id="current_user_email">...</span></span>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-box stat-red"><div class="stat-label">Geciken DÖF</div><div class="stat-value" id="stat_overdue">0</div></div>
+        <div class="stat-box stat-orange"><div class="stat-label">Açık DÖF</div><div class="stat-value" id="stat_open">0</div></div>
+        <div class="stat-box stat-blue"><div class="stat-label">Devam Eden</div><div class="stat-value" id="stat_progress">0</div></div>
+        <div class="stat-box stat-green"><div class="stat-label">Kapalı</div><div class="stat-value" id="stat_closed">0</div></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="filters">
+            <button class="filter-btn active" data-filter="active" onclick="setFilter('active')">Aktif DÖF</button>
+            <button class="filter-btn" data-filter="overdue" onclick="setFilter('overdue')">Geciken</button>
+            <button class="filter-btn" data-filter="Açık" onclick="setFilter('Açık')">Açık</button>
+            <button class="filter-btn" data-filter="Devam Ediyor" onclick="setFilter('Devam Ediyor')">Devam Eden</button>
+            <button class="filter-btn" data-filter="Kapalı" onclick="setFilter('Kapalı')">Kapalı</button>
+            <button class="filter-btn" data-filter="all" onclick="setFilter('all')">Tümü</button>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <input class="search-input" id="search_input" type="text" placeholder="Firma, bulgu, sorumlu ara..." oninput="renderDofTable()">
+            <button class="refresh-btn" onclick="refreshAll()">Yenile</button>
+        </div>
     </div>
 
     <div class="grid-sections">
-        
-        <!-- SOL PANEL: TÜM SİSTEMDEKİ AÇIK RİSKLER -->
         <div class="panel">
-            <h3 class="panel-title">🚨 Giderilmeyi Bekleyen Açık Riskler ve Yasal Terminler <span id="cnt_open_risks" class="badge badge-danger">0</span></h3>
-            <p style="color: #64748b; font-size: 12px; margin: 5px 0;">Süresi geçmiş veya yaklaşan yasal aksiyonlar burada listelenir. Sahada çözüldükçe kapatabilirsiniz.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Müşteri Firma</th>
-                        <th>Bulgu / Tehlike Tanımı</th>
-                        <th>Risk Skoru</th>
-                        <th>Hedef Termin</th>
-                        <th>İşlem</th>
-                    </tr>
-                </thead>
-                <tbody id="all_open_risks_tbody">
-                    <tr><td colspan="5" style="text-align:center; color:#94a3b8;">Veriler taranıyor...</td></tr>
-                </tbody>
-            </table>
+            <h3 class="panel-title">📋 DÖF Takip Matrisi <span id="cnt_visible" class="badge badge-open">0</span></h3>
+            <p class="panel-help">Risk Motoru'ndan gelen kayıtlar artık önerilen önlem, sorumlu kişi, termin ve kapanış açıklamasıyla takip edilir.</p>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Firma</th>
+                            <th>Bulgu / Önerilen Önlem</th>
+                            <th>Sorumlu</th>
+                            <th>Skor</th>
+                            <th>Termin</th>
+                            <th>Foto</th>
+                            <th>Durum</th>
+                            <th>İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dof_tbody">
+                        <tr><td colspan="8" style="text-align:center; color:#94a3b8;">Veriler taranıyor...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="status-line" id="dof_status"></div>
         </div>
 
-        <!-- SAĞ PANEL: YAKLAŞAN SAHA ZİYARETLERİ -->
         <div class="panel">
-            <h3 class="panel-title panel-title-blue">📅 Bu Ayki Saha Ziyaret Programı Takibi <span id="cnt_visits" class="badge" style="background:#dbeafe; color:#1d4ed8;">0</span></h3>
-            <p style="color: #64748b; font-size: 12px; margin: 5px 0;">Uzman ve hekimlerin bu ay yapacağı saha denetimleri planı.</p>
-            <table>
+            <h3 class="panel-title" style="border-color:#ea580c; color:#ea580c;">📅 Bu Ayki Saha Ziyaretleri <span id="cnt_visits" class="badge" style="background:#ffedd5; color:#c2410c;">0</span></h3>
+            <p class="panel-help">DÖF takibi ile saha ziyaret planı birlikte izlenir.</p>
+            <table class="visit-table">
                 <thead>
                     <tr>
                         <th>Tarih</th>
                         <th>Firma</th>
-                        <th>Sorumlu Personel</th>
-                        <th>Planlanan Süre</th>
+                        <th>Sorumlu</th>
+                        <th>Süre</th>
                     </tr>
                 </thead>
                 <tbody id="current_visits_tbody">
@@ -77,7 +178,6 @@
                 </tbody>
             </table>
         </div>
-
     </div>
 </div>
 
@@ -86,70 +186,212 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    let allDofs = [];
+    let currentFilter = 'active';
+
     window.onload = async function() {
         const { data: { session } } = await dbClient.auth.getSession();
         if (!session) { window.location.href = "login.html"; return; }
         document.body.style.display = "block";
-
-        fetchGlobalOpenRisks();
-        fetchGlobalVisits();
+        document.getElementById('current_user_email').innerText = session.user.email;
+        await refreshAll();
     };
 
-    async function fetchGlobalOpenRisks() {
-        const tbody = document.getElementById('all_open_risks_tbody');
-        const { data } = await dbClient.from('risk_assessments').select('*, customer_companies(company_name)').eq('status', 'Açık').order('target_date', { ascending: true });
-        
-        if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#16a34a; font-weight:bold;">✓ Harika! Sistemde bekleyen açık risk veya bulgu yok.</td></tr>`;
-            document.getElementById('cnt_open_risks').innerText = "0";
+    async function refreshAll() {
+        await fetchDofs();
+        await fetchGlobalVisits();
+    }
+
+    function todayAtStart() {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d;
+    }
+
+    function isOverdue(dof) {
+        if (!dof || dof.status === 'Kapalı' || !dof.target_date) return false;
+        const target = new Date(dof.target_date + 'T00:00:00');
+        return target < todayAtStart();
+    }
+
+    function escapeHTML(value) {
+        if (value === null || value === undefined) return '';
+        return value.toString()
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function statusBadge(status) {
+        if (status === 'Kapalı') return '<span class="badge badge-closed">Kapalı</span>';
+        if (status === 'Devam Ediyor') return '<span class="badge badge-progress">Devam Ediyor</span>';
+        return '<span class="badge badge-open">Açık</span>';
+    }
+
+    function setFilter(filter) {
+        currentFilter = filter;
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === filter);
+        });
+        renderDofTable();
+    }
+
+    async function fetchDofs() {
+        const tbody = document.getElementById('dof_tbody');
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8;">DÖF kayıtları yükleniyor...</td></tr>`;
+
+        const { data, error } = await dbClient
+            .from('risk_assessments')
+            .select('*, customer_companies(company_name)')
+            .order('target_date', { ascending: true })
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#b91c1c; font-weight:bold;">Hata: ${escapeHTML(error.message)}</td></tr>`;
             return;
         }
 
-        document.getElementById('cnt_open_risks').innerText = data.length;
-        tbody.innerHTML = '';
-        
-        const bugun = new Date("2026-06-16");
+        allDofs = data || [];
+        updateStats();
+        renderDofTable();
+    }
 
-        data.forEach(r => {
-            const terminTarihi = new Date(r.target_date);
-            const gecikmişMi = terminTarihi < bugun;
-            const rowClass = gecikmişMi ? 'overdue-row' : '';
-            const compName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Sirket';
-            
-            tbody.innerHTML += `
-                <tr class="${rowClass}">
-                    <td><strong>${compName}</strong></td>
-                    <td>${r.hazard_title}</td>
-                    <td style="color:#b91c1c; font-weight:bold;">⚠️ ${r.risk_score}</td>
-                    <td>${gecikmişMi ? `<span style="color:red; font-weight:bold;">🚨 Gecikti (${r.target_date})</span>` : r.target_date}</td>
-                    <td><button class="close-action-btn" onclick="closeRiskFromHavuz('${r.id}')">Giderildi</button></td>
-                </tr>
-            `;
+    function updateStats() {
+        const open = allDofs.filter(d => d.status === 'Açık' || !d.status).length;
+        const progress = allDofs.filter(d => d.status === 'Devam Ediyor').length;
+        const closed = allDofs.filter(d => d.status === 'Kapalı').length;
+        const overdue = allDofs.filter(d => isOverdue(d)).length;
+        document.getElementById('stat_open').innerText = open;
+        document.getElementById('stat_progress').innerText = progress;
+        document.getElementById('stat_closed').innerText = closed;
+        document.getElementById('stat_overdue').innerText = overdue;
+    }
+
+    function getFilteredDofs() {
+        const search = (document.getElementById('search_input').value || '').trim().toLowerCase();
+        return allDofs.filter(d => {
+            const status = d.status || 'Açık';
+            let matchesFilter = true;
+            if (currentFilter === 'active') matchesFilter = status !== 'Kapalı';
+            else if (currentFilter === 'overdue') matchesFilter = isOverdue(d);
+            else if (currentFilter === 'all') matchesFilter = true;
+            else matchesFilter = status === currentFilter;
+
+            if (!matchesFilter) return false;
+            if (!search) return true;
+            const compName = d.customer_companies ? d.customer_companies.company_name : '';
+            const combined = [compName, d.hazard_title, d.action_plan, d.responsible_person, status].join(' ').toLowerCase();
+            return combined.includes(search);
         });
     }
 
-    async function closeRiskFromHavuz(id) {
-        if(!confirm("Bu bulgunun giderildiğini ve yasal olarak kapatıldığını onaylıyor musunuz?")) return;
-        await dbClient.from('risk_assessments').update({ status: 'Kapalı' }).eq('id', id);
-        fetchGlobalOpenRisks();
+    function renderDofTable() {
+        const tbody = document.getElementById('dof_tbody');
+        const visible = getFilteredDofs();
+        document.getElementById('cnt_visible').innerText = visible.length;
+
+        if (visible.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="empty-state">✓ Seçili filtreye uygun DÖF kaydı yok.</td></tr>`;
+            document.getElementById('dof_status').innerText = '';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        visible.forEach(d => {
+            const compName = d.customer_companies ? d.customer_companies.company_name : 'Bilinmeyen Şirket';
+            const overdue = isOverdue(d);
+            const isClosed = d.status === 'Kapalı';
+            const rowClass = isClosed ? 'closed-row' : (overdue ? 'overdue-row' : '');
+            const photoCell = d.image_url ? `<a href="${escapeHTML(d.image_url)}" target="_blank" class="photo-link">📷 Var</a>` : `<span class="photo-none">Yok</span>`;
+            const terminCell = overdue ? `<span style="color:#b91c1c; font-weight:900;">🚨 ${escapeHTML(d.target_date || '-')}</span><br><span class="badge badge-overdue">Gecikti</span>` : escapeHTML(d.target_date || '-');
+            const closeNote = d.close_note ? `<div class="close-note">✅ Kapanış: ${escapeHTML(d.close_note)}</div>` : '';
+            const actionPlan = d.action_plan ? `<div class="action-plan">🛠️ ${escapeHTML(d.action_plan)}</div>` : `<div class="action-plan">Önerilen önlem girilmemiş.</div>`;
+            const responsible = d.responsible_person ? escapeHTML(d.responsible_person) : '<span class="muted">Atanmamış</span>';
+            const actions = isClosed
+                ? `<button class="btn-sm btn-disabled" disabled>Kapatıldı</button>`
+                : `<button class="btn-sm btn-progress" onclick="markInProgress('${d.id}')">Devam Ediyor</button><button class="btn-sm btn-close" onclick="closeDof('${d.id}')">Kapat</button>`;
+
+            tbody.innerHTML += `
+                <tr class="${rowClass}">
+                    <td><strong>${escapeHTML(compName)}</strong></td>
+                    <td><div class="risk-title">${escapeHTML(d.hazard_title || '-')}</div>${actionPlan}${closeNote}</td>
+                    <td>${responsible}</td>
+                    <td><span class="score">${escapeHTML(d.risk_score || '-')}</span></td>
+                    <td>${terminCell}</td>
+                    <td>${photoCell}</td>
+                    <td>${statusBadge(d.status || 'Açık')}</td>
+                    <td>${actions}</td>
+                </tr>
+            `;
+        });
+
+        const overdueCount = visible.filter(d => isOverdue(d)).length;
+        document.getElementById('dof_status').innerText = overdueCount > 0 ? `${overdueCount} gecikmiş DÖF kaydı bu filtrede görünüyor.` : '';
+        document.getElementById('dof_status').style.color = overdueCount > 0 ? '#b91c1c' : '#16a34a';
+    }
+
+    async function markInProgress(id) {
+        const { error } = await dbClient.from('risk_assessments').update({ status: 'Devam Ediyor' }).eq('id', id);
+        if (error) { alert('Durum güncellenemedi: ' + error.message); return; }
+        await fetchDofs();
+    }
+
+    async function closeDof(id) {
+        const note = prompt('Bu DÖF nasıl giderildi? Kapanış açıklamasını yazın:');
+        if (note === null) return;
+        const cleanNote = note.trim();
+        if (!cleanNote) { alert('Kapanış açıklaması boş olamaz.'); return; }
+
+        const { error } = await dbClient.from('risk_assessments').update({
+            status: 'Kapalı',
+            close_note: cleanNote,
+            closed_at: new Date().toISOString()
+        }).eq('id', id);
+
+        if (error) { alert('DÖF kapatılamadı: ' + error.message); return; }
+        await fetchDofs();
     }
 
     async function fetchGlobalVisits() {
         const tbody = document.getElementById('current_visits_tbody');
-        const { data } = await dbClient.from('field_schedules').select('*, customer_companies(company_name)').order('visit_date', { ascending: true });
-        
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const start = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+        const endDate = new Date(year, month + 1, 1);
+        const end = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-01`;
+
+        const { data, error } = await dbClient
+            .from('field_schedules')
+            .select('*, customer_companies(company_name)')
+            .gte('visit_date', start)
+            .lt('visit_date', end)
+            .order('visit_date', { ascending: true });
+
+        if (error) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Hata: ${escapeHTML(error.message)}</td></tr>`;
+            return;
+        }
+
         if (!data || data.length === 0) {
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Bu ay için planlanmış ziyaret yok.</td></tr>`;
-            document.getElementById('cnt_visits').innerText = "0";
+            document.getElementById('cnt_visits').innerText = '0';
             return;
         }
 
         document.getElementById('cnt_visits').innerText = data.length;
         tbody.innerHTML = '';
         data.forEach(v => {
-            const compName = v.customer_companies ? v.customer_companies.company_name : 'Bilinmeyen Sirket';
-            tbody.innerHTML += `<tr><td>📅 ${v.visit_date}</td><td><strong>${compName}</strong></td><td>👤 ${v.assigned_staff || 'Atanmamış'}</td><td>⏱️ ${v.planned_minutes} Dk</td></tr>`;
+            const compName = v.customer_companies ? v.customer_companies.company_name : 'Bilinmeyen Şirket';
+            tbody.innerHTML += `<tr><td class="visit-date">${escapeHTML(v.visit_date)}</td><td><strong>${escapeHTML(compName)}</strong></td><td>${escapeHTML(v.assigned_staff || 'Atanmamış')}</td><td>⏱️ ${escapeHTML(v.planned_minutes || '-')} dk</td></tr>`;
         });
+    }
+
+    async function handleLogout() {
+        await dbClient.auth.signOut();
+        window.location.href = 'login.html';
     }
 </script>
 </body>
