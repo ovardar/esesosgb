@@ -37,6 +37,10 @@
         .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
         .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 
+        /* 🔄 AKILLI SENKRONİZASYON BARI */
+        .sync-banner { background: #fff7ed; border: 1px solid #ffedd5; color: #c2410c; padding: 12px 20px; border-radius: 8px; margin-bottom: 20px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .sync-banner.synced { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: var(--text-muted); font-weight: 600; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; background: var(--bg-card); color: var(--text-main); }
@@ -47,22 +51,16 @@
         button.save-btn:hover { background: var(--primary-hover); }
         
         .close-btn { background: var(--accent-green); color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .close-btn:hover { background: var(--accent-green-hover); }
-        .status-closed { opacity: 0.6; }
-
         .table-container { margin-top: 35px; border-top: 2px solid var(--border-color); padding-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); }
         th { background-color: var(--table-header); color: var(--text-muted); font-weight: 600; }
-        .badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .risk-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer; transition: transform 0.2s; }
-        .risk-thumb:hover { transform: scale(1.1); }
+        .risk-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
     <div class="global-header">
         <div class="top-row">
             <div class="logo-area">🏢 <span>AKAD OSGB</span> <span class="logo-badge">SaaS</span></div>
@@ -71,7 +69,6 @@
                 <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
             </div>
         </div>
-
         <div class="nav-container">
             <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
             <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
@@ -83,8 +80,13 @@
         </div>
     </div>
 
+    <div id="sync_status_banner" class="sync-banner synced">
+        <span id="sync_status_text">🔄 Bulut Durumu: Sistem Senkronize (Çevrimdışı Çalışmaya Hazır)</span>
+        <span id="sync_queue_count" class="logo-badge" style="background:#166534;">0</span>
+    </div>
+
     <h2>🦺 Fine-Kinney Risk Analiz Motoru</h2>
-    <p style="color: var(--text-muted); font-size: 14px;">Sahada tespit edilen tehlikeleri girin veya mevcut açık riskleri kapatın.</p>
+    <p style="color: var(--text-muted); font-size: 14px;">Bulgular anında telefonunuza kaydedilir; internet geldiğinde otomatik olarak buluta senkronize edilir.</p>
     
     <div class="form-group">
         <label>İlgili Müşteri Firma</label>
@@ -93,14 +95,12 @@
 
     <div class="form-group">
         <label>Tehlike Tanımı / Bulgusu</label>
-        <textarea id="hazard_title" rows="2" placeholder="Örn: Yangın tüplerinin periyodik kontrol tarihi geçmiş..."></textarea>
+        <textarea id="hazard_title" rows="2" placeholder="Örn: Katlar arası korkuluklar sökülmüş..."></textarea>
     </div>
 
-    <!-- 🔗 100% GÜVENLİ FOTOĞRAF LINK ALANI -->
     <div class="form-group" style="background: var(--table-header); border: 1px dashed var(--border-color); padding: 12px; border-radius: 6px;">
-        <label style="color: var(--primary); font-weight: bold;">📷 Saha Kanıt Fotoğraf Linki (URL)</label>
-        <input type="text" id="risk_image_url_input" placeholder="Örn: https://hizliresim.com/resim.jpg">
-        <small style="color:var(--text-muted); display:block; margin-top:3px;">Sahada çekilen fotoğrafın internet adresini (URL) buraya yapıştırabilirsiniz. Boş bırakılabilir.</small>
+        <label style="color: var(--primary); font-weight: bold;">📷 Saha Kanıt Fotoğrafı Çek</label>
+        <input type="file" id="risk_image_file" accept="image/*" capture="environment" style="border:none; padding:5px 0;">
     </div>
 
     <div class="grid-3">
@@ -147,11 +147,11 @@
         <input type="date" id="target_date">
     </div>
 
-    <button class="save-btn" onclick="saveRisk()">Risk Analizini Kaydet (Canlı)</button>
+    <button class="save-btn" onclick="handleFormSubmit()">Risk Raporunu Hafızaya Kilitle</button>
     <div id="status"></div>
 
     <div class="table-container">
-        <h3>📋 Sahadaki Risk Bulguları Takip Matrisi (Canlı)</h3>
+        <h3>📋 Sahadaki Güncel Risk Bulguları Matrisi (Canlı Veri)</h3>
         <table>
             <thead>
                 <tr>
@@ -174,40 +174,188 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    let localDatabase = null;
+
     window.onload = async function() {
         const { data: { session } } = await dbClient.auth.getSession();
         if (!session) { window.location.href = "login.html"; return; }
-        
         document.body.style.display = "block";
         document.getElementById('current_user_email').innerText = session.user.email;
         document.getElementById('menu_risk').style.display = 'inline-block';
         document.getElementById('menu_medical').style.display = 'inline-block';
         
         calculateFineKinney(); 
+        await initIndexedDB(); // ⚙️ Telefon içi yerel veri ambarını açıyoruz
         await fetchCompaniesToSelect(); 
         fetchRisks();
+        
+        // 🔄 Arka planda her 5 saniyede bir bekleyen kuyruğu buluta iten otomatik senkronizasyon döngüsü
+        setInterval(processSyncQueue, 5000);
     };
 
-    function calculateFineKinney() {
-        const o = parseFloat(document.getElementById('prob').value);
-        const f = parseFloat(document.getElementById('freq').value);
+    // 🏛️ INDEXEDDB BAŞLATMA (CİHAZ İÇİ VERİ AMBARI)
+    function initIndexedDB() {
+        return new Promise((resolve) => {
+            const request = indexedDB.open("OSGB_Offline_DB", 1);
+            request.onupgradeneeded = (e) => {
+                let db = e.target.result;
+                if (!db.objectStoreNames.contains("risk_queue")) {
+                    db.createObjectStore("risk_queue", { keyPath: "id", autoIncrement: true });
+                }
+            };
+            request.onsuccess = (e) => { localDatabase = e.target.result; updateSyncBanner(); resolve(); };
+        });
+    }
+
+    // 📸 GÖRSEL OPTİMİZASYON (CANVAS SIKISTIRMA SÜZGECİ)
+    function compressImage(file) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width; let height = img.height;
+                    const MAX_WIDTH = 1000; const MAX_HEIGHT = 1000;
+                    if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } } 
+                    else { if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.toBlob((blob) => { resolve(blob); }, 'image/jpeg', 0.6);
+                };
+            };
+        });
+    }
+
+    // 🚀 FORM HIZLICA "LOCAL" HAFIZAYA ALINIYOR (BEKLEME SÜRESİ: 0 SANİYE)
+    async function handleFormSubmit() {
+        const compId = document.getElementById('company_select').value; 
+        const hazard = document.getElementById('hazard_title').value;
+        const o = parseFloat(document.getElementById('prob').value); 
+        const f = parseFloat(document.getElementById('freq').value); 
         const s = parseFloat(document.getElementById('sev').value);
-        const score = o * f * s;
-        document.getElementById('risk_score_display').innerText = score.toFixed(1);
-        const lvl = document.getElementById('risk_level_display');
-        if(score < 20) { lvl.innerText = "Düşük Risk"; lvl.style.color = "var(--accent-green)"; }
-        else if(score < 70) { lvl.innerText = "Olası Risk"; lvl.style.color = "orange"; }
-        else if(score < 200) { lvl.innerText = "Önemli Risk"; lvl.style.color = "darkorange"; }
-        else { lvl.innerText = "ESASLI RİSK (İŞİ DURDUR)"; lvl.style.color = "red"; }
+        const target = document.getElementById('target_date').value;
+        const fileInput = document.getElementById('risk_image_file');
+
+        if(!compId || !hazard || !target) { alert("Lütfen tüm alanları doldurun!"); return; }
+
+        let photoBlob = null;
+        if (fileInput && fileInput.files && fileInput.files.length > 0) {
+            photoBlob = await compressImage(fileInput.files[0]); // Hemen sıkıştırıp hazır ediyoruz
+        }
+
+        const newRecord = {
+            company_id: compId,
+            hazard_title: hazard,
+            probability_o: o,
+            frequency_f: f,
+            severity_s: s,
+            risk_score: (o * f * s),
+            target_date: target,
+            photo: photoBlob, // Fotoğrafı ikili veri olarak yerel kasaya atıyoruz
+            timestamp: Date.now()
+        };
+
+        // IndexedDB risk_queue deposuna yazma hamlesi
+        const transaction = localDatabase.transaction(["risk_queue"], "readwrite");
+        const store = transaction.objectStoreWithNames ? transaction.objectStoreWithNames.get("risk_queue") : transaction.objectStore("risk_queue");
+        store.add(newRecord);
+
+        transaction.oncomplete = () => {
+            document.getElementById('hazard_title').value = '';
+            document.getElementById('target_date').value = '';
+            if(fileInput) fileInput.value = '';
+            
+            document.getElementById('status').style.color = "green";
+            document.getElementById('status').innerText = "⚡ Kayıt başarıyla telefon hafızasına kilitlendi! Arka planda buluta gönderilecek.";
+            
+            updateSyncBanner();
+            setTimeout(() => { document.getElementById('status').innerText = ""; }, 4000);
+            processSyncQueue(); // İnternet varsa anında senkronizasyonu tetikle
+        };
     }
 
-    async function fetchCompaniesToSelect() {
-        const select = document.getElementById('company_select');
-        const { data } = await dbClient.from('customer_companies').select('id, company_name').order('company_name');
-        select.innerHTML = '<option value="">-- Lütfen Firma Seçin --</option>';
-        if (data) { data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; }); }
+    // 🔄 ARKA PLANDA SESSİZCE BULUTA GÖNDERME MOTORU (BACKGROUND BACKGROUND SYNC)
+    async function processSyncQueue() {
+        if (!navigator.onLine) { return; } // İnternet yoksa hiç zorlama, havuzu beklet
+
+        const transaction = localDatabase.transaction(["risk_queue"], "readwrite");
+        const store = transaction.objectStoreWithNames ? transaction.objectStoreWithNames.get("risk_queue") : transaction.objectStore("risk_queue");
+        const request = store.openCursor();
+
+        request.onsuccess = async (e) => {
+            const cursor = e.target.result;
+            if (cursor) {
+                const record = cursor.value;
+                let publicImageUrl = null;
+
+                try {
+                    // 1. Eğer yerel hafızada bekleyen bir fotoğraf varsa önce onu buluta itiyoruz
+                    if (record.photo) {
+                        const fileName = `${Date.now()}_offline.jpg`;
+                        const { error: uploadError } = await dbClient.storage
+                            .from('risk-photos')
+                            .upload(fileName, record.photo, { contentType: 'image/jpeg' });
+
+                        if (!uploadError) {
+                            publicImageUrl = `${SUPABASE_URL}/storage/v1/object/public/risk-photos/${fileName}`;
+                        }
+                    }
+
+                    // 2. Form verilerini ana tabloya yazıyoruz
+                    const { error: insertError } = await dbClient.from('risk_assessments').insert([{
+                        company_id: record.company_id,
+                        hazard_title: record.hazard_title,
+                        probability_o: record.probability_o,
+                        frequency_f: record.frequency_f,
+                        severity_s: record.severity_s,
+                        risk_score: record.risk_score,
+                        target_date: record.target_date,
+                        status: 'Açık',
+                        image_url: publicImageUrl
+                    }]);
+
+                    if (!insertError) {
+                        // 3. Buluta başarıyla yazıldıysa, telefonun hafızasındaki bu yükü siliyoruz
+                        const delTransaction = localDatabase.transaction(["risk_queue"], "readwrite");
+                        const delStore = delTransaction.objectStoreWithNames ? delTransaction.objectStoreWithNames.get("risk_queue") : delTransaction.objectStore("risk_queue");
+                        delStore.delete(record.id);
+                        delTransaction.oncomplete = () => { updateSyncBanner(); fetchRisks(); };
+                    }
+                } catch (err) { console.error("Senkronizasyon hatası: ", err); }
+            }
+        };
     }
 
+    // 📊 SENKRONİZASYON BARI GÜNCELLEME SİHİRBAZI
+    function updateSyncBanner() {
+        const transaction = localDatabase.transaction(["risk_queue"], "readonly");
+        const store = transaction.objectStoreWithNames ? transaction.objectStoreWithNames.get("risk_queue") : transaction.objectStore("risk_queue");
+        const countRequest = store.count();
+
+        countRequest.onsuccess = () => {
+            const count = countRequest.result;
+            const banner = document.getElementById('sync_status_banner');
+            const txt = document.getElementById('sync_status_text');
+            const badge = document.getElementById('sync_queue_count');
+
+            badge.innerText = count;
+            if (count > 0) {
+                banner.className = "sync-banner";
+                txt.innerText = `⚠️ Çevrimdışı Mod: Buluta gönderilmeyi bekleyen ${count} adet saha raporu var.`;
+                badge.style.background = "#c2410c";
+            } else {
+                banner.className = "sync-banner synced";
+                txt.innerText = "✓ Bulut Durumu: Tüm raporlar başarıyla senkronize edildi (Sistem Güvende).";
+                badge.style.background = "#166534";
+            }
+        };
+    }
+
+    // Diğer yardımcı fonksiyonlar
     async function fetchRisks() {
         const tbody = document.getElementById('risk_table_body');
         const { data } = await dbClient.from('risk_assessments').select('*, customer_companies(company_name)').order('status', { ascending: false }).order('created_at', { ascending: false });
@@ -223,7 +371,6 @@
             const compName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
             const isClosed = r.status === 'Kapalı';
             const actionCell = isClosed ? '<span style="color:var(--accent-green); font-weight:bold;">✓ Giderildi</span>' : `<button class="close-btn" onclick="closeRisk('${r.id}')">Kapat</button>`;
-            
             const imgHTML = r.image_url ? `<img src="${r.image_url}" class="risk-thumb" onclick="window.open('${r.image_url}')">` : `📷 <span style="font-size:10px; color:var(--text-muted);">Yok</span>`;
 
             tbody.innerHTML += `<tr class="${isClosed ? 'status-closed' : ''}"><td>${imgHTML}</td><td><strong>${compName}</strong></td><td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td><td>${r.risk_score}</td><td><span class="badge" style="background:${badgeColor}; color:${textColor};">${lvlText}</span></td><td>${r.target_date}</td><td>${actionCell}</td></tr>`;
@@ -235,41 +382,14 @@
         await dbClient.from('risk_assessments').update({ status: 'Kapalı' }).eq('id', id); fetchRisks();
     }
 
-    // 🚀 %100 ÇÖKMEZ DOĞRUDAN METİN/LINK YAZMA MOTORU
-    async function saveRisk() {
-        const compId = document.getElementById('company_select').value; 
-        const hazard = document.getElementById('hazard_title').value;
-        const o = parseFloat(document.getElementById('prob').value); 
-        const f = parseFloat(document.getElementById('freq').value); 
-        const s = parseFloat(document.getElementById('sev').value);
-        const target = document.getElementById('target_date').value;
-        const urlInput = document.getElementById('risk_image_url_input').value.trim();
-        const statusDiv = document.getElementById('status');
-
-        if(!compId || !hazard || !target) { alert("Lütfen gerekli tüm alanları doldurun!"); return; }
-        statusDiv.style.color = "blue"; statusDiv.innerText = "Veritabanına kaydediliyor...";
-
-        const { error } = await dbClient.from('risk_assessments').insert([{ 
-            company_id: compId, 
-            hazard_title: hazard, 
-            probability_o: o, 
-            frequency_f: f, 
-            severity_s: s, 
-            risk_score: (o*f*s), 
-            target_date: target, 
-            status: 'Açık',
-            image_url: urlInput || null // Direkt olarak girilen linki buraya yazıyoruz!
-        }]);
-
-        if (error) {
-            statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message;
-        } else {
-            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 İşlem başarıyla tamamlandı! Rapor kaydedildi.";
-            document.getElementById('hazard_title').value = ''; 
-            document.getElementById('target_date').value = '';
-            document.getElementById('risk_image_url_input').value = '';
-            fetchRisks();
-        }
+    function calculateFineKinney() {
+        const o = parseFloat(document.getElementById('prob').value); const f = parseFloat(document.getElementById('freq').value); const s = parseFloat(document.getElementById('sev').value);
+        const score = o * f * s; document.getElementById('risk_score_display').innerText = score.toFixed(1);
+        const lvl = document.getElementById('risk_level_display');
+        if(score < 20) { lvl.innerText = "Düşük Risk"; lvl.style.color = "var(--accent-green)"; }
+        else if(score < 70) { lvl.innerText = "Olası Risk"; lvl.style.color = "orange"; }
+        else if(score < 200) { lvl.innerText = "Önemli Risk"; lvl.style.color = "darkorange"; }
+        else { lvl.innerText = "ESASLI RİSK (İŞİ DURDUR)"; lvl.style.color = "red"; }
     }
 
     async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
