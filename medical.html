@@ -6,7 +6,7 @@
     <title>İSGM Hekim Modülü - Sağlık Kayıtları</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0fdf4; padding: 30px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0fdf4; padding: 30px; display: none; }
         .card { background: white; padding: 25px; border-radius: 12px; max-width: 550px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h2 { color: #166534; margin-top: 0; }
         .form-group { margin-bottom: 15px; }
@@ -40,7 +40,7 @@
     </div>
 
     <div class="form-group">
-        <label>Kanaat ve Sonuç Kararı</label>
+        <label>Kanaat ve Sonucu Kararı</label>
         <select id="decision">
             <option value="Ağır ve Tehlikeli İşlerde Çalışabilir">Ağır ve Tehlikeli İşlerde Çalışabilir</option>
             <option value="Yüksekte Çalışabilir">Yüksekte Çalışabilir</option>
@@ -60,6 +60,23 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // 🛡️ SADECE HEKİM ERİŞEBİLİR KONTROLÜ
+    window.onload = async function() {
+        const { data: { session } } = await dbClient.auth.getSession();
+        if (!session) {
+            window.location.href = "login.html";
+            return;
+        }
+        
+        const email = session.user.email;
+        if (!email.includes('hekim') && !email.includes('admin')) {
+            alert("⚠️ Bu sayfaya erişim yetkiniz yoktur! Sadece İşyeri Hekimleri girebilir.");
+            window.location.href = "index.html";
+        } else {
+            document.body.style.display = "block";
+        }
+    };
+
     async function saveMedical() {
         const gozVal = document.getElementById('goz').value;
         const kalpVal = document.getElementById('kalp').value;
@@ -67,35 +84,15 @@
         const decisionVal = document.getElementById('decision').value;
         const statusDiv = document.getElementById('status');
 
-        if(!gozVal || !kalpVal || !kasVal) {
-            statusDiv.style.color = "red";
-            statusDiv.innerText = "Lütfen klinik bulguları boş bırakmayın!";
-            return;
-        }
+        if(!gozVal || !kalpVal || !kasVal) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen klinik bulguları boş bırakmayın!"; return; }
+        statusDiv.style.color = "blue"; statusDiv.innerText = "Medikal kayıt şifrelenerek gönderiliyor...";
 
-        statusDiv.style.color = "blue";
-        statusDiv.innerText = "Medikal kayıt şifrelenerek gönderiliyor...";
+        const { error } = await dbClient.from('worker_medical_records').insert([{ goz_secure: gozVal, kalp_secure: kalpVal, kas_secure: kasVal, final_decision: decisionVal }]);
 
-        const { data, error } = await dbClient
-            .from('worker_medical_records')
-            .insert([
-                { 
-                    goz_secure: gozVal, 
-                    kalp_secure: kalpVal, 
-                    kas_secure: kasVal, 
-                    final_decision: decisionVal
-                }
-            ]);
-
-        if (error) {
-            statusDiv.style.color = "red";
-            statusDiv.innerText = "Hata: " + error.message;
-        } else {
-            statusDiv.style.color = "green";
-            statusDiv.innerText = "🚀 Muayene Kartı Başarıyla Canlı Veritabanına Yazıldı!";
-            document.getElementById('goz').value = '';
-            document.getElementById('kalp').value = '';
-            document.getElementById('kas').value = '';
+        if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
+        else {
+            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Muayene Kartı Başarıyla Canlı Veritabanına Yazıldı!";
+            document.getElementById('goz').value = ''; document.getElementById('kalp').value = ''; document.getElementById('kas').value = '';
         }
     }
 </script>
