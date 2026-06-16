@@ -1,9 +1,10 @@
-const CACHE_NAME = 'osgb-saas-cache-v13';
+const CACHE_NAME = 'osgb-saas-cache-v14';
 const APP_SHELL = [
   './',
   './risk.html',
   './dashboard.html',
   './actions.html',
+  './company-detail.html',
   './login.html',
   './offline.html',
   './offline-db.js',
