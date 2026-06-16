@@ -184,13 +184,16 @@
         document.getElementById('menu_risk').style.display = 'inline-block';
         document.getElementById('menu_medical').style.display = 'inline-block';
         
+        // 1. Önce internetten gelmesi gereken firma ve matris verilerini hemen tetikliyoruz
         calculateFineKinney(); 
-        await initIndexedDB(); // ⚙️ Telefon içi yerel veri ambarını açıyoruz
-        await fetchCompaniesToSelect(); 
+        fetchCompaniesToSelect(); 
         fetchRisks();
         
-        // 🔄 Arka planda her 5 saniyede bir bekleyen kuyruğu buluta iten otomatik senkronizasyon döngüsü
-        setInterval(processSyncQueue, 5000);
+        // 2. Arka planda yerel hafıza ambarını bağımsızca ayağa kaldırıyoruz
+        initIndexedDB().then(() => {
+            // Hafıza açılınca her 5 saniyede bir kuyruğu kontrol etmeye başla
+            setInterval(processSyncQueue, 5000);
+        });
     };
 
     // 🏛️ INDEXEDDB BAŞLATMA (CİHAZ İÇİ VERİ AMBARI)
