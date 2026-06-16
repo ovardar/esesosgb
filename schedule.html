@@ -3,31 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSGB SaaS - Aylık Saha Takvimi</title>
+    <title>OSGB SaaS - Gelişmiş Saha Takvimi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; display: none; }
-        .card { background: white; padding: 25px; border-radius: 12px; max-width: 950px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h2 { color: #1e293b; margin-top: 0; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #64748b; font-weight: 600; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-        .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .grid-4 { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; gap: 12px; margin-bottom: 15px; }
         button.submit-btn { background: #6366f1; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
         button.submit-btn:hover { background: #4f46e5; }
         
-        /* 📅 CSS GRID TAKVİM TASARIMI */
+        /* 📅 TAKVİM VE NAVİGASYON TASARIMI */
         .calendar-container { margin-top: 30px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; color: #1e293b; }
+        .month-nav-btn { background: #1e293b; color: white; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .month-nav-btn:hover { background: #475569; }
+        
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
         .calendar-day-name { background: #f1f5f9; text-align: center; padding: 8px; font-weight: 600; font-size: 12px; color: #475569; border-radius: 4px; }
-        .calendar-cell { background: #f8fafc; border: 1px solid #e2e8f0; min-height: 90px; padding: 6px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; }
+        .calendar-cell { background: #f8fafc; border: 1px solid #e2e8f0; min-height: 105px; padding: 6px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+        .calendar-cell-empty { background: #f1f5f9; border: 1px dashed #cbd5e1; opacity: 0.5; }
         
-        /* Görev Kartı Tasarımları */
-        .task-badge { font-size: 11px; padding: 4px; border-radius: 4px; margin-top: 4px; font-weight: bold; color: white; line-height: 1.2; }
-        .task-incomplete { background: #f97316; } /* Yasal süreye ulaşılmadıysa Turuncu */
-        .task-complete { background: #10b981; }   /* Yasal süre tamamlandıysa Yeşil */
+        /* Görev Kartları */
+        .task-badge { font-size: 11px; padding: 4px; border-radius: 4px; margin-top: 4px; font-weight: bold; color: white; line-height: 1.2; cursor: pointer; position: relative; }
+        .task-badge:hover { opacity: 0.9; transform: translateY(-1px); }
+        .task-incomplete { background: #f97316; }
+        .task-complete { background: #10b981; }
         
+        /* 🔔 MODAL (DÜZENLEME PENCERESİ) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-update { background: #10b981; color: white; border: none; padding: 10px; border-radius: 6px; flex: 1; font-weight: bold; cursor: pointer; }
+        .btn-delete { background: #ef4444; color: white; border: none; padding: 10px; border-radius: 6px; flex: 1; font-weight: bold; cursor: pointer; }
+        .btn-close { background: #64748b; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; }
+
         .nav-link { display: block; text-align: center; margin-top: 25px; color: #64748b; text-decoration: none; font-size: 14px; }
         #status { margin-top: 10px; text-align: center; font-weight: bold; }
     </style>
@@ -35,11 +48,10 @@
 <body>
 
 <div class="card">
-    <h2>📅 Aylık Saha Ziyaret Takvimi & Planlayıcı</h2>
-    <p style="color: #64748b; font-size: 14px;">Firmalara saha ziyaretleri planlayın. Sistem, yasal sürelerin tamamlanma durumunu kontrol eder.</p>
+    <h2>📅 Gelişmiş Saha Ziyaret Takvimi & Planlayıcı</h2>
+    <p style="color: #64748b; font-size: 14px;">Ortak operasyon takvimi. Görevlerin üzerine tıklayarak düzenleyebilir veya silebilirsiniz.</p>
     
-    <!-- 🖊️ GÖREV PLANLAMA FORMU -->
-    <div class="grid-3">
+    <div class="grid-4">
         <div class="form-group">
             <label>Ziyaret Edilecek Firma</label>
             <select id="company_select" onchange="renderCalendarWithTasks()">
@@ -47,12 +59,16 @@
             </select>
         </div>
         <div class="form-group">
+            <label>Gidecek Personel / Atama</label>
+            <input type="text" id="visit_staff" placeholder="Örn: Uzm. Ahmet Yılmaz">
+        </div>
+        <div class="form-group">
             <label>Ziyaret Tarihi</label>
             <input type="date" id="visit_date">
         </div>
         <div class="form-group">
             <label>Süre (Dakika)</label>
-            <input type="number" id="visit_minutes" placeholder="Örn: 60">
+            <input type="number" id="visit_minutes" placeholder="60">
         </div>
     </div>
     
@@ -64,19 +80,42 @@
     <button class="submit-btn" onclick="saveSchedule()">Ziyaret Planını Takvime İşle</button>
     <div id="status"></div>
 
-    <!-- 📅 DİNAMİK TAKVİM ALANI -->
     <div class="calendar-container">
         <div class="calendar-header">
-            <span style="font-size: 18px;">📅 Haziran 2026 Operasyon Takvimi</span>
+            <div>
+                <button class="month-nav-btn" onclick="changeMonth(-1)">◀ Önceki Ay</button>
+                <span id="lbl_month_year" style="font-size: 18px; margin: 0 15px; vertical-align: middle;">Haziran 2026</span>
+                <button class="month-nav-btn" onclick="changeMonth(1)">Sonraki Ay ▶</button>
+            </div>
             <span id="lbl_süre_durumu" style="font-size: 13px; color: #475569;"></span>
         </div>
         
-        <div class="calendar-grid" id="calendar_grid_body">
-            <!-- Başlıklar ve hücreler JS ile dolacak -->
-        </div>
+        <div class="calendar-grid" id="calendar_grid_body"></div>
     </div>
     
     <a href="index.html" class="nav-link">← Ana Yönetim Paneline Dön</a>
+</div>
+
+<div id="taskModal" class="modal">
+    <div class="modal-content">
+        <h3 style="margin-top:0; color:#1e293b;">Ziyaret Planını Düzenle</h3>
+        <input type="hidden" id="modal_task_id">
+        
+        <div class="form-group">
+            <label>Yeni Tarih</label>
+            <input type="date" id="modal_visit_date">
+        </div>
+        <div class="form-group">
+            <label>Yeni Süre (Dakika)</label>
+            <input type="number" id="modal_visit_minutes">
+        </div>
+        
+        <div class="modal-buttons">
+            <button class="btn-update" onclick="updateTask()">Değişiklikleri Kaydet</button>
+            <button class="btn-delete" onclick="deleteTask()">Planı Sil</button>
+            <button class="btn-close" onclick="closeModal()">Kapat</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -84,9 +123,9 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     
-    // Proje 2026 haziran ayında kurgulandığı için takvimi Haziran 2026'ya sabitliyoruz
-    const CURRENT_YEAR = 2026;
-    const CURRENT_MONTH = 5; // JS'de aylar 0'dan başlar (5 = Haziran)
+    // 🗓️ AY VE YIL DİNAMİK NAVİGASYON DEĞİŞKENLERİ
+    let currentDate = new Date(2026, 5, 1); // Varsayılan: Haziran 2026
+    const MONTH_NAMES = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
     const DAY_NAMES = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
     window.onload = async function() {
@@ -98,74 +137,96 @@
         renderCalendarWithTasks();
     };
 
+    async function changeMonth(direction) {
+        currentDate.setMonth(currentDate.getMonth() + direction);
+        renderCalendarWithTasks();
+    }
+
     async function fetchCompaniesToSelect() {
         const select = document.getElementById('company_select');
         try {
             const { data } = await dbClient.from('customer_companies').select('id, company_name').order('company_name');
             if (data && data.length > 0) {
-                select.innerHTML = '<option value="">-- Tüm Portföyü / Genel Takvimi Gör --</option>';
+                select.innerHTML = '<option value="">-- Tüm Portföyü / Genel Ortak Takvimi Gör --</option>';
                 data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; });
             }
         } catch (err) { console.error(err.message); }
     }
 
-    // 📅 AKILLI TAKVİM VE SÜRE KONTROL MOTORU
     async function renderCalendarWithTasks() {
         const grid = document.getElementById('calendar_grid_body');
         const selectedCompanyId = document.getElementById('company_select').value;
         const lblSüre = document.getElementById('lbl_süre_durumu');
         
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        
+        document.getElementById('lbl_month_year').innerText = `${MONTH_NAMES[month]} ${year}`;
         grid.innerHTML = '';
         lblSüre.innerText = '';
 
-        // 1. Gün isimlerini basıyoruz
         DAY_NAMES.forEach(d => { grid.innerHTML += `<div class="calendar-day-name">${d}</div>`; });
 
+        // Ayın ilk gününün haftanın hangi gününe denk geldiğini buluyoruz
+        let firstDayIndex = new Date(year, month, 1).getDay() - 1;
+        if (firstDayIndex === -1) firstDayIndex = 6; // Pazar günü düzeltmesi
+        
+        // Ayda toplam kaç gün var?
+        const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+
         try {
-            // Veritabanındaki tüm planları çekiyoruz
             let query = dbClient.from('field_schedules').select('*, customer_companies(company_name, danger_class)');
             if(selectedCompanyId) { query = query.eq('company_id', selectedCompanyId); }
             const { data: schedules } = await query;
 
-            // Eğer tek bir firma seçildiyse yasal süre durumunu hesaplayıp yukarıya yazacağız
-            if(selectedCompanyId) {
+            // Yasal Hedef Hesabı
+            if(selectedCompanyId && schedules) {
                 const { data: comp } = await dbClient.from('customer_companies').select('danger_class').eq('id', selectedCompanyId).single();
                 const { count } = await dbClient.from('workers').select('*', { count: 'exact', head: true }).eq('company_id', selectedCompanyId);
-                
                 let katsayi = comp.danger_class === 'Tehlikeli' ? 20 : (comp.danger_class === 'Çok Tehlikeli' ? 40 : 10);
                 let yasalGerekenDk = (count || 0) * katsayi;
                 
-                let planlananToplamDk = (schedules || []).reduce((sum, s) => sum + s.planned_minutes, 0);
+                // Sadece görüntülenen aya ait planların sürelerini topluyoruz
+                let planlananToplamDk = schedules
+                    .filter(s => new Date(s.visit_date).getMonth() === month && new Date(s.visit_date).getFullYear() === year)
+                    .reduce((sum, s) => sum + s.planned_minutes, 0);
                 
                 if (planlananToplamDk >= yasalGerekenDk) {
-                    lblSüre.innerHTML = `<span style="color:#10b981; font-weight:bold;">✓ Yasal Hedef Tamamlandı (${planlananToplamDk}/${yasalGerekenDk} dk)</span>`;
+                    lblSüre.innerHTML = `<span style="color:#10b981; font-weight:bold;">✓ Aylık Hedef Tamam (${planlananToplamDk}/${yasalGerekenDk} dk)</span>`;
                 } else {
-                    lblSüre.innerHTML = `<span style="color:#f97316; font-weight:bold;">⚠️ Eksik Süre Var (${planlananToplamDk}/${yasalGerekenDk} dk Planlandı)</span>`;
+                    lblSüre.innerHTML = `<span style="color:#f97316; font-weight:bold;">⚠️ Eksik Süre (${planlananToplamDk}/${yasalGerekenDk} dk Planlandı)</span>`;
                 }
             }
 
-            // 2. Haziran 2026 takvim hücrelerini oluşturuyoruz (Haziran 1 Pazartesiye denk geliyor, 30 gün çekiyor)
-            for (let day = 1; day <= 30; day++) {
-                // Günün tam ISO tarih metnini buluyoruz (Örn: "2026-06-01")
-                const dayString = `${CURRENT_YEAR}-06-${day.toString().padStart(2, '0')}`;
-                
-                // O güne denk gelen ziyaret planları var mı?
+            // İlk günden önceki boş hücreleri basıyoruz
+            for (let i = 0; i < firstDayIndex; i++) { grid.innerHTML += `<div class="calendar-cell calendar-cell-empty"></div>`; }
+
+            // Günleri tek tek döngüyle basıyoruz
+            for (let day = 1; day <= totalDaysInMonth; day++) {
+                const dayString = `${year}-${(month+1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
                 const todaysTasks = (schedules || []).filter(s => s.visit_date === dayString);
                 let taskHTML = '';
 
                 for (const task of todaysTasks) {
-                    // Her bir görevin yasal durum rengini tayin etmek için firmanın yasal süresine tekrar bakıyoruz
                     const { count: wCount } = await dbClient.from('workers').select('*', { count: 'exact', head: true }).eq('company_id', task.company_id);
                     let katsayi = task.customer_companies.danger_class === 'Tehlikeli' ? 20 : (task.customer_companies.danger_class === 'Çok Tehlikeli' ? 40 : 10);
                     let yasalDk = (wCount || 0) * katsayi;
                     
-                    // O firmaya o ay yapılan toplam yatırımı hesapla
-                    const totalFirmPlan = (schedules || []).filter(s => s.company_id === task.company_id).reduce((sum, s) => sum + s.planned_minutes, 0);
-                    const isComplete = totalFirmPlan >= yasalDk;
+                    const totalFirmPlan = (schedules || [])
+                        .filter(s => s.company_id === task.company_id && new Date(s.visit_date).getMonth() === month)
+                        .reduce((sum, s) => sum + s.planned_minutes, 0);
                     
+                    const isComplete = totalFirmPlan >= yasalDk;
+                    const staffName = task.assigned_staff ? task.assigned_staff : 'Atanmamış';
+
+                    // 🔗 TIKLANDIĞINDA MODAL PENCERESİNİ AÇAN EVENT EKLEDİK
                     taskHTML += `
-                        <div class="task-badge ${isComplete ? 'task-complete' : 'task-incomplete'}" title="${task.notes || ''}">
-                            🏢 ${task.customer_companies.company_name.substring(0,8)}... <br>⏱️ ${task.planned_minutes} dk
+                        <div class="task-badge ${isComplete ? 'task-complete' : 'task-incomplete'}" 
+                             onclick="openModal('${task.id}', '${task.visit_date}', '${task.planned_minutes}')"
+                             title="${task.notes || ''}">
+                            🏢 ${task.customer_companies.company_name.substring(0,6)}.. <br>
+                            👤 ${staffName.substring(0,10)} <br>
+                            ⏱️ ${task.planned_minutes} dk
                         </div>
                     `;
                 }
@@ -173,33 +234,57 @@
                 grid.innerHTML += `
                     <div class="calendar-cell">
                         <span style="font-weight: bold; color: #64748b;">${day}</span>
-                        <div style="overflow-y: auto; max-height: 65px;">${taskHTML}</div>
+                        <div style="overflow-y: auto; max-height: 75px; width: 100%;">${taskHTML}</div>
                     </div>
                 `;
             }
-
         } catch (err) { console.error(err.message); }
+    }
+
+    // 🔔 MODAL İŞLEMLERİ FONKSİYONLARI
+    function openModal(id, date, minutes) {
+        document.getElementById('modal_task_id').value = id;
+        document.getElementById('modal_visit_date').value = date;
+        document.getElementById('modal_visit_minutes').value = minutes;
+        document.getElementById('taskModal').style.display = 'flex';
+    }
+    function closeModal() { document.getElementById('taskModal').style.display = 'none'; }
+
+    // PLAN GÜNCELLEME (UPDATE)
+    async function updateTask() {
+        const id = document.getElementById('modal_task_id').value;
+        const newDate = document.getElementById('modal_visit_date').value;
+        const newMins = parseInt(document.getElementById('modal_visit_minutes').value);
+
+        const { error } = await dbClient.from('field_schedules').update({ visit_date: newDate, planned_minutes: newMins }).eq('id', id);
+        if (error) alert("Hata: " + error.message);
+        else { closeModal(); renderCalendarWithTasks(); }
+    }
+
+    // PLAN SİLME (DELETE)
+    async function deleteTask() {
+        if(!confirm("Bu saha ziyaret planını tamamen silmek istediğinize emin misiniz?")) return;
+        const id = document.getElementById('modal_task_id').value;
+
+        const { error } = await dbClient.from('field_schedules').delete().eq('id', id);
+        if (error) alert("Hata: " + error.message);
+        else { closeModal(); renderCalendarWithTasks(); }
     }
 
     async function saveSchedule() {
         const compId = document.getElementById('company_select').value;
+        const staff = document.getElementById('visit_staff').value;
         const date = document.getElementById('visit_date').value;
         const mins = document.getElementById('visit_minutes').value;
         const notes = document.getElementById('visit_notes').value;
         const statusDiv = document.getElementById('status');
 
-        if(!compId || !date || !mins) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen Firma, Tarih ve Süre alanlarını doldurun!"; return; }
-        
-        // Sadece Haziran 2026'ya izin veriyoruz planlama bütünlüğü için
-        if (!date.startsWith('2026-06')) {
-            statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen sadece Haziran 2026 (2026-06) dönemine planlama yapın!";
-            return;
-        }
-
-        statusDiv.style.color = "blue"; statusDiv.innerText = "Plan bulut takvimine yazılıyor...";
+        if(!compId || !date || !mins || !staff) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen Atama dahil tüm alanları doldurun!"; return; }
+        statusDiv.style.color = "blue"; statusDiv.innerText = "Plan takvime işleniyor...";
 
         const { error } = await dbClient.from('field_schedules').insert([{
             company_id: compId,
+            assigned_staff: staff,
             visit_date: date,
             planned_minutes: parseInt(mins),
             notes: notes
@@ -207,10 +292,10 @@
 
         if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
         else {
-            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Saha ziyareti başarıyla planlandı!";
+            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Ziyaret planı başarıyla eklendi!";
             document.getElementById('visit_minutes').value = '';
             document.getElementById('visit_notes').value = '';
-            renderCalendarWithTasks(); // Takvimi anında yenile
+            renderCalendarWithTasks();
         }
     }
 </script>
