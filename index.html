@@ -156,7 +156,7 @@
             const { data: companies } = await dbClient.from('customer_companies').select('danger_class');
             if (companies) {
                 document.getElementById('stat_total_firms').innerText = companies.length;
-                const dangerCount = companies.filter(c => c.danger_class === 'Çok Tehlikeli').length;
+              const dangerCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'çok tehlikeli').length;
                 document.getElementById('stat_danger_firms').innerText = dangerCount;
             }
 
