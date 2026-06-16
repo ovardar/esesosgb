@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSGB SaaS - Çalışan Kadro Yönetimi</title>
+    <title>OSGB SaaS - Kadro Yönetimi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 🎨 CSS DEĞİŞKENLERİ - TEMA UYUM KATMANI */
         :root {
             --bg-main: #f4f6f9;
             --bg-card: #ffffff;
@@ -14,18 +13,28 @@
             --text-muted: #64748b;
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
-            --accent-green: #10b981;
-            --accent-green-hover: #059669;
             --border-color: #e2e8f0;
             --table-header: #f8fafc;
             --nav-inactive-bg: #e2e8f0;
             --nav-inactive-text: #475569;
         }
-
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; transition: background 0.3s, color 0.3s; }
-        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); transition: background 0.3s; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; transition: background 0.3s; }
+        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
         
-        h2 { color: var(--text-main); margin-top: 0; }
+        /* 🏛️ GLOBAL STANDART ÜST BAR */
+        .global-header { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .logo-area { font-size: 18px; font-weight: 800; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
+        .logo-badge { background: var(--primary); color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+        .controls-group { display: flex; align-items: center; gap: 20px; }
+        .user-info { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+        .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        
+        .nav-container { display: flex; gap: 8px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
+        .nav-btn { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.2s ease; }
+        .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
+        .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: var(--text-muted); font-weight: 600; }
         input, select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; background: var(--bg-card); color: var(--text-main); }
@@ -35,13 +44,6 @@
         button.submit-btn:hover { background: var(--primary-hover); }
         #status { margin-top: 15px; text-align: center; font-weight: bold; }
 
-        /* 🦅 ASİL MENÜ BUTONLARI */
-        .nav-container { display: flex; gap: 8px; margin-bottom: 25px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
-        .nav-btn { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.2s ease; border: 1px solid transparent; }
-        .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
-        .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-
-        /* 📊 TABLO TASARIMI */
         .table-container { margin-top: 35px; border-top: 2px solid var(--border-color); padding-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -52,14 +54,24 @@
 <body>
 
 <div class="card">
-    <!-- 🦅 ASİL VE DİNAMİK MENÜ YAPISI -->
-    <div class="nav-container">
-        <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
-        <a href="workers.html" class="nav-btn active-page">👥 Kadro Yönetimi</a>
-        <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-        <a href="staff.html" class="nav-btn">🔑 Personel Yönetimi</a>
-        <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
-        <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
+    <div class="global-header">
+        <div class="top-row">
+            <div class="logo-area">🏢 <span>AKAD OSGB</span> <span class="logo-badge">SaaS</span></div>
+            <div class="controls-group">
+                <div class="user-info">👤 <span id="current_user_email">...</span></div>
+                <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+            </div>
+        </div>
+
+        <div class="nav-container">
+            <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+            <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+            <a href="workers.html" class="nav-btn active-page">👥 Kadro Yönetimi</a>
+            <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+            <a href="staff.html" class="nav-btn">🔑 Personel Yönetimi</a>
+            <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
+            <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
+        </div>
     </div>
 
     <h2>👥 Çalışan Personel Kadro Yönetimi</h2>
@@ -73,25 +85,10 @@
     </div>
 
     <div class="grid-4">
-        <div class="form-group">
-            <label>Personel Adı Soyadı</label>
-            <input type="text" id="worker_name" placeholder="Örn: Ali Can">
-        </div>
-        <div class="form-group">
-            <label>Yaş</label>
-            <input type="number" id="worker_age" placeholder="25">
-        </div>
-        <div class="form-group">
-            <label>Cinsiyet</label>
-            <select id="worker_gender">
-                <option value="Erkek">Erkek</option>
-                <option value="Kadın">Kadın</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Görev / Unvan</label>
-            <input type="text" id="worker_job" placeholder="Örn: Kaynakçı">
-        </div>
+        <div class="form-group"><label>Personel Adı Soyadı</label><input type="text" id="worker_name" placeholder="Örn: Ali Can"></div>
+        <div class="form-group"><label>Yaş</label><input type="number" id="worker_age" placeholder="25"></div>
+        <div class="form-group"><label>Cinsiyet</label><select id="worker_gender"><option value="Erkek">Erkek</option><option value="Kadın">Kadın</option></select></div>
+        <div class="form-group"><label>Görev / Unvan</label><input type="text" id="worker_job" placeholder="Örn: Kaynakçı"></div>
     </div>
 
     <button class="submit-btn" onclick="saveWorker()">Yeni Çalışanı Kadroya Ekle</button>
@@ -108,11 +105,7 @@
                     <th>Görevi / Unvanı</th>
                 </tr>
             </thead>
-            <tbody id="worker_table_body">
-                <tr>
-                    <td colspan="4" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td>
-                </tr>
-            </tbody>
+            <tbody id="worker_table_body"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -122,38 +115,32 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 🎨 TEMA MATRİSİ (ANA SAYFAYLA BİREBİR AYNI)
     const themes = {
         isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--primary-hover': '#1d4ed8', '--accent-green': '#10b981', '--accent-green-hover': '#059669', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
         'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--primary-hover': '#7dd3fc', '--accent-green': '#34d399', '--accent-green-hover': '#059669', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
-        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--primary-hover': '#c2410c', '--accent-green': '#84cc16', '--accent-green-hover': '#65a30d', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
-        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--primary-hover': '#334155', '--accent-green': '#000000', '--accent-green-hover': '#1e293b', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--primary-hover': '#166534', '--accent-green': '#65a30d', '--accent-green-hover': '#4d7c0f', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
+        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
+        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
+        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
     };
 
     window.onload = async function() {
-        // 🧠 HAFIZADAN AKTİF TEMAYI OKUYORUZ VE ANINDA GIYDIRIYORUZ
         const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
-        if (themes[activeTheme]) {
-            Object.keys(themes[activeTheme]).forEach(key => { document.documentElement.style.setProperty(key, themes[activeTheme][key]); });
-        }
+        if (themes[activeTheme]) { Object.keys(themes[activeTheme]).forEach(key => { document.documentElement.style.setProperty(key, themes[activeTheme][key]); }); }
 
         const { data: { session } } = await dbClient.auth.getSession();
         if (!session) { window.location.href = "login.html"; return; }
         document.body.style.display = "block";
 
         const email = session.user.email;
+        document.getElementById('current_user_email').innerText = email;
+        
         if (email.includes('uzman') || email.includes('admin')) document.getElementById('menu_risk').style.display = 'inline-block';
         if (email.includes('hekim') || email.includes('admin')) document.getElementById('menu_medical').style.display = 'inline-block';
         
         await fetchCompaniesToSelect();
-
         const urlParams = new URLSearchParams(window.location.search);
         const companyIdFromUrl = urlParams.get('id');
-        if (companyIdFromUrl) {
-            document.getElementById('company_select').value = companyIdFromUrl;
-            fetchWorkers();
-        }
+        if (companyIdFromUrl) { document.getElementById('company_select').value = companyIdFromUrl; fetchWorkers(); }
     };
 
     async function fetchCompaniesToSelect() {
@@ -171,18 +158,12 @@
         const compId = document.getElementById('company_select').value;
         const tbody = document.getElementById('worker_table_body');
         if(!compId) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr>`; return; }
-
         try {
             const { data } = await dbClient.from('workers').select('*').eq('company_id', compId).order('created_at', { ascending: false });
-            if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Bu firmaya kayıtlı personel kadrosu bulunmuyor.</td></tr>`;
-                return;
-            }
+            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Kayıtlı personel bulunmuyor.</td></tr>`; return; }
             tbody.innerHTML = '';
-            data.forEach(w => {
-                tbody.innerHTML += `<tr><td>document.write<strong>${w.full_name}</strong></td><td>${w.age}</td><td>${w.gender}</td><td>${w.job_title || '-'}</td></tr>`;
-            });
-        } catch (err) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`; }
+            data.forEach(w => { tbody.innerHTML += `<tr><td><strong>${w.full_name}</strong></td><td>${w.age}</td><td>${w.gender}</td><td>${w.job_title || '-'}</td></tr>`; });
+        } catch (err) { console.error(err.message); }
     }
 
     async function saveWorker() {
@@ -193,20 +174,12 @@
         const job = document.getElementById('worker_job').value;
         const statusDiv = document.getElementById('status');
 
-        if(!compId || !name || !age) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen Firma, İsim ve Yaş alanlarını doldurun!"; return; }
-        statusDiv.style.color = "blue"; statusDiv.innerText = "Kadroya işleniyor...";
-
+        if(!compId || !name || !age) { statusDiv.style.color = "red"; statusDiv.innerText = "Eksik alanları doldurun!"; return; }
         const { error } = await dbClient.from('workers').insert([{ company_id: compId, full_name: name, age: parseInt(age), gender: gender, job_title: job }]);
-
-        if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
-        else {
-            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Başarılı! Personel firma kadrosuna eklendi.";
-            document.getElementById('worker_name').value = '';
-            document.getElementById('worker_age').value = '';
-            document.getElementById('worker_job').value = '';
-            fetchWorkers();
-        }
+        if (error) alert(error.message);
+        else { document.getElementById('worker_name').value = ''; document.getElementById('worker_age').value = ''; document.getElementById('worker_job').value = ''; fetchWorkers(); }
     }
+    async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
 </script>
 </body>
 </html>
