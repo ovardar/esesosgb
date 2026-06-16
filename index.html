@@ -149,18 +149,21 @@
         fetchDashboardStats(); // Canlı sayaçları çalıştırıyoruz
     };
 
-    // VERİTABANINDAN METRİKLERİ SAYAN FONKSİYON
+    // VERİTABANINDAN METRİKLERİ SAYAN FONKSİYON (GÜNCEL & GARANTİLİ)
     async function fetchDashboardStats() {
         try {
-            // 1. Toplam firma ve Çok Tehlikeli firma sayısını çekiyoruz
             const { data: companies } = await dbClient.from('customer_companies').select('danger_class');
             if (companies) {
                 document.getElementById('stat_total_firms').innerText = companies.length;
-              const dangerCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'çok tehlikeli').length;
+                
+                // Küçük-büyük harf ve boşluk hatalarını tamamen süpürüyoruz
+                const dangerCount = companies.filter(c => {
+                    return c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'çok tehlikeli';
+                }).length;
+                
                 document.getElementById('stat_danger_firms').innerText = dangerCount;
             }
 
-            // 2. risk_assessments tablosundan toplam risk sayısını çekiyoruz
             const { data: risks } = await dbClient.from('risk_assessments').select('id');
             if (risks) {
                 document.getElementById('stat_total_risks').innerText = risks.length;
