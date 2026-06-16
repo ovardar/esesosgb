@@ -32,7 +32,6 @@
         .btn-delete-action { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
         .btn-delete-action:hover { background: #b91c1c; }
 
-        /* 🔔 MODAL (DÜZENLEME PENCERESİ) */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
         .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
@@ -46,9 +45,8 @@
 
 <div class="card">
     <h2>🔑 OSGB Gelişmiş Kullanıcı & Personel Yönetimi</h2>
-    <p style="color: #64748b; font-size: 14px;">Personel kartlarını, sertifika sınıflarını ve işe giriş/çıkış tarihlerine göre otomatik aktiflik durumlarını yönetin.</p>
+    <p style="color: #64748b; font-size: 14px;">Yönetici yetki kilidi tarih kriterlerini ezebilir. Esnek kurumsal İK denetimi.</p>
     
-    <!-- 🖊️ FORM SATIR 1: Temel Bilgiler -->
     <div class="grid-row">
         <div class="form-group">
             <label>Personel Adı Soyadı</label>
@@ -77,7 +75,6 @@
         </div>
     </div>
 
-    <!-- 🖊️ FORM SATIR 2: İK ve Tarih Ayarları -->
     <div class="grid-row-2">
         <div class="form-group">
             <label>İşe Giriş Tarihi</label>
@@ -88,10 +85,12 @@
             <input type="date" id="termination_date">
         </div>
         <div class="form-group">
-            <label>Manuel Durum Kilidi</label>
+            <!-- 🧠 YENİ HİYERARŞİK SEÇİM KUTUSU -->
+            <label>Manuel Durum Kilidi (Karar Üstünlüğü)</label>
             <select id="is_active_manual">
-                <option value="Aktif">Aktif (Sistem Açık)</option>
-                <option value="Pasif">Pasif (Giriş Engellensin)</option>
+                <option value="Otomatik">Otomatik (Tarih Kriteri Geçerli)</option>
+                <option value="Aktif">Manuel Aktif (Tarih Ne Olursa Olsun Girebilsin)</option>
+                <option value="Pasif">Manuel Pasif (Direkt Engelle)</option>
             </select>
         </div>
     </div>
@@ -109,7 +108,7 @@
                     <th>E-Posta</th>
                     <th>Giriş / Çıkış Tarihi</th>
                     <th style="text-align: center;">Erişim Durumu</th>
-                    <th>Aksiyonler</th>
+                    <th>Aksiyonlar</th>
                 </tr>
             </thead>
             <tbody id="staff_table_body">
@@ -123,7 +122,7 @@
     <a href="index.html" class="nav-link">← Ana Yönetim Paneline Dön</a>
 </div>
 
-<!-- 🔔 YENİ EKLENEN PERSONEL DÜZENLEME PENCERESİ (MODAL) -->
+<!-- 🔔 GÜNCELLENEN MODAL -->
 <div id="staffModal" class="modal">
     <div class="modal-content">
         <h3 style="margin-top:0; color:#1e293b; border-bottom:2px solid #ec4899; padding-bottom:8px;">📝 Personel Kartını Güncelle</h3>
@@ -171,10 +170,12 @@
         </div>
 
         <div class="form-group">
-            <label>Manuel Durum Kilidi</label>
+            <!-- 🧠 MODAL İÇİNDEKİ EZİCİ SEÇİM ALANI -->
+            <label>Manuel Durum Kilidi (Karar Üstünlüğü)</label>
             <select id="modal_is_active_manual">
-                <option value="Aktif">Aktif (Sistem Açık)</option>
-                <option value="Pasif">Pasif (Giriş Engellensin)</option>
+                <option value="Otomatik">Otomatik (Tarih Kriteri Geçerli)</option>
+                <option value="Aktif">Manuel Aktif (Tarih Ne Olursa Olsun Girebilsin)</option>
+                <option value="Pasif">Manuel Pasif (Direkt Engelle)</option>
             </select>
         </div>
         
@@ -214,10 +215,14 @@
         }
     }
 
+    // 🧠 YÖNETİCİ SEÇİMİNİ TARİHİN ÜSTÜNE ÇIKARAN SÜZGEÇ
     function calculateSystemStatus(hireStr, termStr, manualStatus) {
-        if (manualStatus === 'Pasif') return false; 
-        if (!hireStr) return false; 
+        // 1. Eğer yönetici elle "Aktif" veya "Pasif" dediyse tarihlere HİÇ BAKMA, direkt o kararı bas!
+        if (manualStatus === 'Aktif') return true;
+        if (manualStatus === 'Pasif') return false;
 
+        // 2. Eğer "Otomatik" bırakıldıysa tarih çarklarını döndür:
+        if (!hireStr) return false; 
         const hire = new Date(hireStr);
         if (hire > todayDate) return false;
 
@@ -241,10 +246,10 @@
             data.forEach(s => {
                 const isSystemActive = calculateSystemStatus(s.hire_date, s.termination_date, s.is_active_manual);
                 
-                // Güvenli string kaçışları (Modal'a hatasız veri paslamak için)
                 const safeName = (s.name_surname || '').replace(/'/g, "\\'");
                 const safeEmail = (s.email || '').replace(/'/g, "\\'");
                 const safeTerm = s.termination_date || '';
+                const currentManualStatus = s.is_active_manual || 'Otomatik';
 
                 tbody.innerHTML += `
                     <tr>
@@ -257,9 +262,8 @@
                                 ${isSystemActive ? '● AKTİF (Girebilir)' : '○ PASİF (Bloke)'}
                             </span>
                         </td>
-                        <!-- DÜZENLE VE SİL BUTONLARI ARTIK YAN YANA -->
                         <td>
-                            <button class="btn-edit-action" onclick="openStaffModal('${s.id}', '${safeName}', '${s.staff_role}', '${s.certificate_class}', '${safeEmail}', '${s.hire_date}', '${safeTerm}', '${s.is_active_manual}')">Düzenle</button>
+                            <button class="btn-edit-action" onclick="openStaffModal('${s.id}', '${safeName}', '${s.staff_role}', '${s.certificate_class}', '${safeEmail}', '${s.hire_date}', '${safeTerm}', '${currentManualStatus}')">Düzenle</button>
                             <button class="btn-delete-action" onclick="deleteStaff('${s.id}')">Sil</button>
                         </td>
                     </tr>
@@ -268,7 +272,6 @@
         } catch (err) { console.error(err.message); }
     }
 
-    // 🔑 DÜZENLEME MODALINI AÇAN VE VERİLERİ DOLDURAN AKILLI HÜCRE FONKSİYONU
     function openStaffModal(id, name, role, cert, email, hire, term, manual) {
         document.getElementById('modal_staff_id').value = id;
         document.getElementById('modal_staff_name').value = name;
@@ -279,15 +282,12 @@
         document.getElementById('modal_termination_date').value = term;
         document.getElementById('modal_is_active_manual').value = manual;
 
-        // Rol durumuna göre sınıf seçim kutusunu kilitle/aç kontrolünü tetikliyoruz
         toggleCertClass('modal_staff_role', 'modal_certificate_class');
-
         document.getElementById('staffModal').style.display = 'flex';
     }
 
     function closeModal() { document.getElementById('staffModal').style.display = 'none'; }
 
-    // 🧠 VERİLERİ BULUTTA GÜNCELLEYEN OPERASYON FONKSİYONU
     async function updateStaff() {
         const id = document.getElementById('modal_staff_id').value;
         const name = document.getElementById('modal_staff_name').value;
@@ -311,10 +311,7 @@
         }).eq('id', id);
 
         if (error) { alert("Güncelleme Hatası: " + error.message); }
-        else {
-            closeModal();
-            fetchStaff(); // Listeyi anlık olarak yenile ve durumları yeniden hesapla
-        }
+        else { closeModal(); fetchStaff(); }
     }
 
     async function saveStaff() {
