@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSGB SaaS - Ana Sayfa / Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-main: #f4f6f9;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --border-color: #e2e8f0;
+            --table-header: #f8fafc;
+            --nav-inactive-bg: #e2e8f0;
+            --nav-inactive-text: #475569;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; }
+        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        
+        .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        h2 { color: var(--text-main); margin: 0; }
+        .user-info { font-size: 14px; color: var(--text-muted); font-weight: 600; }
+        .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
+        
+        /* 🦅 GLOBAL SABİT ÜST BAR */
+        .nav-container { display: flex; gap: 8px; margin-bottom: 25px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
+        .nav-btn { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.2s ease; }
+        .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
+        .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+
+        /* 📊 DASHBOARD METRİKLERİ */
+        .distribution-title { font-size: 14px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .metric-box { padding: 15px 20px; border-radius: 10px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .metric-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .metric-orange { background: linear-gradient(135deg, #f97316, #c2410c); }
+        .metric-green { background: linear-gradient(135deg, #10b981, #047857); }
+        .metric-title { font-size: 12px; font-weight: 600; opacity: 0.9; }
+        .metric-value { font-size: 26px; font-weight: bold; margin-top: 3px; }
+
+        /* 🚨 OPERASYONEL NABIZ */
+        .operational-banner { background: var(--text-main); color: var(--bg-card); padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border: 1px solid var(--border-color); }
+        .op-text h4 { margin: 0; font-size: 15px; }
+        .op-text p { margin: 3px 0 0 0; font-size: 12px; opacity: 0.8; }
+        .op-badge { background: #f97316; color: white; padding: 8px 16px; border-radius: 8px; font-size: 22px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header-bar">
+        <h2>📊 OSGB SaaS Yönetici Dashboard</h2>
+        <div class="user-info">👤 Giriş: <span id="current_user_email" style="color: var(--primary);">...</span></div>
+        <button class="logout-btn" onclick="handleLogout()">Çıkış</button>
+    </div>
+
+    <!-- 🦅 GLOBAL SABİT ÜST BAR (EN BAŞA ANA SAYFA GELDİ) -->
+    <div class="nav-container">
+        <a href="dashboard.html" class="nav-btn active-page">🏠 Ana Sayfa</a>
+        <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+        <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+        <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+        <a href="staff.html" class="nav-btn">🔑 Personel Yönetimi</a>
+        <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
+        <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
+    </div>
+
+    <!-- 📊 PORTFÖY ÖZET GÖSTERGELERİ -->
+    <div class="distribution-title">📋 Portföy Tehlike Dağılımı</div>
+    <div class="dashboard-grid">
+        <div class="metric-box metric-red"><div class="metric-title">Çok Tehlikeli Firma</div><div class="metric-value" id="stat_danger_cok">0</div></div>
+        <div class="metric-box metric-orange"><div class="metric-title">Tehlikeli Firma</div><div class="metric-value" id="stat_danger_tehlike">0</div></div>
+        <div class="metric-box metric-green"><div class="metric-title">Az Tehlikeli Firma</div><div class="metric-value" id="stat_danger_az">0</div></div>
+    </div>
+
+    <!-- 🚨 OPERASYONEL NABIZ -->
+    <div class="operational-banner">
+        <div class="op-text">
+            <h4>🚨 Sahadaki Aktif Risk ve Bulgular (Açık Uygunsuzluklar)</h4>
+            <p>OSGB uzmanları tarafından sahada tespit edilmiş, anlık olarak kapatılmayı bekleyen yasal bildirimler.</p>
+        </div>
+        <div class="op-badge" id="stat_total_risks">0</div>
+    </div>
+    
+    <div style="background: var(--table-header); border: 1px dashed var(--border-color); padding: 30px; border-radius: 8px; text-align: center; color: var(--text-muted); font-size: 14px; margin-top: 20px;">
+        💡 <strong>Grafikler & Performans Analizleri Yakında:</strong> Buraya bir sonraki adımlarda uzmanların aylık hakediş grafiklerini ve firmaların yasal süre doluluk oranlarını gösteren kurumsal İSG barlarını ekleyeceğiz.
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
+    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    window.onload = async function() {
+        // Ana sayfada seçilen temayı ortak hafızadan okuyoruz
+        const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
+        const themes = {
+            isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
+            'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
+            eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
+            kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
+            doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
+        };
+        if (themes[activeTheme]) { Object.keys(themes[activeTheme]).forEach(key => { document.documentElement.style.setProperty(key, themes[activeTheme][key]); }); }
+
+        const { data: { session } } = await dbClient.auth.getSession();
+        if (!session) { window.location.href = "login.html"; return; }
+        
+        document.body.style.display = "block";
+        const email = session.user.email;
+        document.getElementById('current_user_email').innerText = email;
+        
+        if (email.includes('uzman') || email.includes('admin')) document.getElementById('menu_risk').style.display = 'inline-block';
+        if (email.includes('hekim') || email.includes('admin')) document.getElementById('menu_medical').style.display = 'inline-block';
+        
+        fetchDashboardStats();
+    };
+
+    async function fetchDashboardStats() {
+        try {
+            const { data: companies } = await dbClient.from('customer_companies').select('danger_class');
+            if (companies) {
+                const cokCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'çok tehlikeli').length;
+                const tehlikeCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'tehlikeli').length;
+                const azCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'az tehlikeli').length;
+                
+                document.getElementById('stat_danger_cok').innerText = cokCount;
+                document.getElementById('stat_danger_tehlike').innerText = tehlikeCount;
+                document.getElementById('stat_danger_az').innerText = azCount;
+            }
+            const { data: risks } = await dbClient.from('risk_assessments').select('id').eq('status', 'Açık');
+            if (risks) { document.getElementById('stat_total_risks').innerText = risks.length; }
+        } catch (err) { console.error(err.message); }
+    }
+
+    async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
+</script>
+</body>
+</html>
