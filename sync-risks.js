@@ -59,7 +59,7 @@
       .from(RISK_PHOTO_BUCKET)
       .getPublicUrl(path);
 
-    return data && data.publicUrl ? data.publicUrl : null;
+    return { url: data && data.publicUrl ? data.publicUrl : null, path }; 
   }
 
   async function findExistingRiskByLocalId(localId) {
@@ -77,7 +77,7 @@
     return data || null;
   }
 
-  async function insertOrReuseRisk(risk, imageUrl) {
+  async function insertOrReuseRisk(risk, imageInfo) {
     const dbClient = getDbClient();
 
     const existing = await findExistingRiskByLocalId(risk.local_id);
@@ -98,7 +98,8 @@
       status: 'Açık'
     };
 
-    if (imageUrl) payload.image_url = imageUrl;
+    if (imageInfo && imageInfo.url) payload.image_url = imageInfo.url;
+    if (imageInfo && imageInfo.path) payload.image_path = imageInfo.path;
 
     const { data, error } = await dbClient
       .from('risk_assessments')
@@ -174,14 +175,15 @@
             last_error: null
           });
 
-          const imageUrl = await uploadRiskPhoto(risk);
-          const serverId = await insertOrReuseRisk(risk, imageUrl);
+          const imageInfo = await uploadRiskPhoto(risk);
+          const serverId = await insertOrReuseRisk(risk, imageInfo);
 
           await window.OSGBOfflineDB.updateRisk(risk.local_id, {
             sync_status: 'synced',
             server_id: serverId || null,
             synced_at: new Date().toISOString(),
-            image_url: imageUrl || null,
+            image_url: imageInfo && imageInfo.url ? imageInfo.url : null,
+            image_path: imageInfo && imageInfo.path ? imageInfo.path : null,
             photo_blob: null,
             last_error: null
           });

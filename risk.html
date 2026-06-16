@@ -157,9 +157,9 @@
 
     <div class="photo-box">
         <label>Kanıt Fotoğrafı (Offline destekli)</label>
-        <input type="file" id="risk_photo" accept="image/*" capture="environment" onchange="previewRiskPhoto()">
+        <input type="file" id="risk_photo" accept="image/*" capture="environment" onchange="prepareRiskPhoto()">
         <img id="risk_photo_preview" class="photo-preview" alt="Seçilen risk fotoğrafı önizlemesi">
-        <div id="photo_compress_status" style="font-size:12px; color:var(--text-muted); margin-top:6px;">Fotoğraf seçildiğinde otomatik sıkıştırılır; internet yokken cihazda saklanır, bağlantı gelince Supabase Storage'a yüklenir.</div>
+        <div id="photo_compress_status" style="font-size:12px; color:var(--text-muted); margin-top:6px;">Fotoğraf internet yokken cihazda saklanır; bağlantı gelince Supabase Storage'a yüklenir.</div>
     </div>
 
     <div class="offline-panel">
@@ -345,13 +345,54 @@
         });
     }
 
+    window.fetchRisks = fetchRisks;
+
     async function closeRisk(id) {
         if(!confirm("Bu risk bulgusunun sahada giderildiğini onaylıyor musunuz?")) return;
         await dbClient.from('risk_assessments').update({ status: 'Kapalı' }).eq('id', id); fetchRisks();
     }
 
+    function extractStoragePathFromPublicUrl(publicUrl) {
+        if (!publicUrl) return null;
+        try {
+            const marker = '/storage/v1/object/public/risk-photos/';
+            const idx = publicUrl.indexOf(marker);
+            if (idx === -1) return null;
+            return decodeURIComponent(publicUrl.substring(idx + marker.length).split('?')[0]);
+        } catch (err) {
+            return null;
+        }
+    }
+
     async function deleteRisk(id) {
-        if(!confirm("Bu risk kaydı kalıcı olarak silinsin mi?")) return;
+        if(!confirm("Bu risk kaydı ve varsa bağlı fotoğrafı kalıcı olarak silinsin mi?")) return;
+
+        const { data: risk, error: readError } = await dbClient
+            .from('risk_assessments')
+            .select('id, image_url, image_path')
+            .eq('id', id)
+            .single();
+
+        if (readError) {
+            alert("Silme öncesi kayıt okunamadı: " + readError.message);
+            return;
+        }
+
+        const imagePath = risk && (risk.image_path || extractStoragePathFromPublicUrl(risk.image_url));
+
+        if (imagePath) {
+            const { error: storageError } = await dbClient.storage
+                .from('risk-photos')
+                .remove([imagePath]);
+
+            if (storageError) {
+                const devam = confirm("Fotoğraf Storage'dan silinemedi: " + storageError.message + "
+
+Yine de risk kaydını tablodan silmek istiyor musunuz?");
+                if (!devam) return;
+            }
+        }
+
         const { error } = await dbClient.from('risk_assessments').delete().eq('id', id);
         if (error) { alert("Silme hatası: " + error.message); return; }
         fetchRisks();
@@ -362,7 +403,9 @@
         return 'local_' + Date.now() + '_' + Math.random().toString(16).slice(2);
     }
 
-    let selectedCompressedRiskPhoto = null;
+    let selectedRiskPhotoBlob = null;
+    let selectedRiskPhotoName = null;
+    let selectedRiskPhotoType = null;
 
     function formatBytes(bytes) {
         if (!bytes && bytes !== 0) return '-';
@@ -371,95 +414,92 @@
         return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
     }
 
+    function setPhotoStatus(message, color) {
+        const el = document.getElementById('photo_compress_status');
+        if (!el) return;
+        el.innerText = message;
+        el.style.color = color || 'var(--text-muted)';
+    }
+
     function loadImageFromFile(file) {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            const objectUrl = URL.createObjectURL(file);
-            img.onload = function () { URL.revokeObjectURL(objectUrl); resolve(img); };
-            img.onerror = function () { URL.revokeObjectURL(objectUrl); reject(new Error('Fotoğraf okunamadı.')); };
-            img.src = objectUrl;
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error('Fotoğraf okunamadı.'));
+            img.src = URL.createObjectURL(file);
         });
     }
 
-    async function compressImageFile(file, maxWidth, quality) {
-        if (!file || !file.type || !file.type.startsWith('image/')) {
-            return { blob: file, name: file ? file.name : null, type: file ? file.type : null, originalSize: file ? file.size : 0, compressedSize: file ? file.size : 0, compressed: false };
-        }
+    function canvasToBlob(canvas, type, quality) {
+        return new Promise((resolve, reject) => {
+            canvas.toBlob((blob) => {
+                if (blob) resolve(blob);
+                else reject(new Error('Fotoğraf sıkıştırılamadı.'));
+            }, type, quality);
+        });
+    }
+
+    async function compressImageFile(file) {
+        const maxWidth = 1280;
+        const outputType = 'image/jpeg';
+        const quality = 0.72;
+
+        if (!file || !file.type || !file.type.startsWith('image/')) return file;
 
         const img = await loadImageFromFile(file);
-        const limitWidth = maxWidth || 1280;
-        const ratio = img.width > limitWidth ? limitWidth / img.width : 1;
-        const targetWidth = Math.round(img.width * ratio);
-        const targetHeight = Math.round(img.height * ratio);
+        const scale = img.width > maxWidth ? maxWidth / img.width : 1;
+        const width = Math.round(img.width * scale);
+        const height = Math.round(img.height * scale);
 
         const canvas = document.createElement('canvas');
-        canvas.width = targetWidth;
-        canvas.height = targetHeight;
+        canvas.width = width;
+        canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+        ctx.drawImage(img, 0, 0, width, height);
 
-        const blob = await new Promise((resolve) => {
-            canvas.toBlob(resolve, 'image/jpeg', quality || 0.72);
-        });
-
-        if (!blob || blob.size >= file.size) {
-            return { blob: file, name: file.name, type: file.type || 'image/jpeg', originalSize: file.size, compressedSize: file.size, compressed: false };
-        }
-
-        const baseName = (file.name || 'risk-photo').replace(/\.[^.]+$/, '');
-        return {
-            blob: blob,
-            name: baseName + '.jpg',
-            type: 'image/jpeg',
-            originalSize: file.size,
-            compressedSize: blob.size,
-            compressed: true,
-            width: targetWidth,
-            height: targetHeight
-        };
+        const compressed = await canvasToBlob(canvas, outputType, quality);
+        if (compressed.size >= file.size) return file;
+        return compressed;
     }
 
-    async function previewRiskPhoto() {
+    async function prepareRiskPhoto() {
         const fileInput = document.getElementById('risk_photo');
         const preview = document.getElementById('risk_photo_preview');
-        const status = document.getElementById('photo_compress_status');
         const file = fileInput.files && fileInput.files[0];
 
-        selectedCompressedRiskPhoto = null;
+        selectedRiskPhotoBlob = null;
+        selectedRiskPhotoName = null;
+        selectedRiskPhotoType = null;
+
         if (!file) {
             preview.style.display = 'none';
             preview.src = '';
-            if (status) status.innerText = 'Fotoğraf seçildiğinde otomatik sıkıştırılır; internet yokken cihazda saklanır, bağlantı gelince Supabase Storage\'a yüklenir.';
+            setPhotoStatus("Fotoğraf internet yokken cihazda saklanır; bağlantı gelince Supabase Storage'a yüklenir.");
             return;
         }
 
-        if (status) {
-            status.style.color = 'var(--text-muted)';
-            status.innerText = 'Fotoğraf hazırlanıyor ve sıkıştırılıyor...';
-        }
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+        setPhotoStatus('Fotoğraf hazırlanıyor ve sıkıştırılıyor...', 'var(--text-muted)');
 
         try {
-            selectedCompressedRiskPhoto = await compressImageFile(file, 1280, 0.72);
-            preview.src = URL.createObjectURL(selectedCompressedRiskPhoto.blob);
-            preview.style.display = 'block';
+            const compressed = await compressImageFile(file);
+            selectedRiskPhotoBlob = compressed;
+            selectedRiskPhotoName = (file.name || 'risk-photo').replace(/\.[^.]+$/, '') + '.jpg';
+            selectedRiskPhotoType = compressed.type || 'image/jpeg';
 
-            if (status) {
-                if (selectedCompressedRiskPhoto.compressed) {
-                    status.style.color = 'var(--accent-green)';
-                    status.innerText = `Fotoğraf sıkıştırıldı: ${formatBytes(selectedCompressedRiskPhoto.originalSize)} → ${formatBytes(selectedCompressedRiskPhoto.compressedSize)} (${selectedCompressedRiskPhoto.width}x${selectedCompressedRiskPhoto.height}).`;
-                } else {
-                    status.style.color = 'var(--text-muted)';
-                    status.innerText = `Fotoğraf zaten uygun boyutta: ${formatBytes(selectedCompressedRiskPhoto.originalSize)}.`;
-                }
+            if (compressed.size < file.size) {
+                setPhotoStatus(`Fotoğraf sıkıştırıldı: ${formatBytes(file.size)} → ${formatBytes(compressed.size)}.`, 'var(--accent-green)');
+            } else {
+                setPhotoStatus(`Fotoğraf zaten uygun boyutta: ${formatBytes(file.size)}.`, 'var(--text-muted)');
+                selectedRiskPhotoName = file.name || selectedRiskPhotoName;
+                selectedRiskPhotoType = file.type || selectedRiskPhotoType;
             }
         } catch (err) {
-            selectedCompressedRiskPhoto = { blob: file, name: file.name, type: file.type, originalSize: file.size, compressedSize: file.size, compressed: false };
-            preview.src = URL.createObjectURL(file);
-            preview.style.display = 'block';
-            if (status) {
-                status.style.color = '#c2410c';
-                status.innerText = 'Fotoğraf sıkıştırılamadı; orijinal dosya kullanılacak. Detay: ' + (err.message || err);
-            }
+            selectedRiskPhotoBlob = file;
+            selectedRiskPhotoName = file.name || 'risk-photo.jpg';
+            selectedRiskPhotoType = file.type || 'image/jpeg';
+            setPhotoStatus('Fotoğraf sıkıştırılamadı; orijinal dosya kullanılacak. Detay: ' + err.message, '#c2410c');
         }
     }
 
@@ -509,18 +549,10 @@
         const sev = parseFloat(document.getElementById('sev').value);
         const target = document.getElementById('target_date').value;
         const photoInput = document.getElementById('risk_photo');
-        const photoFile = photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
+        const originalPhotoFile = photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
+        const photoFile = selectedRiskPhotoBlob || originalPhotoFile;
 
         if(!compId || !hazard || !target) { alert("Lütfen firma, tehlike tanımı ve termin tarihini doldurun!"); return; }
-
-        let preparedPhoto = selectedCompressedRiskPhoto;
-        if (photoFile && !preparedPhoto) {
-            preparedPhoto = await compressImageFile(photoFile, 1280, 0.72);
-        }
-
-        const photoBlob = preparedPhoto ? preparedPhoto.blob : null;
-        const photoName = preparedPhoto ? preparedPhoto.name : null;
-        const photoType = preparedPhoto ? (preparedPhoto.type || 'image/jpeg') : null;
 
         const localRisk = {
             local_id: makeLocalId(),
@@ -532,12 +564,9 @@
             risk_score: (o * f * sev),
             target_date: target,
             status: 'Açık',
-            photo_blob: photoBlob,
-            photo_name: photoName,
-            photo_type: photoType,
-            photo_original_size: preparedPhoto ? preparedPhoto.originalSize : null,
-            photo_compressed_size: preparedPhoto ? preparedPhoto.compressedSize : null,
-            photo_was_compressed: preparedPhoto ? preparedPhoto.compressed : false,
+            photo_blob: photoFile,
+            photo_name: photoFile ? (selectedRiskPhotoName || originalPhotoFile?.name || 'risk-photo.jpg') : null,
+            photo_type: photoFile ? (selectedRiskPhotoType || originalPhotoFile?.type || 'image/jpeg') : null,
             sync_status: 'pending',
             created_at: new Date().toISOString(),
             created_offline: !navigator.onLine
@@ -550,12 +579,8 @@
         document.getElementById('risk_photo').value = '';
         document.getElementById('risk_photo_preview').style.display = 'none';
         document.getElementById('risk_photo_preview').src = '';
-        selectedCompressedRiskPhoto = null;
-        const photoStatus = document.getElementById('photo_compress_status');
-        if (photoStatus) {
-            photoStatus.style.color = 'var(--text-muted)';
-            photoStatus.innerText = 'Fotoğraf seçildiğinde otomatik sıkıştırılır; internet yokken cihazda saklanır, bağlantı gelince Supabase Storage\'a yüklenir.';
-        }
+        selectedRiskPhotoBlob = null; selectedRiskPhotoName = null; selectedRiskPhotoType = null;
+        setPhotoStatus("Fotoğraf internet yokken cihazda saklanır; bağlantı gelince Supabase Storage'a yüklenir.");
 
         document.getElementById('offline_status').style.color = navigator.onLine ? 'var(--text-muted)' : '#c2410c';
         document.getElementById('offline_status').innerText = navigator.onLine
