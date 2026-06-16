@@ -7,7 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f1f5f9; padding: 30px; display: none; }
-        .card { background: white; padding: 25px; border-radius: 12px; max-width: 550px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 25px; border-radius: 12px; max-width: 800px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h2 { color: #0f172a; margin-top: 0; display: flex; align-items: center; gap: 10px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #475569; font-weight: 600; }
@@ -19,6 +19,13 @@
         button:hover { background: #0369a1; }
         .nav-link { display: block; text-align: center; margin-top: 15px; color: #64748b; text-decoration: none; font-size: 14px; }
         #status { margin-top: 15px; text-align: center; font-weight: bold; }
+
+        /* Canlı Tablo Tasarımı */
+        .table-container { margin-top: 35px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+        .badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -78,6 +85,26 @@
 
     <button onclick="saveRisk()">Risk Analizini Kaydet (Canlı)</button>
     <div id="status"></div>
+
+    <div class="table-container">
+        <h3>📋 Sahada Açık Olan Risk Bulguları (Canlı)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tehlike Tanımı</th>
+                    <th>O x F x Ş</th>
+                    <th>Skor</th>
+                    <th>Risk Seviyesi</th>
+                    <th>Termin</th>
+                </tr>
+            </thead>
+            <tbody id="risk_table_body">
+                <tr>
+                    <td colspan="5" style="text-align:center; color:#94a3b8;">Veriler yükleniyor...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
     
     <a href="index.html" class="nav-link">← Ana Yönetim Paneline Dön</a>
 </div>
@@ -87,21 +114,18 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 🛡️ SADECE UZMAN ERİŞEBİLİR KONTROLÜ
     window.onload = async function() {
         const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) {
-            window.location.href = "login.html";
-            return;
-        }
+        if (!session) { window.location.href = "login.html"; return; }
         
         const email = session.user.email;
         if (!email.includes('uzman') && !email.includes('admin')) {
-            alert("⚠️ Bu sayfaya erişim yetkiniz yoktur! Sadece İSG Uzmanları girebilir.");
+            alert("⚠️ Bu sayfaya erişim yetkiniz yoktur!");
             window.location.href = "index.html";
         } else {
             document.body.style.display = "block";
             calculateFineKinney();
+            fetchRisks(); // Canlı listeyi çağırıyoruz
         }
     };
 
@@ -116,6 +140,35 @@
         else if(score < 70) { lvl.innerText = "Olası Risk (İzlenmeli)"; lvl.style.color = "orange"; }
         else if(score < 200) { lvl.innerText = "Önemli Risk (Önlem Al)"; lvl.style.color = "darkorange"; }
         else { lvl.innerText = "ESASLI RİSK (İŞİ DURDUR)"; lvl.style.color = "red"; }
+    }
+
+    // SUPABASE'DEN RİSKLERİ ÇEKEN FONKSİYON
+    async function fetchRisks() {
+        const tbody = document.getElementById('risk_table_body');
+        try {
+            const { data } = await dbClient.from('risk_assessments').select('*').order('created_at', { ascending: false });
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Kayıtlı risk bulgusu yok.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = '';
+            data.forEach(r => {
+                let badgeColor = '#dcfce7', textColor = '#15803d', lvlText = 'Düşük';
+                if(r.risk_score >= 20 && r.risk_score < 70) { badgeColor = '#ffedd5'; textColor = '#c2410c'; lvlText = 'Olası'; }
+                else if(r.risk_score >= 70 && r.risk_score < 200) { badgeColor = '#fee2e2'; textColor = '#b91c1c'; lvlText = 'Önemli'; }
+                else if(r.risk_score >= 200) { badgeColor = '#f87171'; textColor = '#ffffff'; lvlText = 'ESASLI'; }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${r.hazard_title}</strong></td>
+                        <td>${r.probability_o}x${r.frequency_f}x${r.severity_s}</td>
+                        <td>${r.risk_score}</td>
+                        <td><span class="badge" style="background:${badgeColor}; color:${textColor};">${lvlText}</span></td>
+                        <td>${r.target_date}</td>
+                    </tr>
+                `;
+            });
+        } catch (err) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`; }
     }
 
     async function saveRisk() {
@@ -136,6 +189,7 @@
         else {
             statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Risk Raporu Başarıyla Veritabanına Eklendi!";
             document.getElementById('hazard_title').value = ''; document.getElementById('target_date').value = '';
+            fetchRisks(); // Tabloyu anlık yeniliyoruz
         }
     }
 </script>
