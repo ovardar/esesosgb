@@ -7,12 +7,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; display: none; }
-        .card { background: white; padding: 25px; border-radius: 12px; max-width: 750px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 25px; border-radius: 12px; max-width: 1000px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         h2 { color: #1e293b; margin-top: 0; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #64748b; font-weight: 600; }
+        label { display: block; margin-bottom: 5px; color: #64748b; font-weight: 600; font-size: 13px; }
         input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-        .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .grid-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 12px; margin-bottom: 12px; }
+        .grid-row-2 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px; }
         button.submit-btn { background: #ec4899; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
         button.submit-btn:hover { background: #db2777; }
         .nav-link { display: block; text-align: center; margin-top: 15px; color: #64748b; text-decoration: none; font-size: 14px; }
@@ -20,52 +21,86 @@
 
         .table-container { margin-top: 35px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
         th { background-color: #f8fafc; color: #475569; font-weight: 600; }
-        .badge-role { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .badge-active { background: #dcfce7; color: #15803d; }
+        .badge-passive { background: #fee2e2; color: #b91c1c; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🔑 OSGB Kullanıcı & Personel Tanımlama Paneli</h2>
-    <p style="color: #64748b; font-size: 14px;">OSGB bünyesindeki aktif uzmanları, hekimleri ve onların kurumsal rollerini buradan yönetin.</p>
+    <h2>🔑 OSGB Gelişmiş Kullanıcı & Personel Yönetimi</h2>
+    <p style="color: #64748b; font-size: 14px;">Personel kartlarını, sertifika sınıflarını ve işe giriş/çıkış tarihlerine göre otomatik aktiflik durumlarını yönetin.</p>
     
-    <div class="grid-3">
+    <!-- 🖊️ FORM SATIR 1: Temel Bilgiler -->
+    <div class="grid-row">
         <div class="form-group">
             <label>Personel Adı Soyadı</label>
-            <input type="text" id="staff_name" placeholder="Örn: Orhan Vardar">
+            <input type="text" id="staff_name" placeholder="Örn: Ali Yılmaz">
         </div>
         <div class="form-group">
             <label>Sistem Rolü</label>
-            <select id="staff_role">
+            <select id="staff_role" onchange="toggleCertClass()">
                 <option value="Uzman">Uzman (İSG)</option>
-                <option value="Hekim">Hekim (İSGM)</option>
+                <option value="Hekim">Hekim</option>
+                <option value="DSP">DSP (Diğer Sağlık Personeli)</option>
             </select>
         </div>
         <div class="form-group">
-            <label>E-Posta Adresi</label>
+            <label>Uzmanlık Sınıfı</label>
+            <select id="certificate_class">
+                <option value="Yok">Yok (Hekim/DSP)</option>
+                <option value="A Sınıfı">A Sınıfı</option>
+                <option value="B Sınıfı">B Sınıfı</option>
+                <option value="C Sınıfı">C Sınıfı</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Kurumsal E-Posta</label>
             <input type="email" id="staff_email" placeholder="isim@osgb.com">
         </div>
     </div>
 
-    <button class="submit-btn" onclick="saveStaff()">Yeni Personel Hesabı Tanımla</button>
+    <!-- 🖊️ FORM SATIR 2: İK ve Tarih Ayarları -->
+    <div class="grid-row-2">
+        <div class="form-group">
+            <label>İşe Giriş Tarihi</label>
+            <input type="date" id="hire_date">
+        </div>
+        <div class="form-group">
+            <label>İşten Çıkış Tarihi (Boş Bırakılabilir)</label>
+            <input type="date" id="termination_date">
+        </div>
+        <div class="form-group">
+            <label>Manuel Durum Kilidi</label>
+            <select id="is_active_manual">
+                <option value="Aktif">Aktif (Sistem Açık)</option>
+                <option value="Pasif">Pasif (Giriş Engellensin)</option>
+            </select>
+        </div>
+    </div>
+
+    <button class="submit-btn" onclick="saveStaff()">Personel Kartını ve Yetkilerini Kaydet</button>
     <div id="status"></div>
 
     <div class="table-container">
-        <h3>📋 OSGB Resmi Personel Kadrosu (Canlı)</h3>
+        <h3>📋 OSGB Canlı İK Kadrosu ve Erişim Yetkileri Matrisi</h3>
         <table>
             <thead>
                 <tr>
                     <th>Adı Soyadı</th>
-                    <th>Kurumsal E-Posta</th>
-                    <th>Yetki / Rolü</th>
+                    <th>Rol / Sınıf</th>
+                    <th>E-Posta</th>
+                    <th>Giriş / Çıkış Tarihi</th>
+                    <th style="text-align: center;">Erişim Durumu</th>
                     <th>Aksiyon</th>
                 </tr>
             </thead>
             <tbody id="staff_table_body">
                 <tr>
-                    <td colspan="4" style="text-align:center; color:#94a3b8;">Yükleniyor...</td>
+                    <td colspan="6" style="text-align:center; color:#94a3b8;">Kadro yükleniyor...</td>
                 </tr>
             </tbody>
         </table>
@@ -79,33 +114,78 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // 🗓️ 2026 GÜNCEL ZAMAN SABİTİ
+    const TODAY_STR = "2026-06-16";
+    const todayDate = new Date(TODAY_STR);
+
     window.onload = async function() {
         const { data: { session } } = await dbClient.auth.getSession();
         if (!session) { window.location.href = "login.html"; return; }
         document.body.style.display = "block";
+        
+        // Giriş tarihine varsayılan olarak bugünü atayalım kolaylık olsun
+        document.getElementById('hire_date').value = TODAY_STR;
+        
         fetchStaff();
     };
+
+    function toggleCertClass() {
+        const role = document.getElementById('staff_role').value;
+        const certSelect = document.getElementById('certificate_class');
+        if (role !== 'Uzman') {
+            certSelect.value = 'Yok';
+            certSelect.disabled = true;
+        } else {
+            certSelect.disabled = false;
+            certSelect.value = 'C Sınıfı';
+        }
+    }
+
+    // 🧠 DİNAMİK AKTİFLİK DURUMUNU HESAPLAYAN AKILLI MOTOR
+    function calculateSystemStatus(hireStr, termStr, manualStatus) {
+        if (manualStatus === 'Pasif') return false; // Yönetici manuel kilitlediyse direkt pasif
+        if (!hireStr) return false; // İşe giriş tarihi yoksa geçersiz
+
+        const hire = new Date(hireStr);
+        
+        // Giriş tarihi henüz gelmediyse pasif
+        if (hire > todayDate) return false;
+
+        // Çıkış tarihi girilmişse kontrol et
+        if (termStr) {
+            const term = new Date(termStr);
+            // Eğer işten çıkış tarihi geçmişte kalmışsa pasif
+            if (term <= todayDate) return false;
+        }
+
+        return true; // Tüm yasal bariyerleri geçtiyse AKTİF
+    }
 
     async function fetchStaff() {
         const tbody = document.getElementById('staff_table_body');
         try {
             const { data } = await dbClient.from('osgb_staff').select('*').order('created_at', { ascending: false });
             if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Sistemde henüz tanımlı uzman veya hekim bulunmuyor.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">Kayıtlı kadro bulunmuyor.</td></tr>`;
                 return;
             }
             tbody.innerHTML = '';
             data.forEach(s => {
-                let isUzman = s.staff_role === 'Uzman';
-                let bColor = isUzman ? '#e0f2fe' : '#dcfce7';
-                let tColor = isUzman ? '#0369a1' : '#15803d';
+                // Canlı aktiflik kontrolünü çalıştırıyoruz
+                const isSystemActive = calculateSystemStatus(s.hire_date, s.termination_date, s.is_active_manual);
                 
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${s.name_surname}</strong></td>
-                        <td>${s.email || '-'}</td>
-                        <td><span class="badge-role" style="background:${bColor}; color:${tColor};">${s.staff_role}</span></td>
-                        <td><button onclick="deleteStaff('${s.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold;">Sil</button></td>
+                        <td><strong>🏢 ${s.name_surname}</strong></td>
+                        <td>${s.staff_role} <br><small style="color:#64748b;">(${s.certificate_class || 'Sınıf Yok'})</small></td>
+                        <td><code>${s.email || '-'}</code></td>
+                        <td><small>Giriş: ${s.hire_date || '-'}<br>Çıkış: ${s.termination_date || 'Devam Ediyor'}</small></td>
+                        <td style="text-align: center;">
+                            <span class="badge ${isSystemActive ? 'badge-active' : 'badge-passive'}">
+                                ${isSystemActive ? '● AKTİF (Girebilir)' : '○ PASİF (Bloke)'}
+                            </span>
+                        </td>
+                        <td><button onclick="deleteStaff('${s.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-weight:bold; font-size:12px;">Kadro Dışı Bırak</button></td>
                     </tr>
                 `;
             });
@@ -115,25 +195,38 @@
     async function saveStaff() {
         const name = document.getElementById('staff_name').value;
         const role = document.getElementById('staff_role').value;
+        const cert = document.getElementById('certificate_class').value;
         const email = document.getElementById('staff_email').value;
+        const hire = document.getElementById('hire_date').value;
+        const term = document.getElementById('termination_date').value || null;
+        const manual = document.getElementById('is_active_manual').value;
         const statusDiv = document.getElementById('status');
 
-        if(!name || !email) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen alanları eksiksiz doldurun!"; return; }
-        statusDiv.style.color = "blue"; statusDiv.innerText = "Kadrosu onaylanıyor...";
+        if(!name || !email || !hire) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen İsim, E-Posta and Giriş Tarihi alanlarını doldurun!"; return; }
+        statusDiv.style.color = "blue"; statusDiv.innerText = "Veri tabanına işleniyor...";
 
-        const { error } = await dbClient.from('osgb_staff').insert([{ name_surname: name, staff_role: role, email: email }]);
+        const { error } = await dbClient.from('osgb_staff').insert([{ 
+            name_surname: name, 
+            staff_role: role, 
+            certificate_class: cert,
+            email: email,
+            hire_date: hire,
+            termination_date: term,
+            is_active_manual: manual
+        }]);
 
         if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
         else {
-            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Personel başarıyla tanımlandı ve yetkilendirildi!";
+            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Başarılı! Personel kartı İK sistemine kaydedildi.";
             document.getElementById('staff_name').value = '';
             document.getElementById('staff_email').value = '';
+            document.getElementById('termination_date').value = '';
             fetchStaff();
         }
     }
 
     async function deleteStaff(id) {
-        if(!confirm("Bu personeli kadrodan çıkarmak istediğinize emin misiniz?")) return;
+        if(!confirm("Bu personeli kadrodan tamamen silmek istediğinize emin misiniz?")) return;
         await dbClient.from('osgb_staff').delete().eq('id', id);
         fetchStaff();
     }
