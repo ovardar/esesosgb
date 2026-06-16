@@ -222,7 +222,6 @@
             const isClosed = r.status === 'Kapalı';
             const actionCell = isClosed ? '<span style="color:var(--accent-green); font-weight:bold;">✓ Giderildi</span>' : `<button class="close-btn" onclick="closeRisk('${r.id}')">Kapat</button>`;
             
-            // Eğer resim linki varsa göster, yoksa simge koy
             const imgHTML = r.image_url ? `<img src="${r.image_url}" class="risk-thumb" onclick="window.open('${r.image_url}')">` : `📷 <span style="font-size:10px; color:var(--text-muted);">Yok</span>`;
 
             tbody.innerHTML += `<tr class="${isClosed ? 'status-closed' : ''}"><td>${imgHTML}</td><td><strong>${compName}</strong></td><td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td><td>${r.risk_score}</td><td><span class="badge" style="background:${badgeColor}; color:${textColor};">${lvlText}</span></td><td>${r.target_date}</td><td>${actionCell}</td></tr>`;
@@ -234,7 +233,16 @@
         await dbClient.from('risk_assessments').update({ status: 'Kapalı' }).eq('id', id); fetchRisks();
     }
 
-    // 🔥 EN JİLET VE YALIN FOTOĞRAF+FORM KAYIT MOTORU
+    // 🧠 YALIN BASE64 VE ÇÖKMEZ MOBİL DOSYA OKUYUCU
+    function convertFileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsArrayBuffer(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
     async function saveRisk() {
         const compId = document.getElementById('company_select').value; 
         const hazard = document.getElementById('hazard_title').value;
@@ -246,31 +254,39 @@
         const statusDiv = document.getElementById('status');
 
         if(!compId || !hazard || !target) { alert("Lütfen gerekli tüm alanları doldurun!"); return; }
-        statusDiv.style.color = "blue"; statusDiv.innerText = "İşlem başlatıldı...";
+        statusDiv.style.color = "blue"; statusDiv.innerText = "Bulut bağlantısı kuruluyor...";
 
         let publicImageUrl = null;
 
-        // Dosya yükleme mekanizmasını en saf JavaScript Blob yapısıyla sarmaladık:
         if (fileInput && fileInput.files && fileInput.files.length > 0) {
-            statusDiv.innerText = "📸 Fotoğraf buluta aktarılıyor...";
-            const file = fileInput.files[0];
-            const fileExt = file.name.split('.').pop() || 'jpg';
-            const fileName = `${Date.now()}_img.${fileExt}`;
+            try {
+                statusDiv.innerText = "📸 Fotoğraf Base64 akıllı moduna dönüştürülüyor ve yükleniyor...";
+                const file = fileInput.files[0];
+                const fileExt = file.name.split('.').pop() || 'jpg';
+                const fileName = `${Date.now()}_img.${fileExt}`;
 
-            // En saf yükleme komutu
-            const { data: uploadData, error: uploadError } = await dbClient.storage
-                .from('risk-photos')
-                .upload(fileName, file, { cacheControl: '3600', upsert: true });
+                // Dosyayı tarayıcı içinde güvenli ArrayBuffer nesnesine çeviriyoruz (Çökmeyi önler)
+                const arrayBuffer = await convertFileToBase64(file);
 
-            if (!uploadError) {
-                // Link oluşturma mekanizmasını garantiye almak için manuel URL birleştirme yapıyoruz
-                publicImageUrl = `${SUPABASE_URL}/storage/v1/object/public/risk-photos/${fileName}`;
-            } else {
-                console.error("Yükleme başarısız: ", uploadError.message);
+                // Supabase Storage'a en yalın ikili veri (ArrayBuffer) olarak fırlatıyoruz:
+                const { data: uploadData, error: uploadError } = await dbClient.storage
+                    .from('risk-photos')
+                    .upload(fileName, arrayBuffer, {
+                        contentType: file.type,
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+
+                if (!uploadError) {
+                    publicImageUrl = `${SUPABASE_URL}/storage/v1/object/public/risk-photos/${fileName}`;
+                } else {
+                    console.error("Yükleme başarısız: ", uploadError.message);
+                }
+            } catch (err) {
+                console.error("Dönüştürme veya yükleme hatası: ", err.message);
             }
         }
 
-        // Veritabanına yazım hamlesi
         statusDiv.innerText = "📝 Form veritabanına işleniyor...";
         const { error } = await dbClient.from('risk_assessments').insert([{ 
             company_id: compId, 
@@ -285,9 +301,9 @@
         }]);
 
         if (error) {
-            statusDiv.style.color = "red"; statusDiv.innerText = "Veritabanı hatası: " + error.message;
+            statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message;
         } else {
-            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Başarıyla tamamlandı!";
+            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 İşlem başarıyla tamamlandı! Fotoğraf ve rapor canlıda.";
             document.getElementById('hazard_title').value = ''; 
             document.getElementById('target_date').value = '';
             if(fileInput) fileInput.value = '';
