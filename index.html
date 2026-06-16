@@ -170,7 +170,6 @@
         try {
             const { data: companies } = await dbClient.from('customer_companies').select('danger_class');
             if (companies) {
-                // Her tehlike sınıfını kendi içinde tertemiz filtreleyip sayıyoruz
                 const cokCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'çok tehlikeli').length;
                 const tehlikeCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'tehlikeli').length;
                 const azCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'az tehlikeli').length;
@@ -180,7 +179,7 @@
                 document.getElementById('stat_danger_az').innerText = azCount;
             }
 
-            // Bağımsız risk tablosundan veri çekme
+            // Sadece statüsü "Açık" olan riskleri saydırıyoruz
             const { data: risks } = await dbClient.from('risk_assessments').select('id').eq('status', 'Açık');
             if (risks) {
                 document.getElementById('stat_total_risks').innerText = risks.length;
@@ -208,7 +207,7 @@
         document.getElementById('suggestions').style.display = 'none';
     }
 
-  ```javascript
+    // 🔗 DETAY SAYFASI BAĞLANTISI ENTEGRE EDİLMİŞ ŞEFFAF FETCH FONKSİYONU
     async function fetchCompanies() {
         const tbody = document.getElementById('company_table_body');
         try {
@@ -218,11 +217,10 @@
             data.forEach(company => {
                 let badgeClass = company.danger_class === 'Tehlikeli' ? 'badge-tehlike' : (company.danger_class === 'Çok Tehlikeli' ? 'badge-cok' : 'badge-az');
                 
-                // 🔗 FİRMA İSMİNİ DİNAMİK URL PARAMETRELİ LİNKE ÇEVİRDİK
                 tbody.innerHTML += `
                     <tr>
                         <td>
-                            <a href="company-detail.html?id=${company.id}" style="color: #2563eb; text-decoration: none; font-weight: bold; hover: text-decoration: underline;">
+                            <a href="company-detail.html?id=${company.id}" style="color: #2563eb; text-decoration: none; font-weight: bold;">
                                 🏢 ${company.company_name} (Detay gör)
                             </a>
                         </td>
