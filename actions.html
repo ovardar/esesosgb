@@ -189,11 +189,44 @@
     let allDofs = [];
     let currentFilter = 'active';
 
+    function normalizeFilterParam(rawFilter) {
+        const value = (rawFilter || '').trim().toLowerCase();
+        const filterMap = {
+            'active': 'active',
+            'aktif': 'active',
+            'overdue': 'overdue',
+            'geciken': 'overdue',
+            'open': 'Açık',
+            'acik': 'Açık',
+            'açık': 'Açık',
+            'progress': 'Devam Ediyor',
+            'devam': 'Devam Ediyor',
+            'devam-ediyor': 'Devam Ediyor',
+            'devam_ediyor': 'Devam Ediyor',
+            'closed': 'Kapalı',
+            'kapali': 'Kapalı',
+            'kapalı': 'Kapalı',
+            'all': 'all',
+            'tum': 'all',
+            'tümü': 'all'
+        };
+        return filterMap[value] || 'active';
+    }
+
+    function applyInitialFilterFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        currentFilter = normalizeFilterParam(params.get('filter'));
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.filter === currentFilter);
+        });
+    }
+
     window.onload = async function() {
         const { data: { session } } = await dbClient.auth.getSession();
         if (!session) { window.location.href = "login.html"; return; }
         document.body.style.display = "block";
         document.getElementById('current_user_email').innerText = session.user.email;
+        applyInitialFilterFromUrl();
         await refreshAll();
     };
 
@@ -230,11 +263,21 @@
         return '<span class="badge badge-open">Açık</span>';
     }
 
+    function filterToUrlValue(filter) {
+        if (filter === 'Açık') return 'open';
+        if (filter === 'Devam Ediyor') return 'progress';
+        if (filter === 'Kapalı') return 'closed';
+        return filter;
+    }
+
     function setFilter(filter) {
         currentFilter = filter;
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.filter === filter);
         });
+        const url = new URL(window.location.href);
+        url.searchParams.set('filter', filterToUrlValue(filter));
+        window.history.replaceState({}, '', url.toString());
         renderDofTable();
     }
 
