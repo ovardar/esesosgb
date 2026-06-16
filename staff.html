@@ -6,96 +6,88 @@
     <title>OSGB SaaS - Kullanıcı & Personel Yönetimi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; display: none; }
-        .card { background: white; padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        h2 { color: #1e293b; margin-top: 0; }
+        /* 🎨 CSS DEĞİŞKENLERİ - TEMA UYUM KATMANI */
+        :root {
+            --bg-main: #f4f6f9;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent-green: #10b981;
+            --accent-green-hover: #059669;
+            --border-color: #e2e8f0;
+            --table-header: #f8fafc;
+            --nav-inactive-bg: #e2e8f0;
+            --nav-inactive-text: #475569;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; transition: background 0.3s, color 0.3s; }
+        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); transition: background 0.3s; }
+        
+        h2 { color: var(--text-main); margin-top: 0; }
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #64748b; font-weight: 600; font-size: 13px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-weight: 600; font-size: 13px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; background: var(--bg-card); color: var(--text-main); }
         .grid-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr; gap: 12px; margin-bottom: 12px; }
         .grid-row-2 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 15px; }
-        button.submit-btn { background: #ec4899; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        button.submit-btn:hover { background: #db2777; }
-        .nav-link { display: block; text-align: center; margin-top: 15px; color: #64748b; text-decoration: none; font-size: 14px; }
-        #status { margin-top: 15px; text-align: center; font-weight: bold; }
+        button.submit-btn { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        button.submit-btn:hover { background: var(--primary-hover); }
+        
+        /* 🦅 ASİL MENÜ BUTONLARI */
+        .nav-container { display: flex; gap: 8px; margin-bottom: 25px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
+        .nav-btn { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.2s ease; border: 1px solid transparent; }
+        .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
+        .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 
-        .table-container { margin-top: 35px; border-top: 2px solid #e2e8f0; padding-top: 20px; }
+        .table-container { margin-top: 35px; border-top: 2px solid var(--border-color); padding-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
-        th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        th { background-color: var(--table-header); color: var(--text-muted); font-weight: 600; }
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
         .badge-active { background: #dcfce7; color: #15803d; }
         .badge-passive { background: #fee2e2; color: #b91c1c; }
 
-        .btn-edit-action { background: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-right: 5px; }
-        .btn-edit-action:hover { background: #1d4ed8; }
+        .btn-edit-action { background: var(--primary); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-right: 5px; }
         .btn-delete-action { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .btn-delete-action:hover { background: #b91c1c; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: var(--bg-card); color: var(--text-main); padding: 25px; border-radius: 12px; width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 1px solid var(--border-color); }
         .modal-buttons { display: flex; gap: 10px; margin-top: 20px; }
-        .btn-update { background: #10b981; color: white; border: none; padding: 12px; border-radius: 6px; flex: 1; font-weight: bold; cursor: pointer; font-size: 14px; }
-        .btn-update:hover { background: #059669; }
-        .btn-close { background: #64748b; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-        .btn-close:hover { background: #475569; }
+        .btn-update { background: var(--accent-green); color: white; border: none; padding: 12px; border-radius: 6px; flex: 1; font-weight: bold; cursor: pointer; }
+        .btn-close { background: var(--nav-inactive-text); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="card">
+    <!-- 🦅 ASİL VE DİNAMİK MENÜ YAPISI -->
+    <div class="nav-container">
+        <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+        <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+        <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+        <a href="staff.html" class="nav-btn active-page">🔑 Personel Yönetimi</a>
+        <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
+        <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
+    </div>
+
     <h2>🔑 OSGB Gelişmiş Kullanıcı & Personel Yönetimi</h2>
-    <p style="color: #64748b; font-size: 14px;">Yönetici yetki kilidi tarih kriterlerini ezebilir. Esnek kurumsal İK denetimi.</p>
+    <p style="color: var(--text-muted); font-size: 14px;">Personel kartlarını ve yetkilerini yönetin.</p>
     
     <div class="grid-row">
-        <div class="form-group">
-            <label>Personel Adı Soyadı</label>
-            <input type="text" id="staff_name" placeholder="Örn: Ali Yılmaz">
-        </div>
-        <div class="form-group">
-            <label>Sistem Rolü</label>
-            <select id="staff_role" onchange="toggleCertClass('staff_role', 'certificate_class')">
-                <option value="Uzman">Uzman (İSG)</option>
-                <option value="Hekim">Hekim</option>
-                <option value="DSP">DSP (Diğer Sağlık Personeli)</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Uzmanlık Sınıfı</label>
-            <select id="certificate_class">
-                <option value="Yok">Yok (Hekim/DSP)</option>
-                <option value="A Sınıfı">A Sınıfı</option>
-                <option value="B Sınıfı">B Sınıfı</option>
-                <option value="C Sınıfı">C Sınıfı</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Kurumsal E-Posta</label>
-            <input type="email" id="staff_email" placeholder="isim@osgb.com">
-        </div>
+        <div class="form-group"><label>Personel Adı Soyadı</label><input type="text" id="staff_name" placeholder="Örn: Ali Yılmaz"></div>
+        <div class="form-group"><label>Sistem Rolü</label><select id="staff_role" onchange="toggleCertClass('staff_role', 'certificate_class')"><option value="Uzman">Uzman (İSG)</option><option value="Hekim">Hekim</option><option value="DSP">DSP (Diğer Sağlık Personeli)</option></select></div>
+        <div class="form-group"><label>Uzmanlık Sınıfı</label><select id="certificate_class"><option value="Yok">Yok (Hekim/DSP)</option><option value="A Sınıfı">A Sınıfı</option><option value="B Sınıfı">B Sınıfı</option><option value="C Sınıfı">C Sınıfı</option></select></div>
+        <div class="form-group"><label>Kurumsal E-Posta</label><input type="email" id="staff_email" placeholder="isim@osgb.com"></div>
     </div>
 
     <div class="grid-row-2">
-        <div class="form-group">
-            <label>İşe Giriş Tarihi</label>
-            <input type="date" id="hire_date">
-        </div>
-        <div class="form-group">
-            <label>İşten Çıkış Tarihi (Boş Bırakılabilir)</label>
-            <input type="date" id="termination_date">
-        </div>
-        <div class="form-group">
-            <!-- 🧠 YENİ HİYERARŞİK SEÇİM KUTUSU -->
-            <label>Manuel Durum Kilidi (Karar Üstünlüğü)</label>
-            <select id="is_active_manual">
-                <option value="Otomatik">Otomatik (Tarih Kriteri Geçerli)</option>
-                <option value="Aktif">Manuel Aktif (Tarih Ne Olursa Olsun Girebilsin)</option>
-                <option value="Pasif">Manuel Pasif (Direkt Engelle)</option>
-            </select>
-        </div>
+        <div class="form-group"><label>İşe Giriş Tarihi</label><input type="date" id="hire_date"></div>
+        <div class="form-group"><label>İşten Çıkış Tarihi</label><input type="date" id="termination_date"></div>
+        <div class="form-group"><label>Manuel Durum Kilidi</label><select id="is_active_manual"><option value="Otomatik">Otomatik (Tarih Kriteri Geçerli)</option><option value="Aktif">Manuel Aktif</option><option value="Pasif">Manuel Pasif</option></select></div>
     </div>
 
-    <button class="submit-btn" onclick="saveStaff()">Personel Kartını ve Yetkilerini Kaydet</button>
+    <button class="submit-btn" onclick="saveStaff()">Personel Kartını Kaydet</button>
     <div id="status"></div>
 
     <div class="table-container">
@@ -111,76 +103,29 @@
                     <th>Aksiyonlar</th>
                 </tr>
             </thead>
-            <tbody id="staff_table_body">
-                <tr>
-                    <td colspan="6" style="text-align:center; color:#94a3b8;">Kadro yükleniyor...</td>
-                </tr>
-            </tbody>
+            <tbody id="staff_table_body"><tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Kadro yükleniyor...</td></tr></tbody>
         </table>
     </div>
-    
-    <a href="index.html" class="nav-link">← Ana Yönetim Paneline Dön</a>
 </div>
 
-<!-- 🔔 GÜNCELLENEN MODAL -->
+<!-- Modal -->
 <div id="staffModal" class="modal">
     <div class="modal-content">
-        <h3 style="margin-top:0; color:#1e293b; border-bottom:2px solid #ec4899; padding-bottom:8px;">📝 Personel Kartını Güncelle</h3>
+        <h3>📝 Personel Kartını Güncelle</h3>
         <input type="hidden" id="modal_staff_id">
-        
-        <div class="form-group">
-            <label>Personel Adı Soyadı</label>
-            <input type="text" id="modal_staff_name">
-        </div>
-
+        <div class="form-group"><label>Personel Adı Soyadı</label><input type="text" id="modal_staff_name"></div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div class="form-group">
-                <label>Sistem Rolü</label>
-                <select id="modal_staff_role" onchange="toggleCertClass('modal_staff_role', 'modal_certificate_class')">
-                    <option value="Uzman">Uzman (İSG)</option>
-                    <option value="Hekim">Hekim</option>
-                    <option value="DSP">DSP (Diğer Sağlık Personeli)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Uzmanlık Sınıfı</label>
-                <select id="modal_certificate_class">
-                    <option value="Yok">Yok (Hekim/DSP)</option>
-                    <option value="A Sınıfı">A Sınıfı</option>
-                    <option value="B Sınıfı">B Sınıfı</option>
-                    <option value="C Sınıfı">C Sınıfı</option>
-                </select>
-            </div>
+            <div class="form-group"><label>Sistem Rolü</label><select id="modal_staff_role" onchange="toggleCertClass('modal_staff_role', 'modal_certificate_class')"><option value="Uzman">Uzman</option><option value="Hekim">Hekim</option><option value="DSP">DSP</option></select></div>
+            <div class="form-group"><label>Uzmanlık Sınıfı</label><select id="modal_certificate_class"><option value="Yok">Yok</option><option value="A Sınıfı">A Sınıfı</option><option value="B Sınıfı">B Sınıfı</option><option value="C Sınıfı">C Sınıfı</option></select></div>
         </div>
-
-        <div class="form-group">
-            <label>Kurumsal E-Posta</label>
-            <input type="email" id="modal_staff_email">
-        </div>
-
+        <div class="form-group"><label>Kurumsal E-Posta</label><input type="email" id="modal_staff_email"></div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-            <div class="form-group">
-                <label>İşe Giriş Tarihi</label>
-                <input type="date" id="modal_hire_date">
-            </div>
-            <div class="form-group">
-                <label>İşten Çıkış Tarihi</label>
-                <input type="date" id="modal_termination_date">
-            </div>
+            <div class="form-group"><label>İşe Giriş Tarihi</label><input type="date" id="modal_hire_date"></div>
+            <div class="form-group"><label>İşten Çıkış Tarihi</label><input type="date" id="modal_termination_date"></div>
         </div>
-
-        <div class="form-group">
-            <!-- 🧠 MODAL İÇİNDEKİ EZİCİ SEÇİM ALANI -->
-            <label>Manuel Durum Kilidi (Karar Üstünlüğü)</label>
-            <select id="modal_is_active_manual">
-                <option value="Otomatik">Otomatik (Tarih Kriteri Geçerli)</option>
-                <option value="Aktif">Manuel Aktif (Tarih Ne Olursa Olsun Girebilsin)</option>
-                <option value="Pasif">Manuel Pasif (Direkt Engelle)</option>
-            </select>
-        </div>
-        
+        <div class="form-group"><label>Manuel Durum Kilidi</label><select id="modal_is_active_manual"><option value="Otomatik">Otomatik</option><option value="Aktif">Manuel Aktif</option><option value="Pasif">Manuel Pasif</option></select></div>
         <div class="modal-buttons">
-            <button class="btn-update" onclick="updateStaff()">Değişiklikleri Veritabanına İşle</button>
+            <button class="btn-update" onclick="updateStaff()">Güncelle</button>
             <button class="btn-close" onclick="closeModal()">İptal Et</button>
         </div>
     </div>
@@ -191,167 +136,78 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const TODAY_STR = "2026-06-16";
-    const todayDate = new Date(TODAY_STR);
+    const themes = {
+        isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--primary-hover': '#1d4ed8', '--accent-green': '#10b981', '--accent-green-hover': '#059669', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
+        'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--primary-hover': '#7dd3fc', '--accent-green': '#34d399', '--accent-green-hover': '#059669', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
+        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--primary-hover': '#c2410c', '--accent-green': '#84cc16', '--accent-green-hover': '#65a30d', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
+        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--primary-hover': '#334155', '--accent-green': '#000000', '--accent-green-hover': '#1e293b', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
+        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--primary-hover': '#166534', '--accent-green': '#65a30d', '--accent-green-hover': '#4d7c0f', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
+    };
 
     window.onload = async function() {
+        const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
+        if (themes[activeTheme]) { Object.keys(themes[activeTheme]).forEach(key => { document.documentElement.style.setProperty(key, themes[activeTheme][key]); }); }
+
         const { data: { session } } = await dbClient.auth.getSession();
         if (!session) { window.location.href = "login.html"; return; }
         document.body.style.display = "block";
-        
-        document.getElementById('hire_date').value = TODAY_STR;
+        document.getElementById('hire_date').value = "2026-06-16";
         fetchStaff();
     };
 
     function toggleCertClass(roleId, certId) {
         const role = document.getElementById(roleId).value;
         const certSelect = document.getElementById(certId);
-        if (role !== 'Uzman') {
-            certSelect.value = 'Yok';
-            certSelect.disabled = true;
-        } else {
-            certSelect.disabled = false;
-            if(certSelect.value === 'Yok') certSelect.value = 'C Sınıfı';
-        }
+        if (role !== 'Uzman') { certSelect.value = 'Yok'; certSelect.disabled = true; } else { certSelect.disabled = false; if(certSelect.value === 'Yok') certSelect.value = 'C Sınıfı'; }
     }
 
-    // 🧠 YÖNETİCİ SEÇİMİNİ TARİHİN ÜSTÜNE ÇIKARAN SÜZGEÇ
     function calculateSystemStatus(hireStr, termStr, manualStatus) {
-        // 1. Eğer yönetici elle "Aktif" veya "Pasif" dediyse tarihlere HİÇ BAKMA, direkt o kararı bas!
         if (manualStatus === 'Aktif') return true;
         if (manualStatus === 'Pasif') return false;
-
-        // 2. Eğer "Otomatik" bırakıldıysa tarih çarklarını döndür:
-        if (!hireStr) return false; 
+        if (!hireStr) return false;
         const hire = new Date(hireStr);
-        if (hire > todayDate) return false;
-
-        if (termStr) {
-            const term = new Date(termStr);
-            if (term <= todayDate) return false;
-        }
-
-        return true; 
+        if (hire > new Date("2026-06-16")) return false;
+        if (termStr) { const term = new Date(termStr); if (term <= new Date("2026-06-16")) return false; }
+        return true;
     }
 
     async function fetchStaff() {
         const tbody = document.getElementById('staff_table_body');
-        try {
-            const { data } = await dbClient.from('osgb_staff').select('*').order('created_at', { ascending: false });
-            if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8;">Kayıtlı kadro bulunmuyor.</td></tr>`;
-                return;
-            }
-            tbody.innerHTML = '';
-            data.forEach(s => {
-                const isSystemActive = calculateSystemStatus(s.hire_date, s.termination_date, s.is_active_manual);
-                
-                const safeName = (s.name_surname || '').replace(/'/g, "\\'");
-                const safeEmail = (s.email || '').replace(/'/g, "\\'");
-                const safeTerm = s.termination_date || '';
-                const currentManualStatus = s.is_active_manual || 'Otomatik';
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>🏢 ${s.name_surname}</strong></td>
-                        <td>${s.staff_role} <br><small style="color:#64748b;">(${s.certificate_class || 'Sınıf Yok'})</small></td>
-                        <td><code>${s.email || '-'}</code></td>
-                        <td><small>Giriş: ${s.hire_date || '-'}<br>Çıkış: ${s.termination_date || 'Devam Ediyor'}</small></td>
-                        <td style="text-align: center;">
-                            <span class="badge ${isSystemActive ? 'badge-active' : 'badge-passive'}">
-                                ${isSystemActive ? '● AKTİF (Girebilir)' : '○ PASİF (Bloke)'}
-                            </span>
-                        </td>
-                        <td>
-                            <button class="btn-edit-action" onclick="openStaffModal('${s.id}', '${safeName}', '${s.staff_role}', '${s.certificate_class}', '${safeEmail}', '${s.hire_date}', '${safeTerm}', '${currentManualStatus}')">Düzenle</button>
-                            <button class="btn-delete-action" onclick="deleteStaff('${s.id}')">Sil</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        } catch (err) { console.error(err.message); }
+        const { data } = await dbClient.from('osgb_staff').select('*').order('created_at', { ascending: false });
+        tbody.innerHTML = '';
+        data.forEach(s => {
+            const isSystemActive = calculateSystemStatus(s.hire_date, s.termination_date, s.is_active_manual);
+            tbody.innerHTML += `<tr><td><strong>🏢 ${s.name_surname}</strong></td><td>${s.staff_role} <br><small style="color:var(--text-muted);">(${s.certificate_class})</small></td><td><code>${s.email}</code></td><td><small>Giriş: ${s.hire_date}<br>Çıkış: ${s.termination_date || 'Devam'}</small></td><td style="text-align: center;"><span class="badge ${isSystemActive ? 'badge-active' : 'badge-passive'}">${isSystemActive ? '● AKTİF' : '○ PASİF'}</span></td><td><button class="btn-edit-action" onclick="openStaffModal('${s.id}', '${s.name_surname.replace(/'/g, "\\'")}', '${s.staff_role}', '${s.certificate_class}', '${s.email}', '${s.hire_date}', '${s.termination_date || ''}', '${s.is_active_manual}')">Düzenle</button><button class="btn-delete-action" onclick="deleteStaff('${s.id}')">Sil</button></td></tr>`;
+        });
     }
 
     function openStaffModal(id, name, role, cert, email, hire, term, manual) {
-        document.getElementById('modal_staff_id').value = id;
-        document.getElementById('modal_staff_name').value = name;
-        document.getElementById('modal_staff_role').value = role;
-        document.getElementById('modal_certificate_class').value = cert;
-        document.getElementById('modal_staff_email').value = email;
-        document.getElementById('modal_hire_date').value = hire;
-        document.getElementById('modal_termination_date').value = term;
-        document.getElementById('modal_is_active_manual').value = manual;
-
-        toggleCertClass('modal_staff_role', 'modal_certificate_class');
-        document.getElementById('staffModal').style.display = 'flex';
+        document.getElementById('modal_staff_id').value = id; document.getElementById('modal_staff_name').value = name;
+        document.getElementById('modal_staff_role').value = role; document.getElementById('modal_certificate_class').value = cert;
+        document.getElementById('modal_staff_email').value = email; document.getElementById('modal_hire_date').value = hire;
+        document.getElementById('modal_termination_date').value = term; document.getElementById('modal_is_active_manual').value = manual;
+        toggleCertClass('modal_staff_role', 'modal_certificate_class'); document.getElementById('staffModal').style.display = 'flex';
     }
-
     function closeModal() { document.getElementById('staffModal').style.display = 'none'; }
 
     async function updateStaff() {
         const id = document.getElementById('modal_staff_id').value;
-        const name = document.getElementById('modal_staff_name').value;
-        const role = document.getElementById('modal_staff_role').value;
-        const cert = document.getElementById('modal_certificate_class').value;
-        const email = document.getElementById('modal_staff_email').value;
-        const hire = document.getElementById('modal_hire_date').value;
-        const term = document.getElementById('modal_termination_date').value || null;
-        const manual = document.getElementById('modal_is_active_manual').value;
-
-        if(!name || !email || !hire) { alert("Lütfen İsim, E-Posta ve Giriş Tarihi alanlarını boş bırakmayın!"); return; }
-
         const { error } = await dbClient.from('osgb_staff').update({
-            name_surname: name,
-            staff_role: role,
-            certificate_class: cert,
-            email: email,
-            hire_date: hire,
-            termination_date: term,
-            is_active_manual: manual
+            name_surname: document.getElementById('modal_staff_name').value,
+            staff_role: document.getElementById('modal_staff_role').value,
+            certificate_class: document.getElementById('modal_certificate_class').value,
+            email: document.getElementById('modal_staff_email').value,
+            hire_date: document.getElementById('modal_hire_date').value,
+            termination_date: document.getElementById('modal_termination_date').value || null,
+            is_active_manual: document.getElementById('modal_is_active_manual').value
         }).eq('id', id);
-
-        if (error) { alert("Güncelleme Hatası: " + error.message); }
-        else { closeModal(); fetchStaff(); }
+        if (error) alert(error.message); else { closeModal(); fetchStaff(); }
     }
-
     async function saveStaff() {
-        const name = document.getElementById('staff_name').value;
-        const role = document.getElementById('staff_role').value;
-        const cert = document.getElementById('certificate_class').value;
-        const email = document.getElementById('staff_email').value;
-        const hire = document.getElementById('hire_date').value;
-        const term = document.getElementById('termination_date').value || null;
-        const manual = document.getElementById('is_active_manual').value;
-        const statusDiv = document.getElementById('status');
-
-        if(!name || !email || !hire) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen İsim, E-Posta ve Giriş Tarihi alanlarını doldurun!"; return; }
-        statusDiv.style.color = "blue"; statusDiv.innerText = "Veri tabanına işleniyor...";
-
-        const { error } = await dbClient.from('osgb_staff').insert([{ 
-            name_surname: name, 
-            staff_role: role, 
-            certificate_class: cert,
-            email: email,
-            hire_date: hire,
-            termination_date: term,
-            is_active_manual: manual
-        }]);
-
-        if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
-        else {
-            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Başarılı! Personel kartı İK sistemine kaydedildi.";
-            document.getElementById('staff_name').value = '';
-            document.getElementById('staff_email').value = '';
-            document.getElementById('termination_date').value = '';
-            fetchStaff();
-        }
+        const { error } = await dbClient.from('osgb_staff').insert([{ name_surname: document.getElementById('staff_name').value, staff_role: document.getElementById('staff_role').value, certificate_class: document.getElementById('certificate_class').value, email: document.getElementById('staff_email').value, hire_date: document.getElementById('hire_date').value, termination_date: document.getElementById('termination_date').value || null, is_active_manual: document.getElementById('is_active_manual').value }]);
+        if (error) alert(error.message); else { fetchStaff(); }
     }
-
-    async function deleteStaff(id) {
-        if(!confirm("Bu personeli kadrodan tamamen silmek istediğinize emin misiniz?")) return;
-        await dbClient.from('osgb_staff').delete().eq('id', id);
-        fetchStaff();
-    }
+    async function deleteStaff(id) { if(confirm("Silmek istediğine emin misin?")) { await dbClient.from('osgb_staff').delete().eq('id', id); fetchStaff(); } }
 </script>
 </body>
 </html>
