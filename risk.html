@@ -61,6 +61,7 @@
 <body>
 
 <div class="card">
+    <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
     <div class="global-header">
         <div class="top-row">
             <div class="logo-area">🏢 <span>AKAD OSGB</span> <span class="logo-badge">SaaS</span></div>
@@ -80,6 +81,7 @@
         </div>
     </div>
 
+    <!-- 🔄 DİNAMİK SENKRONİZASYON DURUM PANELİ -->
     <div id="sync_status_banner" class="sync-banner synced">
         <span id="sync_status_text">🔄 Bulut Durumu: Sistem Senkronize (Çevrimdışı Çalışmaya Hazır)</span>
         <span id="sync_queue_count" class="logo-badge" style="background:#166534;">0</span>
@@ -176,38 +178,47 @@
 
     let localDatabase = null;
 
+    // 🏛️ BAĞIMSIZ HALE GETİRİLMİŞ window.onload MOTORU
     window.onload = async function() {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) { window.location.href = "login.html"; return; }
-        document.body.style.display = "block";
-        document.getElementById('current_user_email').innerText = session.user.email;
-        document.getElementById('menu_risk').style.display = 'inline-block';
-        document.getElementById('menu_medical').style.display = 'inline-block';
-        
-        // 1. Önce internetten gelmesi gereken firma ve matris verilerini hemen tetikliyoruz
-        calculateFineKinney(); 
-        fetchCompaniesToSelect(); 
-        fetchRisks();
-        
-        // 2. Arka planda yerel hafıza ambarını bağımsızca ayağa kaldırıyoruz
-        initIndexedDB().then(() => {
-            // Hafıza açılınca her 5 saniyede bir kuyruğu kontrol etmeye başla
-            setInterval(processSyncQueue, 5000);
-        });
+        try {
+            const { data: { session } } = await dbClient.auth.getSession();
+            if (!session) { window.location.href = "login.html"; return; }
+            
+            document.body.style.display = "block";
+            document.getElementById('current_user_email').innerText = session.user.email;
+            
+            const email = session.user.email;
+            if (email.includes('uzman') || email.includes('admin')) document.getElementById('menu_risk').style.display = 'inline-block';
+            if (email.includes('hekim') || email.includes('admin')) document.getElementById('menu_medical').style.display = 'inline-block';
+            
+            // 🚀 BİRBİRİNİ KİLİTLEMEYEN ÖZGÜR TETİKLEMELER
+            calculateFineKinney(); 
+            fetchCompaniesToSelect(); 
+            fetchRisks();
+            
+            // Yerel ambarı aç ve başla
+            initIndexedDB();
+        } catch (e) {
+            console.error("Yükleme sırasında genel hata: ", e);
+        }
     };
 
-    // 🏛️ INDEXEDDB BAŞLATMA (CİHAZ İÇİ VERİ AMBARI)
+    // 🏛️ GÜVENLİ INDEXEDDB BAŞLATICI (ASLA RESOLVE/REJECT KİLİDİNE TAKILMAZ)
     function initIndexedDB() {
-        return new Promise((resolve) => {
-            const request = indexedDB.open("OSGB_Offline_DB", 1);
-            request.onupgradeneeded = (e) => {
-                let db = e.target.result;
-                if (!db.objectStoreNames.contains("risk_queue")) {
-                    db.createObjectStore("risk_queue", { keyPath: "id", autoIncrement: true });
-                }
-            };
-            request.onsuccess = (e) => { localDatabase = e.target.result; updateSyncBanner(); resolve(); };
-        });
+        const request = indexedDB.open("OSGB_Offline_DB", 1);
+        request.onupgradeneeded = (e) => {
+            let db = e.target.result;
+            if (!db.objectStoreNames.contains("risk_queue")) {
+                db.createObjectStore("risk_queue", { keyPath: "id", autoIncrement: true });
+            }
+        };
+        request.onsuccess = (e) => { 
+            localDatabase = e.target.result; 
+            updateSyncBanner(); 
+            // Döngüyü burada başlatıyoruz
+            setInterval(processSyncQueue, 5000);
+        };
+        request.onerror = (e) => { console.error("IndexedDB Açılamadı: ", e); };
     }
 
     // 📸 GÖRSEL OPTİMİZASYON (CANVAS SIKISTIRMA SÜZGECİ)
@@ -233,7 +244,7 @@
         });
     }
 
-    // 🚀 FORM HIZLICA "LOCAL" HAFIZAYA ALINIYOR (BEKLEME SÜRESİ: 0 SANİYE)
+    // 🚀 FORM LOKAL HAFIZAYA ALINIYOR
     async function handleFormSubmit() {
         const compId = document.getElementById('company_select').value; 
         const hazard = document.getElementById('hazard_title').value;
@@ -247,7 +258,7 @@
 
         let photoBlob = null;
         if (fileInput && fileInput.files && fileInput.files.length > 0) {
-            photoBlob = await compressImage(fileInput.files[0]); // Hemen sıkıştırıp hazır ediyoruz
+            photoBlob = await compressImage(fileInput.files[0]);
         }
 
         const newRecord = {
@@ -258,13 +269,14 @@
             severity_s: s,
             risk_score: (o * f * s),
             target_date: target,
-            photo: photoBlob, // Fotoğrafı ikili veri olarak yerel kasaya atıyoruz
+            photo: photoBlob,
             timestamp: Date.now()
         };
 
-        // IndexedDB risk_queue deposuna yazma hamlesi
+        if(!localDatabase) { alert("Yerel hafıza henüz hazır değil, lütfen 1 saniye bekleyip tekrar deneyin."); return; }
+
         const transaction = localDatabase.transaction(["risk_queue"], "readwrite");
-        const store = transaction.objectStoreWithNames ? transaction.objectStoreWithNames.get("risk_queue") : transaction.objectStore("risk_queue");
+        const store = transaction.objectStore("risk_queue");
         store.add(newRecord);
 
         transaction.oncomplete = () => {
@@ -277,16 +289,16 @@
             
             updateSyncBanner();
             setTimeout(() => { document.getElementById('status').innerText = ""; }, 4000);
-            processSyncQueue(); // İnternet varsa anında senkronizasyonu tetikle
+            processSyncQueue();
         };
     }
 
-    // 🔄 ARKA PLANDA SESSİZCE BULUTA GÖNDERME MOTORU (BACKGROUND BACKGROUND SYNC)
+    // 🔄 ARKA PLANDA SESSİZCE BULUTA GÖNDERME MOTORU
     async function processSyncQueue() {
-        if (!navigator.onLine) { return; } // İnternet yoksa hiç zorlama, havuzu beklet
+        if (!navigator.onLine || !localDatabase) { return; }
 
         const transaction = localDatabase.transaction(["risk_queue"], "readwrite");
-        const store = transaction.objectStoreWithNames ? transaction.objectStoreWithNames.get("risk_queue") : transaction.objectStore("risk_queue");
+        const store = transaction.objectStore("risk_queue");
         const request = store.openCursor();
 
         request.onsuccess = async (e) => {
@@ -296,7 +308,6 @@
                 let publicImageUrl = null;
 
                 try {
-                    // 1. Eğer yerel hafızada bekleyen bir fotoğraf varsa önce onu buluta itiyoruz
                     if (record.photo) {
                         const fileName = `${Date.now()}_offline.jpg`;
                         const { error: uploadError } = await dbClient.storage
@@ -308,7 +319,6 @@
                         }
                     }
 
-                    // 2. Form verilerini ana tabloya yazıyoruz
                     const { error: insertError } = await dbClient.from('risk_assessments').insert([{
                         company_id: record.company_id,
                         hazard_title: record.hazard_title,
@@ -322,9 +332,8 @@
                     }]);
 
                     if (!insertError) {
-                        // 3. Buluta başarıyla yazıldıysa, telefonun hafızasındaki bu yükü siliyoruz
                         const delTransaction = localDatabase.transaction(["risk_queue"], "readwrite");
-                        const delStore = delTransaction.objectStoreWithNames ? delTransaction.objectStoreWithNames.get("risk_queue") : delTransaction.objectStore("risk_queue");
+                        const delStore = delTransaction.objectStore("risk_queue");
                         delStore.delete(record.id);
                         delTransaction.oncomplete = () => { updateSyncBanner(); fetchRisks(); };
                     }
@@ -335,8 +344,9 @@
 
     // 📊 SENKRONİZASYON BARI GÜNCELLEME SİHİRBAZI
     function updateSyncBanner() {
+        if(!localDatabase) return;
         const transaction = localDatabase.transaction(["risk_queue"], "readonly");
-        const store = transaction.objectStoreWithNames ? transaction.objectStoreWithNames.get("risk_queue") : transaction.objectStore("risk_queue");
+        const store = transaction.objectStore("risk_queue");
         const countRequest = store.count();
 
         countRequest.onsuccess = () => {
@@ -358,26 +368,36 @@
         };
     }
 
-    // Diğer yardımcı fonksiyonlar
+    async function fetchCompaniesToSelect() {
+        try {
+            const select = document.getElementById('company_select');
+            const { data } = await dbClient.from('customer_companies').select('id, company_name').order('company_name');
+            select.innerHTML = '<option value="">-- Lütfen Firma Seçin --</option>';
+            if (data) { data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; }); }
+        } catch (err) { console.error("Firma yükleme hatası: ", err); }
+    }
+
     async function fetchRisks() {
-        const tbody = document.getElementById('risk_table_body');
-        const { data } = await dbClient.from('risk_assessments').select('*, customer_companies(company_name)').order('status', { ascending: false }).order('created_at', { ascending: false });
-        tbody.innerHTML = '';
-        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Kayıtlı risk bulgusu yok.</td></tr>`; return; }
-        
-        data.forEach(r => {
-            let badgeColor = '#dcfce7', textColor = '#15803d', lvlText = 'Düşük';
-            if(r.risk_score >= 20 && r.risk_score < 70) { badgeColor = '#ffedd5'; textColor = '#c2410c'; lvlText = 'Olası'; }
-            else if(r.risk_score >= 70 && r.risk_score < 200) { badgeColor = '#fee2e2'; textColor = '#b91c1c'; lvlText = 'Önemli'; }
-            else if(r.risk_score >= 200) { badgeColor = '#f87171'; textColor = '#ffffff'; lvlText = 'ESASLI'; }
+        try {
+            const tbody = document.getElementById('risk_table_body');
+            const { data } = await dbClient.from('risk_assessments').select('*, customer_companies(company_name)').order('status', { ascending: false }).order('created_at', { ascending: false });
+            tbody.innerHTML = '';
+            if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Kayıtlı risk bulgusu yok.</td></tr>`; return; }
+            
+            data.forEach(r => {
+                let badgeColor = '#dcfce7', textColor = '#15803d', lvlText = 'Düşük';
+                if(r.risk_score >= 20 && r.risk_score < 70) { badgeColor = '#ffedd5'; textColor = '#c2410c'; lvlText = 'Olası'; }
+                else if(r.risk_score >= 70 && r.risk_score < 200) { badgeColor = '#fee2e2'; textColor = '#b91c1c'; lvlText = 'Önemli'; }
+                else if(r.risk_score >= 200) { badgeColor = '#f87171'; textColor = '#ffffff'; lvlText = 'ESASLI'; }
 
-            const compName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
-            const isClosed = r.status === 'Kapalı';
-            const actionCell = isClosed ? '<span style="color:var(--accent-green); font-weight:bold;">✓ Giderildi</span>' : `<button class="close-btn" onclick="closeRisk('${r.id}')">Kapat</button>`;
-            const imgHTML = r.image_url ? `<img src="${r.image_url}" class="risk-thumb" onclick="window.open('${r.image_url}')">` : `📷 <span style="font-size:10px; color:var(--text-muted);">Yok</span>`;
+                const compName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
+                const isClosed = r.status === 'Kapalı';
+                const actionCell = isClosed ? '<span style="color:var(--accent-green); font-weight:bold;">✓ Giderildi</span>' : `<button class="close-btn" onclick="closeRisk('${r.id}')">Kapat</button>`;
+                const imgHTML = r.image_url ? `<img src="${r.image_url}" class="risk-thumb" onclick="window.open('${r.image_url}')">` : `📷 <span style="font-size:10px; color:var(--text-muted);">Yok</span>`;
 
-            tbody.innerHTML += `<tr class="${isClosed ? 'status-closed' : ''}"><td>${imgHTML}</td><td><strong>${compName}</strong></td><td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td><td>${r.risk_score}</td><td><span class="badge" style="background:${badgeColor}; color:${textColor};">${lvlText}</span></td><td>${r.target_date}</td><td>${actionCell}</td></tr>`;
-        });
+                tbody.innerHTML += `<tr class="${isClosed ? 'status-closed' : ''}"><td>${imgHTML}</td><td><strong>${compName}</strong></td><td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td><td>${r.risk_score}</td><td><span class="badge" style="background:${badgeColor}; color:${textColor};">${lvlText}</span></td><td>${r.target_date}</td><td>${actionCell}</td></tr>`;
+            });
+        } catch (err) { console.error("Risk matrisi yükleme hatası: ", err); }
     }
 
     async function closeRisk(id) {
@@ -385,17 +405,7 @@
         await dbClient.from('risk_assessments').update({ status: 'Kapalı' }).eq('id', id); fetchRisks();
     }
 
-    function calculateFineKinney() {
-        const o = parseFloat(document.getElementById('prob').value); const f = parseFloat(document.getElementById('freq').value); const s = parseFloat(document.getElementById('sev').value);
-        const score = o * f * s; document.getElementById('risk_score_display').innerText = score.toFixed(1);
-        const lvl = document.getElementById('risk_level_display');
-        if(score < 20) { lvl.innerText = "Düşük Risk"; lvl.style.color = "var(--accent-green)"; }
-        else if(score < 70) { lvl.innerText = "Olası Risk"; lvl.style.color = "orange"; }
-        else if(score < 200) { lvl.innerText = "Önemli Risk"; lvl.style.color = "darkorange"; }
-        else { lvl.innerText = "ESASLI RİSK (İŞİ DURDUR)"; lvl.style.color = "red"; }
-    }
-
-    async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
+    function handleLogout() { dbClient.auth.signOut().then(() => { window.location.href = "login.html"; }); }
 </script>
 </body>
 </html>
