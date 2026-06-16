@@ -12,8 +12,13 @@
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; color: #374151; font-weight: 600; }
         input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
+        .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; }
         button { background: #16a34a; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
         button:hover { background: #15803d; }
+        
+        /* Dinamik Mevzuat Uyarı Kutusu */
+        .warning-box { background-color: #fef2f2; border: 1px dashed #ef4444; color: #b91c1c; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; font-size: 14px; display: none; }
+
         .nav-link { display: block; text-align: center; margin-top: 15px; color: #64748b; text-decoration: none; font-size: 14px; }
         #status { margin-top: 15px; text-align: center; font-weight: bold; }
 
@@ -28,13 +33,31 @@
 
 <div class="card">
     <h2>🩺 Periyodik Muayene & Sağlık Kartı Girişi</h2>
-    <p style="color: #64748b; font-size: 14px;">Klinik bulguları girip ilgili firmayla ilişkilendirin.</p>
+    <p style="color: #64748b; font-size: 14px;">Çalışan bilgilerini ve klinik bulguları girin. Sistem yaş/mevzuat kontrolü yapacaktır.</p>
     
     <div class="form-group">
         <label>İlgili Müşteri Firma</label>
         <select id="company_select">
             <option value="">Firmalar yükleniyor...</option>
         </select>
+    </div>
+
+    <div class="grid-3">
+        <div class="form-group">
+            <label>Çalışan Adı Soyadı</label>
+            <input type="text" id="worker_name" placeholder="Örn: Ahmet Yılmaz">
+        </div>
+        <div class="form-group">
+            <label>Yaş</label>
+            <input type="number" id="worker_age" oninput="checkMedicalLawConstraint()" placeholder="Örn: 25">
+        </div>
+        <div class="form-group">
+            <label>Cinsiyet</label>
+            <select id="worker_gender">
+                <option value="Erkek">Erkek</option>
+                <option value="Kadın">Kadın</option>
+            </select>
+        </div>
     </div>
 
     <div class="form-group">
@@ -54,12 +77,16 @@
 
     <div class="form-group">
         <label>Kanaat ve Sonucu Kararı</label>
-        <select id="decision">
+        <select id="decision" onchange="checkMedicalLawConstraint()">
             <option value="Ağır ve Tehlikeli İşlerde Çalışabilir">Ağır ve Tehlikeli İşlerde Çalışabilir</option>
             <option value="Yüksekte Çalışabilir">Yüksekte Çalışabilir</option>
             <option value="Kısıtlamalarla Çalışabilir">Kısıtlamalarla Çalışabilir</option>
             <option value="Sahada Çalışması Uygun Değildir">Sahada Çalışması Uygun Değildir</option>
         </select>
+    </div>
+
+    <div id="law_warning" class="warning-box">
+        ⚠️ İSG Mevzuat Uyarısı: 18 yaş altı çalışanlar kanunen ağır, tehlikeli veya yüksekte çalışma gerektiren işlerde görevlendirilemez!
     </div>
 
     <button onclick="saveMedical()">Sağlık Kartını Onayla ve Kaydet (Canlı)</button>
@@ -71,8 +98,8 @@
             <thead>
                 <tr>
                     <th>Firma Unvanı</th>
-                    <th>Göz Bulgusu</th>
-                    <th>Kalp/Tansiyon</th>
+                    <th>Çalışan Adı (Yaş/Cinsiyet)</th>
+                    <th>Klinik Bulgular (Göz/Kalp)</th>
                     <th>Hekim Kararı</th>
                 </tr>
             </thead>
@@ -102,10 +129,24 @@
             window.location.href = "index.html";
         } else {
             document.body.style.display = "block";
-            await fetchCompaniesToSelect(); // Önce firmaları yükle
-            fetchMedicalRecords(); // Sonra listele
+            await fetchCompaniesToSelect();
+            fetchMedicalRecords();
         }
     };
+
+    // 🧠 DİNAMİK MEVZUAT KONTROL MOTORU
+    function checkMedicalLawConstraint() {
+        const age = parseInt(document.getElementById('worker_age').value);
+        const decision = document.getElementById('decision').value;
+        const warningBox = document.getElementById('law_warning');
+
+        // Yaş 18'den küçükse ve ağır/yüksekte çalışma seçildiyse uyarıyı patlat
+        if (age < 18 && (decision === "Ağır ve Tehlikeli İşlerde Çalışabilir" || decision === "Yüksekte Çalışabilir")) {
+            warningBox.style.display = 'block';
+        } else {
+            warningBox.style.display = 'none';
+        }
+    }
 
     async function fetchCompaniesToSelect() {
         const select = document.getElementById('company_select');
@@ -133,11 +174,15 @@
             tbody.innerHTML = '';
             data.forEach(m => {
                 const compName = m.customer_companies ? m.customer_companies.company_name : 'Bilinmeyen Firma';
+                const wName = m.worker_name ? m.worker_name : 'Belirtilmedi';
+                const wAge = m.worker_age ? m.worker_age : '-';
+                const wGender = m.worker_gender ? m.worker_gender : '-';
+
                 tbody.innerHTML += `
                     <tr>
                         <td><strong>${compName}</strong></td>
-                        <td>${m.goz_secure || '-'}</td>
-                        <td>${m.kalp_secure || '-'}</td>
+                        <td>${wName} (${wAge} / ${wGender})</td>
+                        <td>👁️ ${m.goz_secure || '-'} <br> ❤️ ${m.kalp_secure || '-'}</td>
                         <td><span class="badge-decision">${m.final_decision}</span></td>
                     </tr>
                 `;
@@ -147,17 +192,23 @@
 
     async function saveMedical() {
         const compId = document.getElementById('company_select').value;
+        const wName = document.getElementById('worker_name').value;
+        const wAge = parseInt(document.getElementById('worker_age').value);
+        const wGender = document.getElementById('worker_gender').value;
         const gozVal = document.getElementById('goz').value;
         const kalpVal = document.getElementById('kalp').value;
         const kasVal = document.getElementById('kas').value;
         const decisionVal = document.getElementById('decision').value;
         const statusDiv = document.getElementById('status');
 
-        if(!compId || !gozVal || !kalpVal || !kasVal) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen firma dahil tüm alanları doldurun!"; return; }
+        if(!compId || !wName || !wAge || !gozVal || !kalpVal || !kasVal) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen çalışan bilgileri dahil tüm alanları doldurun!"; return; }
         statusDiv.style.color = "blue"; statusDiv.innerText = "Medikal kayıt gönderiliyor...";
 
         const { error } = await dbClient.from('worker_medical_records').insert([{ 
             company_id: compId,
+            worker_name: wName,
+            worker_age: wAge,
+            worker_gender: wGender,
             goz_secure: gozVal, 
             kalp_secure: kalpVal, 
             kas_secure: kasVal, 
@@ -166,8 +217,13 @@
 
         if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
         else {
-            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Muayene Kartı İlgili Firmaya Bağlanarak Kaydedildi!";
-            document.getElementById('goz').value = ''; document.getElementById('kalp').value = ''; document.getElementById('kas').value = '';
+            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Muayene Kartı Mevzuat Kontrolünden Geçerek Başarıyla Kaydedildi!";
+            document.getElementById('worker_name').value = '';
+            document.getElementById('worker_age').value = '';
+            document.getElementById('goz').value = ''; 
+            document.getElementById('kalp').value = ''; 
+            document.getElementById('kas').value = '';
+            document.getElementById('law_warning').style.display = 'none';
             fetchMedicalRecords();
         }
     }
