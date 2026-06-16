@@ -14,14 +14,21 @@
         .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
         .logout-btn:hover { background: #dc2626; }
         
-        /* DASHBOARD METRİK KARTLARI TASARIMI */
+        /* 📊 FİRMA DAĞILIM KUTULARI (ÜST SIRA) */
+        .distribution-title { font-size: 14px; font-weight: bold; color: #475569; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;}
         .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        .metric-box { padding: 20px; border-radius: 10px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .metric-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .metric-box { padding: 15px 20px; border-radius: 10px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .metric-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
         .metric-orange { background: linear-gradient(135deg, #f97316, #c2410c); }
-        .metric-title { font-size: 13px; font-weight: 600; text-transform: uppercase; opacity: 0.9; }
-        .metric-value { font-size: 28px; font-weight: bold; margin-top: 5px; }
+        .metric-green { background: linear-gradient(135deg, #10b981, #047857); }
+        .metric-title { font-size: 12px; font-weight: 600; opacity: 0.9; }
+        .metric-value { font-size: 26px; font-weight: bold; margin-top: 3px; }
+
+        /* 🚨 OPERASYONEL RİSK METRİĞİ (BAĞIMSIZ BANT) */
+        .operational-banner { background: #1e293b; color: white; padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+        .op-text h4 { margin: 0; font-size: 15px; color: #f8fafc; }
+        .op-text p { margin: 3px 0 0 0; font-size: 12px; color: #94a3b8; }
+        .op-badge { background: #f97316; color: white; padding: 8px 16px; border-radius: 8px; font-size: 22px; font-weight: bold; box-shadow: 0 2px 5px rgba(249,115,22,0.3); }
 
         .form-group { margin-bottom: 15px; position: relative; }
         label { display: block; margin-bottom: 5px; color: #64748b; font-weight: 600; }
@@ -63,19 +70,28 @@
         <a id="menu_medical" href="medical.html" style="background:#16a34a; color:white; padding:10px 15px; border-radius:6px; text-decoration:none; font-weight:bold; font-size:14px; display:none;">🩺 Hekim Sağlık Kartı</a>
     </div>
 
+    <div class="distribution-title">📋 Portföy Tehlike Dağılımı</div>
     <div class="dashboard-grid">
-        <div class="metric-box metric-blue">
-            <div class="metric-title">Toplam Firma</div>
-            <div class="metric-value" id="stat_total_firms">0</div>
-        </div>
         <div class="metric-box metric-red">
-            <div class="metric-title">Çok Tehlikeli</div>
-            <div class="metric-value" id="stat_danger_firms">0</div>
+            <div class="metric-title">Çok Tehlikeli Firma</div>
+            <div class="metric-value" id="stat_danger_cok">0</div>
         </div>
         <div class="metric-box metric-orange">
-            <div class="metric-title">Açık Risk Bulgusu</div>
-            <div class="metric-value" id="stat_total_risks">0</div>
+            <div class="metric-title">Tehlikeli Firma</div>
+            <div class="metric-value" id="stat_danger_tehlike">0</div>
         </div>
+        <div class="metric-box metric-green">
+            <div class="metric-title">Az Tehlikeli Firma</div>
+            <div class="metric-value" id="stat_danger_az">0</div>
+        </div>
+    </div>
+
+    <div class="operational-banner">
+        <div class="op-text">
+            <h4>🚨 Sahadaki Aktif Risk ve Bulgular</h4>
+            <p>İSG uzmanları tarafından sisteme işlenmiş, kapatılmayı bekleyen toplam uygunsuzluk sayısı.</p>
+        </div>
+        <div class="op-badge" id="stat_total_risks">0</div>
     </div>
 
     <h2>🏢 Akıllı Firma Yönetim Paneli</h2>
@@ -146,24 +162,25 @@
         if (email.includes('hekim') || email.includes('admin')) document.getElementById('menu_medical').style.display = 'block';
         
         fetchCompanies();
-        fetchDashboardStats(); // Canlı sayaçları çalıştırıyoruz
+        fetchDashboardStats();
     };
 
-    // VERİTABANINDAN METRİKLERİ SAYAN FONKSİYON (GÜNCEL & GARANTİLİ)
+    // CANLI MANTIKSAL DAĞILIM VE SAYAÇ FONKSİYONU
     async function fetchDashboardStats() {
         try {
             const { data: companies } = await dbClient.from('customer_companies').select('danger_class');
             if (companies) {
-                document.getElementById('stat_total_firms').innerText = companies.length;
+                // Her tehlike sınıfını kendi içinde tertemiz filtreleyip sayıyoruz
+                const cokCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'çok tehlikeli').length;
+                const tehlikeCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'tehlikeli').length;
+                const azCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'az tehlikeli').length;
                 
-                // Küçük-büyük harf ve boşluk hatalarını tamamen süpürüyoruz
-                const dangerCount = companies.filter(c => {
-                    return c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'çok tehlikeli';
-                }).length;
-                
-                document.getElementById('stat_danger_firms').innerText = dangerCount;
+                document.getElementById('stat_danger_cok').innerText = cokCount;
+                document.getElementById('stat_danger_tehlike').innerText = tehlikeCount;
+                document.getElementById('stat_danger_az').innerText = azCount;
             }
 
+            // Bağımsız risk tablosundan veri çekme
             const { data: risks } = await dbClient.from('risk_assessments').select('id');
             if (risks) {
                 document.getElementById('stat_total_risks').innerText = risks.length;
@@ -218,7 +235,7 @@
                 document.getElementById('comp_name').value = ''; document.getElementById('tax_no').value = ''; document.getElementById('nace_search').value = ''; document.getElementById('danger_display').value = '';
                 selectedNaceCode = ""; selectedDangerClass = ""; 
                 fetchCompanies();
-                fetchDashboardStats(); // Yeni firma eklenince sayaçları da anlık güncelle
+                fetchDashboardStats();
             }
         } catch (err) { statusDiv.style.color = "red"; statusDiv.innerText = "Bağlantı Hatası: " + err.message; }
     }
