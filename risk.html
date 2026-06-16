@@ -20,7 +20,7 @@
             --nav-inactive-bg: #e2e8f0;
             --nav-inactive-text: #475569;
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; transition: background 0.3s; }
         .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
         
         /* 🏛️ GLOBAL STANDART ÜST BAR */
@@ -47,17 +47,20 @@
         button.save-btn:hover { background: var(--primary-hover); }
         
         .close-btn { background: var(--accent-green); color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { background: var(--accent-green-hover); }
+        .status-closed { opacity: 0.6; }
+
         .table-container { margin-top: 35px; border-top: 2px solid var(--border-color); padding-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); }
         th { background-color: var(--table-header); color: var(--text-muted); font-weight: 600; }
         .badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-        .risk-thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="card">
+    <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
     <div class="global-header">
         <div class="top-row">
             <div class="logo-area">🏢 <span>AKAD OSGB</span> <span class="logo-badge">SaaS</span></div>
@@ -66,6 +69,7 @@
                 <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
             </div>
         </div>
+
         <div class="nav-container">
             <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
             <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
@@ -78,7 +82,7 @@
     </div>
 
     <h2>🦺 Fine-Kinney Risk Analiz Motoru</h2>
-    <p style="color: var(--text-muted); font-size: 14px;">Sahada tespit edilen tehlikeleri girin ve yasal termin sürelerini takip edin.</p>
+    <p style="color: var(--text-muted); font-size: 14px;">Sahada tespit edilen tehlikeleri girin veya mevcut açık riskleri kapatın.</p>
     
     <div class="form-group">
         <label>İlgili Müşteri Firma</label>
@@ -134,15 +138,14 @@
         <input type="date" id="target_date">
     </div>
 
-    <button class="save-btn" onclick="saveRisk()">Risk Analizini Veritabanına Kaydet</button>
+    <button class="save-btn" onclick="saveRisk()">Risk Analizini Kaydet (Canlı)</button>
     <div id="status"></div>
 
     <div class="table-container">
-        <h3>📋 Sahadaki Risk Bulguları Takip Matrisi (Canlı Veri)</h3>
+        <h3>📋 Sahadaki Risk Bulguları Takip Matrisi (Canlı)</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Görsel</th>
                     <th>Firma Unvanı</th>
                     <th>Tehlike Tanımı</th>
                     <th>Skor</th>
@@ -151,7 +154,7 @@
                     <th>Aksiyon</th>
                 </tr>
             </thead>
-            <tbody id="risk_table_body"><tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Veriler yükleniyor...</td></tr></tbody>
+            <tbody id="risk_table_body"><tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Veriler yükleniyor...</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -161,20 +164,30 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    const themes = {
+        isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--primary-hover': '#1d4ed8', '--accent-green': '#10b981', '--accent-green-hover': '#059669', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
+        'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
+        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
+        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
+        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
+    };
+
     window.onload = async function() {
+        const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
+        if (themes[activeTheme]) { Object.keys(themes[activeTheme]).forEach(key => { document.documentElement.style.setProperty(key, themes[activeTheme][key]); }); }
+
         const { data: { session } } = await dbClient.auth.getSession();
         if (!session) { window.location.href = "login.html"; return; }
         
-        document.body.style.display = "block";
         const email = session.user.email;
         document.getElementById('current_user_email').innerText = email;
+        if (!email.includes('uzman') && !email.includes('admin')) { window.location.href = "dashboard.html"; return; }
         
+        document.body.style.display = "block";
         if (email.includes('uzman') || email.includes('admin')) document.getElementById('menu_risk').style.display = 'inline-block';
         if (email.includes('hekim') || email.includes('admin')) document.getElementById('menu_medical').style.display = 'inline-block';
         
-        calculateFineKinney(); 
-        fetchCompaniesToSelect(); 
-        fetchRisks();
+        calculateFineKinney(); await fetchCompaniesToSelect(); fetchRisks();
     };
 
     function calculateFineKinney() {
@@ -185,8 +198,8 @@
         document.getElementById('risk_score_display').innerText = score.toFixed(1);
         const lvl = document.getElementById('risk_level_display');
         if(score < 20) { lvl.innerText = "Düşük Risk"; lvl.style.color = "var(--accent-green)"; }
-        else if(score < 70) { lvl.innerText = "Olası Risk"; lvl.style.color = "orange"; }
-        else if(score < 200) { lvl.innerText = "Önemli Risk"; lvl.style.color = "darkorange"; }
+        else if(score < 70) { lvl.innerText = "Olası Risk (İzlenmeli)"; lvl.style.color = "orange"; }
+        else if(score < 200) { lvl.innerText = "Önemli Risk (Önlem Al)"; lvl.style.color = "darkorange"; }
         else { lvl.innerText = "ESASLI RİSK (İŞİ DURDUR)"; lvl.style.color = "red"; }
     }
 
@@ -201,7 +214,7 @@
         const tbody = document.getElementById('risk_table_body');
         const { data } = await dbClient.from('risk_assessments').select('*, customer_companies(company_name)').order('status', { ascending: false }).order('created_at', { ascending: false });
         tbody.innerHTML = '';
-        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Kayıtlı risk bulgusu yok.</td></tr>`; return; }
+        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Kayıtlı risk bulgusu yok.</td></tr>`; return; }
         
         data.forEach(r => {
             let badgeColor = '#dcfce7', textColor = '#15803d', lvlText = 'Düşük';
@@ -211,43 +224,25 @@
 
             const compName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
             const isClosed = r.status === 'Kapalı';
-            const actionCell = isClosed ? '<span style="color:var(--accent-green); font-weight:bold;">✓ Giderildi</span>' : `<button class="close-btn" onclick="closeRisk('${r.id}')">Kapat</button>`;
-            const imgHTML = r.image_url ? `<img src="${r.image_url}" class="risk-thumb" onclick="window.open('${r.image_url}')">` : `📷 <span style="font-size:10px; color:var(--text-muted);">Yok</span>`;
+            const actionCell = isClosed ? '<span style="color:var(--accent-green); font-weight:bold;">✓ Giderildi</span>' : `<button class="close-btn" onclick="closeRisk('${r.id}')">Riski Kapat</button>`;
 
-            tbody.innerHTML += `<tr class="${isClosed ? 'status-closed' : ''}"><td>${imgHTML}</td><td><strong>${compName}</strong></td><td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td><td>${r.risk_score}</td><td><span class="badge" style="background:${badgeColor}; color:${textColor};">${lvlText}</span></td><td>${r.target_date}</td><td>${actionCell}</td></tr>`;
+            tbody.innerHTML += `<tr class="${isClosed ? 'status-closed' : ''}"><td><strong>${compName}</strong></td><td>${isClosed ? `<s>${r.hazard_title}</s>` : r.hazard_title}</td><td>${r.risk_score}</td><td><span class="badge" style="background:${badgeColor}; color:${textColor};">${lvlText}</span></td><td>${r.target_date}</td><td>${actionCell}</td></tr>`;
         });
     }
 
     async function closeRisk(id) {
-        if(!confirm("Bulgu giderildi mi?")) return;
+        if(!confirm("Bu risk bulgusunun sahada giderildiğini onaylıyor musunuz?")) return;
         await dbClient.from('risk_assessments').update({ status: 'Kapalı' }).eq('id', id); fetchRisks();
     }
 
     async function saveRisk() {
-        const compId = document.getElementById('company_select').value; 
-        const hazard = document.getElementById('hazard_title').value;
-        const o = parseFloat(document.getElementById('prob').value); 
-        const f = parseFloat(document.getElementById('freq').value); 
-        const s = parseFloat(document.getElementById('sev').value);
+        const compId = document.getElementById('company_select').value; const hazard = document.getElementById('hazard_title').value;
+        const o = parseFloat(document.getElementById('prob').value); const f = parseFloat(document.getElementById('freq').value); const s = parseFloat(document.getElementById('sev').value);
         const target = document.getElementById('target_date').value;
-        const statusDiv = document.getElementById('status');
-
         if(!compId || !hazard || !target) { alert("Lütfen tüm alanları doldurun!"); return; }
-        statusDiv.style.color = "blue"; statusDiv.innerText = "Veritabanına kaydediliyor...";
-
-        const { error } = await dbClient.from('risk_assessments').insert([{ 
-            company_id: compId, hazard_title: hazard, probability_o: o, frequency_f: f, severity_s: s, risk_score: (o*f*s), target_date: target, status: 'Açık'
-        }]);
-
-        if (error) {
-            statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message;
-        } else {
-            statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Başarıyla tamamlandı!";
-            document.getElementById('hazard_title').value = ''; document.getElementById('target_date').value = '';
-            fetchRisks();
-        }
+        await dbClient.from('risk_assessments').insert([{ company_id: compId, hazard_title: hazard, probability_o: o, frequency_f: f, severity_s: s, risk_score: (o*f*s), target_date: target, status: 'Açık' }]);
+        document.getElementById('hazard_title').value = ''; document.getElementById('target_date').value = ''; fetchRisks();
     }
-
     async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
 </script>
 </body>
