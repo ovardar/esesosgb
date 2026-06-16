@@ -101,7 +101,7 @@
             <a href="index.html" class="nav-btn active-page">🏢 Firma Yönetimi</a>
             <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
             <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-            <a href="staff.html" class="nav-btn">🔑 Personel Yönetimi</a>
+            <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
             <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
             <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
         </div>
@@ -143,6 +143,105 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
+    // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
+    // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
+    function normalizeAccessRole(value) {
+        const v = (value || '').toString().trim().toLowerCase();
+        if (['admin', 'yonetici', 'yönetici'].includes(v)) return 'admin';
+        if (['uzman', 'isg_uzmani', 'isg uzmanı', 'iş güvenliği uzmanı'].includes(v)) return 'uzman';
+        if (['hekim', 'isyeri hekimi', 'işyeri hekimi'].includes(v)) return 'hekim';
+        if (['dsp', 'diğer sağlık personeli', 'diger saglik personeli'].includes(v)) return 'dsp';
+        if (['firma_yetkilisi', 'firma yetkilisi', 'musteri', 'müşteri'].includes(v)) return 'firma_yetkilisi';
+        return '';
+    }
+
+    function inferAccessRoleFromEmail(email) {
+        const e = (email || '').toLowerCase();
+        if (e.includes('admin')) return 'admin';
+        if (e.includes('hekim')) return 'hekim';
+        if (e.includes('dsp')) return 'dsp';
+        if (e.includes('firma') || e.includes('musteri') || e.includes('müşteri')) return 'firma_yetkilisi';
+        if (e.includes('uzman')) return 'uzman';
+        return 'uzman';
+    }
+
+    function isStaffAccessActive(record) {
+        if (!record) return true;
+        if (record.can_login === false) return false;
+        if (record.is_active_manual === 'Aktif') return true;
+        if (record.is_active_manual === 'Pasif') return false;
+        const today = new Date(); today.setHours(0,0,0,0);
+        if (record.hire_date) {
+            const hire = new Date(record.hire_date); hire.setHours(0,0,0,0);
+            if (hire > today) return false;
+        }
+        if (record.termination_date) {
+            const term = new Date(record.termination_date); term.setHours(0,0,0,0);
+            if (term <= today) return false;
+        }
+        return true;
+    }
+
+    async function getCurrentAuthContext() {
+        const { data: { session } } = await dbClient.auth.getSession();
+        if (!session) return { session: null, email: '', role: '', canLogin: false, staff: null };
+        const email = session.user.email || '';
+        let staff = null;
+        try {
+            const { data } = await dbClient.from('osgb_staff').select('*').ilike('email', email).maybeSingle();
+            staff = data || null;
+        } catch (err) {
+            console.warn('Rol kaydı okunamadı, e-posta bazlı geçici role dönülüyor:', err.message);
+        }
+        const role = normalizeAccessRole(staff && staff.access_role) || normalizeAccessRole(staff && staff.staff_role) || inferAccessRoleFromEmail(email);
+        const canLogin = isStaffAccessActive(staff);
+        return { session, email, role, canLogin, staff };
+    }
+
+    function canAccessPage(role, page) {
+        if (role === 'admin') return true;
+        if (page === 'risk') return role === 'uzman';
+        if (page === 'medical') return role === 'hekim';
+        if (page === 'staff') return false;
+        if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
+        return true;
+    }
+
+    function roleLabel(role) {
+        return { admin: 'Admin', uzman: 'İSG Uzmanı', hekim: 'İşyeri Hekimi', dsp: 'DSP', firma_yetkilisi: 'Firma Yetkilisi' }[role] || role || 'Rol yok';
+    }
+
+    function applyRoleBasedNavigation(role) {
+        const riskMenu = document.getElementById('menu_risk');
+        const medicalMenu = document.getElementById('menu_medical');
+        const staffMenu = document.getElementById('menu_staff');
+        if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
+        if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
+        if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
+        if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
+    }
+
+    async function requireAuthAndRole(page) {
+        const auth = await getCurrentAuthContext();
+        if (!auth.session) { window.location.href = 'login.html'; return null; }
+        if (!auth.canLogin) {
+            await dbClient.auth.signOut();
+            alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
+            window.location.href = 'login.html';
+            return null;
+        }
+        const userInfo = document.getElementById('current_user_email');
+        if (userInfo) userInfo.innerText = `${auth.email} • ${roleLabel(auth.role)}`;
+        applyRoleBasedNavigation(auth.role);
+        if (page && !canAccessPage(auth.role, page)) {
+            window.location.href = 'dashboard.html';
+            return null;
+        }
+        return auth;
+    }
+
+
     let selectedNaceCode = "";
     let selectedDangerClass = "";
 
@@ -164,16 +263,9 @@
         const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
         setTheme(activeTheme);
 
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) { window.location.href = "login.html"; return; }
-        
+        const auth = await requireAuthAndRole('company');
+        if (!auth) return;
         document.body.style.display = "block";
-        const email = session.user.email;
-        document.getElementById('current_user_email').innerText = email;
-        
-        if (email.includes('uzman') || email.includes('admin')) document.getElementById('menu_risk').style.display = 'inline-block';
-        if (email.includes('hekim') || email.includes('admin')) document.getElementById('menu_medical').style.display = 'inline-block';
-        
         fetchCompanies();
     };
 
