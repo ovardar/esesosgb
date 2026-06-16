@@ -386,9 +386,7 @@
                 .remove([imagePath]);
 
             if (storageError) {
-                const devam = confirm("Fotoğraf Storage'dan silinemedi: " + storageError.message + "
-
-Yine de risk kaydını tablodan silmek istiyor musunuz?");
+                const devam = confirm("Fotoğraf Storage'dan silinemedi: " + storageError.message + "\n\nYine de risk kaydını tablodan silmek istiyor musunuz?");
                 if (!devam) return;
             }
         }
