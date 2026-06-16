@@ -208,6 +208,7 @@
         document.getElementById('suggestions').style.display = 'none';
     }
 
+  ```javascript
     async function fetchCompanies() {
         const tbody = document.getElementById('company_table_body');
         try {
@@ -216,7 +217,20 @@
             tbody.innerHTML = '';
             data.forEach(company => {
                 let badgeClass = company.danger_class === 'Tehlikeli' ? 'badge-tehlike' : (company.danger_class === 'Çok Tehlikeli' ? 'badge-cok' : 'badge-az');
-                tbody.innerHTML += `<tr><td><strong>${company.company_name}</strong></td><td>${company.tax_number || '-'}</td><td>${company.nace_code || '-'}</td><td><span class="badge ${badgeClass}">${company.danger_class}</span></td></tr>`;
+                
+                // 🔗 FİRMA İSMİNİ DİNAMİK URL PARAMETRELİ LİNKE ÇEVİRDİK
+                tbody.innerHTML += `
+                    <tr>
+                        <td>
+                            <a href="company-detail.html?id=${company.id}" style="color: #2563eb; text-decoration: none; font-weight: bold; hover: text-decoration: underline;">
+                                🏢 ${company.company_name} (Detay gör)
+                            </a>
+                        </td>
+                        <td>${company.tax_number || '-'}</td>
+                        <td>${company.nace_code || '-'}</td>
+                        <td><span class="badge ${badgeClass}">${company.danger_class}</span></td>
+                    </tr>
+                `;
             });
         } catch (err) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`; }
     }
