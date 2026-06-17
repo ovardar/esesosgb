@@ -1910,8 +1910,11 @@ const localRisk = {
         await updateOfflineRiskCount();
 
         if (navigator.onLine && window.OSGBRiskSync) {
-            await window.OSGBRiskSync.syncPendingRisks();
-        }
+    await window.OSGBRiskSync.syncPendingRisks();
+}
+
+await updateOfflineRiskCount();
+fetchRisks();
     }
     async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
 </script>
