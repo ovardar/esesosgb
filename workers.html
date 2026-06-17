@@ -49,6 +49,7 @@
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
         th { background-color: var(--table-header); color: var(--text-muted); font-weight: 600; }
         tr:hover { background-color: var(--table-header); }
+            .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
     </style>
 </head>
 <body>
@@ -199,6 +200,27 @@
         if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
     }
 
+
+    function setTenantBranding(tenant) {
+        const titleEl = document.getElementById('lbl_osgb_title');
+        if (titleEl) titleEl.innerText = (tenant && tenant.name) ? tenant.name : 'Eses Software';
+        const area = titleEl ? titleEl.closest('.logo-area') : null;
+        if (!area) return;
+        let img = area.querySelector('.tenant-logo-img');
+        const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
+        if (logoUrl) {
+            if (!img) {
+                img = document.createElement('img');
+                img.className = 'tenant-logo-img';
+                img.alt = 'Logo';
+                area.insertBefore(img, titleEl);
+            }
+            img.src = logoUrl;
+        } else if (img) {
+            img.remove();
+        }
+    }
+
     async function requireAuthAndRole(page) {
         const auth = await getCurrentAuthContext();
         if (!auth.session) { window.location.href = 'login.html'; return null; }
@@ -210,8 +232,7 @@
         }
         const userInfo = document.getElementById('current_user_email');
         if (userInfo) userInfo.innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-        const titleEl = document.getElementById('lbl_osgb_title');
-        if (titleEl) titleEl.innerText = (auth.tenant && auth.tenant.name) ? auth.tenant.name : 'Eses Software';
+        setTenantBranding(auth.tenant);
         applyRoleBasedNavigation(auth.role);
         if (page && !canAccessPage(auth.role, page)) {
             window.location.href = 'dashboard.html';

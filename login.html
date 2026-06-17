@@ -9,6 +9,7 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 18px; box-sizing: border-box; }
         .login-card { background: white; padding: 35px; border-radius: 16px; width: 100%; max-width: 440px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         h2 { text-align: center; color: #1e293b; margin-top: 0; margin-bottom: 25px; }
+        .tenant-login-logo { display:none; width:86px; height:86px; object-fit:contain; margin:0 auto 14px; border:1px solid #e2e8f0; border-radius:18px; background:#fff; padding:10px; box-sizing:border-box; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 6px; color: #475569; font-weight: 600; font-size: 14px; }
         input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
@@ -24,6 +25,7 @@
 <body>
 
 <div class="login-card">
+    <img id="tenant_logo_img" class="tenant-login-logo" alt="Logo">
     <h2>🏢 <span id="tenant_title">OSGB SaaS</span> Giriş</h2>
     <div id="tenant_hint" style="text-align:center; color:#64748b; font-size:13px; margin-top:-15px; margin-bottom:20px;">Sistem giriş paneli</div>
 
@@ -100,6 +102,8 @@
             if (!error && data) {
                 document.getElementById('tenant_title').innerText = data.name || 'OSGB SaaS';
                 document.getElementById('tenant_hint').innerText = 'Giriş adresi: ' + window.location.origin + '/login.html?tenant=' + data.slug;
+                const logoImg = document.getElementById('tenant_logo_img');
+                if (data.logo_url) { logoImg.src = data.logo_url; logoImg.style.display = 'block'; } else { logoImg.style.display = 'none'; }
                 applyPrimaryColor(data.primary_color || currentPrimaryColor);
             }
         } catch (err) {

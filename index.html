@@ -74,6 +74,7 @@
         .worker-count-link { color: var(--primary); text-decoration: none; font-weight: bold; border-bottom: 1px dashed var(--primary); padding-bottom: 2px; }
         .worker-count-link:hover { color: var(--primary-hover); border-bottom: 1px solid var(--primary-hover); }
         .katip-time { font-family: 'Courier New', Courier, monospace; font-weight: bold; font-size: 12px; color: var(--text-main); line-height: 1.3; }
+            .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
     </style>
 </head>
 <body>
@@ -102,6 +103,7 @@
             <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
             <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
             <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
+            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
             <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
             <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
         </div>
@@ -142,12 +144,6 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let CURRENT_AUTH = null;
-    function tenantScoped(query) {
-        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) return query.eq('tenant_id', CURRENT_AUTH.tenant_id);
-        return query;
-    }
-
 
     // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
     // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
@@ -224,10 +220,33 @@
         const riskMenu = document.getElementById('menu_risk');
         const medicalMenu = document.getElementById('menu_medical');
         const staffMenu = document.getElementById('menu_staff');
+        const saasMenu = document.getElementById('menu_saas');
         if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
         if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
         if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
         if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
+        if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
+    }
+
+
+    function setTenantBranding(tenant) {
+        const titleEl = document.getElementById('lbl_osgb_title');
+        if (titleEl) titleEl.innerText = (tenant && tenant.name) ? tenant.name : 'Eses Software';
+        const area = titleEl ? titleEl.closest('.logo-area') : null;
+        if (!area) return;
+        let img = area.querySelector('.tenant-logo-img');
+        const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
+        if (logoUrl) {
+            if (!img) {
+                img = document.createElement('img');
+                img.className = 'tenant-logo-img';
+                img.alt = 'Logo';
+                area.insertBefore(img, titleEl);
+            }
+            img.src = logoUrl;
+        } else if (img) {
+            img.remove();
+        }
     }
 
     async function requireAuthAndRole(page) {
@@ -241,15 +260,12 @@
         }
         const userInfo = document.getElementById('current_user_email');
         if (userInfo) userInfo.innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-        const titleEl = document.getElementById('lbl_osgb_title');
-        if (titleEl) titleEl.innerText = (auth.tenant && auth.tenant.name) ? auth.tenant.name : 'Eses Software';
+        setTenantBranding(auth.tenant);
         applyRoleBasedNavigation(auth.role);
         if (page && !canAccessPage(auth.role, page)) {
             window.location.href = 'dashboard.html';
             return null;
         }
-        CURRENT_AUTH = auth;
-        window.CURRENT_AUTH = auth;
         return auth;
     }
 
@@ -313,13 +329,13 @@
     async function fetchCompanies() {
         const tbody = document.getElementById('company_table_body');
         try {
-            const { data: companies } = await tenantScoped(dbClient.from('customer_companies').select('*')).order('created_at', { ascending: false });
+            const { data: companies } = await dbClient.from('customer_companies').select('*').order('created_at', { ascending: false });
             if (!companies || companies.length === 0) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Henüz kayıtlı firma bulunmuyor.</td></tr>`; return; }
             tbody.innerHTML = '';
             
             for (const company of companies) {
                 let badgeClass = company.danger_class === 'Tehlikeli' ? 'badge-tehlike' : (company.danger_class === 'Çok Tehlikeli' ? 'badge-cok' : 'badge-az');
-                const { count } = await tenantScoped(dbClient.from('workers').select('*', { count: 'exact', head: true })).eq('company_id', company.id);
+                const { count } = await dbClient.from('workers').select('*', { count: 'exact', head: true }).eq('company_id', company.id);
                 const workerCount = count || 0;
 
                 let uzmanKatsayi = 10; let hekimKatsayi = 5;
@@ -351,7 +367,7 @@
         if(!name || !tax || !selectedNaceCode) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen alanları eksiksiz doldurun!"; return; }
         statusDiv.style.color = "blue"; statusDiv.innerText = "Buluta gönderiliyor...";
         try {
-            const { error } = await dbClient.from('customer_companies').insert([{ tenant_id: CURRENT_AUTH ? CURRENT_AUTH.tenant_id : null, company_name: name, tax_number: tax, nace_code: selectedNaceCode, danger_class: selectedDangerClass }]);
+            const { error } = await dbClient.from('customer_companies').insert([{ company_name: name, tax_number: tax, nace_code: selectedNaceCode, danger_class: selectedDangerClass }]);
             if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
             else {
                 statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Başarılı! Firma kaydedildi.";

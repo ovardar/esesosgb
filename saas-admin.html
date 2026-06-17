@@ -50,6 +50,13 @@
         .link-box { background:#f8fafc; border:1px dashed var(--border-color); border-radius:8px; padding:9px; word-break:break-all; font-size:12px; color:#334155; }
         .edit-panel { margin-top:18px; border:2px solid #dbeafe; background:#f8fbff; }
         .hidden { display:none; }
+        .logo-upload-box { border:1px dashed var(--border-color); border-radius:10px; padding:12px; background:#f8fafc; }
+        .logo-upload-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .logo-preview { width:64px; height:64px; border:1px solid var(--border-color); border-radius:12px; background:white; object-fit:contain; padding:6px; box-sizing:border-box; }
+        .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
+        .help-text { color:var(--text-muted); font-size:11px; margin-top:6px; line-height:1.35; }
+        input[type="file"] { padding:8px; background:white; }
+
         @media(max-width:900px){ body{padding:12px}.top-row,.controls-group{flex-direction:column;align-items:stretch}.grid,.row{grid-template-columns:1fr}.card{padding:15px} }
     </style>
 </head>
@@ -90,8 +97,15 @@
                         <input id="tenant_color" type="color" value="#2563eb">
                     </div>
                 </div>
-                <label>Logo URL <span class="muted">(şimdilik opsiyonel)</span></label>
-                <input id="tenant_logo" placeholder="https://.../logo.png">
+                <label>Logo Dosyası <span class="muted">(opsiyonel)</span></label>
+                <div class="logo-upload-box">
+                    <div class="logo-upload-row">
+                        <img id="tenant_logo_preview" class="logo-preview" alt="Logo önizleme" src="">
+                        <input id="tenant_logo_file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="previewSelectedLogo('tenant_logo_file','tenant_logo_preview')">
+                    </div>
+                    <div class="help-text">PNG, JPG, WebP veya SVG seçebilirsin. Büyük görseller otomatik küçültülüp sıkıştırılır; üst menüde 32×32 logo olarak gösterilir.</div>
+                </div>
+                <input id="tenant_logo" type="hidden">
                 <label>Üretilecek Giriş Linki</label>
                 <div class="link-box" id="login_link_preview">Slug girince link oluşur.</div>
 
@@ -123,8 +137,16 @@
                         <input id="edit_tenant_color" type="color" value="#2563eb">
                     </div>
                 </div>
-                <label>Logo URL</label>
-                <input id="edit_tenant_logo" placeholder="https://.../logo.png">
+                <label>Logo Dosyası</label>
+                <div class="logo-upload-box">
+                    <div class="logo-upload-row">
+                        <img id="edit_tenant_logo_preview" class="logo-preview" alt="Logo önizleme" src="">
+                        <input id="edit_tenant_logo_file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="previewSelectedLogo('edit_tenant_logo_file','edit_tenant_logo_preview')">
+                    </div>
+                    <div class="help-text">Yeni logo seçmezsen mevcut logo korunur. Logoyu kaldırmak için aşağıdaki butonu kullan.</div>
+                    <button type="button" class="btn btn-secondary btn-small" onclick="clearEditedLogo()">Logoyu Kaldır</button>
+                </div>
+                <input id="edit_tenant_logo" type="hidden">
                 <label>Giriş Linki</label>
                 <div class="link-box" id="edit_login_link_preview">-</div>
                 <div class="row">
@@ -184,7 +206,7 @@ function normalizeAccessRole(value){ const v=(value||'').toString().trim().toLow
 function roleLabel(role){ return {super_admin:'Super Admin',admin:'Admin',uzman:'İSG Uzmanı',hekim:'İşyeri Hekimi',dsp:'DSP',firma_yetkilisi:'Firma Yetkilisi'}[role] || role || 'Rol yok'; }
 function isStaffAccessActive(record){ if(!record) return true; if(record.can_login===false) return false; if(record.is_active_manual==='Aktif') return true; if(record.is_active_manual==='Pasif') return false; return true; }
 async function getCurrentAuthContext(){ const {data:{session}}=await dbClient.auth.getSession(); if(!session) return {session:null}; const email=session.user.email||''; const {data}=await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email', email).maybeSingle(); const staff=data||null; const role=normalizeAccessRole(staff&&staff.access_role); return {session,email,role,staff,canLogin:isStaffAccessActive(staff),tenant:staff&&staff.tenants?staff.tenants:null}; }
-async function requireSuperAdmin(){ const auth=await getCurrentAuthContext(); if(!auth.session){ window.location.href='login.html'; return null; } if(!auth.canLogin){ await dbClient.auth.signOut(); alert('Bu kullanıcı için sistem erişimi pasif.'); window.location.href='login.html'; return null; } if(auth.role!=='super_admin'){ alert('Bu sayfa yalnızca Super Admin içindir.'); window.location.href='dashboard.html'; return null; } document.getElementById('current_user_email').innerText = `${auth.email} • ${roleLabel(auth.role)}`; document.getElementById('lbl_osgb_title').innerText = auth.tenant && auth.tenant.name ? auth.tenant.name : 'Eses Software'; currentAuth = auth; return auth; }
+async function requireSuperAdmin(){ const auth=await getCurrentAuthContext(); if(!auth.session){ window.location.href='login.html'; return null; } if(!auth.canLogin){ await dbClient.auth.signOut(); alert('Bu kullanıcı için sistem erişimi pasif.'); window.location.href='login.html'; return null; } if(auth.role!=='super_admin'){ alert('Bu sayfa yalnızca Super Admin içindir.'); window.location.href='dashboard.html'; return null; } document.getElementById('current_user_email').innerText = `${auth.email} • ${roleLabel(auth.role)}`; setTenantBranding(auth.tenant); currentAuth = auth; return auth; }
 function slugify(txt){ return (txt||'').toString().trim().toLowerCase().replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
 function tenantLoginUrl(slug){ return `${window.location.origin}/login.html?tenant=${encodeURIComponent(slug||'')}`; }
 function previewLoginLink(){ const slug=slugify(document.getElementById('tenant_slug').value); document.getElementById('login_link_preview').innerText = slug ? tenantLoginUrl(slug) : 'Slug girince link oluşur.'; }
@@ -193,19 +215,104 @@ document.getElementById('tenant_name').addEventListener('input',()=>{ const slug
 document.getElementById('tenant_slug').addEventListener('input',()=>{ document.getElementById('tenant_slug').dataset.touched='1'; });
 function setStatus(msg, ok=true){ const el=document.getElementById('form_status'); el.className='status '+(ok?'ok':'err'); el.innerText=msg||''; }
 function setEditStatus(msg, ok=true){ const el=document.getElementById('edit_status'); el.className='status '+(ok?'ok':'err'); el.innerText=msg||''; }
-function clearForm(){ ['tenant_name','tenant_slug','tenant_logo','admin_name','admin_email'].forEach(id=>document.getElementById(id).value=''); document.getElementById('tenant_color').value='#2563eb'; document.getElementById('tenant_slug').dataset.touched=''; previewLoginLink(); setStatus(''); }
+const LOGO_BUCKET = 'tenant-logos';
+
+function setTenantBranding(tenant){
+  const titleEl = document.getElementById('lbl_osgb_title');
+  if (titleEl) titleEl.innerText = tenant && tenant.name ? tenant.name : 'Eses Software';
+  const area = titleEl ? titleEl.closest('.logo-area') : null;
+  if (!area) return;
+  let img = area.querySelector('.tenant-logo-img');
+  const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
+  if (logoUrl) {
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'tenant-logo-img';
+      img.alt = 'Logo';
+      area.insertBefore(img, titleEl);
+    }
+    img.src = logoUrl;
+  } else if (img) {
+    img.remove();
+  }
+}
+
+function resetLogoPreview(imgId){
+  const img=document.getElementById(imgId);
+  if(!img) return;
+  img.removeAttribute('src');
+  img.style.opacity='0.35';
+}
+
+function previewSelectedLogo(inputId, imgId){
+  const input=document.getElementById(inputId);
+  const img=document.getElementById(imgId);
+  if(!input || !img || !input.files || !input.files[0]) return;
+  img.src=URL.createObjectURL(input.files[0]);
+  img.style.opacity='1';
+}
+
+async function fileToCompressedLogo(file){
+  if(!file) return null;
+  if(file.size > 5 * 1024 * 1024) throw new Error('Logo dosyası en fazla 5 MB olabilir.');
+  if(file.type === 'image/svg+xml') {
+    if(file.size > 1024 * 1024) throw new Error('SVG logo en fazla 1 MB olabilir.');
+    return { blob:file, ext:'svg', contentType:'image/svg+xml' };
+  }
+  const bitmap = await new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload=()=>resolve(img);
+    img.onerror=()=>reject(new Error('Logo dosyası okunamadı.'));
+    img.src=URL.createObjectURL(file);
+  });
+  const maxSize = 512;
+  const ratio = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * ratio));
+  const h = Math.max(1, Math.round(bitmap.height * ratio));
+  const canvas=document.createElement('canvas');
+  canvas.width=w; canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,w,h);
+  ctx.drawImage(bitmap,0,0,w,h);
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.82));
+  if(!blob) throw new Error('Logo sıkıştırılamadı.');
+  return { blob, ext:'webp', contentType:'image/webp' };
+}
+
+async function uploadLogoForTenant(tenantId, slug, inputId){
+  const input=document.getElementById(inputId);
+  if(!input || !input.files || !input.files[0]) return null;
+  const prepared=await fileToCompressedLogo(input.files[0]);
+  const safeSlug=slugify(slug || tenantId || 'tenant');
+  const path=`${tenantId}/${safeSlug}-logo-${Date.now()}.${prepared.ext}`;
+  const { error:uploadError } = await dbClient.storage.from(LOGO_BUCKET).upload(path, prepared.blob, { contentType:prepared.contentType, upsert:true });
+  if(uploadError) throw uploadError;
+  const { data } = dbClient.storage.from(LOGO_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function clearEditedLogo(){
+  document.getElementById('edit_tenant_logo').value='';
+  document.getElementById('edit_tenant_logo_file').value='';
+  resetLogoPreview('edit_tenant_logo_preview');
+  setEditStatus('Logo kaldırılmak üzere işaretlendi. Kaydet butonuna basınca logo kaldırılır.', true);
+}
+
+function clearForm(){ ['tenant_name','tenant_slug','tenant_logo','admin_name','admin_email'].forEach(id=>document.getElementById(id).value=''); const f=document.getElementById('tenant_logo_file'); if(f) f.value=''; resetLogoPreview('tenant_logo_preview'); document.getElementById('tenant_color').value='#2563eb'; document.getElementById('tenant_slug').dataset.touched=''; previewLoginLink(); setStatus(''); }
 async function createTenantWithAdmin(){
   try{
     const name=document.getElementById('tenant_name').value.trim();
     const slug=slugify(document.getElementById('tenant_slug').value);
-    const logo=document.getElementById('tenant_logo').value.trim() || null;
+    let logo=document.getElementById('tenant_logo').value.trim() || null;
     const color=document.getElementById('tenant_color').value || '#2563eb';
     const adminName=document.getElementById('admin_name').value.trim();
     const adminEmail=document.getElementById('admin_email').value.trim().toLowerCase();
     if(!name || !slug) throw new Error('Müşteri adı ve slug zorunlu.');
     if(!adminName || !adminEmail) throw new Error('İlk admin adı ve e-postası zorunlu.');
-    const {data:tenant, error:tErr}=await dbClient.from('tenants').insert({name, slug, logo_url:logo, primary_color:color, is_active:true}).select().single();
+    const {data:tenant, error:tErr}=await dbClient.from('tenants').insert({name, slug, logo_url:null, primary_color:color, is_active:true}).select().single();
     if(tErr) throw tErr;
+    logo = await uploadLogoForTenant(tenant.id, slug, 'tenant_logo_file');
+    if(logo){ const {error:logoErr}=await dbClient.from('tenants').update({logo_url:logo}).eq('id', tenant.id); if(logoErr) throw logoErr; }
     const {error:sErr}=await dbClient.from('osgb_staff').insert({tenant_id:tenant.id, name_surname:adminName, staff_role:'Yönetici', certificate_class:'Yok', email:adminEmail, hire_date:new Date().toISOString().slice(0,10), is_active_manual:'Aktif', access_role:'admin', can_login:true, auth_invite_status:'not_sent'});
     if(sErr) throw sErr;
     setStatus(`Müşteri oluşturuldu. Giriş linki: ${tenantLoginUrl(slug)}`, true);
@@ -227,7 +334,7 @@ async function loadTenants(){
     const safeUrl=tenantLoginUrl(t.slug);
     const inviteButton=primaryAdmin ? `<button class="btn btn-blue btn-small" onclick="sendInvite('${primaryAdmin.id}')">Davet Gönder</button>` : '<span class="muted">Admin yok</span>';
     tbody.innerHTML += `<tr>
-      <td><strong>${escapeHtml(t.name)}</strong><br><span class="muted">slug: ${escapeHtml(t.slug)}</span></td>
+      <td>${t.logo_url?`<img src="${escapeHtml(t.logo_url)}" style="width:34px;height:34px;object-fit:contain;border:1px solid #e2e8f0;border-radius:8px;background:white;padding:3px;margin-right:6px;vertical-align:middle;">`:''}<strong>${escapeHtml(t.name)}</strong><br><span class="muted">slug: ${escapeHtml(t.slug)}</span></td>
       <td><div class="link-box">${safeUrl}</div><button class="btn btn-secondary btn-small" onclick="copyText('${safeUrl}')">Kopyala</button></td>
       <td>${adminsHtml}</td>
       <td>${active?'<span class="badge badge-green">Aktif</span>':'<span class="badge badge-red">Pasif</span>'}</td>
@@ -253,7 +360,7 @@ async function editTenant(id){
   document.getElementById('edit_admin_id').value=admin ? admin.id : '';
   document.getElementById('edit_tenant_name').value=t.name||'';
   document.getElementById('edit_tenant_slug').value=t.slug||'';
-  document.getElementById('edit_tenant_logo').value=t.logo_url||'';
+  document.getElementById('edit_tenant_logo').value=t.logo_url||''; document.getElementById('edit_tenant_logo_file').value=''; if(t.logo_url){ const img=document.getElementById('edit_tenant_logo_preview'); img.src=t.logo_url; img.style.opacity='1'; } else { resetLogoPreview('edit_tenant_logo_preview'); }
   document.getElementById('edit_tenant_color').value=t.primary_color||'#2563eb';
   document.getElementById('edit_tenant_active').value=(t.is_active!==false).toString();
   document.getElementById('edit_admin_name').value=admin ? (admin.name_surname||'') : '';
@@ -271,7 +378,7 @@ async function saveEditedTenant(){
     const adminId=document.getElementById('edit_admin_id').value;
     const name=document.getElementById('edit_tenant_name').value.trim();
     const slug=slugify(document.getElementById('edit_tenant_slug').value);
-    const logo=document.getElementById('edit_tenant_logo').value.trim() || null;
+    let logo=document.getElementById('edit_tenant_logo').value.trim() || null;
     const color=document.getElementById('edit_tenant_color').value || '#2563eb';
     const isActive=document.getElementById('edit_tenant_active').value==='true';
     const adminName=document.getElementById('edit_admin_name').value.trim();
@@ -280,6 +387,8 @@ async function saveEditedTenant(){
     const adminCanLogin=document.getElementById('edit_admin_can_login').value==='true';
     if(!tenantId || !name || !slug) throw new Error('Müşteri adı ve slug zorunlu.');
     if(!adminName || !adminEmail) throw new Error('Admin adı ve e-postası zorunlu.');
+    const uploadedLogo = await uploadLogoForTenant(tenantId, slug, 'edit_tenant_logo_file');
+    if(uploadedLogo) logo = uploadedLogo;
     const {error:tErr}=await dbClient.from('tenants').update({name, slug, logo_url:logo, primary_color:color, is_active:isActive}).eq('id', tenantId);
     if(tErr) throw tErr;
     if(adminId){
@@ -321,7 +430,7 @@ async function sendInvite(staffId){
   }catch(err){ setEditStatus('Davet gönderilemedi: '+(err.message||err), false); alert('Davet gönderilemedi: '+(err.message||err)); }
 }
 async function handleLogout(){ await dbClient.auth.signOut(); window.location.href='login.html'; }
-window.onload=async()=>{ const auth=await requireSuperAdmin(); if(!auth) return; document.body.style.display='block'; previewLoginLink(); loadTenants(); };
+window.onload=async()=>{ const auth=await requireSuperAdmin(); if(!auth) return; document.body.style.display='block'; resetLogoPreview('tenant_logo_preview'); resetLogoPreview('edit_tenant_logo_preview'); previewLoginLink(); loadTenants(); };
 </script>
 </body>
 </html>
