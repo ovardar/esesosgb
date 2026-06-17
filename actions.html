@@ -670,87 +670,16 @@
         }
 
     
-
-        /* ================================
-           v26 PRODUCT UX REFINEMENT
-           ================================ */
-        :root { --brand-500: var(--primary); --brand-600: var(--primary); --brand-700: #116149; }
-        body {
-            background:
-                radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 12%, transparent), transparent 30rem),
-                linear-gradient(180deg, var(--bg-main) 0%, color-mix(in srgb, var(--bg-main) 88%, #e6f4ee) 100%) !important;
-        }
-        .global-header {
-            background: linear-gradient(135deg, #e9f8f0, #cfeee0) !important;
-            color: #12392d !important;
-            border-bottom: 1px solid rgba(22, 131, 95, .18) !important;
-        }
-        .global-header .logo-area,
-        .global-header .user-info,
-        .global-header .theme-selector-container span { color: #12392d !important; }
-        .global-header .logo-area {
-            font-family: ui-serif, Georgia, Cambria, "Times New Roman", serif !important;
-            font-size: 18px !important;
-            font-weight: 500 !important;
-            letter-spacing: .01em !important;
-        }
-        .global-header .logo-area > span#lbl_osgb_title { font-weight: 500 !important; }
-        .global-header .theme-selector-container,
-        .global-header .user-info {
-            background: rgba(255,255,255,.62) !important;
-            border-color: rgba(22, 131, 95, .20) !important;
-            color: #12392d !important;
-        }
-        .global-header .nav-container {
-            background: rgba(255,255,255,.54) !important;
-            border-color: rgba(22, 131, 95, .16) !important;
-        }
-        .global-header .nav-btn {
-            background: rgba(255,255,255,.72) !important;
-            color: #204d3f !important;
-            border: 1px solid rgba(22, 131, 95, .12) !important;
-        }
-        .global-header .nav-btn:hover { background: #fff !important; color: #0f513f !important; }
-        .global-header .nav-btn.active-page {
-            background: var(--primary) !important;
-            color: white !important;
-            box-shadow: 0 6px 16px rgba(22, 131, 95, .20) !important;
-        }
-        .global-header .logo-badge {
-            background: rgba(22,131,95,.10) !important;
-            color: #116149 !important;
-            border-color: rgba(22,131,95,.18) !important;
-            font-family: inherit !important;
-            font-size: 10px !important;
-        }
-        .card > h1 + p,
-        .card > h2 + p,
-        .card > h3 + p,
-        .page-subtitle {
-            margin: -8px 26px 20px !important;
-            color: var(--text-muted) !important;
-            font-size: 14px !important;
-            line-height: 1.55 !important;
-            max-width: 980px !important;
-        }
-        table, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; font-size: 13px !important; }
-        th { cursor: pointer; user-select: none; white-space: nowrap; }
-        th.sort-asc::after { content: " ▲"; font-size: 10px; color: var(--primary); }
-        th.sort-desc::after { content: " ▼"; font-size: 10px; color: var(--primary); }
-        .table-tools { display:flex; align-items:center; justify-content:space-between; gap:10px; margin: 8px 0 10px; flex-wrap:wrap; }
-        .table-tools small { color: var(--text-muted); font-weight:600; }
-        .column-filter-row th { background: color-mix(in srgb, var(--table-header) 86%, white) !important; padding: 6px !important; }
-        .column-filter-row input { width:100%; box-sizing:border-box; border:1px solid var(--border-color); border-radius:8px; padding:7px 8px; font-size:12px; background: var(--bg-card); color: var(--text-main); }
-        .action-stack { display:flex; flex-direction:column; gap:6px; min-width: 112px; }
-        .action-stack .btn { width:100%; text-align:center; margin:0 !important; white-space: nowrap; }
-        .link-box { max-width: 260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        @media (max-width: 760px) {
-            .global-header .logo-area { font-size: 16px !important; }
-            .card > h1 + p, .card > h2 + p, .page-subtitle { margin-left: 16px !important; margin-right: 16px !important; }
-            table, th, td { font-size: 12px !important; }
-            .column-filter-row input { min-width: 92px; }
-        }
-
+        /* v26.1 layout and typography fixes */
+        .logo-area { font-weight: 600 !important; letter-spacing: .1px !important; font-size: 17px !important; }
+        .logo-area #lbl_osgb_title { font-weight: 600 !important; }
+        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
+        table, thead, tbody, tr, th, td { font-family: inherit !important; }
+        table { font-size: 13px !important; }
+        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
+        tbody td { padding: 9px 11px !important; }
+        .page-desc { max-width: none !important; }
+    
     </style>
 </head>
 <body>
@@ -1092,67 +1021,5 @@
         window.location.href = 'login.html';
     }
 </script>
-
-<script>
-(function(){
-  function cellText(row, idx){ return (row.children[idx]?.innerText || '').trim().toLocaleLowerCase('tr-TR'); }
-  function enhanceTable(table){
-    if(!table || table.dataset.v26Enhanced === '1' || !table.tHead || !table.tHead.rows.length) return;
-    table.dataset.v26Enhanced = '1';
-    const headerRow = table.tHead.rows[0];
-    const colCount = headerRow.cells.length;
-    Array.from(headerRow.cells).forEach((th, idx) => {
-      th.title = 'Sıralamak için tıklayın';
-      th.addEventListener('click', () => {
-        const tbody = table.tBodies[0]; if(!tbody) return;
-        const rows = Array.from(tbody.rows).filter(r => !r.classList.contains('column-filter-row'));
-        const current = th.dataset.sortDir === 'asc' ? 'desc' : 'asc';
-        Array.from(headerRow.cells).forEach(h => { h.classList.remove('sort-asc','sort-desc'); h.dataset.sortDir=''; });
-        th.dataset.sortDir = current; th.classList.add(current === 'asc' ? 'sort-asc' : 'sort-desc');
-        rows.sort((a,b) => {
-          const av = cellText(a, idx); const bv = cellText(b, idx);
-          const an = parseFloat(av.replace(/[^0-9,.-]/g,'').replace(',','.'));
-          const bn = parseFloat(bv.replace(/[^0-9,.-]/g,'').replace(',','.'));
-          const bothNum = !Number.isNaN(an) && !Number.isNaN(bn) && /\d/.test(av+bv);
-          const cmp = bothNum ? an - bn : av.localeCompare(bv, 'tr');
-          return current === 'asc' ? cmp : -cmp;
-        });
-        rows.forEach(r => tbody.appendChild(r));
-      });
-    });
-    const filterRow = document.createElement('tr');
-    filterRow.className = 'column-filter-row';
-    for(let i=0;i<colCount;i++){
-      const th = document.createElement('th');
-      const input = document.createElement('input');
-      input.type = 'search';
-      input.placeholder = 'Filtrele';
-      input.addEventListener('input', () => applyFilters(table));
-      th.appendChild(input); filterRow.appendChild(th);
-    }
-    table.tHead.appendChild(filterRow);
-    if(!table.previousElementSibling || !table.previousElementSibling.classList || !table.previousElementSibling.classList.contains('table-tools')){
-      const tools = document.createElement('div');
-      tools.className = 'table-tools';
-      tools.innerHTML = '<small>🔎 Her sütunda filtreleme, başlıklara tıklayarak sıralama</small>';
-      table.parentNode.insertBefore(tools, table);
-    }
-  }
-  function applyFilters(table){
-    const inputs = Array.from(table.querySelectorAll('.column-filter-row input'));
-    const tbody = table.tBodies[0]; if(!tbody) return;
-    Array.from(tbody.rows).forEach(row => {
-      const ok = inputs.every((inp, idx) => !inp.value || cellText(row, idx).includes(inp.value.trim().toLocaleLowerCase('tr-TR')));
-      row.style.display = ok ? '' : 'none';
-    });
-  }
-  window.enhanceAllTables = function(){ document.querySelectorAll('table').forEach(enhanceTable); };
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(window.enhanceAllTables, 500);
-    setTimeout(window.enhanceAllTables, 1500);
-  });
-})();
-</script>
-
 </body>
 </html>
