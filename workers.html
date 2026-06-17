@@ -702,6 +702,7 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let CURRENT_AUTH = null;
 
     // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
     // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
@@ -842,6 +843,7 @@
 
         const auth = await requireAuthAndRole('workers');
         if (!auth) return;
+        CURRENT_AUTH = auth;
         document.body.style.display = "block";
 
         await fetchCompaniesToSelect();
@@ -853,7 +855,9 @@
     async function fetchCompaniesToSelect() {
         const select = document.getElementById('company_select');
         try {
-            const { data } = await dbClient.from('customer_companies').select('id, company_name').order('company_name');
+            let query = dbClient.from('customer_companies').select('id, company_name').order('company_name');
+            if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) query = query.eq('tenant_id', CURRENT_AUTH.tenant_id);
+            const { data } = await query;
             if (data && data.length > 0) {
                 select.innerHTML = '<option value="">-- Lütfen Liste İçin Firma Seçin --</option>';
                 data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; });
@@ -866,7 +870,9 @@
         const tbody = document.getElementById('worker_table_body');
         if(!compId) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr>`; return; }
         try {
-            const { data } = await dbClient.from('workers').select('*').eq('company_id', compId).order('created_at', { ascending: false });
+            let query = dbClient.from('workers').select('*').eq('company_id', compId).order('created_at', { ascending: false });
+            if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) query = query.eq('tenant_id', CURRENT_AUTH.tenant_id);
+            const { data } = await query;
             if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Kayıtlı personel bulunmuyor.</td></tr>`; return; }
             tbody.innerHTML = '';
             data.forEach(w => { tbody.innerHTML += `<tr><td><strong>${w.full_name}</strong></td><td>${w.age}</td><td>${w.gender}</td><td>${w.job_title || '-'}</td></tr>`; });
@@ -882,7 +888,9 @@
         const statusDiv = document.getElementById('status');
 
         if(!compId || !name || !age) { statusDiv.style.color = "red"; statusDiv.innerText = "Eksik alanları doldurun!"; return; }
-        const { error } = await dbClient.from('workers').insert([{ company_id: compId, full_name: name, age: parseInt(age), gender: gender, job_title: job }]);
+        const payload = { company_id: compId, full_name: name, age: parseInt(age), gender: gender, job_title: job };
+        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) payload.tenant_id = CURRENT_AUTH.tenant_id;
+        const { error } = await dbClient.from('workers').insert([payload]);
         if (error) alert(error.message);
         else { document.getElementById('worker_name').value = ''; document.getElementById('worker_age').value = ''; document.getElementById('worker_job').value = ''; fetchWorkers(); }
     }
