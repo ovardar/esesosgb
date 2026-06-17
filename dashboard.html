@@ -108,6 +108,7 @@
             <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
             <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
             <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
+            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
             <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
             <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
         </div>
@@ -180,12 +181,6 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let CURRENT_AUTH = null;
-    function tenantScoped(query) {
-        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) return query.eq('tenant_id', CURRENT_AUTH.tenant_id);
-        return query;
-    }
-
 
     // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
     // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
@@ -262,10 +257,12 @@
         const riskMenu = document.getElementById('menu_risk');
         const medicalMenu = document.getElementById('menu_medical');
         const staffMenu = document.getElementById('menu_staff');
+        const saasMenu = document.getElementById('menu_saas');
         if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
         if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
         if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
         if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
+        if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
     }
 
     async function requireAuthAndRole(page) {
@@ -286,8 +283,6 @@
             window.location.href = 'dashboard.html';
             return null;
         }
-        CURRENT_AUTH = auth;
-        window.CURRENT_AUTH = auth;
         return auth;
     }
 
@@ -359,16 +354,11 @@
             const today = todayString();
             const { start, end } = currentMonthRange();
 
-            const companiesQuery = tenantScoped(dbClient.from('customer_companies').select('id, danger_class'));
-            const workersQuery = tenantScoped(dbClient.from('workers').select('id', { count: 'exact', head: true }));
-            const risksQuery = tenantScoped(dbClient.from('risk_assessments').select('id, status, target_date, image_url, image_path, hazard_title, action_plan, responsible_person, risk_score, customer_companies(company_name)').order('target_date', { ascending: true }));
-            const visitsQuery = tenantScoped(dbClient.from('field_schedules').select('id, visit_date, assigned_staff, planned_minutes, customer_companies(company_name)').gte('visit_date', start).lt('visit_date', end).order('visit_date', { ascending: true }));
-
             const [companiesRes, workersRes, risksRes, visitsRes] = await Promise.all([
-                companiesQuery,
-                workersQuery,
-                risksQuery,
-                visitsQuery
+                dbClient.from('customer_companies').select('id, danger_class'),
+                dbClient.from('workers').select('id', { count: 'exact', head: true }),
+                dbClient.from('risk_assessments').select('id, status, target_date, image_url, image_path, hazard_title, action_plan, responsible_person, risk_score, customer_companies(company_name)').order('target_date', { ascending: true }),
+                dbClient.from('field_schedules').select('id, visit_date, assigned_staff, planned_minutes, customer_companies(company_name)').gte('visit_date', start).lt('visit_date', end).order('visit_date', { ascending: true })
             ]);
 
             const companies = companiesRes.data || [];

@@ -186,20 +186,6 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let CURRENT_AUTH = null;
-    function tenantScoped(query) {
-        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) return query.eq('tenant_id', CURRENT_AUTH.tenant_id);
-        return query;
-    }
-    function normalizeAccessRole(role) { return (role || '').toString().trim().toLowerCase(); }
-    async function loadCurrentAuthContext(session) {
-        const email = session && session.user ? session.user.email || '' : '';
-        const { data } = await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email', email).maybeSingle();
-        const staff = data || null;
-        const role = normalizeAccessRole(staff && staff.access_role);
-        return { session, email, role, staff, tenant_id: staff ? staff.tenant_id : null, tenant: staff && staff.tenants ? staff.tenants : null };
-    }
-
     let allDofs = [];
     let currentFilter = 'active';
 
@@ -238,12 +224,8 @@
     window.onload = async function() {
         const { data: { session } } = await dbClient.auth.getSession();
         if (!session) { window.location.href = "login.html"; return; }
-        CURRENT_AUTH = await loadCurrentAuthContext(session);
-        window.CURRENT_AUTH = CURRENT_AUTH;
         document.body.style.display = "block";
-        document.getElementById('current_user_email').innerText = `${CURRENT_AUTH.email} • ${CURRENT_AUTH.role || 'rol yok'}`;
-        const titleEl = document.getElementById('lbl_osgb_title');
-        if (titleEl && CURRENT_AUTH.tenant && CURRENT_AUTH.tenant.name) titleEl.innerText = CURRENT_AUTH.tenant.name;
+        document.getElementById('current_user_email').innerText = session.user.email;
         applyInitialFilterFromUrl();
         await refreshAll();
     };
@@ -303,9 +285,9 @@
         const tbody = document.getElementById('dof_tbody');
         tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8;">DÖF kayıtları yükleniyor...</td></tr>`;
 
-        const { data, error } = await tenantScoped(dbClient
+        const { data, error } = await dbClient
             .from('risk_assessments')
-            .select('*, customer_companies(company_name)'))
+            .select('*, customer_companies(company_name)')
             .order('target_date', { ascending: true })
             .order('created_at', { ascending: false });
 
@@ -424,9 +406,9 @@
         const endDate = new Date(year, month + 1, 1);
         const end = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-01`;
 
-        const { data, error } = await tenantScoped(dbClient
+        const { data, error } = await dbClient
             .from('field_schedules')
-            .select('*, customer_companies(company_name)'))
+            .select('*, customer_companies(company_name)')
             .gte('visit_date', start)
             .lt('visit_date', end)
             .order('visit_date', { ascending: true });

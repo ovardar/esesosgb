@@ -97,6 +97,7 @@
             <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
             <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
             <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
+            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
             <a id="menu_risk" href="risk.html" class="nav-btn active-page" style="display:none;">🦺 Uzman Risk Motoru</a>
             <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
         </div>
@@ -260,12 +261,6 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let CURRENT_AUTH = null;
-    function tenantScoped(query) {
-        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) return query.eq('tenant_id', CURRENT_AUTH.tenant_id);
-        return query;
-    }
-
 
     // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
     // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
@@ -342,10 +337,12 @@
         const riskMenu = document.getElementById('menu_risk');
         const medicalMenu = document.getElementById('menu_medical');
         const staffMenu = document.getElementById('menu_staff');
+        const saasMenu = document.getElementById('menu_saas');
         if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
         if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
         if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
         if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
+        if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
     }
 
     async function requireAuthAndRole(page) {
@@ -366,8 +363,6 @@
             window.location.href = 'dashboard.html';
             return null;
         }
-        CURRENT_AUTH = auth;
-        window.CURRENT_AUTH = auth;
         return auth;
     }
 
@@ -639,9 +634,9 @@
         }
 
         try {
-            const { data, error } = await tenantScoped(dbClient
+            const { data, error } = await dbClient
                 .from('customer_companies')
-                .select('id, company_name, nace_code, danger_class'))
+                .select('id, company_name, nace_code, danger_class')
                 .order('company_name');
 
             if (error) throw error;
@@ -677,7 +672,7 @@
 
     async function fetchRisks() {
         const tbody = document.getElementById('risk_table_body');
-        const { data } = await tenantScoped(dbClient.from('risk_assessments').select('*, customer_companies(company_name)')).order('status', { ascending: false }).order('created_at', { ascending: false });
+        const { data } = await dbClient.from('risk_assessments').select('*, customer_companies(company_name)').order('status', { ascending: false }).order('created_at', { ascending: false });
         tbody.innerHTML = '';
         if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Kayıtlı risk bulgusu yok.</td></tr>`; return; }
         
@@ -931,7 +926,6 @@
 
         const localRisk = {
             local_id: makeLocalId(),
-            tenant_id: CURRENT_AUTH ? CURRENT_AUTH.tenant_id : null,
             company_id: compId,
             hazard_title: hazard,
             action_plan: actionPlan || null,

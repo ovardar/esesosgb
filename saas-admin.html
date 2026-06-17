@@ -8,7 +8,7 @@
     <style>
         :root { --bg-main:#f4f6f9; --bg-card:#ffffff; --text-main:#1e293b; --text-muted:#64748b; --primary:#2563eb; --border-color:#e2e8f0; --table-header:#f8fafc; --nav-inactive-bg:#e2e8f0; --nav-inactive-text:#475569; }
         body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:var(--bg-main); color:var(--text-main); padding:30px; display:none; }
-        .card { background:var(--bg-card); padding:25px; border-radius:12px; max-width:1220px; margin:0 auto; box-shadow:0 4px 15px rgba(0,0,0,0.05); border:1px solid var(--border-color); }
+        .card { background:var(--bg-card); padding:25px; border-radius:12px; max-width:1160px; margin:0 auto; box-shadow:0 4px 15px rgba(0,0,0,0.05); border:1px solid var(--border-color); }
         .global-header { border-bottom:1px solid var(--border-color); padding-bottom:15px; margin-bottom:20px; }
         .top-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; gap:12px; }
         .logo-area { font-size:18px; font-weight:800; color:var(--text-main); letter-spacing:.5px; display:flex; align-items:center; gap:8px; }
@@ -32,27 +32,19 @@
         .btn-secondary { background:#e2e8f0; color:#334155; }
         .btn-danger { background:#fee2e2; color:#b91c1c; }
         .btn-green { background:#dcfce7; color:#15803d; }
-        .btn-warn { background:#fef3c7; color:#92400e; }
         .btn-small { padding:7px 9px; font-size:11px; }
         .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
         table { width:100%; border-collapse:collapse; font-size:12px; margin-top:12px; }
         th, td { border-bottom:1px solid var(--border-color); padding:9px; text-align:left; vertical-align:top; }
         th { background:var(--table-header); color:var(--text-muted); font-weight:800; }
-        .badge { display:inline-block; border-radius:999px; padding:3px 7px; font-size:10px; font-weight:900; white-space:nowrap; }
+        .badge { display:inline-block; border-radius:999px; padding:3px 7px; font-size:10px; font-weight:900; }
         .badge-green { background:#dcfce7; color:#15803d; }
         .badge-red { background:#fee2e2; color:#b91c1c; }
         .badge-blue { background:#dbeafe; color:#1d4ed8; }
-        .badge-yellow { background:#fef3c7; color:#92400e; }
         .muted { color:var(--text-muted); }
         .status { margin-top:12px; font-size:12px; font-weight:800; }
-        .status.ok { color:#15803d; } .status.err { color:#b91c1c; } .status.info { color:#1d4ed8; }
+        .status.ok { color:#15803d; } .status.err { color:#b91c1c; }
         .link-box { background:#f8fafc; border:1px dashed var(--border-color); border-radius:8px; padding:9px; word-break:break-all; font-size:12px; color:#334155; }
-        .edit-panel { margin-top:18px; border:2px solid #dbeafe; background:#f8fbff; }
-        .edit-panel.hidden { display:none; }
-        .mini-list { display:flex; flex-direction:column; gap:8px; }
-        .admin-card { border:1px solid var(--border-color); background:#fff; border-radius:10px; padding:10px; }
-        .admin-top { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; flex-wrap:wrap; }
-        .help { font-size:11px; color:var(--text-muted); line-height:1.45; margin-top:8px; }
         @media(max-width:900px){ body{padding:12px}.top-row,.controls-group{flex-direction:column;align-items:stretch}.grid,.row{grid-template-columns:1fr}.card{padding:15px} }
     </style>
 </head>
@@ -75,7 +67,7 @@
     </div>
 
     <h2>🧩 Müşteri OSGB Yönetimi</h2>
-    <p class="page-desc">Müşteri tenantlarını oluştur, giriş linklerini üret, müşteri/admin bilgilerini düzenle ve davet gönder.</p>
+    <p class="page-desc">Satış yaptığın/kiraladığın OSGB müşterilerini oluştur, giriş linkini üret ve ilk admin kullanıcısını tanımla.</p>
 
     <div class="grid">
         <div class="panel">
@@ -92,7 +84,7 @@
                     <input id="tenant_color" type="color" value="#2563eb">
                 </div>
             </div>
-            <label>Logo URL <span class="muted">(opsiyonel)</span></label>
+            <label>Logo URL <span class="muted">(şimdilik opsiyonel)</span></label>
             <input id="tenant_logo" placeholder="https://.../logo.png">
             <label>Üretilecek Giriş Linki</label>
             <div class="link-box" id="login_link_preview">Slug girince link oluşur.</div>
@@ -107,7 +99,7 @@
                 <button class="btn btn-secondary" onclick="clearForm()">Temizle</button>
             </div>
             <div id="form_status" class="status"></div>
-            <p class="help">Müşteri oluşturulduktan sonra sağdaki tabloda admin satırından “Davet Gönder” diyebilirsin. Kullanıcı e-postadaki linkten şifresini kendisi oluşturur.</p>
+            <p class="muted" style="font-size:12px;line-height:1.45;margin-top:14px;">Bu adım Auth şifresi/davet e-postası oluşturmaz. Bir sonraki adımda “Davet Gönder” Edge Function ile eklenecek. Şimdilik müşteri tenant kaydı ve adminin uygulama rol kaydı oluşturulur.</p>
         </div>
 
         <div class="panel">
@@ -122,78 +114,6 @@
                     <tbody id="tenants_tbody"><tr><td colspan="5" class="muted">Yükleniyor...</td></tr></tbody>
                 </table>
             </div>
-
-            <div id="edit_panel" class="panel edit-panel hidden">
-                <h3>✏️ Müşteri / Admin Düzenle</h3>
-                <input type="hidden" id="edit_tenant_id">
-                <input type="hidden" id="edit_admin_id">
-                <div class="row">
-                    <div>
-                        <label>Müşteri Adı</label>
-                        <input id="edit_tenant_name">
-                    </div>
-                    <div>
-                        <label>Slug</label>
-                        <input id="edit_tenant_slug" oninput="previewEditLoginLink()">
-                    </div>
-                </div>
-                <div class="row">
-                    <div>
-                        <label>Tema Rengi</label>
-                        <input id="edit_tenant_color" type="color" value="#2563eb">
-                    </div>
-                    <div>
-                        <label>Durum</label>
-                        <select id="edit_tenant_active">
-                            <option value="true">Aktif</option>
-                            <option value="false">Pasif</option>
-                        </select>
-                    </div>
-                </div>
-                <label>Logo URL</label>
-                <input id="edit_tenant_logo" placeholder="https://.../logo.png">
-                <label>Giriş Linki</label>
-                <div class="link-box" id="edit_login_link_preview">-</div>
-
-                <h3 style="margin-top:20px;">👤 Ana Admin Bilgisi</h3>
-                <div class="row">
-                    <div>
-                        <label>Admin Ad Soyad</label>
-                        <input id="edit_admin_name">
-                    </div>
-                    <div>
-                        <label>Admin E-posta</label>
-                        <input id="edit_admin_email" type="email">
-                    </div>
-                </div>
-                <div class="row">
-                    <div>
-                        <label>Admin Sistem Rolü</label>
-                        <select id="edit_admin_role">
-                            <option value="admin">Admin</option>
-                            <option value="uzman">İSG Uzmanı</option>
-                            <option value="hekim">İşyeri Hekimi</option>
-                            <option value="dsp">DSP</option>
-                            <option value="firma_yetkilisi">Firma Yetkilisi</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label>Giriş İzni</label>
-                        <select id="edit_admin_can_login">
-                            <option value="true">Giriş yapabilir</option>
-                            <option value="false">Giriş kapalı</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="actions">
-                    <button class="btn btn-primary" onclick="saveTenantAndAdmin()">Kaydet</button>
-                    <button class="btn btn-green" onclick="inviteCurrentAdmin()">Davet Gönder</button>
-                    <button class="btn btn-warn" onclick="resetCurrentAdminInvite()">Davet Durumunu Sıfırla</button>
-                    <button class="btn btn-secondary" onclick="cancelEdit()">Kapat</button>
-                </div>
-                <div id="edit_status" class="status"></div>
-                <p class="help">Admin e-postasını değiştirirsen davet durumu otomatik “Gönderilmedi” olur. Böylece yeni adrese tekrar davet gönderebilirsin.</p>
-            </div>
         </div>
     </div>
 </div>
@@ -201,9 +121,6 @@
 const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
 const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
 const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let cachedTenants = [];
-let cachedAdminsByTenant = {};
-let originalEditAdminEmail = '';
 
 function normalizeAccessRole(value){ const v=(value||'').toString().trim().toLowerCase(); if(['super_admin','super admin','saas_admin','sistem sahibi'].includes(v)) return 'super_admin'; if(['admin','yonetici','yönetici'].includes(v)) return 'admin'; if(['uzman','isg_uzmani','isg uzmanı','iş güvenliği uzmanı'].includes(v)) return 'uzman'; if(['hekim','isyeri hekimi','işyeri hekimi'].includes(v)) return 'hekim'; if(['dsp','diğer sağlık personeli','diger saglik personeli'].includes(v)) return 'dsp'; if(['firma_yetkilisi','firma yetkilisi','musteri','müşteri'].includes(v)) return 'firma_yetkilisi'; return ''; }
 function roleLabel(role){ return {super_admin:'Super Admin',admin:'Admin',uzman:'İSG Uzmanı',hekim:'İşyeri Hekimi',dsp:'DSP',firma_yetkilisi:'Firma Yetkilisi'}[role] || role || 'Rol yok'; }
@@ -213,11 +130,9 @@ async function requireSuperAdmin(){ const auth=await getCurrentAuthContext(); if
 function slugify(txt){ return (txt||'').toString().trim().toLowerCase().replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
 function tenantLoginUrl(slug){ return `${window.location.origin}/login.html?tenant=${encodeURIComponent(slug)}`; }
 function previewLoginLink(){ const slug=slugify(document.getElementById('tenant_slug').value); document.getElementById('login_link_preview').innerText = slug ? tenantLoginUrl(slug) : 'Slug girince link oluşur.'; }
-function previewEditLoginLink(){ const slug=slugify(document.getElementById('edit_tenant_slug').value); document.getElementById('edit_login_link_preview').innerText = slug ? tenantLoginUrl(slug) : '-'; }
 document.getElementById('tenant_name').addEventListener('input',()=>{ const slugEl=document.getElementById('tenant_slug'); if(!slugEl.dataset.touched){ slugEl.value=slugify(document.getElementById('tenant_name').value); previewLoginLink(); }});
 document.getElementById('tenant_slug').addEventListener('input',()=>{ document.getElementById('tenant_slug').dataset.touched='1'; });
 function setStatus(msg, ok=true){ const el=document.getElementById('form_status'); el.className='status '+(ok?'ok':'err'); el.innerText=msg; }
-function setEditStatus(msg, type='info'){ const el=document.getElementById('edit_status'); el.className='status '+(type==='ok'?'ok':type==='err'?'err':'info'); el.innerText=msg||''; }
 function clearForm(){ ['tenant_name','tenant_slug','tenant_logo','admin_name','admin_email'].forEach(id=>document.getElementById(id).value=''); document.getElementById('tenant_color').value='#2563eb'; document.getElementById('tenant_slug').dataset.touched=''; previewLoginLink(); setStatus(''); }
 async function createTenantWithAdmin(){
   try{
@@ -231,162 +146,35 @@ async function createTenantWithAdmin(){
     if(!adminName || !adminEmail) throw new Error('İlk admin adı ve e-postası zorunlu.');
     const {data:tenant, error:tErr}=await dbClient.from('tenants').insert({name, slug, logo_url:logo, primary_color:color, is_active:true}).select().single();
     if(tErr) throw tErr;
-    const {error:sErr}=await dbClient.from('osgb_staff').insert({tenant_id:tenant.id, name_surname:adminName, staff_role:'Yönetici', certificate_class:'Yok', email:adminEmail, hire_date:new Date().toISOString().slice(0,10), is_active_manual:'Aktif', access_role:'admin', can_login:true, auth_invite_status:'not_sent'});
+    const {error:sErr}=await dbClient.from('osgb_staff').insert({tenant_id:tenant.id, name_surname:adminName, staff_role:'Yönetici', certificate_class:'Yok', email:adminEmail, hire_date:new Date().toISOString().slice(0,10), is_active_manual:'Aktif', access_role:'admin', can_login:true});
     if(sErr) throw sErr;
     setStatus(`Müşteri oluşturuldu. Giriş linki: ${tenantLoginUrl(slug)}`, true);
     await loadTenants();
-  }catch(err){ setStatus('Hata: '+readableError(err), false); }
+  }catch(err){ setStatus('Hata: '+err.message, false); }
 }
 async function loadTenants(){
-  cancelEdit(false);
   const tbody=document.getElementById('tenants_tbody'); tbody.innerHTML='<tr><td colspan="5" class="muted">Yükleniyor...</td></tr>';
   const {data:tenants,error}=await dbClient.from('tenants').select('*').order('created_at',{ascending:false});
-  if(error){ tbody.innerHTML=`<tr><td colspan="5" style="color:#b91c1c;">${escapeHtml(error.message)}</td></tr>`; return; }
-  cachedTenants = tenants || [];
-  cachedAdminsByTenant = {};
-  document.getElementById('tenant_count').innerText=`${cachedTenants.length} müşteri/tenant`;
-  if(cachedTenants.length===0){ tbody.innerHTML='<tr><td colspan="5" class="muted">Kayıtlı müşteri yok.</td></tr>'; return; }
+  if(error){ tbody.innerHTML=`<tr><td colspan="5" style="color:#b91c1c;">${error.message}</td></tr>`; return; }
+  document.getElementById('tenant_count').innerText=`${(tenants||[]).length} müşteri/tenant`;
+  if(!tenants || tenants.length===0){ tbody.innerHTML='<tr><td colspan="5" class="muted">Kayıtlı müşteri yok.</td></tr>'; return; }
   tbody.innerHTML='';
-  for(const t of cachedTenants){
-    const {data:admins}=await dbClient.from('osgb_staff').select('id,name_surname,email,access_role,auth_invite_status,auth_invited_at,can_login,is_active_manual').eq('tenant_id', t.id).in('access_role',['admin','super_admin']);
-    cachedAdminsByTenant[t.id] = admins || [];
-    const adminsHtml=(admins||[]).map(a=>adminHtml(a,t)).join('<hr style="border:none;border-top:1px solid #e2e8f0;">') || '<span class="muted">Admin yok</span>';
+  for(const t of tenants){
+    const {data:admins}=await dbClient.from('osgb_staff').select('name_surname,email,access_role').eq('tenant_id', t.id).in('access_role',['admin','super_admin']);
+    const adminsHtml=(admins||[]).map(a=>`<strong>${escapeHtml(a.name_surname||'-')}</strong><br><span class="muted">${escapeHtml(a.email||'-')} • ${escapeHtml(a.access_role||'-')}</span>`).join('<hr style="border:none;border-top:1px solid #e2e8f0;">') || '<span class="muted">Admin yok</span>';
     const active=t.is_active!==false;
     tbody.innerHTML += `<tr>
       <td><strong>${escapeHtml(t.name)}</strong><br><span class="muted">slug: ${escapeHtml(t.slug)}</span></td>
-      <td><div class="link-box">${tenantLoginUrl(t.slug)}</div><button class="btn btn-secondary btn-small" onclick="copyText('${escapeAttr(tenantLoginUrl(t.slug))}')">Kopyala</button></td>
+      <td><div class="link-box">${tenantLoginUrl(t.slug)}</div><button class="btn btn-secondary btn-small" onclick="copyText('${tenantLoginUrl(t.slug)}')">Kopyala</button></td>
       <td>${adminsHtml}</td>
       <td>${active?'<span class="badge badge-green">Aktif</span>':'<span class="badge badge-red">Pasif</span>'}</td>
-      <td>
-        <button class="btn btn-primary btn-small" onclick="openEditTenant('${t.id}')">Düzenle</button>
-        <button class="btn ${active?'btn-danger':'btn-green'} btn-small" onclick="toggleTenant('${t.id}', ${active})">${active?'Pasifleştir':'Aktifleştir'}</button>
-      </td>
+      <td><button class="btn ${active?'btn-danger':'btn-green'} btn-small" onclick="toggleTenant('${t.id}', ${active})">${active?'Pasifleştir':'Aktifleştir'}</button></td>
     </tr>`;
   }
 }
-function adminHtml(a,t){
-  const inviteStatus = inviteBadge(a.auth_invite_status, a.auth_invited_at);
-  return `<div class="admin-card">
-    <div class="admin-top">
-      <div><strong>${escapeHtml(a.name_surname||'-')}</strong><br><span class="muted">${escapeHtml(a.email||'-')} • ${escapeHtml(roleLabel(normalizeAccessRole(a.access_role)))}</span><br>${inviteStatus}</div>
-      <div class="actions" style="margin-top:0;">
-        <button class="btn btn-green btn-small" onclick="sendInvite('${a.id}')">Davet Gönder</button>
-        <button class="btn btn-secondary btn-small" onclick="openEditTenant('${t.id}','${a.id}')">Admini Düzenle</button>
-      </div>
-    </div>
-  </div>`;
-}
-function inviteBadge(status, at){
-  const s=(status||'not_sent').toString();
-  if(s==='sent') return `<span class="badge badge-green">Davet gönderildi</span> <span class="muted">${formatDate(at)}</span>`;
-  if(s==='failed') return '<span class="badge badge-red">Davet hatası</span>';
-  return '<span class="badge badge-yellow">Gönderilmedi</span>';
-}
-function formatDate(v){ if(!v) return ''; try{ return new Date(v).toLocaleString('tr-TR'); }catch(e){ return ''; } }
-function openEditTenant(tenantId, adminId){
-  const t = cachedTenants.find(x=>x.id===tenantId);
-  if(!t){ alert('Müşteri kaydı bulunamadı.'); return; }
-  const admins = cachedAdminsByTenant[tenantId] || [];
-  const admin = adminId ? admins.find(a=>a.id===adminId) : (admins.find(a=>normalizeAccessRole(a.access_role)==='admin') || admins[0] || null);
-  document.getElementById('edit_tenant_id').value=t.id;
-  document.getElementById('edit_tenant_name').value=t.name||'';
-  document.getElementById('edit_tenant_slug').value=t.slug||'';
-  document.getElementById('edit_tenant_logo').value=t.logo_url||'';
-  document.getElementById('edit_tenant_color').value=t.primary_color||'#2563eb';
-  document.getElementById('edit_tenant_active').value=(t.is_active!==false).toString();
-  document.getElementById('edit_admin_id').value=admin?admin.id:'';
-  document.getElementById('edit_admin_name').value=admin?admin.name_surname||'':'';
-  document.getElementById('edit_admin_email').value=admin?admin.email||'':'';
-  document.getElementById('edit_admin_role').value=admin?normalizeAccessRole(admin.access_role)||'admin':'admin';
-  document.getElementById('edit_admin_can_login').value=admin && admin.can_login===false ? 'false':'true';
-  originalEditAdminEmail=admin?(admin.email||'').toLowerCase():'';
-  previewEditLoginLink();
-  setEditStatus(admin?'Düzenleme paneli açıldı.':'Bu tenant için admin kaydı yok. Admin bilgisi girip kaydedebilirsin.','info');
-  document.getElementById('edit_panel').classList.remove('hidden');
-  document.getElementById('edit_panel').scrollIntoView({behavior:'smooth',block:'start'});
-}
-function cancelEdit(clear=true){
-  const panel=document.getElementById('edit_panel');
-  if(panel) panel.classList.add('hidden');
-  if(clear){ setEditStatus(''); originalEditAdminEmail=''; }
-}
-async function saveTenantAndAdmin(){
-  try{
-    const tenantId=document.getElementById('edit_tenant_id').value;
-    if(!tenantId) throw new Error('Düzenlenecek tenant seçilmedi.');
-    const name=document.getElementById('edit_tenant_name').value.trim();
-    const slug=slugify(document.getElementById('edit_tenant_slug').value);
-    const logo=document.getElementById('edit_tenant_logo').value.trim() || null;
-    const color=document.getElementById('edit_tenant_color').value || '#2563eb';
-    const isActive=document.getElementById('edit_tenant_active').value === 'true';
-    if(!name || !slug) throw new Error('Müşteri adı ve slug zorunlu.');
-    const {error:tErr}=await dbClient.from('tenants').update({name, slug, logo_url:logo, primary_color:color, is_active:isActive}).eq('id',tenantId);
-    if(tErr) throw tErr;
-    const adminId=document.getElementById('edit_admin_id').value;
-    const adminName=document.getElementById('edit_admin_name').value.trim();
-    const adminEmail=document.getElementById('edit_admin_email').value.trim().toLowerCase();
-    const adminRole=document.getElementById('edit_admin_role').value;
-    const canLogin=document.getElementById('edit_admin_can_login').value === 'true';
-    if(adminName || adminEmail){
-      if(!adminName || !adminEmail) throw new Error('Admin adı ve e-postası birlikte doldurulmalı.');
-      const payload={tenant_id:tenantId, name_surname:adminName, staff_role:'Yönetici', certificate_class:'Yok', email:adminEmail, is_active_manual:canLogin?'Aktif':'Pasif', access_role:adminRole, can_login:canLogin};
-      if(adminEmail !== originalEditAdminEmail){ payload.auth_invite_status='not_sent'; payload.auth_invited_at=null; }
-      if(adminId){
-        const {error:sErr}=await dbClient.from('osgb_staff').update(payload).eq('id',adminId);
-        if(sErr) throw sErr;
-      } else {
-        payload.hire_date=new Date().toISOString().slice(0,10);
-        payload.auth_invite_status='not_sent';
-        const {error:sErr}=await dbClient.from('osgb_staff').insert(payload);
-        if(sErr) throw sErr;
-      }
-    }
-    setEditStatus('Müşteri/admin bilgileri kaydedildi.','ok');
-    await loadTenants();
-  }catch(err){ setEditStatus('Hata: '+readableError(err),'err'); }
-}
-async function sendInvite(staffId){
-  try{
-    const auth=await dbClient.auth.getSession();
-    const token=auth.data && auth.data.session && auth.data.session.access_token;
-    if(!token) throw new Error('Oturum bulunamadı. Yeniden giriş yap.');
-    if(!confirm('Bu kullanıcıya davet e-postası gönderilsin mi?')) return;
-    const {data,error}=await dbClient.functions.invoke('invite-staff-user',{
-      body:{staff_id:staffId, site_origin:window.location.origin},
-      headers:{Authorization:`Bearer ${token}`}
-    });
-    if(error) throw error;
-    if(!data || data.ok===false) throw new Error(data && data.error ? data.error : 'Davet gönderilemedi.');
-    alert(`Davet gönderildi: ${data.email || ''}`);
-    await loadTenants();
-  }catch(err){ alert('Davet gönderilemedi: '+readableError(err)); }
-}
-function inviteCurrentAdmin(){
-  const adminId=document.getElementById('edit_admin_id').value;
-  if(!adminId){ setEditStatus('Önce admin kaydını kaydetmelisin.','err'); return; }
-  sendInvite(adminId);
-}
-async function resetCurrentAdminInvite(){
-  try{
-    const adminId=document.getElementById('edit_admin_id').value;
-    if(!adminId) throw new Error('Önce admin kaydını seçmelisin.');
-    const {error}=await dbClient.from('osgb_staff').update({auth_invite_status:'not_sent',auth_invited_at:null}).eq('id',adminId);
-    if(error) throw error;
-    setEditStatus('Davet durumu sıfırlandı.','ok');
-    await loadTenants();
-  }catch(err){ setEditStatus('Hata: '+readableError(err),'err'); }
-}
+function escapeHtml(v){ return (v||'').toString().replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
 async function copyText(text){ await navigator.clipboard.writeText(text); alert('Giriş linki kopyalandı.'); }
 async function toggleTenant(id, isActive){ const {error}=await dbClient.from('tenants').update({is_active:!isActive}).eq('id', id); if(error){ alert(error.message); return; } loadTenants(); }
-function readableError(err){
-  if(!err) return 'Bilinmeyen hata';
-  if(typeof err === 'string') return err;
-  if(err.message) return err.message;
-  if(err.error) return err.error;
-  try{return JSON.stringify(err);}catch(e){return String(err);}
-}
-function escapeHtml(v){ return (v||'').toString().replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
-function escapeAttr(v){ return escapeHtml(v).replace(/`/g,'&#96;'); }
 async function handleLogout(){ await dbClient.auth.signOut(); window.location.href='login.html'; }
 window.onload=async()=>{ const auth=await requireSuperAdmin(); if(!auth) return; document.body.style.display='block'; previewLoginLink(); loadTenants(); };
 </script>

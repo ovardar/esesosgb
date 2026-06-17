@@ -161,17 +161,6 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let CURRENT_AUTH = null;
-    function tenantScoped(query) {
-        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) return query.eq('tenant_id', CURRENT_AUTH.tenant_id);
-        return query;
-    }
-    async function loadCurrentAuthContext(session) {
-        const email = session && session.user ? session.user.email || '' : '';
-        const { data } = await dbClient.from('osgb_staff').select('*, tenants(id, name, slug)').ilike('email', email).maybeSingle();
-        const staff = data || null;
-        return { session, email, staff, tenant_id: staff ? staff.tenant_id : null, tenant: staff && staff.tenants ? staff.tenants : null };
-    }
     let currentCompanyName = "";
 
     function escapeHtml(value) {
@@ -214,8 +203,6 @@
     window.onload = async function() {
         const { data: { session } } = await dbClient.auth.getSession();
         if (!session) { window.location.href = "login.html"; return; }
-        CURRENT_AUTH = await loadCurrentAuthContext(session);
-        window.CURRENT_AUTH = CURRENT_AUTH;
         document.body.style.display = "block";
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -230,8 +217,7 @@
     };
 
     async function fetchCompanyProfile(id) {
-        const { data, error } = await tenantScoped(dbClient.from('customer_companies').select('*')).eq('id', id).single();
-        if (error || !data) { alert('Bu firma bu tenant altında bulunamadı veya erişim yetkiniz yok.'); window.location.href='index.html'; return; }
+        const { data } = await dbClient.from('customer_companies').select('*').eq('id', id).single();
         if (data) {
             currentCompanyName = data.company_name;
             document.getElementById('lbl_company_name').innerText = data.company_name;
@@ -243,7 +229,7 @@
 
     async function fetchCompanyRisks(id) {
         const tbody = document.getElementById('company_risk_tbody');
-        const { data, error } = await tenantScoped(dbClient.from('risk_assessments').select('*')).eq('company_id', id).order('created_at', { ascending: false });
+        const { data, error } = await dbClient.from('risk_assessments').select('*').eq('company_id', id).order('created_at', { ascending: false });
         if (error) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#b91c1c;">Hata: ${escapeHtml(error.message)}</td></tr>`; return; }
         if (!data || data.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Kayıtlı DÖF / risk bulgusu yok.</td></tr>`;
@@ -292,7 +278,7 @@
 
     async function fetchCompanySchedules(id) {
         const tbody = document.getElementById('company_schedule_tbody');
-        const { data, error } = await tenantScoped(dbClient.from('field_schedules').select('*')).eq('company_id', id).order('visit_date', { ascending: false });
+        const { data, error } = await dbClient.from('field_schedules').select('*').eq('company_id', id).order('visit_date', { ascending: false });
         if (error) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#b91c1c;">Hata: ${escapeHtml(error.message)}</td></tr>`; return; }
         if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Ziyaret kaydı bulunmuyor.</td></tr>`; return; }
         tbody.innerHTML = '';
@@ -303,7 +289,7 @@
 
     async function fetchCompanyMedical(id) {
         const tbody = document.getElementById('company_medical_tbody');
-        const { data, error } = await tenantScoped(dbClient.from('worker_medical_records').select('*')).eq('company_id', id).order('created_at', { ascending: false });
+        const { data, error } = await dbClient.from('worker_medical_records').select('*').eq('company_id', id).order('created_at', { ascending: false });
         if (error) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#b91c1c;">Hata: ${escapeHtml(error.message)}</td></tr>`; return; }
         if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Sağlık muayene kaydı yok.</td></tr>`; return; }
         tbody.innerHTML = '';
