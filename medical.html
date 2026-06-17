@@ -6,6 +6,7 @@
     <title>OSGB SaaS - Hekim Sağlık Kartı</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
@@ -1146,121 +1147,135 @@
             .substring(0, 60) || 'calisan';
     }
 
-    function downloadLegalEk2Pdf(recordId) {
+    function buildEk2PdfHtml(record) {
+        const producedDate = new Date().toLocaleDateString('tr-TR');
+        const companyName = escapeHtml(pdfSafe(record.company_name));
+        const workerName = escapeHtml(pdfSafe(record.worker_name));
+        const ageGender = escapeHtml(`${pdfSafe(record.worker_age)} / ${pdfSafe(record.worker_gender)}`);
+        const examDate = escapeHtml(pdfDate(record.created_at));
+        const goz = escapeHtml(pdfSafe(record.goz_secure));
+        const kalp = escapeHtml(pdfSafe(record.kalp_secure));
+        const kas = escapeHtml(pdfSafe(record.kas_secure));
+        const decision = escapeHtml(pdfSafe(record.final_decision));
+
+        return `
+            <div style="width:794px; min-height:1123px; box-sizing:border-box; padding:38px 40px 34px; background:#ffffff; color:#111827; font-family:Arial, Helvetica, sans-serif; font-size:13px; line-height:1.38;">
+                <div style="text-align:center; letter-spacing:1.4px; font-weight:800; font-size:15px;">T.C. ÇALIŞMA VE SOSYAL GÜVENLİK BAKANLIĞI</div>
+                <div style="text-align:center; letter-spacing:1.1px; font-weight:700; font-size:12px; margin-top:6px;">İş Sağlığı ve Güvenliği Genel Müdürlüğü</div>
+                <div style="text-align:center; letter-spacing:2.2px; font-weight:900; font-size:18px; margin-top:12px;">EK-2 İŞÇİ SAĞLIK MUAYENE KARTI</div>
+                <div style="text-align:center; letter-spacing:1px; font-size:12px; margin-top:8px;">İşe Giriş / Periyodik Muayene Formu</div>
+                <div style="border-top:1.5px solid #111827; margin-top:22px; margin-bottom:16px;"></div>
+
+                <div style="font-weight:900; letter-spacing:1.8px; font-size:14px; margin-bottom:8px;">1. İŞYERİ VE ÇALIŞAN BİLGİLERİ</div>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; margin:0 0 18px;">
+                    <thead>
+                        <tr>
+                            <th style="background:#2563eb; color:#fff; text-align:left; padding:9px; border:1px solid #cbd5e1; width:31%;">Alan</th>
+                            <th style="background:#2563eb; color:#fff; text-align:left; padding:9px; border:1px solid #cbd5e1;">Bilgi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="font-weight:700; padding:9px; border:1px solid #cbd5e1;">İşyeri / Firma Unvanı</td><td style="padding:9px; border:1px solid #cbd5e1;">${companyName}</td></tr>
+                        <tr><td style="font-weight:700; padding:9px; border:1px solid #cbd5e1;">Çalışanın Adı Soyadı</td><td style="padding:9px; border:1px solid #cbd5e1;">${workerName}</td></tr>
+                        <tr><td style="font-weight:700; padding:9px; border:1px solid #cbd5e1;">Yaş / Cinsiyet</td><td style="padding:9px; border:1px solid #cbd5e1;">${ageGender}</td></tr>
+                        <tr><td style="font-weight:700; padding:9px; border:1px solid #cbd5e1;">Muayene Tarihi</td><td style="padding:9px; border:1px solid #cbd5e1;">${examDate}</td></tr>
+                        <tr><td style="font-weight:700; padding:9px; border:1px solid #cbd5e1;">Form Üretim Tarihi</td><td style="padding:9px; border:1px solid #cbd5e1;">${producedDate}</td></tr>
+                    </tbody>
+                </table>
+
+                <div style="font-weight:900; letter-spacing:1.8px; font-size:14px; margin:14px 0 8px;">2. KLİNİK MUAYENE BULGULARI</div>
+                <table style="width:100%; border-collapse:collapse; font-size:12px; margin:0 0 18px;">
+                    <thead>
+                        <tr>
+                            <th style="background:#16a34a; color:#fff; text-align:left; padding:9px; border:1px solid #cbd5e1; width:31%;">Muayene Alanı</th>
+                            <th style="background:#16a34a; color:#fff; text-align:left; padding:9px; border:1px solid #cbd5e1;">Bulgular</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="font-weight:700; padding:9px; border:1px solid #cbd5e1;">Göz Muayene Bulguları</td><td style="padding:9px; border:1px solid #cbd5e1;">${goz}</td></tr>
+                        <tr><td style="font-weight:700; padding:9px; border:1px solid #cbd5e1;">Kardiyovasküler Bulgular</td><td style="padding:9px; border:1px solid #cbd5e1;">${kalp}</td></tr>
+                        <tr><td style="font-weight:700; padding:9px; border:1px solid #cbd5e1;">Kas-İskelet Sistemi Bulguları</td><td style="padding:9px; border:1px solid #cbd5e1;">${kas}</td></tr>
+                    </tbody>
+                </table>
+
+                <div style="font-weight:900; letter-spacing:1.8px; font-size:14px; margin:14px 0 8px;">3. HEKİM NİHAİ KANAATİ VE SONUÇ KARARI</div>
+                <div style="border:1px solid #cbd5e1; background:#eff6ff; color:#1e40af; font-size:15px; font-weight:900; text-align:center; padding:14px 12px; margin-bottom:22px;">
+                    ${decision}
+                </div>
+
+                <div style="font-size:12px; margin:8px 0 34px; line-height:1.45;">
+                    Bu belge, sistemde kayıtlı periyodik muayene kartı verilerinden otomatik olarak oluşturulmuştur. Hekim tarafından kontrol edilip imzalanarak fiziksel/kurumsal kayıt sürecinde kullanılmalıdır.
+                </div>
+
+                <table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:18px;">
+                    <tbody>
+                        <tr><td style="font-weight:700; padding:12px; border:1px solid #cbd5e1; width:31%;">İşyeri Hekimi Adı Soyadı</td><td style="padding:12px; border:1px solid #cbd5e1; height:44px;"></td></tr>
+                        <tr><td style="font-weight:700; padding:12px; border:1px solid #cbd5e1;">Kaşe / İmza</td><td style="padding:12px; border:1px solid #cbd5e1; height:58px;"></td></tr>
+                        <tr><td style="font-weight:700; padding:12px; border:1px solid #cbd5e1;">Tarih</td><td style="padding:12px; border:1px solid #cbd5e1;">${producedDate}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    async function downloadLegalEk2Pdf(recordId) {
         const record = medicalTableRows.find(row => String(row.id) === String(recordId));
         if (!record) {
             alert('PDF oluşturulacak sağlık kartı bulunamadı. Sayfayı yenileyip tekrar deneyin.');
             return;
         }
 
-        if (!window.jspdf || !window.jspdf.jsPDF) {
+        if (!window.jspdf || !window.jspdf.jsPDF || !window.html2canvas) {
             alert('PDF motoru yüklenemedi. İnternet bağlantısını kontrol edip sayfayı yenileyin.');
             return;
         }
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const margin = 14;
-        let y = 14;
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'fixed';
+        wrapper.style.left = '-10000px';
+        wrapper.style.top = '0';
+        wrapper.style.width = '794px';
+        wrapper.style.background = '#ffffff';
+        wrapper.innerHTML = buildEk2PdfHtml(record);
+        document.body.appendChild(wrapper);
 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11);
-        doc.text('T.C. ÇALIŞMA VE SOSYAL GÜVENLİK BAKANLIĞI', pageWidth / 2, y, { align: 'center' });
-        y += 6;
-        doc.setFontSize(10);
-        doc.text('İş Sağlığı ve Güvenliği Genel Müdürlüğü', pageWidth / 2, y, { align: 'center' });
-        y += 8;
-        doc.setFontSize(13);
-        doc.text('EK-2 İŞÇİ SAĞLIK MUAYENE KARTI', pageWidth / 2, y, { align: 'center' });
-        y += 7;
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        doc.text('İşe Giriş / Periyodik Muayene Formu', pageWidth / 2, y, { align: 'center' });
-        y += 7;
-        doc.line(margin, y, pageWidth - margin, y);
-        y += 7;
+        try {
+            const canvas = await html2canvas(wrapper.firstElementChild, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false
+            });
 
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.text('1. İŞYERİ VE ÇALIŞAN BİLGİLERİ', margin, y);
-        y += 3;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const imgData = canvas.toDataURL('image/png');
+            const imgWidth = pageWidth;
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-        doc.autoTable({
-            startY: y,
-            theme: 'grid',
-            head: [['Alan', 'Bilgi']],
-            body: [
-                ['İşyeri / Firma Unvanı', pdfSafe(record.company_name)],
-                ['Çalışanın Adı Soyadı', pdfSafe(record.worker_name)],
-                ['Yaş / Cinsiyet', `${pdfSafe(record.worker_age)} / ${pdfSafe(record.worker_gender)}`],
-                ['Muayene Tarihi', pdfDate(record.created_at)],
-                ['Form Üretim Tarihi', new Date().toLocaleDateString('tr-TR')]
-            ],
-            styles: { font: 'helvetica', fontSize: 9, cellPadding: 2.5 },
-            headStyles: { fillColor: [37, 99, 235], textColor: 255 },
-            columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' }, 1: { cellWidth: 125 } },
-            margin: { left: margin, right: margin }
-        });
+            if (imgHeight <= pageHeight) {
+                doc.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+            } else {
+                let remainingHeight = imgHeight;
+                let position = 0;
+                while (remainingHeight > 0) {
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    remainingHeight -= pageHeight;
+                    position -= pageHeight;
+                    if (remainingHeight > 0) doc.addPage();
+                }
+            }
 
-        y = doc.lastAutoTable.finalY + 8;
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.text('2. KLİNİK MUAYENE BULGULARI', margin, y);
-        y += 3;
-
-        doc.autoTable({
-            startY: y,
-            theme: 'grid',
-            head: [['Muayene Alanı', 'Bulgular']],
-            body: [
-                ['Göz Muayene Bulguları', pdfSafe(record.goz_secure)],
-                ['Kardiyovasküler Bulgular', pdfSafe(record.kalp_secure)],
-                ['Kas-İskelet Sistemi Bulguları', pdfSafe(record.kas_secure)]
-            ],
-            styles: { font: 'helvetica', fontSize: 9, cellPadding: 2.5 },
-            headStyles: { fillColor: [22, 163, 74], textColor: 255 },
-            columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' }, 1: { cellWidth: 125 } },
-            margin: { left: margin, right: margin }
-        });
-
-        y = doc.lastAutoTable.finalY + 8;
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(10);
-        doc.text('3. HEKİM NİHAİ KANAATİ VE SONUÇ KARARI', margin, y);
-        y += 3;
-
-        doc.autoTable({
-            startY: y,
-            theme: 'grid',
-            body: [[pdfSafe(record.final_decision)]],
-            styles: { font: 'helvetica', fontSize: 11, fontStyle: 'bold', cellPadding: 4, halign: 'center' },
-            bodyStyles: { fillColor: [239, 246, 255], textColor: [30, 64, 175] },
-            margin: { left: margin, right: margin }
-        });
-
-        y = doc.lastAutoTable.finalY + 10;
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        const noteLines = doc.splitTextToSize('Bu belge, sistemde kayıtlı periyodik muayene kartı verilerinden otomatik olarak oluşturulmuştur. Hekim tarafından kontrol edilip imzalanarak fiziksel/kurumsal kayıt sürecinde kullanılmalıdır.', pageWidth - margin * 2);
-        doc.text(noteLines, margin, y);
-        y += noteLines.length * 5 + 8;
-
-        doc.autoTable({
-            startY: y,
-            theme: 'grid',
-            body: [
-                ['İşyeri Hekimi Adı Soyadı', ''],
-                ['Kaşe / İmza', ''],
-                ['Tarih', new Date().toLocaleDateString('tr-TR')]
-            ],
-            styles: { font: 'helvetica', fontSize: 9, cellPadding: 5 },
-            columnStyles: { 0: { cellWidth: 55, fontStyle: 'bold' }, 1: { cellWidth: 125, minCellHeight: 14 } },
-            margin: { left: margin, right: margin }
-        });
-
-        const filename = `EK-2_${fileSafeName(record.worker_name)}_${fileSafeName(record.company_name)}.pdf`;
-        doc.save(filename);
+            const filename = `EK-2_${fileSafeName(record.worker_name)}_${fileSafeName(record.company_name)}.pdf`;
+            doc.save(filename);
+        } catch (err) {
+            console.error(err);
+            alert('PDF oluşturulamadı: ' + (err.message || err));
+        } finally {
+            wrapper.remove();
+        }
     }
 
     async function saveMedical() {
