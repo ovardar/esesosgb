@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSGB SaaS - DÖF Dashboard</title>
+    <title>OSGB SaaS - Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -18,745 +18,77 @@
             --nav-inactive-text: #475569;
         }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; }
-        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1120px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
+        
+        /* 🏛️ GLOBAL STANDART ÜST BAR STİLLERİ */
         .global-header { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        
+        /* Sol Üst Köşe - OSGB Logo Alanı */
         .logo-area { font-size: 18px; font-weight: 800; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
         .logo-badge { background: var(--primary); color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+        
+        /* Sağ Üst Köşe - Kontroller Grubu */
         .controls-group { display: flex; align-items: center; gap: 20px; }
         .theme-selector-container { display: flex; gap: 6px; align-items: center; background: var(--table-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); }
         .theme-btn { width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .user-info { font-size: 13px; color: var(--text-muted); font-weight: 600; }
         .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        .nav-container { display: flex; gap: 8px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); flex-wrap: wrap; }
+        
+        /* Sabit Sekme Menüsü Container */
+        .nav-container { display: flex; gap: 8px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
         .nav-btn { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.2s ease; }
         .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
         .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
 
-        .section-title { font-size: 14px; font-weight: bold; color: var(--text-muted); margin: 22px 0 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 18px; }
-        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 18px; }
-        .metric-box { padding: 15px 18px; border-radius: 10px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 76px; cursor: default; }
-        .metric-box.clickable { cursor: pointer; }
-        .metric-title { font-size: 12px; font-weight: 700; opacity: 0.95; line-height: 1.25; }
-        .metric-value { font-size: 28px; font-weight: 800; margin-top: 5px; }
-        .metric-sub { font-size: 11px; opacity: 0.85; margin-top: 3px; }
+        /* 📊 DASHBOARD METRİKLERİ */
+        .distribution-title { font-size: 14px; font-weight: bold; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .metric-box { padding: 15px 20px; border-radius: 10px; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         .metric-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
         .metric-orange { background: linear-gradient(135deg, #f97316, #c2410c); }
         .metric-green { background: linear-gradient(135deg, #10b981, #047857); }
-        .metric-blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
-        .metric-purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-        .metric-slate { background: linear-gradient(135deg, #475569, #0f172a); }
-        .metric-cyan { background: linear-gradient(135deg, #06b6d4, #0e7490); }
-        .metric-amber { background: linear-gradient(135deg, #f59e0b, #b45309); }
+        .metric-title { font-size: 12px; font-weight: 600; opacity: 0.9; }
+        .metric-value { font-size: 26px; font-weight: bold; margin-top: 3px; }
 
-        .operational-banner { color: white; padding: 16px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin: 20px 0 22px; border: 1px solid var(--border-color); cursor: pointer; }
-        .op-critical { background: linear-gradient(135deg, #991b1b, #ef4444); }
-        .op-warning { background: linear-gradient(135deg, #9a3412, #f97316); }
-        .op-good { background: linear-gradient(135deg, #065f46, #10b981); }
-        .op-text h4 { margin: 0; font-size: 16px; }
-        .op-text p { margin: 5px 0 0 0; font-size: 12px; opacity: 0.9; }
-        .op-badge { background: rgba(255,255,255,0.18); color: white; padding: 8px 16px; border-radius: 8px; font-size: 24px; font-weight: bold; min-width: 44px; text-align: center; }
+        /* 🚨 OPERASYONEL NABIZ */
+        .operational-banner { background: var(--text-main); color: var(--bg-card); padding: 15px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border: 1px solid var(--border-color); }
+        .op-text h4 { margin: 0; font-size: 15px; }
+        .op-text p { margin: 3px 0 0 0; font-size: 12px; opacity: 0.8; }
+        .op-badge { background: #f97316; color: white; padding: 8px 16px; border-radius: 8px; font-size: 22px; font-weight: bold; }
 
-        .content-grid { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 18px; margin-top: 18px; }
-        .panel { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; }
-        .panel h3 { margin: 0; padding-bottom: 8px; border-bottom: 2px solid var(--primary); font-size: 16px; }
-        .panel p { color: var(--text-muted); font-size: 12px; margin: 8px 0 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 12px; }
-        th, td { padding: 9px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: top; }
-        th { background-color: var(--table-header); color: var(--text-muted); font-weight: 700; }
-        .badge { padding: 3px 7px; border-radius: 999px; font-size: 10px; font-weight: 800; display: inline-block; white-space: nowrap; }
-        .badge-red { background:#fee2e2; color:#b91c1c; }
-        .badge-orange { background:#ffedd5; color:#c2410c; }
-        .badge-green { background:#dcfce7; color:#15803d; }
-        .badge-blue { background:#dbeafe; color:#1d4ed8; }
-        .small-link { color: var(--primary); font-weight: 700; text-decoration: none; }
-        .small-link:hover { text-decoration: underline; }
-        .empty-state { text-align:center; color:var(--text-muted); padding:18px; }
 
-        @media (max-width: 900px) {
-            body { padding: 14px; }
-            .top-row, .controls-group, .operational-banner { flex-direction: column; align-items: stretch; gap: 10px; }
-            .dashboard-grid, .kpi-grid, .content-grid { grid-template-columns: 1fr; }
-            .nav-btn { text-align: center; }
-        }
-            .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
-    
-
-        /* ================================
-           v24 UI POLISH - ortak arayuz duzeltmeleri
-           ================================ */
-        :root {
-            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.10);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
-            --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        .card {
-            width: min(100%, 1240px) !important;
-            max-width: 1240px !important;
-            border-radius: var(--radius-lg) !important;
-            box-shadow: var(--shadow-md) !important;
-        }
-
-        .global-header {
-            background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        .top-row {
-            gap: 14px;
-            align-items: center !important;
-        }
-
-        .logo-area {
-            min-width: 0;
-            font-size: 17px !important;
-            letter-spacing: 0 !important;
-            gap: 10px !important;
-        }
-
-        .logo-area span[id^="lbl_"] {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .tenant-logo-img {
-            width: 36px !important;
-            height: 36px !important;
-            padding: 4px !important;
-            border-radius: 10px !important;
-            box-shadow: var(--shadow-sm);
-            flex: 0 0 auto;
-        }
-
-        .logo-badge {
-            border-radius: 999px !important;
-            padding: 4px 9px !important;
-            font-size: 11px !important;
-            letter-spacing: .02em;
-            flex: 0 0 auto;
-        }
-
-        .controls-group {
-            gap: 10px !important;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .theme-selector-container {
-            border-radius: 999px !important;
-            padding: 6px 10px !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .theme-btn {
-            width: 18px !important;
-            height: 18px !important;
-            transition: transform .15s ease, box-shadow .15s ease;
-        }
-        .theme-btn:hover { transform: translateY(-1px) scale(1.08); box-shadow: 0 3px 8px rgba(15,23,42,.18); }
-
-        .user-info {
-            background: var(--table-header);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 7px 11px;
-            max-width: 280px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .logout-btn,
-        button,
-        .btn,
-        input[type="submit"] {
-            border-radius: 10px !important;
-            font-weight: 750 !important;
-            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-        }
-        button:hover,
-        .logout-btn:hover,
-        .btn:hover,
-        input[type="submit"]:hover {
-            transform: translateY(-1px);
-            filter: brightness(.98);
-            box-shadow: var(--shadow-sm);
-        }
-        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
-
-        .nav-container {
-            justify-content: flex-start !important;
-            gap: 7px !important;
-            padding: 8px !important;
-            border-radius: 14px !important;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .nav-btn {
-            white-space: nowrap;
-            border-radius: 10px !important;
-            padding: 9px 13px !important;
-            font-size: 12.5px !important;
-            box-shadow: none;
-        }
-        .nav-btn.active-page { box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important; }
-
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        h1 { font-size: clamp(24px, 3vw, 34px); }
-        h2 { font-size: clamp(20px, 2.4vw, 28px); }
-        h3 { font-size: clamp(16px, 1.8vw, 20px); }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px !important;
-            color: var(--text-main) !important;
-            font-size: 13px !important;
-            letter-spacing: .04em !important;
-        }
-
-        .panel,
-        .form-card,
-        .table-card,
-        .sub-card,
-        .mini-card,
-        .info-card {
-            border-radius: var(--radius-md) !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .metric-box {
-            border-radius: 14px !important;
-            box-shadow: 0 10px 24px rgba(15,23,42,.10) !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .metric-box:after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,.20), transparent 45%);
-            pointer-events: none;
-        }
-        .metric-title, .metric-sub, .metric-value { position: relative; z-index: 1; }
-
-        input,
-        select,
-        textarea {
-            border: 1px solid var(--border-color) !important;
-            border-radius: 10px !important;
-            background: var(--bg-card);
-            color: var(--text-main);
-            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--primary) !important;
-            box-shadow: var(--focus-ring) !important;
-        }
-        label { font-weight: 700; color: var(--text-main); }
-
-        table {
-            border-collapse: separate !important;
-            border-spacing: 0 !important;
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        th {
-            font-size: 11px !important;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            white-space: nowrap;
-        }
-        td { line-height: 1.45; }
-        tbody tr { transition: background .12s ease; }
-        tbody tr:hover { background: rgba(37, 99, 235, 0.035); }
-        .empty-state {
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            background: var(--table-header);
-        }
-
-        .badge {
-            border-radius: 999px !important;
-            letter-spacing: .02em;
-            padding: 4px 8px !important;
-        }
-
-        .small-link { text-underline-offset: 3px; }
-
-        .operational-banner {
-            box-shadow: var(--shadow-sm);
-            border: 0 !important;
-        }
-
-        @media (max-width: 900px) {
-            body { padding: 12px !important; }
-            .card { padding: 16px !important; border-radius: 16px !important; }
-            .top-row { align-items: stretch !important; }
-            .controls-group { justify-content: flex-start; }
-            .user-info { max-width: 100%; }
-            .nav-container { flex-wrap: nowrap !important; justify-content: flex-start !important; }
-            .nav-btn { flex: 0 0 auto; }
-            table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
-            th, td { padding: 9px 10px !important; }
-        }
-
-        @media (max-width: 520px) {
-            .logo-area { font-size: 15px !important; }
-            .tenant-logo-img { width: 32px !important; height: 32px !important; }
-            .theme-selector-container { width: 100%; justify-content: center; }
-            .logout-btn { width: 100%; }
-        }
-
-    
-
-        /* ================================
-           v25 PRODUCT DESIGN SYSTEM - derin arayuz revizyonu
-           ================================ */
-        :root {
-            --brand-50: #eff6ff;
-            --brand-100: #dbeafe;
-            --brand-500: #2563eb;
-            --brand-600: #1d4ed8;
-            --brand-700: #1e40af;
-            --ink-900: #0f172a;
-            --ink-700: #334155;
-            --ink-500: #64748b;
-            --surface-0: #ffffff;
-            --surface-1: #f8fafc;
-            --surface-2: #eef2f7;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --info: #0284c7;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(37,99,235,.15), transparent 32rem),
-                radial-gradient(circle at top right, rgba(14,165,233,.12), transparent 28rem),
-                linear-gradient(180deg, #f8fafc 0%, #edf2f7 52%, #e9eef6 100%) !important;
-            color: var(--ink-900) !important;
-        }
-
-        .card {
-            padding: 0 !important;
-            overflow: hidden;
-            background: rgba(255,255,255,.92) !important;
-            backdrop-filter: blur(10px);
-        }
-
-        .global-header {
-            padding: 18px 22px 14px !important;
-            margin-bottom: 0 !important;
-            background: linear-gradient(135deg, #047857 0%, #059669 58%, #0f766e 100%) !important;
-            color: white;
-            border-bottom: 0 !important;
-        }
-        .global-header .logo-area,
-        .global-header .user-info,
-        .global-header .theme-selector-container span { color: white !important; }
-        .global-header .theme-selector-container,
-        .global-header .user-info {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-container {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.16) !important;
-            margin-top: 12px;
-        }
-        .global-header .nav-btn {
-            background: rgba(255,255,255,.10) !important;
-            color: rgba(255,255,255,.86) !important;
-            border: 1px solid rgba(255,255,255,.10);
-        }
-        .global-header .nav-btn:hover {
-            background: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-btn.active-page {
-            background: white !important;
-            color: var(--brand-700) !important;
-            box-shadow: 0 8px 18px rgba(15,23,42,.22) !important;
-        }
-        .global-header .tenant-logo-img {
-            width: 42px !important;
-            height: 42px !important;
-            background: white !important;
-            border-color: rgba(255,255,255,.35) !important;
-        }
-        .global-header .logo-badge {
-            background: rgba(255,255,255,.18) !important;
-            border: 1px solid rgba(255,255,255,.18);
-        }
-        .logout-btn { background: rgba(239,68,68,.92) !important; }
-
-        .card > h1,
-        .card > h2,
-        .card > .page-desc,
-        .card > .section-title,
-        .card > .dashboard-grid,
-        .card > .kpi-grid,
-        .card > .operational-banner,
-        .card > .content-grid,
-        .card > .grid,
-        .card > .panel,
-        .card > form,
-        .card > table,
-        .card > div:not(.global-header) {
-            margin-left: 22px;
-            margin-right: 22px;
-        }
-        .card > h1,
-        .card > h2 {
-            margin-top: 22px !important;
-            margin-bottom: 4px !important;
-            font-size: clamp(22px, 2.6vw, 31px) !important;
-            letter-spacing: -0.035em;
-            color: var(--ink-900);
-        }
-        .page-desc {
-            max-width: 780px;
-            color: var(--ink-500) !important;
-            font-size: 14px !important;
-            margin-bottom: 20px !important;
-        }
-
-        .section-title {
-            margin-top: 24px !important;
-            margin-bottom: 11px !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--ink-700) !important;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(226,232,240,.9);
-            padding: 7px 11px;
-            border-radius: 999px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .panel {
-            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)) !important;
-            border: 1px solid rgba(203,213,225,.85) !important;
-            box-shadow: 0 12px 30px rgba(15,23,42,.07) !important;
-            border-radius: 18px !important;
-        }
-        .panel h3 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            border-bottom: 1px solid rgba(226,232,240,.95) !important;
-            padding-bottom: 12px !important;
-            margin-bottom: 14px !important;
-            color: var(--ink-900);
-            letter-spacing: -0.01em;
-        }
-        .panel h3::after {
-            content: "";
-            flex: 1;
-            height: 3px;
-            max-width: 56px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: .7;
-        }
-
-        .dashboard-grid,
-        .kpi-grid {
-            gap: 16px !important;
-        }
-        .metric-box {
-            position: relative;
-            overflow: hidden;
-            min-height: 104px !important;
-            padding: 18px 19px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 18px 38px rgba(15,23,42,.13) !important;
-        }
-        .metric-box::before {
-            content: "";
-            position: absolute;
-            inset: -40% -30% auto auto;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.17);
-        }
-        .metric-title { font-size: 12.5px !important; text-transform: uppercase; letter-spacing: .045em; }
-        .metric-value { font-size: 34px !important; letter-spacing: -0.045em; }
-        .metric-sub { font-size: 12px !important; }
-        .metric-box.clickable:hover {
-            transform: translateY(-3px);
-            filter: saturate(1.04);
-        }
-
-        .content-grid {
-            margin-bottom: 24px;
-            align-items: start;
-        }
-        .operational-banner {
-            min-height: 86px;
-            padding: 20px 22px !important;
-            border-radius: 20px !important;
-        }
-        .op-text h4 { font-size: 18px !important; letter-spacing: -0.015em; }
-        .op-badge { border-radius: 16px !important; }
-
-        table {
-            background: white;
-            box-shadow: inset 0 0 0 1px rgba(226,232,240,.75);
-        }
-        th {
-            background: #f1f5f9 !important;
-            color: #475569 !important;
-        }
-        td {
-            background-clip: padding-box;
-        }
-        tbody tr:nth-child(even) td { background: rgba(248,250,252,.65); }
-
-        .btn-primary,
-        button.btn-primary {
-            background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-blue,
-        button.btn-blue {
-            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-secondary,
-        button.btn-secondary {
-            background: #f1f5f9 !important;
-            color: #334155 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        .btn-danger,
-        button.btn-danger {
-            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .status.ok {
-            background: #ecfdf5 !important;
-            color: #047857 !important;
-            border: 1px solid #a7f3d0 !important;
-        }
-        .status.err {
-            background: #fef2f2 !important;
-            color: #b91c1c !important;
-            border: 1px solid #fecaca !important;
-        }
-
-        /* SaaS Yonetimi urun paneli revizyonu */
-        .grid {
-            grid-template-columns: 420px minmax(0, 1fr) !important;
-            gap: 22px !important;
-            align-items: start !important;
-            margin-bottom: 24px;
-        }
-        .grid > div:first-child {
-            position: sticky;
-            top: 18px;
-            align-self: start;
-        }
-        .edit-panel {
-            border: 1px solid rgba(37,99,235,.22) !important;
-            background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
-        }
-        .link-box {
-            border-radius: 12px !important;
-            border: 1px solid #bfdbfe !important;
-            background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
-            color: #1e40af !important;
-            font-weight: 750;
-        }
-        .logo-upload-box {
-            border: 1px dashed #93c5fd !important;
-            background: #f8fbff !important;
-            border-radius: 16px !important;
-        }
-        .logo-preview {
-            width: 56px !important;
-            height: 56px !important;
-            border-radius: 14px !important;
-            box-shadow: var(--shadow-sm);
-        }
-        .actions {
-            gap: 9px !important;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .actions + .button-help,
-        .button-help {
-            margin-top: 10px;
-            display: grid;
-            gap: 7px;
-            color: var(--ink-500);
-            font-size: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 11px 12px;
-        }
-        .button-help strong { color: var(--ink-700); }
-
-        @media (max-width: 1040px) {
-            .grid { grid-template-columns: 1fr !important; }
-            .grid > div:first-child { position: static; }
-        }
-        @media (max-width: 900px) {
-            .card > h1,
-            .card > h2,
-            .card > .page-desc,
-            .card > .section-title,
-            .card > .dashboard-grid,
-            .card > .kpi-grid,
-            .card > .operational-banner,
-            .card > .content-grid,
-            .card > .grid,
-            .card > .panel,
-            .card > form,
-            .card > table,
-            .card > div:not(.global-header) {
-                margin-left: 14px !important;
-                margin-right: 14px !important;
-            }
-            .global-header { padding: 15px !important; }
-            .metric-box { min-height: 92px !important; }
-        }
-
-    
-
-        /* v26.2 hotfix: keep v26 visual system, add branding/table/layout fixes */
-        .logo-area { font-weight: 500 !important; letter-spacing: .01em !important; font-size: 18px !important; }
-        .logo-area #lbl_osgb_title { font-weight: 500 !important; }
-        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
-        table, thead, tbody, tr, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; }
-        table { font-size: 13px !important; border-collapse: separate !important; border-spacing: 0 !important; }
-        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
-        tbody td { padding: 9px 11px !important; }
-        .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
-        .page-desc { max-width: none !important; }
-
-    
-
-        /* v26.3 targeted layout fixes */
-        .global-header {
-            background: linear-gradient(135deg, #047857 0%, #059669 58%, #0f766e 100%) !important;
-        }
-        .global-header .nav-btn.active-page {
-            color: #065f46 !important;
-        }
-        .global-header .logo-badge { display: none !important; }
-        .card > p,
-        .card > .page-desc {
-            margin-left: 22px !important;
-            margin-right: 22px !important;
-            max-width: 900px;
-        }
-        table, thead, tbody, tr, th, td,
-        table input, table select, table button, table a, table span, table small, table code {
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
-        }
-        table { table-layout: auto; }
-        th.sortable-th {
-            cursor: pointer;
-            user-select: none;
-            white-space: nowrap;
-        }
-        th.sortable-th::after {
-            content: " ⇅";
-            opacity: .45;
-            font-size: 11px;
-        }
-        th.sortable-th.sort-asc::after { content: " ↑"; opacity: .9; }
-        th.sortable-th.sort-desc::after { content: " ↓"; opacity: .9; }
-        .table-filter-row th {
-            padding: 6px 8px !important;
-            background: rgba(248,250,252,.96) !important;
-        }
-        .table-filter-input {
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid rgba(203,213,225,.9);
-            border-radius: 8px;
-            padding: 6px 8px;
-            font-size: 12px;
-            background: #fff;
-            color: var(--text-main);
-            min-width: 70px;
-        }
-        .table-filter-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(5,150,105,.10);
-        }
-        .table-container, .table-wrapper, .panel { overflow-x: auto; }
-
-    
-
-        .portfolio-grid { grid-template-columns: repeat(4, minmax(170px, 1fr)) !important; }
-        .summary-band {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(180px, 1fr));
-            gap: 14px;
-            margin-top: 16px;
-            margin-bottom: 18px;
-        }
-        .summary-item {
-            background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(240,253,244,.78));
-            border: 1px solid rgba(187,247,208,.9);
-            border-radius: 16px;
-            padding: 15px 17px;
-            box-shadow: var(--shadow-sm);
-        }
-        .summary-item span { display:block; font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
-        .summary-item strong { display:block; font-size: 28px; line-height: 1.1; margin: 6px 0 3px; color: #065f46; letter-spacing: -.04em; }
-        .summary-item small { color: var(--text-muted); font-weight: 600; }
-        @media (max-width: 900px) {
-            .portfolio-grid, .summary-band { grid-template-columns: 1fr 1fr !important; }
-        }
-        @media (max-width: 560px) {
-            .portfolio-grid, .summary-band { grid-template-columns: 1fr !important; }
-        }
+        /* Sprint 1 Dashboard Health Alerts */
+        .health-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:15px; margin-bottom:25px; }
+        .metric-blue { background: linear-gradient(135deg, #0284c7, #0369a1); }
+        .metric-purple { background: linear-gradient(135deg, #7c3aed, #5b21b6); }
+        .health-panel { background: var(--bg-card); border:1px solid var(--border-color); border-radius:12px; padding:18px; margin-bottom:24px; box-shadow:0 4px 12px rgba(15,23,42,0.04); }
+        .health-panel h3 { margin:0 0 12px; font-size:16px; color:var(--text-main); }
+        .health-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
+        .health-table th, .health-table td { padding:10px; border-bottom:1px solid var(--border-color); text-align:left; vertical-align:middle; }
+        .health-table th { background:var(--table-header); color:var(--text-muted); font-weight:800; }
+        .health-badge { display:inline-block; padding:4px 8px; border-radius:999px; font-size:11px; font-weight:900; white-space:nowrap; }
+        .health-badge-red { background:#fee2e2; color:#b91c1c; }
+        .health-badge-orange { background:#ffedd5; color:#c2410c; }
+        .health-badge-blue { background:#dbeafe; color:#1d4ed8; }
+        .health-badge-green { background:#dcfce7; color:#15803d; }
+        .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
+        @media(max-width:900px){ .dashboard-grid,.health-grid{grid-template-columns:1fr;} .operational-banner{align-items:flex-start; flex-direction:column; gap:10px;} }
 
     </style>
 </head>
 <body>
 
 <div class="card">
+    <!-- 🏛️ YENİ GLOBAL STANDART ÜST BAR (HER SAYFADA MİLMETRİK AYNI KALACAK) -->
     <div class="global-header">
         <div class="top-row">
-            <div class="logo-area"><span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span></div>
+            <!-- Sol Üst: Sabit Logo Alanı -->
+            <div class="logo-area">
+                🏢 <span id="lbl_osgb_title">AKAD OSGB</span> <span class="logo-badge">SaaS</span>
+            </div>
+            
+            <!-- Sağ Üst: Temiz Kontrol Havuzu -->
             <div class="controls-group">
                 <div class="theme-selector-container">
                     <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-right: 2px;">🎨 TEMA:</span>
@@ -771,78 +103,56 @@
             </div>
         </div>
 
+        <!-- Sabit Sekme Butonları (Ana Sayfa Aktif) -->
         <div class="nav-container">
             <a href="dashboard.html" class="nav-btn active-page">🏠 Ana Sayfa</a>
             <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
-            <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
-            <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
             <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
             <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+            <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+            <a href="staff.html" class="nav-btn">🔑 Personel Yönetimi</a>
             <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
             <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
         </div>
     </div>
 
-    <div class="section-title">📋 Portföy Tehlike Dağılımı</div>
-    <div class="dashboard-grid portfolio-grid">
-        <div class="metric-box metric-purple"><div class="metric-title">Toplam Firma</div><div class="metric-value" id="stat_total_companies">0</div><div class="metric-sub">Müşteri portföyü</div></div>
+    <!-- 📊 PORTFÖY ÖZET GÖSTERGELERİ -->
+    <div class="distribution-title">📋 Portföy Tehlike Dağılımı</div>
+    <div class="dashboard-grid">
         <div class="metric-box metric-red"><div class="metric-title">Çok Tehlikeli Firma</div><div class="metric-value" id="stat_danger_cok">0</div></div>
         <div class="metric-box metric-orange"><div class="metric-title">Tehlikeli Firma</div><div class="metric-value" id="stat_danger_tehlike">0</div></div>
         <div class="metric-box metric-green"><div class="metric-title">Az Tehlikeli Firma</div><div class="metric-value" id="stat_danger_az">0</div></div>
     </div>
 
-    <div class="section-title">🚨 DÖF Operasyon Özeti</div>
-    <div class="kpi-grid">
-        <div class="metric-box metric-red clickable" onclick="window.location.href='actions.html?filter=overdue'"><div class="metric-title">Geciken DÖF</div><div class="metric-value" id="stat_overdue_dofs">0</div><div class="metric-sub">Termin tarihi geçmiş aktif kayıt</div></div>
-        <div class="metric-box metric-orange clickable" onclick="window.location.href='actions.html?filter=open'"><div class="metric-title">Açık DÖF</div><div class="metric-value" id="stat_open_dofs">0</div><div class="metric-sub">Henüz kapatılmamış bulgu</div></div>
-        <div class="metric-box metric-blue clickable" onclick="window.location.href='actions.html?filter=progress'"><div class="metric-title">Devam Eden</div><div class="metric-value" id="stat_progress_dofs">0</div><div class="metric-sub">Aksiyona alınmış kayıt</div></div>
-        <div class="metric-box metric-green clickable" onclick="window.location.href='actions.html?filter=closed'"><div class="metric-title">Kapalı DÖF</div><div class="metric-value" id="stat_closed_dofs">0</div><div class="metric-sub">Tamamlanmış kayıt</div></div>
-    </div>
-
-    <div class="summary-band">
-        <div class="summary-item"><span>Aktif DÖF takipte</span><strong id="stat_active_dofs_band">0</strong><small>Açık + devam eden kayıt</small></div>
-        <div class="summary-item"><span>Bu ay planlı saha ziyareti</span><strong id="stat_month_visits">0</strong><small>Takvimde yer alan ziyaret</small></div>
-        <div class="summary-item"><span>Saha planlama yoğunluğu</span><strong id="stat_schedule_density">-</strong><small>Bu ay / aktif firma oranı</small></div>
-    </div>
-
-    <div id="operational_banner" class="operational-banner op-good" onclick="window.location.href='actions.html'">
+    <!-- 🚨 OPERASYONEL NABIZ -->
+    <div class="operational-banner" style="cursor:pointer;" onclick="window.location.href='actions.html'">
         <div class="op-text">
-            <h4 id="op_title">✅ Operasyonel durum iyi</h4>
-            <p id="op_desc">Geciken kritik DÖF bulunmuyor. Detaylı takip için Aksiyon Havuzu'na geçebilirsiniz.</p>
+            <h4>🚨 Sahadaki Aktif Risk ve Bulgular (Açık Uygunsuzluklar)</h4>
+            <p>OSGB uzmanları tarafından sahada tespit edilmiş, anlık olarak kapatılmayı bekleyen yasal bildirimler.</p>
         </div>
-        <div class="op-badge" id="op_badge">0</div>
+        <div class="op-badge" id="stat_total_risks">0</div>
+    </div>
+    
+    <!-- 🩺 SAĞLIK UYARILARI -->
+    <div class="distribution-title">🩺 İş Sağlığı Uyarıları</div>
+    <div class="health-grid">
+        <div class="metric-box metric-red" onclick="window.location.href='medical.html'" style="cursor:pointer;"><div class="metric-title">Referans Dışı Tetkik</div><div class="metric-value" id="stat_medical_abnormal">0</div></div>
+        <div class="metric-box metric-orange" onclick="window.location.href='medical.html'" style="cursor:pointer;"><div class="metric-title">Geciken Sağlık Takibi</div><div class="metric-value" id="stat_health_overdue">0</div></div>
+        <div class="metric-box metric-blue" onclick="window.location.href='medical.html'" style="cursor:pointer;"><div class="metric-title">7 Gün İçinde Yaklaşan Takip</div><div class="metric-value" id="stat_health_upcoming">0</div></div>
     </div>
 
-    <div class="content-grid">
-        <div class="panel">
-            <h3>⏰ Öncelikli DÖF Takibi</h3>
-            <p>Geciken ve yaklaşan aktif kayıtlar. Tam liste için Aksiyon Havuzu'nu açın.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Firma</th>
-                        <th>Bulgu / Sorumlu</th>
-                        <th>Termin</th>
-                        <th>Durum</th>
-                    </tr>
-                </thead>
-                <tbody id="priority_dofs_tbody"><tr><td colspan="4" class="empty-state">DÖF verileri yükleniyor...</td></tr></tbody>
+    <div class="health-panel">
+        <h3>🩺 Kritik Medikal Uyarılar</h3>
+        <div style="overflow-x:auto;">
+            <table class="health-table">
+                <thead><tr><th>Öncelik</th><th>Firma</th><th>Çalışan</th><th>Uyarı</th><th>Tarih</th></tr></thead>
+                <tbody id="health_alerts_body"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Sağlık uyarıları yükleniyor...</td></tr></tbody>
             </table>
         </div>
-        <div class="panel">
-            <h3>📅 Bu Ay Saha Ziyaretleri</h3>
-            <p>Yaklaşan ziyaret planları.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Tarih</th>
-                        <th>Firma / Personel</th>
-                        <th>Süre</th>
-                    </tr>
-                </thead>
-                <tbody id="month_visits_tbody"><tr><td colspan="3" class="empty-state">Ziyaretler yükleniyor...</td></tr></tbody>
-            </table>
-        </div>
+    </div>
+
+    <div style="background: var(--table-header); border: 1px dashed var(--border-color); padding: 30px; border-radius: 8px; text-align: center; color: var(--text-muted); font-size: 14px; margin-top: 20px;">
+        💡 <strong>Grafikler & Performans Analizleri Yakında:</strong> Buraya uzmanların aylık saha ziyaret oranlarını gösteren kurumsal İSG barlarını ekleyeceğiz.
     </div>
 </div>
 
@@ -850,10 +160,22 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let CURRENT_AUTH = null;
 
-    // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
-    // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
-    // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
+    const themes = {
+        isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
+        'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
+        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
+        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
+        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
+    };
+
+    function setTheme(themeName) {
+        const theme = themes[themeName]; if(!theme) return;
+        Object.keys(theme).forEach(key => { document.documentElement.style.setProperty(key, theme[key]); });
+        localStorage.setItem('selected_theme', themeName);
+    }
+
     function normalizeAccessRole(value) {
         const v = (value || '').toString().trim().toLowerCase();
         if (['super_admin', 'super admin', 'saas_admin', 'sistem sahibi'].includes(v)) return 'super_admin';
@@ -881,15 +203,6 @@
         if (record.can_login === false) return false;
         if (record.is_active_manual === 'Aktif') return true;
         if (record.is_active_manual === 'Pasif') return false;
-        const today = new Date(); today.setHours(0,0,0,0);
-        if (record.hire_date) {
-            const hire = new Date(record.hire_date); hire.setHours(0,0,0,0);
-            if (hire > today) return false;
-        }
-        if (record.termination_date) {
-            const term = new Date(record.termination_date); term.setHours(0,0,0,0);
-            if (term <= today) return false;
-        }
         return true;
     }
 
@@ -909,6 +222,10 @@
         return { session, email, role, canLogin, staff, tenant: staff && staff.tenants ? staff.tenants : null, tenant_id: staff ? staff.tenant_id : null };
     }
 
+    function roleLabel(role) {
+        return { super_admin: 'Super Admin', admin: 'Admin', uzman: 'İSG Uzmanı', hekim: 'İşyeri Hekimi', dsp: 'DSP', firma_yetkilisi: 'Firma Yetkilisi' }[role] || role || 'Rol yok';
+    }
+
     function canAccessPage(role, page) {
         if (role === 'super_admin' || role === 'admin') return true;
         if (page === 'risk') return role === 'uzman';
@@ -918,22 +235,16 @@
         return true;
     }
 
-    function roleLabel(role) {
-        return { super_admin: 'Super Admin', admin: 'Admin', uzman: 'İSG Uzmanı', hekim: 'İşyeri Hekimi', dsp: 'DSP', firma_yetkilisi: 'Firma Yetkilisi' }[role] || role || 'Rol yok';
-    }
-
     function applyRoleBasedNavigation(role) {
         const riskMenu = document.getElementById('menu_risk');
         const medicalMenu = document.getElementById('menu_medical');
-        const staffMenu = document.getElementById('menu_staff');
+        const staffLinks = Array.from(document.querySelectorAll('a[href="staff.html"]'));
         const saasMenu = document.getElementById('menu_saas');
-        if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
-        if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
-        if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
-        if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
+        if (riskMenu) riskMenu.style.display = canAccessPage(role, 'risk') ? 'inline-block' : 'none';
+        if (medicalMenu) medicalMenu.style.display = canAccessPage(role, 'medical') ? 'inline-block' : 'none';
+        staffLinks.forEach(el => { el.style.display = canAccessPage(role, 'staff') ? 'inline-block' : 'none'; });
         if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
     }
-
 
     function setTenantBranding(tenant) {
         const titleEl = document.getElementById('lbl_osgb_title');
@@ -955,250 +266,229 @@
         }
     }
 
-    async function requireAuthAndRole(page) {
-        const auth = await getCurrentAuthContext();
-        if (!auth.session) { window.location.href = 'login.html'; return null; }
-        if (!auth.canLogin) {
-            await dbClient.auth.signOut();
-            alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
-            window.location.href = 'login.html';
-            return null;
-        }
-        const userInfo = document.getElementById('current_user_email');
-        if (userInfo) userInfo.innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-        setTenantBranding(auth.tenant);
-        applyRoleBasedNavigation(auth.role);
-        if (page && !canAccessPage(auth.role, page)) {
-            window.location.href = 'dashboard.html';
-            return null;
-        }
-        return auth;
+    function isSuperAdmin() { return CURRENT_AUTH && CURRENT_AUTH.role === 'super_admin'; }
+
+    function tenantFilter(query, tableAlias) {
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id || isSuperAdmin()) return query;
+        return query.eq(tableAlias ? `${tableAlias}.tenant_id` : 'tenant_id', CURRENT_AUTH.tenant_id);
     }
 
-
-    const themes = {
-        isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
-        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
-        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
-    };
-
-    function setTheme(themeName) {
-        const theme = themes[themeName]; if(!theme) return;
-        Object.keys(theme).forEach(key => { document.documentElement.style.setProperty(key, theme[key]); });
-        localStorage.setItem('selected_theme', themeName);
+    function escapeHtml(value) {
+        return (value || '').toString().replace(/[&<>'"]/g, function (char) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char];
+        });
     }
 
-    let CURRENT_AUTH = null;
-    window.CURRENT_AUTH = null;
+    function todayIso() {
+        const d = new Date();
+        d.setHours(0,0,0,0);
+        return d.toISOString().slice(0,10);
+    }
+
+    function addDaysIso(days) {
+        const d = new Date();
+        d.setHours(0,0,0,0);
+        d.setDate(d.getDate() + days);
+        return d.toISOString().slice(0,10);
+    }
+
+    function dateLabel(value) {
+        if (!value) return '-';
+        const d = new Date(value + 'T00:00:00');
+        if (Number.isNaN(d.getTime())) return value;
+        return d.toLocaleDateString('tr-TR');
+    }
+
+    function isAbnormalStatus(value) {
+        const v = (value || '').toString().trim().toLowerCase();
+        return v.includes('referans') || v.includes('takip') || v.includes('anormal') || v.includes('dışı') || v.includes('disi');
+    }
 
     window.onload = async function() {
         const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
         setTheme(activeTheme);
 
-        const auth = await requireAuthAndRole('dashboard');
-        if (!auth) return;
+        const auth = await getCurrentAuthContext();
+        if (!auth.session) { window.location.href = "login.html"; return; }
+        if (!auth.canLogin) {
+            await dbClient.auth.signOut();
+            alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
+            window.location.href = 'login.html';
+            return;
+        }
+
         CURRENT_AUTH = auth;
-        window.CURRENT_AUTH = auth;
-        window.__CURRENT_AUTH_CONTEXT__ = auth;
         document.body.style.display = "block";
-        fetchDashboardStats(auth);
+        document.getElementById('current_user_email').innerText = `${auth.email} • ${roleLabel(auth.role)}`;
+        setTenantBranding(auth.tenant);
+        applyRoleBasedNavigation(auth.role);
+
+        if (!isSuperAdmin() && !CURRENT_AUTH.tenant_id) {
+            alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
+            await dbClient.auth.signOut();
+            window.location.href = 'login.html';
+            return;
+        }
+
+        fetchDashboardStats();
     };
 
-    function todayString() {
-        const d = new Date();
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
-    }
-
-    function currentMonthRange() {
-        const d = new Date();
-        const y = d.getFullYear();
-        const m = d.getMonth();
-        const start = new Date(y, m, 1);
-        const end = new Date(y, m + 1, 1);
-        const fmt = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-        return { start: fmt(start), end: fmt(end) };
-    }
-
-    function setDashValue(id, value) { const el = document.getElementById(id); if (el) el.innerText = value; }
-
-    function normalizeStatus(status) {
-        return status || 'Açık';
-    }
-
-    function isClosed(status) {
-        return normalizeStatus(status) === 'Kapalı';
-    }
-
-    function statusBadge(status) {
-        const st = normalizeStatus(status);
-        if (st === 'Kapalı') return '<span class="badge badge-green">Kapalı</span>';
-        if (st === 'Devam Ediyor') return '<span class="badge badge-blue">Devam Ediyor</span>';
-        return '<span class="badge badge-orange">Açık</span>';
-    }
-
-    function shortText(text, limit) {
-        if (!text) return '-';
-        return text.length > limit ? text.substring(0, limit) + '...' : text;
-    }
-
-    async function fetchDashboardStats(authContext) {
+    async function fetchDashboardStats() {
         try {
-            const auth = authContext || CURRENT_AUTH || window.__CURRENT_AUTH_CONTEXT__;
-            const tenantId = auth && auth.tenant_id;
-            if (!tenantId) throw new Error('Tenant bilgisi bulunamadı. Lütfen çıkış yapıp tenant linkinden tekrar giriş yapın.');
+            let companyQuery = dbClient.from('customer_companies').select('id, danger_class, tenant_id');
+            companyQuery = tenantFilter(companyQuery);
+            const { data: companies, error: companyError } = await companyQuery;
+            if (companyError) throw companyError;
+            if (companies) {
+                const cokCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'çok tehlikeli').length;
+                const tehlikeCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'tehlikeli').length;
+                const azCount = companies.filter(c => c.danger_class && c.danger_class.toString().trim().toLowerCase() === 'az tehlikeli').length;
+                document.getElementById('stat_danger_cok').innerText = cokCount;
+                document.getElementById('stat_danger_tehlike').innerText = tehlikeCount;
+                document.getElementById('stat_danger_az').innerText = azCount;
+            }
 
-            const today = todayString();
-            const { start, end } = currentMonthRange();
+            let riskQuery = dbClient.from('risk_assessments').select('id, tenant_id, status, customer_companies!inner(tenant_id)').eq('status', 'Açık');
+            riskQuery = tenantFilter(riskQuery);
+            if (!isSuperAdmin() && CURRENT_AUTH.tenant_id) riskQuery = riskQuery.eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id);
+            const { data: risks } = await riskQuery;
+            if (risks) document.getElementById('stat_total_risks').innerText = risks.length;
 
-            const [companiesRes, workersRes, risksRes, visitsRes] = await Promise.all([
-                dbClient
-                    .from('customer_companies')
-                    .select('id, danger_class')
-                    .eq('tenant_id', tenantId),
-
-                dbClient
-                    .from('workers')
-                    .select('id', { count: 'exact', head: true })
-                    .eq('tenant_id', tenantId),
-
-                dbClient
-                    .from('risk_assessments')
-                    .select('id, tenant_id, company_id, status, target_date, image_url, image_path, hazard_title, action_plan, responsible_person, risk_score, customer_companies!inner(company_name, tenant_id)')
-                    .eq('tenant_id', tenantId)
-                    .eq('customer_companies.tenant_id', tenantId)
-                    .order('target_date', { ascending: true }),
-
-                dbClient
-                    .from('field_schedules')
-                    .select('id, tenant_id, company_id, visit_date, assigned_staff, planned_minutes, customer_companies!inner(company_name, tenant_id)')
-                    .eq('tenant_id', tenantId)
-                    .eq('customer_companies.tenant_id', tenantId)
-                    .gte('visit_date', start)
-                    .lt('visit_date', end)
-                    .order('visit_date', { ascending: true })
-            ]);
-
-            if (companiesRes.error) throw companiesRes.error;
-            if (workersRes.error) throw workersRes.error;
-            if (risksRes.error) throw risksRes.error;
-            if (visitsRes.error) throw visitsRes.error;
-
-            const companies = companiesRes.data || [];
-            const risks = risksRes.data || [];
-            const visits = visitsRes.data || [];
-            const workerCount = workersRes.count || 0;
-
-            const cokCount = companies.filter(c => (c.danger_class || '').toString().trim().toLowerCase() === 'çok tehlikeli').length;
-            const tehlikeCount = companies.filter(c => (c.danger_class || '').toString().trim().toLowerCase() === 'tehlikeli').length;
-            const azCount = companies.filter(c => (c.danger_class || '').toString().trim().toLowerCase() === 'az tehlikeli').length;
-
-            const openDofs = risks.filter(r => normalizeStatus(r.status) === 'Açık').length;
-            const progressDofs = risks.filter(r => normalizeStatus(r.status) === 'Devam Ediyor').length;
-            const closedDofs = risks.filter(r => normalizeStatus(r.status) === 'Kapalı').length;
-            const activeRisks = risks.filter(r => !isClosed(r.status));
-            const overdueDofs = activeRisks.filter(r => r.target_date && r.target_date < today).length;
-            const photoDofs = risks.filter(r => r.image_url || r.image_path).length;
-            const activeDofs = openDofs + progressDofs;
-            const scheduleDensity = companies.length > 0 ? Math.round((visits.length / companies.length) * 100) + '%' : '-';
-
-            setDashValue('stat_danger_cok', cokCount);
-            setDashValue('stat_danger_tehlike', tehlikeCount);
-            setDashValue('stat_danger_az', azCount);
-            setDashValue('stat_total_companies', companies.length);
-            setDashValue('stat_total_workers', workerCount);
-            setDashValue('stat_open_dofs', openDofs);
-            setDashValue('stat_progress_dofs', progressDofs);
-            setDashValue('stat_closed_dofs', closedDofs);
-            setDashValue('stat_overdue_dofs', overdueDofs);
-            setDashValue('stat_photo_dofs', photoDofs);
-            setDashValue('stat_month_visits', visits.length);
-            setDashValue('stat_active_dofs_band', activeDofs);
-            setDashValue('stat_schedule_density', scheduleDensity);
-
-            updateOperationalBanner(overdueDofs, openDofs, progressDofs);
-            renderPriorityDofs(activeRisks, today);
-            renderMonthVisits(visits, today);
+            await fetchHealthDashboardStats();
         } catch (err) {
-            console.error(err.message);
-            const dofEl = document.getElementById('priority_dofs_tbody');
-            if (dofEl) dofEl.innerHTML = `<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">Dashboard verileri yüklenemedi: ${err.message}</td></tr>`;
-            const visitEl = document.getElementById('month_visits_tbody');
-            if (visitEl) visitEl.innerHTML = '<tr><td colspan="3" class="empty-state" style="color:#b91c1c;">Ziyaretler yüklenemedi.</td></tr>';
+            console.error(err.message || err);
+            renderHealthAlerts([], 'Dashboard verileri alınırken hata oluştu.');
         }
     }
 
-    function updateOperationalBanner(overdue, open, progress) {
-        const banner = document.getElementById('operational_banner');
-        const title = document.getElementById('op_title');
-        const desc = document.getElementById('op_desc');
-        const badge = document.getElementById('op_badge');
-        banner.classList.remove('op-critical', 'op-warning', 'op-good');
-        if (overdue > 0) {
-            banner.classList.add('op-critical');
-            title.innerText = '🚨 Geciken DÖF var';
-            desc.innerText = 'Termin tarihi geçmiş aktif kayıtlar öncelikli aksiyon bekliyor. Detay için Aksiyon Havuzu\'na geçin.';
-            badge.innerText = overdue;
-        } else if ((open + progress) > 0) {
-            banner.classList.add('op-warning');
-            title.innerText = '⚠️ Aktif DÖF takibi sürüyor';
-            desc.innerText = 'Geciken kayıt yok; ancak açık veya devam eden DÖF kayıtları takip edilmeli.';
-            badge.innerText = open + progress;
-        } else {
-            banner.classList.add('op-good');
-            title.innerText = '✅ Operasyonel durum iyi';
-            desc.innerText = 'Geciken veya aktif DÖF bulunmuyor. Yeni saha bulguları için Risk Motoru kullanılabilir.';
-            badge.innerText = '0';
-        }
+    async function fetchHealthDashboardStats() {
+        const today = todayIso();
+        const week = addDaysIso(7);
+        const alerts = [];
+
+        let testQuery = dbClient
+            .from('worker_medical_tests')
+            .select('id, tenant_id, company_id, worker_name, test_type, test_date, result_status, next_check_date, customer_companies!inner(company_name, tenant_id)')
+            .order('created_at', { ascending: false });
+        testQuery = tenantFilter(testQuery);
+        if (!isSuperAdmin() && CURRENT_AUTH.tenant_id) testQuery = testQuery.eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id);
+        const { data: tests, error: testsError } = await testQuery;
+        if (testsError && !String(testsError.message || '').includes('does not exist')) throw testsError;
+
+        const safeTests = tests || [];
+        const abnormalTests = safeTests.filter(t => isAbnormalStatus(t.result_status));
+        document.getElementById('stat_medical_abnormal').innerText = abnormalTests.length;
+
+        abnormalTests.slice(0, 8).forEach(t => {
+            alerts.push({
+                priority: 'Yüksek',
+                badgeClass: 'health-badge-red',
+                company: t.customer_companies ? t.customer_companies.company_name : '-',
+                worker: t.worker_name || '-',
+                message: `${t.test_type || 'Tetkik'} sonucu: ${t.result_status || 'Referans dışı'}`,
+                date: t.test_date || t.next_check_date || '',
+                sortDate: t.test_date || t.next_check_date || '9999-12-31'
+            });
+        });
+
+        safeTests.filter(t => t.next_check_date && t.next_check_date < today).forEach(t => {
+            alerts.push({
+                priority: 'Gecikmiş',
+                badgeClass: 'health-badge-orange',
+                company: t.customer_companies ? t.customer_companies.company_name : '-',
+                worker: t.worker_name || '-',
+                message: `${t.test_type || 'Tetkik'} kontrol tarihi geçti`,
+                date: t.next_check_date,
+                sortDate: t.next_check_date
+            });
+        });
+
+        safeTests.filter(t => t.next_check_date && t.next_check_date >= today && t.next_check_date <= week).forEach(t => {
+            alerts.push({
+                priority: 'Yaklaşıyor',
+                badgeClass: 'health-badge-blue',
+                company: t.customer_companies ? t.customer_companies.company_name : '-',
+                worker: t.worker_name || '-',
+                message: `${t.test_type || 'Tetkik'} kontrolü yaklaşıyor`,
+                date: t.next_check_date,
+                sortDate: t.next_check_date
+            });
+        });
+
+        let followupQuery = dbClient
+            .from('worker_health_followups')
+            .select('id, tenant_id, company_id, worker_name, followup_type, title, next_date, status, customer_companies!inner(company_name, tenant_id)')
+            .eq('status', 'Aktif')
+            .order('next_date', { ascending: true });
+        followupQuery = tenantFilter(followupQuery);
+        if (!isSuperAdmin() && CURRENT_AUTH.tenant_id) followupQuery = followupQuery.eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id);
+        const { data: followups, error: followupsError } = await followupQuery;
+        if (followupsError && !String(followupsError.message || '').includes('does not exist')) throw followupsError;
+
+        const safeFollowups = followups || [];
+        const overdueFollowups = safeFollowups.filter(f => f.next_date && f.next_date < today);
+        const upcomingFollowups = safeFollowups.filter(f => f.next_date && f.next_date >= today && f.next_date <= week);
+        const overdueTests = safeTests.filter(t => t.next_check_date && t.next_check_date < today);
+        const upcomingTests = safeTests.filter(t => t.next_check_date && t.next_check_date >= today && t.next_check_date <= week);
+
+        document.getElementById('stat_health_overdue').innerText = overdueFollowups.length + overdueTests.length;
+        document.getElementById('stat_health_upcoming').innerText = upcomingFollowups.length + upcomingTests.length;
+
+        overdueFollowups.forEach(f => {
+            alerts.push({
+                priority: 'Gecikmiş',
+                badgeClass: 'health-badge-orange',
+                company: f.customer_companies ? f.customer_companies.company_name : '-',
+                worker: f.worker_name || '-',
+                message: `${f.followup_type || 'Takip'}: ${f.title || 'Sağlık takibi'} gecikti`,
+                date: f.next_date,
+                sortDate: f.next_date
+            });
+        });
+
+        upcomingFollowups.forEach(f => {
+            alerts.push({
+                priority: 'Yaklaşıyor',
+                badgeClass: 'health-badge-blue',
+                company: f.customer_companies ? f.customer_companies.company_name : '-',
+                worker: f.worker_name || '-',
+                message: `${f.followup_type || 'Takip'}: ${f.title || 'Sağlık takibi'} yaklaşıyor`,
+                date: f.next_date,
+                sortDate: f.next_date
+            });
+        });
+
+        alerts.sort((a, b) => {
+            const weight = { 'Yüksek': 0, 'Gecikmiş': 1, 'Yaklaşıyor': 2 };
+            const wa = weight[a.priority] ?? 9;
+            const wb = weight[b.priority] ?? 9;
+            if (wa !== wb) return wa - wb;
+            return (a.sortDate || '').localeCompare(b.sortDate || '');
+        });
+
+        renderHealthAlerts(alerts.slice(0, 12));
     }
 
-    function renderPriorityDofs(activeRisks, today) {
-        const tbody = document.getElementById('priority_dofs_tbody');
-        const list = activeRisks
-            .slice()
-            .sort((a, b) => (a.target_date || '9999-12-31').localeCompare(b.target_date || '9999-12-31'))
-            .slice(0, 6);
-        if (list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Aktif DÖF bulunmuyor.</td></tr>';
+    function renderHealthAlerts(alerts, errorMessage) {
+        const tbody = document.getElementById('health_alerts_body');
+        if (!tbody) return;
+        if (errorMessage) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#b91c1c;">${escapeHtml(errorMessage)}</td></tr>`;
             return;
         }
-        tbody.innerHTML = '';
-        list.forEach(r => {
-            const compName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
-            const overdue = r.target_date && r.target_date < today;
-            const terminHtml = overdue ? `<span class="badge badge-red">Gecikti</span><br>${r.target_date}` : `<span class="badge badge-green">Takipte</span><br>${r.target_date || '-'}`;
-            tbody.innerHTML += `
-                <tr>
-                    <td><strong>${compName}</strong><br><small style="color:var(--text-muted);">Skor: ${r.risk_score || '-'}</small></td>
-                    <td>${shortText(r.hazard_title, 72)}<br><small style="color:var(--text-muted);">Sorumlu: ${r.responsible_person || '-'}</small></td>
-                    <td>${terminHtml}</td>
-                    <td>${statusBadge(r.status)}<br><a class="small-link" href="actions.html">Aç</a></td>
-                </tr>`;
-        });
-    }
-
-    function renderMonthVisits(visits, today) {
-        const tbody = document.getElementById('month_visits_tbody');
-        const upcoming = visits.filter(v => !v.visit_date || v.visit_date >= today).slice(0, 6);
-        const list = upcoming.length > 0 ? upcoming : visits.slice(0, 6);
-        if (list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Bu ay planlanmış saha ziyareti yok.</td></tr>';
+        if (!alerts || alerts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Kritik medikal uyarı bulunmuyor.</td></tr>';
             return;
         }
-        tbody.innerHTML = '';
-        list.forEach(v => {
-            const compName = v.customer_companies ? v.customer_companies.company_name : 'Bilinmeyen Firma';
-            tbody.innerHTML += `
-                <tr>
-                    <td>${v.visit_date || '-'}</td>
-                    <td><strong>${compName}</strong><br><small style="color:var(--text-muted);">${v.assigned_staff || 'Atanmamış'}</small></td>
-                    <td>${v.planned_minutes || 0} dk</td>
-                </tr>`;
-        });
+        tbody.innerHTML = alerts.map(a => `
+            <tr>
+                <td><span class="health-badge ${a.badgeClass}">${escapeHtml(a.priority)}</span></td>
+                <td>${escapeHtml(a.company)}</td>
+                <td>${escapeHtml(a.worker)}</td>
+                <td>${escapeHtml(a.message)}</td>
+                <td>${escapeHtml(dateLabel(a.date))}</td>
+            </tr>
+        `).join('');
     }
 
     async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
