@@ -371,7 +371,7 @@
         .global-header {
             padding: 18px 22px 14px !important;
             margin-bottom: 0 !important;
-            background: linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,64,175,.92)) !important;
+            background: linear-gradient(135deg, #047857 0%, #059669 58%, #0f766e 100%) !important;
             color: white;
             border-bottom: 0 !important;
         }
@@ -667,6 +667,88 @@
         .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
         .page-desc { max-width: none !important; }
 
+    
+
+        /* v26.3 targeted layout fixes */
+        .global-header {
+            background: linear-gradient(135deg, #047857 0%, #059669 58%, #0f766e 100%) !important;
+        }
+        .global-header .nav-btn.active-page {
+            color: #065f46 !important;
+        }
+        .global-header .logo-badge { display: none !important; }
+        .card > p,
+        .card > .page-desc {
+            margin-left: 22px !important;
+            margin-right: 22px !important;
+            max-width: 900px;
+        }
+        table, thead, tbody, tr, th, td,
+        table input, table select, table button, table a, table span, table small, table code {
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
+        }
+        table { table-layout: auto; }
+        th.sortable-th {
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        th.sortable-th::after {
+            content: " ⇅";
+            opacity: .45;
+            font-size: 11px;
+        }
+        th.sortable-th.sort-asc::after { content: " ↑"; opacity: .9; }
+        th.sortable-th.sort-desc::after { content: " ↓"; opacity: .9; }
+        .table-filter-row th {
+            padding: 6px 8px !important;
+            background: rgba(248,250,252,.96) !important;
+        }
+        .table-filter-input {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid rgba(203,213,225,.9);
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 12px;
+            background: #fff;
+            color: var(--text-main);
+            min-width: 70px;
+        }
+        .table-filter-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(5,150,105,.10);
+        }
+        .table-container, .table-wrapper, .panel { overflow-x: auto; }
+
+    
+
+        .portfolio-grid { grid-template-columns: repeat(4, minmax(170px, 1fr)) !important; }
+        .summary-band {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(180px, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+            margin-bottom: 18px;
+        }
+        .summary-item {
+            background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(240,253,244,.78));
+            border: 1px solid rgba(187,247,208,.9);
+            border-radius: 16px;
+            padding: 15px 17px;
+            box-shadow: var(--shadow-sm);
+        }
+        .summary-item span { display:block; font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+        .summary-item strong { display:block; font-size: 28px; line-height: 1.1; margin: 6px 0 3px; color: #065f46; letter-spacing: -.04em; }
+        .summary-item small { color: var(--text-muted); font-weight: 600; }
+        @media (max-width: 900px) {
+            .portfolio-grid, .summary-band { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 560px) {
+            .portfolio-grid, .summary-band { grid-template-columns: 1fr !important; }
+        }
+
     </style>
 </head>
 <body>
@@ -702,7 +784,8 @@
     </div>
 
     <div class="section-title">📋 Portföy Tehlike Dağılımı</div>
-    <div class="dashboard-grid">
+    <div class="dashboard-grid portfolio-grid">
+        <div class="metric-box metric-purple"><div class="metric-title">Toplam Firma</div><div class="metric-value" id="stat_total_companies">0</div><div class="metric-sub">Müşteri portföyü</div></div>
         <div class="metric-box metric-red"><div class="metric-title">Çok Tehlikeli Firma</div><div class="metric-value" id="stat_danger_cok">0</div></div>
         <div class="metric-box metric-orange"><div class="metric-title">Tehlikeli Firma</div><div class="metric-value" id="stat_danger_tehlike">0</div></div>
         <div class="metric-box metric-green"><div class="metric-title">Az Tehlikeli Firma</div><div class="metric-value" id="stat_danger_az">0</div></div>
@@ -716,11 +799,10 @@
         <div class="metric-box metric-green clickable" onclick="window.location.href='actions.html?filter=closed'"><div class="metric-title">Kapalı DÖF</div><div class="metric-value" id="stat_closed_dofs">0</div><div class="metric-sub">Tamamlanmış kayıt</div></div>
     </div>
 
-    <div class="kpi-grid">
-        <div class="metric-box metric-purple"><div class="metric-title">Toplam Firma</div><div class="metric-value" id="stat_total_companies">0</div><div class="metric-sub">Müşteri portföyü</div></div>
-        <div class="metric-box metric-slate"><div class="metric-title">Toplam Çalışan</div><div class="metric-value" id="stat_total_workers">0</div><div class="metric-sub">Kayıtlı çalışan sayısı</div></div>
-        <div class="metric-box metric-cyan"><div class="metric-title">Fotoğraflı DÖF</div><div class="metric-value" id="stat_photo_dofs">0</div><div class="metric-sub">Kanıt fotoğrafı olan kayıt</div></div>
-        <div class="metric-box metric-amber"><div class="metric-title">Bu Ay Ziyaret</div><div class="metric-value" id="stat_month_visits">0</div><div class="metric-sub">Planlanan saha ziyareti</div></div>
+    <div class="summary-band">
+        <div class="summary-item"><span>Aktif DÖF takipte</span><strong id="stat_active_dofs_band">0</strong><small>Açık + devam eden kayıt</small></div>
+        <div class="summary-item"><span>Bu ay planlı saha ziyareti</span><strong id="stat_month_visits">0</strong><small>Takvimde yer alan ziyaret</small></div>
+        <div class="summary-item"><span>Saha planlama yoğunluğu</span><strong id="stat_schedule_density">-</strong><small>Bu ay / aktif firma oranı</small></div>
     </div>
 
     <div id="operational_banner" class="operational-banner op-good" onclick="window.location.href='actions.html'">
@@ -936,6 +1018,8 @@
         return { start: fmt(start), end: fmt(end) };
     }
 
+    function setDashValue(id, value) { const el = document.getElementById(id); if (el) el.innerText = value; }
+
     function normalizeStatus(status) {
         return status || 'Açık';
     }
@@ -983,17 +1067,19 @@
             const overdueDofs = activeRisks.filter(r => r.target_date && r.target_date < today).length;
             const photoDofs = risks.filter(r => r.image_url || r.image_path).length;
 
-            document.getElementById('stat_danger_cok').innerText = cokCount;
-            document.getElementById('stat_danger_tehlike').innerText = tehlikeCount;
-            document.getElementById('stat_danger_az').innerText = azCount;
-            document.getElementById('stat_total_companies').innerText = companies.length;
-            document.getElementById('stat_total_workers').innerText = workersRes.count || 0;
-            document.getElementById('stat_open_dofs').innerText = openDofs;
-            document.getElementById('stat_progress_dofs').innerText = progressDofs;
-            document.getElementById('stat_closed_dofs').innerText = closedDofs;
-            document.getElementById('stat_overdue_dofs').innerText = overdueDofs;
-            document.getElementById('stat_photo_dofs').innerText = photoDofs;
-            document.getElementById('stat_month_visits').innerText = visits.length;
+            setDashValue('stat_danger_cok', cokCount);
+            setDashValue('stat_danger_tehlike', tehlikeCount);
+            setDashValue('stat_danger_az', azCount);
+            setDashValue('stat_total_companies', companies.length);
+            setDashValue('stat_total_workers', workersRes.count || 0);
+            setDashValue('stat_open_dofs', openDofs);
+            setDashValue('stat_progress_dofs', progressDofs);
+            setDashValue('stat_closed_dofs', closedDofs);
+            setDashValue('stat_overdue_dofs', overdueDofs);
+            setDashValue('stat_photo_dofs', photoDofs);
+            setDashValue('stat_month_visits', visits.length);
+            setDashValue('stat_active_dofs_band', openDofs + progressDofs);
+            setDashValue('stat_schedule_density', companies.length > 0 ? Math.round((visits.length / companies.length) * 100) + '%' : '-');
 
             updateOperationalBanner(overdueDofs, openDofs, progressDofs);
             renderPriorityDofs(activeRisks, today);
