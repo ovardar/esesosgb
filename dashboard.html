@@ -990,12 +990,18 @@
         localStorage.setItem('selected_theme', themeName);
     }
 
+    let CURRENT_AUTH = null;
+    window.CURRENT_AUTH = null;
+
     window.onload = async function() {
         const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
         setTheme(activeTheme);
 
         const auth = await requireAuthAndRole('dashboard');
         if (!auth) return;
+        CURRENT_AUTH = auth;
+        window.CURRENT_AUTH = auth;
+        window.__CURRENT_AUTH_CONTEXT__ = auth;
         document.body.style.display = "block";
         fetchDashboardStats(auth);
     };
@@ -1017,6 +1023,8 @@
         const fmt = (date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
         return { start: fmt(start), end: fmt(end) };
     }
+
+    function setDashValue(id, value) { const el = document.getElementById(id); if (el) el.innerText = value; }
 
     function normalizeStatus(status) {
         return status || 'Açık';
@@ -1040,7 +1048,7 @@
 
     async function fetchDashboardStats(authContext) {
         try {
-            const auth = authContext || window.__CURRENT_AUTH_CONTEXT__;
+            const auth = authContext || CURRENT_AUTH || window.__CURRENT_AUTH_CONTEXT__;
             const tenantId = auth && auth.tenant_id;
             if (!tenantId) throw new Error('Tenant bilgisi bulunamadı. Lütfen çıkış yapıp tenant linkinden tekrar giriş yapın.');
 
@@ -1048,15 +1056,42 @@
             const { start, end } = currentMonthRange();
 
             const [companiesRes, workersRes, risksRes, visitsRes] = await Promise.all([
-                dbClient.from('customer_companies').select('id, danger_class').eq('tenant_id', tenantId),
-                dbClient.from('workers').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-                dbClient.from('risk_assessments').select('id, status, target_date, image_url, image_path, hazard_title, action_plan, responsible_person, risk_score, customer_companies(company_name)').eq('tenant_id', tenantId).order('target_date', { ascending: true }),
-                dbClient.from('field_schedules').select('id, visit_date, assigned_staff, planned_minutes, customer_companies(company_name)').eq('tenant_id', tenantId).gte('visit_date', start).lt('visit_date', end).order('visit_date', { ascending: true })
+                dbClient
+                    .from('customer_companies')
+                    .select('id, danger_class')
+                    .eq('tenant_id', tenantId),
+
+                dbClient
+                    .from('workers')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('tenant_id', tenantId),
+
+                dbClient
+                    .from('risk_assessments')
+                    .select('id, tenant_id, company_id, status, target_date, image_url, image_path, hazard_title, action_plan, responsible_person, risk_score, customer_companies!inner(company_name, tenant_id)')
+                    .eq('tenant_id', tenantId)
+                    .eq('customer_companies.tenant_id', tenantId)
+                    .order('target_date', { ascending: true }),
+
+                dbClient
+                    .from('field_schedules')
+                    .select('id, tenant_id, company_id, visit_date, assigned_staff, planned_minutes, customer_companies!inner(company_name, tenant_id)')
+                    .eq('tenant_id', tenantId)
+                    .eq('customer_companies.tenant_id', tenantId)
+                    .gte('visit_date', start)
+                    .lt('visit_date', end)
+                    .order('visit_date', { ascending: true })
             ]);
+
+            if (companiesRes.error) throw companiesRes.error;
+            if (workersRes.error) throw workersRes.error;
+            if (risksRes.error) throw risksRes.error;
+            if (visitsRes.error) throw visitsRes.error;
 
             const companies = companiesRes.data || [];
             const risks = risksRes.data || [];
             const visits = visitsRes.data || [];
+            const workerCount = workersRes.count || 0;
 
             const cokCount = companies.filter(c => (c.danger_class || '').toString().trim().toLowerCase() === 'çok tehlikeli').length;
             const tehlikeCount = companies.filter(c => (c.danger_class || '').toString().trim().toLowerCase() === 'tehlikeli').length;
@@ -1068,25 +1103,32 @@
             const activeRisks = risks.filter(r => !isClosed(r.status));
             const overdueDofs = activeRisks.filter(r => r.target_date && r.target_date < today).length;
             const photoDofs = risks.filter(r => r.image_url || r.image_path).length;
+            const activeDofs = openDofs + progressDofs;
+            const scheduleDensity = companies.length > 0 ? Math.round((visits.length / companies.length) * 100) + '%' : '-';
 
-            document.getElementById('stat_danger_cok').innerText = cokCount;
-            document.getElementById('stat_danger_tehlike').innerText = tehlikeCount;
-            document.getElementById('stat_danger_az').innerText = azCount;
-            document.getElementById('stat_total_companies').innerText = companies.length;
-            document.getElementById('stat_total_workers').innerText = workersRes.count || 0;
-            document.getElementById('stat_open_dofs').innerText = openDofs;
-            document.getElementById('stat_progress_dofs').innerText = progressDofs;
-            document.getElementById('stat_closed_dofs').innerText = closedDofs;
-            document.getElementById('stat_overdue_dofs').innerText = overdueDofs;
-            document.getElementById('stat_photo_dofs').innerText = photoDofs;
-            document.getElementById('stat_month_visits').innerText = visits.length;
+            setDashValue('stat_danger_cok', cokCount);
+            setDashValue('stat_danger_tehlike', tehlikeCount);
+            setDashValue('stat_danger_az', azCount);
+            setDashValue('stat_total_companies', companies.length);
+            setDashValue('stat_total_workers', workerCount);
+            setDashValue('stat_open_dofs', openDofs);
+            setDashValue('stat_progress_dofs', progressDofs);
+            setDashValue('stat_closed_dofs', closedDofs);
+            setDashValue('stat_overdue_dofs', overdueDofs);
+            setDashValue('stat_photo_dofs', photoDofs);
+            setDashValue('stat_month_visits', visits.length);
+            setDashValue('stat_active_dofs_band', activeDofs);
+            setDashValue('stat_schedule_density', scheduleDensity);
 
             updateOperationalBanner(overdueDofs, openDofs, progressDofs);
             renderPriorityDofs(activeRisks, today);
             renderMonthVisits(visits, today);
         } catch (err) {
             console.error(err.message);
-            document.getElementById('priority_dofs_tbody').innerHTML = `<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">Dashboard verileri yüklenemedi: ${err.message}</td></tr>`;
+            const dofEl = document.getElementById('priority_dofs_tbody');
+            if (dofEl) dofEl.innerHTML = `<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">Dashboard verileri yüklenemedi: ${err.message}</td></tr>`;
+            const visitEl = document.getElementById('month_visits_tbody');
+            if (visitEl) visitEl.innerHTML = '<tr><td colspan="3" class="empty-state" style="color:#b91c1c;">Ziyaretler yüklenemedi.</td></tr>';
         }
     }
 
