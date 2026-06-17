@@ -41,8 +41,9 @@
     if (!dbClient) throw new Error('Supabase bağlantısı hazır değil. Sayfayı yenileyip tekrar deneyin.');
 
     const ext = getFileExtension(risk.photo_type);
+    const safeTenantId = String(risk.tenant_id || 'unknown-tenant');
     const safeCompanyId = String(risk.company_id || 'unknown-company');
-    const path = `${safeCompanyId}/${risk.local_id}.${ext}`;
+    const path = `${safeTenantId}/${safeCompanyId}/${risk.local_id}.${ext}`;
 
     const { error } = await dbClient.storage
       .from(RISK_PHOTO_BUCKET)
@@ -77,8 +78,43 @@
     return data || null;
   }
 
+  async function resolveTenantIdForRisk(risk) {
+    const dbClient = getDbClient();
+
+    // 1) En doğru kaynak: offline kaydın içindeki tenant_id
+    if (risk && risk.tenant_id) return risk.tenant_id;
+
+    // 2) Risk sayfası CURRENT_AUTH bilgisini window'a açtıysa onu kullan
+    if (window.CURRENT_AUTH && window.CURRENT_AUTH.tenant_id) {
+      risk.tenant_id = window.CURRENT_AUTH.tenant_id;
+      return risk.tenant_id;
+    }
+
+    // 3) Fallback: Seçilen firmanın tenant_id değerini customer_companies üzerinden bul
+    if (risk && risk.company_id) {
+      const { data, error } = await dbClient
+        .from('customer_companies')
+        .select('tenant_id')
+        .eq('id', risk.company_id)
+        .maybeSingle();
+
+      if (error) {
+        throw new Error('Firma tenant bilgisi okunamadı. Detay: ' + error.message);
+      }
+
+      if (data && data.tenant_id) {
+        risk.tenant_id = data.tenant_id;
+        return risk.tenant_id;
+      }
+    }
+
+    throw new Error('Risk kaydı için tenant_id belirlenemedi. Firma kaydının tenant_id bilgisini kontrol edin.');
+  }
+
   async function insertOrReuseRisk(risk, imageInfo) {
     const dbClient = getDbClient();
+
+    const tenantId = await resolveTenantIdForRisk(risk);
 
     const existing = await findExistingRiskByLocalId(risk.local_id);
     if (existing) {
@@ -86,10 +122,9 @@
     }
 
     const payload = {
-      tenant_id: risk.tenant_id,
+      tenant_id: tenantId,
       local_id: risk.local_id,
       created_offline_at: risk.created_at || new Date().toISOString(),
-      tenant_id: window.CURRENT_AUTH ? window.CURRENT_AUTH.tenant_id : null,
       company_id: risk.company_id,
       hazard_title: risk.hazard_title,
       action_plan: risk.action_plan || null,
@@ -181,12 +216,14 @@
             last_error: null
           });
 
+          await resolveTenantIdForRisk(risk);
           const imageInfo = await uploadRiskPhoto(risk);
           const serverId = await insertOrReuseRisk(risk, imageInfo);
 
           await window.OSGBOfflineDB.updateRisk(risk.local_id, {
             sync_status: 'synced',
             server_id: serverId || null,
+            tenant_id: risk.tenant_id || null,
             synced_at: new Date().toISOString(),
             image_url: imageInfo && imageInfo.url ? imageInfo.url : null,
             image_path: imageInfo && imageInfo.path ? imageInfo.path : null,
