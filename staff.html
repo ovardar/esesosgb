@@ -759,6 +759,7 @@
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let CURRENT_AUTH = null;
     let TENANTS_CACHE = [];
+    let STAFF_CACHE_BY_ID = {};
 
     // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
     // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
@@ -1081,7 +1082,9 @@
         tbody.innerHTML = '';
         if (error) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">Hata: ${error.message}</td></tr>`; return; }
         if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Kayıtlı personel yok.</td></tr>`; return; }
+        STAFF_CACHE_BY_ID = {};
         data.forEach(s => {
+            STAFF_CACHE_BY_ID[String(s.id)] = s;
             const accessRole = normalizeAccessRole(s.access_role) || normalizeAccessRole(s.staff_role) || 'uzman';
             const canLoginValue = s.can_login !== false;
             const isSystemActive = calculateSystemStatus(s.hire_date, s.termination_date, s.is_active_manual, canLoginValue);
@@ -1090,7 +1093,6 @@
             const manual = escapeAttr(s.is_active_manual || 'Otomatik');
             const tenantId = escapeAttr(s.tenant_id || '');
             const tenantLabel = s.tenants ? `${s.tenants.name || '-'}${s.tenants.slug ? '<br><small style="color:var(--text-muted);">' + escapeAttr(s.tenants.slug) + '</small>' : ''}` : '<span style="color:#b91c1c; font-weight:bold;">Tenant yok</span>';
-            const modalArgs = [s.id, name, email, manual, accessRole, canLoginValue, tenantId].map(v => JSON.stringify(String(v ?? ''))).join(',');
             tbody.innerHTML += `<tr>
                 <td><strong>${escapeHtml(s.name_surname || '-')}</strong></td>
                 <td>${tenantLabel}</td>
@@ -1099,9 +1101,28 @@
                 <td><code>${escapeHtml(s.email || '-')}</code></td>
                 <td>Giriş: ${escapeHtml(s.hire_date || '-')}<br>Çıkış: ${escapeHtml(s.termination_date || 'Devam')}</td>
                 <td style="text-align: center;"><span class="badge ${isSystemActive ? 'badge-active' : 'badge-passive'}">${isSystemActive ? '● AKTİF' : '○ PASİF'}</span></td>
-                <td><button class="btn-edit-action" onclick="openStaffModal(${modalArgs})">Düzenle</button><button class="btn-delete-action" onclick="deleteStaff('${escapeAttr(s.id)}', '${tenantId}')">Sil</button></td>
+                <td><button class="btn-edit-action" onclick="openStaffModalById('${escapeAttr(s.id)}')">Düzenle</button><button class="btn-delete-action" onclick="deleteStaff('${escapeAttr(s.id)}', '${tenantId}')">Sil</button></td>
             </tr>`;
         });
+    }
+
+    function openStaffModalById(id) {
+        const s = STAFF_CACHE_BY_ID[String(id)];
+        if (!s) {
+            alert('Personel kaydı bulunamadı. Lütfen sayfayı yenileyin.');
+            return;
+        }
+        const accessRole = normalizeAccessRole(s.access_role) || normalizeAccessRole(s.staff_role) || 'uzman';
+        const canLoginValue = s.can_login !== false;
+        openStaffModal(
+            s.id,
+            s.name_surname || '',
+            s.email || '',
+            s.is_active_manual || 'Otomatik',
+            accessRole,
+            String(canLoginValue),
+            s.tenant_id || ''
+        );
     }
 
     function openStaffModal(id, name, email, manual, accessRole, canLoginValue, tenantId) {
