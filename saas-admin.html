@@ -3,283 +3,1075 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS Yönetimi - Eses Software</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>OSGB SaaS - SaaS Yönetimi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg-main:#f4f6f9; --bg-card:#ffffff; --text-main:#1e293b; --text-muted:#64748b; --primary:#2563eb; --border-color:#e2e8f0; --table-header:#f8fafc; --nav-inactive-bg:#e2e8f0; --nav-inactive-text:#475569; }
+        body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:var(--bg-main); color:var(--text-main); padding:30px; display:none; }
+        .card { background:var(--bg-card); padding:25px; border-radius:12px; max-width:1260px; margin:0 auto; box-shadow:0 4px 15px rgba(0,0,0,0.05); border:1px solid var(--border-color); }
+        .global-header { border-bottom:1px solid var(--border-color); padding-bottom:15px; margin-bottom:20px; }
+        .top-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; gap:12px; }
+        .logo-area { font-size:18px; font-weight:800; color:var(--text-main); letter-spacing:.5px; display:flex; align-items:center; gap:8px; }
+        .logo-badge { background:var(--primary); color:white; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:bold; }
+        .controls-group { display:flex; align-items:center; gap:16px; }
+        .user-info { font-size:13px; color:var(--text-muted); font-weight:600; }
+        .logout-btn { background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:bold; }
+        .nav-container { display:flex; gap:8px; justify-content:center; background:var(--table-header); padding:6px; border-radius:10px; border:1px solid var(--border-color); flex-wrap:wrap; }
+        .nav-btn { background:var(--nav-inactive-bg); color:var(--nav-inactive-text); padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:13px; transition:all .2s ease; }
+        .nav-btn.active-page { background:var(--primary); color:white!important; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+        h2 { margin:0 0 6px; }
+        .page-desc { color:var(--text-muted); margin:0 0 20px; font-size:13px; }
+        .grid { display:grid; grid-template-columns:.85fr 1.15fr; gap:18px; align-items:start; }
+        .panel { border:1px solid var(--border-color); background:var(--bg-card); border-radius:12px; padding:18px; }
+        .panel h3 { margin:0 0 12px; font-size:16px; border-bottom:2px solid var(--primary); padding-bottom:8px; }
+        label { display:block; font-size:12px; font-weight:800; color:var(--text-muted); margin:12px 0 6px; }
+        input, select { width:100%; box-sizing:border-box; border:1px solid var(--border-color); border-radius:8px; padding:10px; background:white; color:#111827; }
+        .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .btn { border:none; border-radius:8px; padding:10px 13px; font-weight:800; cursor:pointer; font-size:13px; }
+        .btn-primary { background:var(--primary); color:white; }
+        .btn-secondary { background:#e2e8f0; color:#334155; }
+        .btn-danger { background:#fee2e2; color:#b91c1c; }
+        .btn-green { background:#dcfce7; color:#15803d; }
+        .btn-blue { background:#dbeafe; color:#1d4ed8; }
+        .btn-small { padding:7px 9px; font-size:11px; margin:2px 0; }
+        .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+        table { width:100%; border-collapse:collapse; font-size:12px; margin-top:12px; }
+        th, td { border-bottom:1px solid var(--border-color); padding:9px; text-align:left; vertical-align:top; }
+        th { background:var(--table-header); color:var(--text-muted); font-weight:800; }
+        .badge { display:inline-block; border-radius:999px; padding:3px 7px; font-size:10px; font-weight:900; white-space:nowrap; }
+        .badge-green { background:#dcfce7; color:#15803d; }
+        .badge-red { background:#fee2e2; color:#b91c1c; }
+        .badge-blue { background:#dbeafe; color:#1d4ed8; }
+        .badge-gray { background:#e2e8f0; color:#475569; }
+        .badge-orange { background:#ffedd5; color:#c2410c; }
+        .muted { color:var(--text-muted); }
+        .status { margin-top:12px; font-size:12px; font-weight:800; }
+        .status.ok { color:#15803d; } .status.err { color:#b91c1c; }
+        .link-box { background:#f8fafc; border:1px dashed var(--border-color); border-radius:8px; padding:9px; word-break:break-all; font-size:12px; color:#334155; }
+        .edit-panel { margin-top:18px; border:2px solid #dbeafe; background:#f8fbff; }
+        .hidden { display:none; }
+        .logo-upload-box { border:1px dashed var(--border-color); border-radius:10px; padding:12px; background:#f8fafc; }
+        .logo-upload-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .logo-preview { width:64px; height:64px; border:1px solid var(--border-color); border-radius:12px; background:white; object-fit:contain; padding:6px; box-sizing:border-box; }
+        .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
+        .help-text { color:var(--text-muted); font-size:11px; margin-top:6px; line-height:1.35; }
+        input[type="file"] { padding:8px; background:white; }
+
+        @media(max-width:900px){ body{padding:12px}.top-row,.controls-group{flex-direction:column;align-items:stretch}.grid,.row{grid-template-columns:1fr}.card{padding:15px} }
+    
+
+        /* ================================
+           v24 UI POLISH - ortak arayuz duzeltmeleri
+           ================================ */
+        :root {
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.10);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
+        }
+
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+        }
+
+        .card {
+            width: min(100%, 1240px) !important;
+            max-width: 1240px !important;
+            border-radius: var(--radius-lg) !important;
+            box-shadow: var(--shadow-md) !important;
+        }
+
+        .global-header {
+            background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
+            border-bottom-color: var(--border-color) !important;
+        }
+
+        .top-row {
+            gap: 14px;
+            align-items: center !important;
+        }
+
+        .logo-area {
+            min-width: 0;
+            font-size: 17px !important;
+            letter-spacing: 0 !important;
+            gap: 10px !important;
+        }
+
+        .logo-area span[id^="lbl_"] {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .tenant-logo-img {
+            width: 36px !important;
+            height: 36px !important;
+            padding: 4px !important;
+            border-radius: 10px !important;
+            box-shadow: var(--shadow-sm);
+            flex: 0 0 auto;
+        }
+
+        .logo-badge {
+            border-radius: 999px !important;
+            padding: 4px 9px !important;
+            font-size: 11px !important;
+            letter-spacing: .02em;
+            flex: 0 0 auto;
+        }
+
+        .controls-group {
+            gap: 10px !important;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .theme-selector-container {
+            border-radius: 999px !important;
+            padding: 6px 10px !important;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .theme-btn {
+            width: 18px !important;
+            height: 18px !important;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .theme-btn:hover { transform: translateY(-1px) scale(1.08); box-shadow: 0 3px 8px rgba(15,23,42,.18); }
+
+        .user-info {
+            background: var(--table-header);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 7px 11px;
+            max-width: 280px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .logout-btn,
+        button,
+        .btn,
+        input[type="submit"] {
+            border-radius: 10px !important;
+            font-weight: 750 !important;
+            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+        }
+        button:hover,
+        .logout-btn:hover,
+        .btn:hover,
+        input[type="submit"]:hover {
+            transform: translateY(-1px);
+            filter: brightness(.98);
+            box-shadow: var(--shadow-sm);
+        }
+        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
+
+        .nav-container {
+            justify-content: flex-start !important;
+            gap: 7px !important;
+            padding: 8px !important;
+            border-radius: 14px !important;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .nav-btn {
+            white-space: nowrap;
+            border-radius: 10px !important;
+            padding: 9px 13px !important;
+            font-size: 12.5px !important;
+            box-shadow: none;
+        }
+        .nav-btn.active-page { box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important; }
+
+        h1, h2, h3 { letter-spacing: -0.02em; }
+        h1 { font-size: clamp(24px, 3vw, 34px); }
+        h2 { font-size: clamp(20px, 2.4vw, 28px); }
+        h3 { font-size: clamp(16px, 1.8vw, 20px); }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px !important;
+            color: var(--text-main) !important;
+            font-size: 13px !important;
+            letter-spacing: .04em !important;
+        }
+
+        .panel,
+        .form-card,
+        .table-card,
+        .sub-card,
+        .mini-card,
+        .info-card {
+            border-radius: var(--radius-md) !important;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .metric-box {
+            border-radius: 14px !important;
+            box-shadow: 0 10px 24px rgba(15,23,42,.10) !important;
+            position: relative;
+            overflow: hidden;
+        }
+        .metric-box:after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,.20), transparent 45%);
+            pointer-events: none;
+        }
+        .metric-title, .metric-sub, .metric-value { position: relative; z-index: 1; }
+
+        input,
+        select,
+        textarea {
+            border: 1px solid var(--border-color) !important;
+            border-radius: 10px !important;
+            background: var(--bg-card);
+            color: var(--text-main);
+            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none !important;
+            border-color: var(--primary) !important;
+            box-shadow: var(--focus-ring) !important;
+        }
+        label { font-weight: 700; color: var(--text-main); }
+
+        table {
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+        th {
+            font-size: 11px !important;
+            text-transform: uppercase;
+            letter-spacing: .035em;
+            white-space: nowrap;
+        }
+        td { line-height: 1.45; }
+        tbody tr { transition: background .12s ease; }
+        tbody tr:hover { background: rgba(37, 99, 235, 0.035); }
+        .empty-state {
+            border: 1px dashed var(--border-color);
+            border-radius: 12px;
+            background: var(--table-header);
+        }
+
+        .badge {
+            border-radius: 999px !important;
+            letter-spacing: .02em;
+            padding: 4px 8px !important;
+        }
+
+        .small-link { text-underline-offset: 3px; }
+
+        .operational-banner {
+            box-shadow: var(--shadow-sm);
+            border: 0 !important;
+        }
+
+        @media (max-width: 900px) {
+            body { padding: 12px !important; }
+            .card { padding: 16px !important; border-radius: 16px !important; }
+            .top-row { align-items: stretch !important; }
+            .controls-group { justify-content: flex-start; }
+            .user-info { max-width: 100%; }
+            .nav-container { flex-wrap: nowrap !important; justify-content: flex-start !important; }
+            .nav-btn { flex: 0 0 auto; }
+            table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
+            th, td { padding: 9px 10px !important; }
+        }
+
+        @media (max-width: 520px) {
+            .logo-area { font-size: 15px !important; }
+            .tenant-logo-img { width: 32px !important; height: 32px !important; }
+            .theme-selector-container { width: 100%; justify-content: center; }
+            .logout-btn { width: 100%; }
+        }
+
+    
+
+        /* ================================
+           v25 PRODUCT DESIGN SYSTEM - derin arayuz revizyonu
+           ================================ */
+        :root {
+            --brand-50: #eff6ff;
+            --brand-100: #dbeafe;
+            --brand-500: #2563eb;
+            --brand-600: #1d4ed8;
+            --brand-700: #1e40af;
+            --ink-900: #0f172a;
+            --ink-700: #334155;
+            --ink-500: #64748b;
+            --surface-0: #ffffff;
+            --surface-1: #f8fafc;
+            --surface-2: #eef2f7;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --info: #0284c7;
+        }
+
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(37,99,235,.15), transparent 32rem),
+                radial-gradient(circle at top right, rgba(14,165,233,.12), transparent 28rem),
+                linear-gradient(180deg, #f8fafc 0%, #edf2f7 52%, #e9eef6 100%) !important;
+            color: var(--ink-900) !important;
+        }
+
+        .card {
+            padding: 0 !important;
+            overflow: hidden;
+            background: rgba(255,255,255,.92) !important;
+            backdrop-filter: blur(10px);
+        }
+
+        .global-header {
+            padding: 18px 22px 14px !important;
+            margin-bottom: 0 !important;
+            background: linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,64,175,.92)) !important;
+            color: white;
+            border-bottom: 0 !important;
+        }
+        .global-header .logo-area,
+        .global-header .user-info,
+        .global-header .theme-selector-container span { color: white !important; }
+        .global-header .theme-selector-container,
+        .global-header .user-info {
+            background: rgba(255,255,255,.10) !important;
+            border-color: rgba(255,255,255,.18) !important;
+            color: white !important;
+        }
+        .global-header .nav-container {
+            background: rgba(255,255,255,.10) !important;
+            border-color: rgba(255,255,255,.16) !important;
+            margin-top: 12px;
+        }
+        .global-header .nav-btn {
+            background: rgba(255,255,255,.10) !important;
+            color: rgba(255,255,255,.86) !important;
+            border: 1px solid rgba(255,255,255,.10);
+        }
+        .global-header .nav-btn:hover {
+            background: rgba(255,255,255,.18) !important;
+            color: white !important;
+        }
+        .global-header .nav-btn.active-page {
+            background: white !important;
+            color: var(--brand-700) !important;
+            box-shadow: 0 8px 18px rgba(15,23,42,.22) !important;
+        }
+        .global-header .tenant-logo-img {
+            width: 42px !important;
+            height: 42px !important;
+            background: white !important;
+            border-color: rgba(255,255,255,.35) !important;
+        }
+        .global-header .logo-badge {
+            background: rgba(255,255,255,.18) !important;
+            border: 1px solid rgba(255,255,255,.18);
+        }
+        .logout-btn { background: rgba(239,68,68,.92) !important; }
+
+        .card > h1,
+        .card > h2,
+        .card > .page-desc,
+        .card > .section-title,
+        .card > .dashboard-grid,
+        .card > .kpi-grid,
+        .card > .operational-banner,
+        .card > .content-grid,
+        .card > .grid,
+        .card > .panel,
+        .card > form,
+        .card > table,
+        .card > div:not(.global-header) {
+            margin-left: 22px;
+            margin-right: 22px;
+        }
+        .card > h1,
+        .card > h2 {
+            margin-top: 22px !important;
+            margin-bottom: 4px !important;
+            font-size: clamp(22px, 2.6vw, 31px) !important;
+            letter-spacing: -0.035em;
+            color: var(--ink-900);
+        }
+        .page-desc {
+            max-width: 780px;
+            color: var(--ink-500) !important;
+            font-size: 14px !important;
+            margin-bottom: 20px !important;
+        }
+
+        .section-title {
+            margin-top: 24px !important;
+            margin-bottom: 11px !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: var(--ink-700) !important;
+            background: rgba(255,255,255,.72);
+            border: 1px solid rgba(226,232,240,.9);
+            padding: 7px 11px;
+            border-radius: 999px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .panel {
+            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)) !important;
+            border: 1px solid rgba(203,213,225,.85) !important;
+            box-shadow: 0 12px 30px rgba(15,23,42,.07) !important;
+            border-radius: 18px !important;
+        }
+        .panel h3 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            border-bottom: 1px solid rgba(226,232,240,.95) !important;
+            padding-bottom: 12px !important;
+            margin-bottom: 14px !important;
+            color: var(--ink-900);
+            letter-spacing: -0.01em;
+        }
+        .panel h3::after {
+            content: "";
+            flex: 1;
+            height: 3px;
+            max-width: 56px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            opacity: .7;
+        }
+
+        .dashboard-grid,
+        .kpi-grid {
+            gap: 16px !important;
+        }
+        .metric-box {
+            position: relative;
+            overflow: hidden;
+            min-height: 104px !important;
+            padding: 18px 19px !important;
+            border-radius: 20px !important;
+            box-shadow: 0 18px 38px rgba(15,23,42,.13) !important;
+        }
+        .metric-box::before {
+            content: "";
+            position: absolute;
+            inset: -40% -30% auto auto;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: rgba(255,255,255,.17);
+        }
+        .metric-title { font-size: 12.5px !important; text-transform: uppercase; letter-spacing: .045em; }
+        .metric-value { font-size: 34px !important; letter-spacing: -0.045em; }
+        .metric-sub { font-size: 12px !important; }
+        .metric-box.clickable:hover {
+            transform: translateY(-3px);
+            filter: saturate(1.04);
+        }
+
+        .content-grid {
+            margin-bottom: 24px;
+            align-items: start;
+        }
+        .operational-banner {
+            min-height: 86px;
+            padding: 20px 22px !important;
+            border-radius: 20px !important;
+        }
+        .op-text h4 { font-size: 18px !important; letter-spacing: -0.015em; }
+        .op-badge { border-radius: 16px !important; }
+
+        table {
+            background: white;
+            box-shadow: inset 0 0 0 1px rgba(226,232,240,.75);
+        }
+        th {
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+        }
+        td {
+            background-clip: padding-box;
+        }
+        tbody tr:nth-child(even) td { background: rgba(248,250,252,.65); }
+
+        .btn-primary,
+        button.btn-primary {
+            background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
+            color: white !important;
+            border: 0 !important;
+        }
+        .btn-blue,
+        button.btn-blue {
+            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
+            color: white !important;
+            border: 0 !important;
+        }
+        .btn-secondary,
+        button.btn-secondary {
+            background: #f1f5f9 !important;
+            color: #334155 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+        .btn-danger,
+        button.btn-danger {
+            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
+            color: white !important;
+            border: 0 !important;
+        }
+        .status.ok {
+            background: #ecfdf5 !important;
+            color: #047857 !important;
+            border: 1px solid #a7f3d0 !important;
+        }
+        .status.err {
+            background: #fef2f2 !important;
+            color: #b91c1c !important;
+            border: 1px solid #fecaca !important;
+        }
+
+        /* SaaS Yonetimi urun paneli revizyonu */
+        .grid {
+            grid-template-columns: 420px minmax(0, 1fr) !important;
+            gap: 22px !important;
+            align-items: start !important;
+            margin-bottom: 24px;
+        }
+        .grid > div:first-child {
+            position: sticky;
+            top: 18px;
+            align-self: start;
+        }
+        .edit-panel {
+            border: 1px solid rgba(37,99,235,.22) !important;
+            background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
+        }
+        .link-box {
+            border-radius: 12px !important;
+            border: 1px solid #bfdbfe !important;
+            background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
+            color: #1e40af !important;
+            font-weight: 750;
+        }
+        .logo-upload-box {
+            border: 1px dashed #93c5fd !important;
+            background: #f8fbff !important;
+            border-radius: 16px !important;
+        }
+        .logo-preview {
+            width: 56px !important;
+            height: 56px !important;
+            border-radius: 14px !important;
+            box-shadow: var(--shadow-sm);
+        }
+        .actions {
+            gap: 9px !important;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .actions + .button-help,
+        .button-help {
+            margin-top: 10px;
+            display: grid;
+            gap: 7px;
+            color: var(--ink-500);
+            font-size: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 11px 12px;
+        }
+        .button-help strong { color: var(--ink-700); }
+
+        @media (max-width: 1040px) {
+            .grid { grid-template-columns: 1fr !important; }
+            .grid > div:first-child { position: static; }
+        }
+        @media (max-width: 900px) {
+            .card > h1,
+            .card > h2,
+            .card > .page-desc,
+            .card > .section-title,
+            .card > .dashboard-grid,
+            .card > .kpi-grid,
+            .card > .operational-banner,
+            .card > .content-grid,
+            .card > .grid,
+            .card > .panel,
+            .card > form,
+            .card > table,
+            .card > div:not(.global-header) {
+                margin-left: 14px !important;
+                margin-right: 14px !important;
+            }
+            .global-header { padding: 15px !important; }
+            .metric-box { min-height: 92px !important; }
+        }
+
+    
+
+        /* v26.2 hotfix: keep v26 visual system, add branding/table/layout fixes */
+        .logo-area { font-weight: 500 !important; letter-spacing: .01em !important; font-size: 18px !important; }
+        .logo-area #lbl_osgb_title { font-weight: 500 !important; }
+        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
+        table, thead, tbody, tr, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; }
+        table { font-size: 13px !important; border-collapse: separate !important; border-spacing: 0 !important; }
+        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
+        tbody td { padding: 9px 11px !important; }
+        .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
+        .page-desc { max-width: none !important; }
+
+    
+        /* v26.2 saas single column layout */
+        .grid { display: block !important; margin-bottom: 24px !important; }
+        .grid > div:first-child { position: static !important; display: block !important; }
+        .tenant-create-panel { margin-bottom: 18px !important; }
+        @media(min-width: 920px){
+            .tenant-create-panel { display: grid !important; grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); gap: 13px 22px; align-items: start; }
+            .tenant-create-panel > h3, .tenant-create-panel > .link-box, .tenant-create-panel > .actions, .tenant-create-panel > .status { grid-column: 1 / -1; }
+        }
+        .action-stack { display:flex; flex-direction:column; gap:6px; min-width: 118px; }
+        .action-stack .btn { width:100%; margin:0 !important; white-space:nowrap; }
+        .super-admin-lock-note { margin: 8px 0 10px; padding: 10px 12px; border-radius: 12px; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; font-size: 13px; font-weight: 700; }
+        .hidden { display:none !important; }
+
+
+        /* step saas-admin-only polish: keep current working base, fix SaaS page form and menu */
+        #menu_saas, #menu_staff, #menu_risk, #menu_medical { display: inline-flex !important; }
+        .saas-create-panel { display: block !important; padding: 20px !important; }
+        .saas-create-panel > h3 { margin-bottom: 18px !important; }
+        .saas-create-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr); gap: 18px; align-items: stretch; }
+        .saas-form-section { border: 1px solid rgba(203,213,225,.75); border-radius: 16px; padding: 16px; background: rgba(255,255,255,.72); box-shadow: var(--shadow-sm); }
+        .saas-section-kicker { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; padding: 5px 10px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 12px; font-weight: 850; letter-spacing: .02em; }
+        .saas-link-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: end; margin-top: 16px; }
+        .saas-create-actions { justify-content: flex-end; margin-top: 0 !important; white-space: nowrap; }
+        .saas-admin-note { margin-top: 14px; padding: 12px 13px; border: 1px solid #bfdbfe; border-radius: 14px; background: #eff6ff; color: #1e40af; font-size: 13px; line-height: 1.45; }
+        .saas-create-panel .logo-upload-box { min-height: 118px; }
+        .saas-create-panel .logo-upload-row { align-items: center; }
+        .saas-create-panel .link-box { min-height: 43px; display: flex; align-items: center; }
+        @media(max-width: 900px){ .saas-create-grid, .saas-link-row { grid-template-columns: 1fr; } .saas-create-actions { justify-content: stretch; } .saas-create-actions .btn { width: 100%; } }
+
+    </style>
 </head>
-<body class="bg-gray-50 font-sans antialiased text-gray-900">
+<body>
+<div class="card">
+    <div class="global-header">
+        <div class="top-row">
+            <div class="logo-area"><span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS Yönetimi</span></div>
+            <div class="controls-group">
+                <div class="user-info">👤 <span id="current_user_email">...</span></div>
+                <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+            </div>
+        </div>
+        <div class="nav-container">
+            <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+            <a id="menu_saas" href="saas-admin.html" class="nav-btn active-page">🧩 SaaS Yönetimi</a>
+            <a id="menu_staff" href="staff.html" class="nav-btn">🔑 Personel Yönetimi</a>
+            <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+            <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+            <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+            <a id="menu_risk" href="risk.html" class="nav-btn">🦺 Uzman Risk Motoru</a>
+            <a id="menu_medical" href="medical.html" class="nav-btn">🩺 Hekim Sağlık Kartı</a>
+        </div>
+    </div>
 
-    <!-- ÜST NAVİGASYON VE LOGO ALANI -->
-    <header class="bg-emerald-700 shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Sol Taraf: Logo ve Şirket Adı -->
-                <div class="flex items-center space-x-3">
-                    <div class="bg-amber-400 p-2 rounded-full flex items-center justify-center w-10 h-10 shadow-inner">
-                        <i class="fa-solid fa-bolt text-emerald-800 text-xl"></i>
+    <h2>🧩 Müşteri OSGB Yönetimi</h2>
+    <p class="page-desc">Satış yaptığın/kiraladığın OSGB müşterilerini oluştur, düzenle, adminini yönet, davet gönder ve giriş linkini üret.</p>
+
+    <div class="grid">
+        <div>
+            <div class="panel tenant-create-panel saas-create-panel">
+                <h3>➕ Yeni Müşteri OSGB ve İlk Admin Kullanıcısı</h3>
+                <div class="saas-create-grid">
+                    <div class="saas-form-section">
+                        <div class="saas-section-kicker">Müşteri bilgileri</div>
+                        <label>OSGB / Müşteri Adı</label>
+                        <input id="tenant_name" placeholder="Örn. XYZ OSGB">
+                        <div class="row">
+                            <div>
+                                <label>Kısa Kod / Slug</label>
+                                <input id="tenant_slug" placeholder="xyz" oninput="previewLoginLink()">
+                            </div>
+                            <div>
+                                <label>Tema Rengi</label>
+                                <input id="tenant_color" type="color" value="#2563eb">
+                            </div>
+                        </div>
+                        <label>Logo Dosyası <span class="muted">(opsiyonel)</span></label>
+                        <div class="logo-upload-box">
+                            <div class="logo-upload-row">
+                                <img id="tenant_logo_preview" class="logo-preview" alt="Logo önizleme" src="">
+                                <input id="tenant_logo_file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="previewSelectedLogo('tenant_logo_file','tenant_logo_preview')">
+                            </div>
+                            <div class="help-text">PNG, JPG, WebP veya SVG seçebilirsin. Büyük görseller otomatik küçültülüp sıkıştırılır; üst menüde küçük logo olarak gösterilir.</div>
+                        </div>
+                        <input id="tenant_logo" type="hidden">
                     </div>
-                    <span class="text-white font-bold text-xl tracking-wide">Eses Software</span>
-                </div>
-                
-                <!-- Sağ Taraf: Kullanıcı Bilgisi ve Çıkış -->
-                <div class="flex items-center space-x-4">
-                    <div class="bg-emerald-800/60 text-emerald-50 px-4 py-2 rounded-full text-sm font-medium flex items-center space-x-2 border border-emerald-600/50">
-                        <i class="fa-solid fa-user-shield text-amber-400"></i>
-                        <span>orhan.vardar@gmail.com</span>
-                        <span class="text-xs bg-emerald-600 px-2 py-0.5 rounded text-white font-bold">Super Admin</span>
+
+                    <div class="saas-form-section">
+                        <div class="saas-section-kicker">İlk admin kullanıcısı</div>
+                        <label>Admin Ad Soyad</label>
+                        <input id="admin_name" placeholder="Örn. Ayşe Yılmaz">
+                        <label>Admin E-posta</label>
+                        <input id="admin_email" type="email" placeholder="admin@firma.com">
+                        <div class="saas-admin-note">Bu kullanıcı müşteri tenant’ının ilk yöneticisi olur. Davet e-postası ayrıca “Davet Gönder” ile gönderilir.</div>
                     </div>
-                    <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow transition-colors flex items-center space-x-2">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        <span>Güvenli Çıkış</span>
-                    </button>
                 </div>
+
+                <div class="saas-link-row">
+                    <div>
+                        <label>Üretilecek Giriş Linki</label>
+                        <div class="link-box" id="login_link_preview">Slug girince link oluşur.</div>
+                    </div>
+                    <div class="actions saas-create-actions">
+                        <button class="btn btn-primary" onclick="createTenantWithAdmin()">Müşteriyi ve Admini Oluştur</button>
+                        <button class="btn btn-secondary" onclick="clearForm()">Temizle</button>
+                    </div>
+                </div>
+                <div id="form_status" class="status"></div>
+            </div>
+
+            <div id="edit_panel" class="panel edit-panel hidden">
+                <h3>✏️ Müşteri / Admin Düzenle</h3>
+                <input type="hidden" id="edit_tenant_id">
+                <input type="hidden" id="edit_admin_id">
+                <label>Müşteri Adı</label>
+                <input id="edit_tenant_name">
+                <div class="row">
+                    <div>
+                        <label>Slug / Giriş Kodu</label>
+                        <input id="edit_tenant_slug" oninput="previewEditLoginLink()">
+                    </div>
+                    <div>
+                        <label>Tema Rengi</label>
+                        <input id="edit_tenant_color" type="color" value="#2563eb">
+                    </div>
+                </div>
+                <label>Logo Dosyası</label>
+                <div class="logo-upload-box">
+                    <div class="logo-upload-row">
+                        <img id="edit_tenant_logo_preview" class="logo-preview" alt="Logo önizleme" src="">
+                        <input id="edit_tenant_logo_file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="previewSelectedLogo('edit_tenant_logo_file','edit_tenant_logo_preview')">
+                    </div>
+                    <div class="help-text">Yeni logo seçmezsen mevcut logo korunur. Logoyu kaldırmak için aşağıdaki butonu kullan.</div>
+                    <button type="button" class="btn btn-secondary btn-small" onclick="clearEditedLogo()">Logoyu Kaldır</button>
+                </div>
+                <input id="edit_tenant_logo" type="hidden">
+                <label>Giriş Linki</label>
+                <div class="link-box" id="edit_login_link_preview">-</div>
+                <div class="row">
+                    <div>
+                        <label>Müşteri Durumu</label>
+                        <select id="edit_tenant_active"><option value="true">Aktif</option><option value="false">Pasif</option></select>
+                    </div>
+                    <div>
+                        <label>Admin Giriş İzni</label>
+                        <select id="edit_admin_can_login"><option value="true">Açık</option><option value="false">Kapalı</option></select>
+                    </div>
+                </div>
+                <label>Admin Ad Soyad</label>
+                <input id="edit_admin_name">
+                <label>Admin E-posta</label>
+                <input id="edit_admin_email" type="email">
+                <label>Admin Sistem Rolü</label>
+                <select id="edit_admin_role">
+                    <option value="super_admin">Super Admin</option>
+                    <option value="admin">Admin</option>
+                    <option value="uzman">İSG Uzmanı</option>
+                    <option value="hekim">İşyeri Hekimi</option>
+                    <option value="dsp">DSP</option>
+                    <option value="firma_yetkilisi">Firma Yetkilisi</option>
+                </select>
+                <div id="edit_super_admin_lock_note" class="super-admin-lock-note hidden">Bu kullanıcı Super Admin olduğu için rol, e-posta ve giriş izni bu panelden değiştirilemez. Logo/tema/firma adı güvenle kaydedilir.</div>
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="saveEditedTenant()">Kaydet</button>
+                    <button class="btn btn-blue" onclick="sendInviteForEditingAdmin()">Davet Gönder</button>
+                    <button class="btn btn-secondary" onclick="resetInviteForEditingAdmin()">Davet Durumunu Sıfırla</button>
+                    <button class="btn btn-secondary" onclick="cancelEdit()">Kapat</button>
+                </div>
+                <div class="button-help">
+                    <div><strong>Kaydet:</strong> müşteri ve admin bilgilerini günceller; mail göndermez.</div>
+                    <div><strong>Davet Gönder:</strong> seçili admin e-postasına şifre oluşturma daveti yollar.</div>
+                    <div><strong>Davet Durumunu Sıfırla:</strong> sadece davet takip bilgisini temizler; Auth kullanıcısını silmez.</div>
+                </div>
+                <div id="edit_status" class="status"></div>
             </div>
         </div>
 
-        <!-- ANA MENÜ (İstediğin Yeni Butonlar Eklendi) -->
-        <div class="bg-emerald-800 border-t border-emerald-900/30">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <nav class="flex flex-wrap py-2 gap-2">
-                    <a href="index.html" class="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition flex items-center space-x-2 shadow-sm">
-                        <i class="fa-solid fa-house text-amber-400"></i>
-                        <span>Ana Sayfa</span>
-                    </a>
-                    <a href="schedule.html" class="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition flex items-center space-x-2 shadow-sm">
-                        <i class="fa-solid fa-calendar-days text-blue-400"></i>
-                        <span>Aylık Takvim</span>
-                    </a>
-                    <a href="company-detail.html" class="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition flex items-center space-x-2 shadow-sm">
-                        <i class="fa-solid fa-building text-indigo-400"></i>
-                        <span>Firma Yönetimi</span>
-                    </a>
-                    <a href="staff.html" class="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition flex items-center space-x-2 shadow-sm">
-                        <i class="fa-solid fa-users text-purple-400"></i>
-                        <span>Kadro Yönetimi</span>
-                    </a>
-                    
-                    <!-- YENİ EKLENEN BUTONLAR -->
-                    <a href="saas-admin.html" class="bg-amber-500 text-emerald-950 px-4 py-2 rounded-lg text-sm font-bold flex items-center space-x-2 shadow-sm border border-amber-400">
-                        <i class="fa-solid fa-sliders text-emerald-900"></i>
-                        <span>SaaS Yönetimi</span>
-                    </a>
-                    <a href="risk.html" class="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition flex items-center space-x-2 shadow-sm">
-                        <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
-                        <span>Uzman Risk Motoru</span>
-                    </a>
-                    <a href="medical.html" class="bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-emerald-600 transition flex items-center space-x-2 shadow-sm">
-                        <i class="fa-solid fa-heart-pulse text-red-400"></i>
-                        <span>Hekim Sağlık</span>
-                    </a>
-                </nav>
+        <div class="panel">
+            <h3>📋 Kayıtlı Müşteriler</h3>
+            <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+                <span class="muted" id="tenant_count">Yükleniyor...</span>
+                <button class="btn btn-secondary btn-small" onclick="loadTenants()">Yenile</button>
             </div>
-        </div>
-    </header>
-
-    <!-- ANA İÇERİK ALANI -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        <!-- BAŞLIK ALANI -->
-        <div class="mb-8 border-b border-gray-200 pb-4">
-            <h1 class="text-3xl font-extrabold text-gray-900 flex items-center space-x-3">
-                <span class="text-emerald-600"><i class="fa-solid fa-cubes"></i></span>
-                <span>Müşteri OSGB Yönetimi</span>
-            </h1>
-            <p class="text-sm text-gray-500 mt-1">Satış yaptığın/kiraladığın OSGB müşterilerini oluştur, düzenle, adminini yönet, davet gönder ve giriş linkini üret.</p>
-        </div>
-
-        <!-- FORM KARTI (YENİLENMİŞ DÜZEN) -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-8">
-            <!-- Kart Başlığı -->
-            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h2 class="text-lg font-bold text-gray-800 flex items-center space-x-2">
-                    <i class="fa-solid fa-circle-plus text-emerald-600"></i>
-                    <span>Yeni Müşteri OSGB ve İlk Admin Kullanıcısı</span>
-                </h2>
-                <div class="h-1 w-16 bg-emerald-500 rounded-full"></div>
-            </div>
-
-            <!-- Form İçeriği -->
-            <form id="tenantForm" class="p-6 space-y-8">
-                
-                <!-- BÖLÜM 1: OSGB / MÜŞTERİ BİLGİLERİ -->
-                <div class="space-y-6">
-                    <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-700 border-b border-emerald-100 pb-2">
-                        <i class="fa-solid fa-building-shield mr-1"></i> OSGB / Müşteri Bilgileri
-                    </h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- OSGB Adı -->
-                        <div class="space-y-1.5">
-                            <label for="osgb_adi" class="block text-sm font-semibold text-gray-700">OSGB / Müşteri Adı</label>
-                            <input type="text" id="osgb_adi" name="osgb_adi" placeholder="Örn. XYZ OSGB Hizmetleri" 
-                                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder:text-gray-400 bg-white">
-                        </div>
-
-                        <!-- Logo Dosyası -->
-                        <div class="space-y-1.5">
-                            <label class="block text-sm font-semibold text-gray-700">Logo Dosyası <span class="text-xs font-normal text-gray-400">(Opsiyonel)</span></label>
-                            <div class="flex items-center space-x-4 p-2 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
-                                <div class="w-12 h-12 bg-white rounded border flex items-center justify-center text-gray-400 text-xs overflow-hidden shrink-0 shadow-sm" id="logoPreview">
-                                    <i class="fa-solid fa-image text-lg"></i>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <input type="file" id="logo" name="logo" accept="image/*" class="block w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 file:cursor-pointer cursor-pointer">
-                                    <p class="text-[10px] text-gray-400 mt-1">PNG, JPG, WebP veya SVG (32x32 piksele sıkıştırılır)</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Kısa Kod / Slug -->
-                        <div class="space-y-1.5">
-                            <label for="slug" class="block text-sm font-semibold text-gray-700">Kısa Kod / Slug</label>
-                            <div class="relative">
-                                <input type="text" id="slug" name="slug" placeholder="xyz" 
-                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-mono text-sm bg-white">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-400">
-                                    <i class="fa-solid fa-link text-xs"></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Tema Rengi -->
-                        <div class="space-y-1.5">
-                            <label for="tema_rengi" class="block text-sm font-semibold text-gray-700">Tema Rengi</label>
-                            <div class="flex items-center space-x-3 h-[46px]">
-                                <input type="color" id="tema_rengi" name="tema_rengi" value="#047857" 
-                                    class="w-12 h-full p-1 bg-white border border-gray-300 rounded-lg cursor-pointer">
-                                <input type="text" id="tema_rengi_text" value="#047857" readonly 
-                                    class="flex-1 px-3 py-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm font-mono text-gray-600 outline-none">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dinamik Giriş Linki Bilgilendirmesi -->
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3.5 flex items-start space-x-3">
-                        <i class="fa-solid fa-circle-info text-blue-500 mt-0.5 text-lg"></i>
-                        <div class="text-sm text-blue-800">
-                            <span class="font-semibold">Üretilecek Giriş Linki:</span> 
-                            <span id="generatedUrlDisplay" class="font-mono bg-blue-100/80 px-1.5 py-0.5 rounded text-blue-900 ml-1">Slug girince link otomatik oluşur...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- BÖLÜM 2: İLK ADMİN KULLANICISI -->
-                <div class="space-y-6 pt-2">
-                    <h3 class="text-sm font-bold uppercase tracking-wider text-emerald-700 border-b border-emerald-100 pb-2">
-                        <i class="fa-solid fa-user-gear mr-1"></i> İlk Admin Kullanıcısı Bilgileri
-                    </h3>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Admin Ad Soyad -->
-                        <div class="space-y-1.5">
-                            <label for="admin_isim" class="block text-sm font-semibold text-gray-700">Admin Ad Soyad</label>
-                            <div class="relative">
-                                <input type="text" id="admin_isim" name="admin_isim" placeholder="Örn. Ayşe Yılmaz" 
-                                    class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all bg-white">
-                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                    <i class="fa-solid fa-user text-sm"></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Admin E-posta -->
-                        <div class="space-y-1.5">
-                            <label for="admin_eposta" class="block text-sm font-semibold text-gray-700">Admin E-posta</label>
-                            <div class="relative">
-                                <input type="email" id="admin_eposta" name="admin_eposta" placeholder="admin@firma.com" 
-                                    class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all bg-white">
-                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                                    <i class="fa-solid fa-envelope text-sm"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- FORM AKSİYON BUTONLARI -->
-                <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-100">
-                    <button type="button" id="clearBtn" class="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 active:bg-gray-100 transition shadow-sm cursor-pointer">
-                        Temizle
-                    </button>
-                    <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-sm shadow transition flex items-center space-x-2 cursor-pointer">
-                        <i class="fa-solid fa-square-check"></i>
-                        <span>Müşteriyi ve Admini Oluştur</span>
-                    </button>
-                </div>
-
-            </form>
-        </div>
-
-        <!-- KAYITLI MÜŞTERİLER LİSTESİ -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-list-check text-emerald-600"></i>
-                    <h2 class="text-lg font-bold text-gray-800">Kayıtlı Müşteriler / Tenantlar</h2>
-                    <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full ml-2">2 Müşteri</span>
-                </div>
-                <button class="bg-white hover:bg-gray-50 border border-gray-300 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-700 shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
-                    <i class="fa-solid fa-rotate text-emerald-600"></i>
-                    <span>Yenile</span>
-                </button>
-            </div>
-            
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm border-collapse">
-                    <thead>
-                        <tr class="bg-gray-100/70 border-b border-gray-200 text-gray-600 font-semibold">
-                            <th class="p-4">Müşteri / OSGB</th>
-                            <th class="p-4">Giriş Linki</th>
-                            <th class="p-4">Adminler</th>
-                            <th class="p-4 text-center">Durum</th>
-                            <th class="p-4 text-center">İşlem</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-700">
-                        <tr class="hover:bg-gray-50/50 transition">
-                            <td class="p-4 font-semibold text-gray-900">Kuzey OSGB</td>
-                            <td class="p-4 font-mono text-xs text-blue-600">https://kuzey.eses.com</td>
-                            <td class="p-4 text-gray-600">Ahmet Yılmaz (ahmet@kuzey.com)</td>
-                            <td class="p-4 text-center">
-                                <span class="bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center">
-                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> Aktif
-                                </span>
-                            </td>
-                            <td class="p-4 text-center">
-                                <button class="text-emerald-600 hover:text-emerald-800 font-medium text-xs bg-emerald-50 px-2.5 py-1.5 rounded border border-emerald-200 hover:bg-emerald-100 transition cursor-pointer">Yönet</button>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-gray-50/50 transition">
-                            <td class="p-4 font-semibold text-gray-900">Güney Analiz OSGB</td>
-                            <td class="p-4 font-mono text-xs text-blue-600">https://guney.eses.com</td>
-                            <td class="p-4 text-gray-600">Canan Demir (canan@guney.com)</td>
-                            <td class="p-4 text-center">
-                                <span class="bg-green-100 text-green-800 text-xs px-2.5 py-1 rounded-full font-medium inline-flex items-center">
-                                    <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> Aktif
-                                </span>
-                            </td>
-                            <td class="p-4 text-center">
-                                <button class="text-emerald-600 hover:text-emerald-800 font-medium text-xs bg-emerald-50 px-2.5 py-1.5 rounded border border-emerald-200 hover:bg-emerald-100 transition cursor-pointer">Yönet</button>
-                            </td>
-                        </tr>
-                    </tbody>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>Müşteri</th><th>Giriş Linki</th><th>Adminler</th><th>Durum</th><th>İşlem</th></tr></thead>
+                    <tbody id="tenants_tbody"><tr><td colspan="5" class="muted">Yükleniyor...</td></tr></tbody>
                 </table>
             </div>
         </div>
+    </div>
+</div>
+<script>
+const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
+const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
+const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentAuth = null;
 
-    </main>
+function normalizeAccessRole(value){ const v=(value||'').toString().trim().toLowerCase(); if(['super_admin','super admin','saas_admin','sistem sahibi'].includes(v)) return 'super_admin'; if(['admin','yonetici','yönetici'].includes(v)) return 'admin'; if(['uzman','isg_uzmani','isg uzmanı','iş güvenliği uzmanı'].includes(v)) return 'uzman'; if(['hekim','isyeri hekimi','işyeri hekimi'].includes(v)) return 'hekim'; if(['dsp','diğer sağlık personeli','diger saglik personeli'].includes(v)) return 'dsp'; if(['firma_yetkilisi','firma yetkilisi','musteri','müşteri'].includes(v)) return 'firma_yetkilisi'; return ''; }
+function roleLabel(role){ return {super_admin:'Super Admin',admin:'Admin',uzman:'İSG Uzmanı',hekim:'İşyeri Hekimi',dsp:'DSP',firma_yetkilisi:'Firma Yetkilisi'}[role] || role || 'Rol yok'; }
+function isStaffAccessActive(record){ if(!record) return true; if(record.can_login===false) return false; if(record.is_active_manual==='Aktif') return true; if(record.is_active_manual==='Pasif') return false; return true; }
+async function getCurrentAuthContext(){ const {data:{session}}=await dbClient.auth.getSession(); if(!session) return {session:null}; const email=session.user.email||''; const {data}=await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email', email).maybeSingle(); const staff=data||null; const role=normalizeAccessRole(staff&&staff.access_role); return {session,email,role,staff,canLogin:isStaffAccessActive(staff),tenant:staff&&staff.tenants?staff.tenants:null}; }
+async function requireSuperAdmin(){ const auth=await getCurrentAuthContext(); if(!auth.session){ window.location.href='login.html'; return null; } if(!auth.canLogin){ await dbClient.auth.signOut(); alert('Bu kullanıcı için sistem erişimi pasif.'); window.location.href='login.html'; return null; } if(auth.role!=='super_admin'){ alert('Bu sayfa yalnızca Super Admin içindir.'); window.location.href='dashboard.html'; return null; } document.getElementById('current_user_email').innerText = `${auth.email} • ${roleLabel(auth.role)}`; setTenantBranding(auth.tenant); currentAuth = auth; return auth; }
+function slugify(txt){ return (txt||'').toString().trim().toLowerCase().replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+function tenantLoginUrl(slug){ return `${window.location.origin}/login.html?tenant=${encodeURIComponent(slug||'')}`; }
+function previewLoginLink(){ const slug=slugify(document.getElementById('tenant_slug').value); document.getElementById('login_link_preview').innerText = slug ? tenantLoginUrl(slug) : 'Slug girince link oluşur.'; }
+function previewEditLoginLink(){ const slug=slugify(document.getElementById('edit_tenant_slug').value); document.getElementById('edit_login_link_preview').innerText = slug ? tenantLoginUrl(slug) : '-'; }
+document.getElementById('tenant_name').addEventListener('input',()=>{ const slugEl=document.getElementById('tenant_slug'); if(!slugEl.dataset.touched){ slugEl.value=slugify(document.getElementById('tenant_name').value); previewLoginLink(); }});
+document.getElementById('tenant_slug').addEventListener('input',()=>{ document.getElementById('tenant_slug').dataset.touched='1'; });
+function setStatus(msg, ok=true){ const el=document.getElementById('form_status'); el.className='status '+(ok?'ok':'err'); el.innerText=msg||''; }
+function setEditStatus(msg, ok=true){ const el=document.getElementById('edit_status'); el.className='status '+(ok?'ok':'err'); el.innerText=msg||''; }
+const LOGO_BUCKET = 'tenant-logos';
 
-    <!-- Renk Seçici Senkronizasyon Scripti -->
-    <script>
-        const colorPicker = document.getElementById('tema_rengi');
-        const colorText = document.getElementById('tema_rengi_text');
-        if(colorPicker && colorText) {
-            colorPicker.addEventListener('input', (e) => {
-                colorText.value = e.target.value.toUpperCase();
-            });
-        }
-    </script>
+function setTenantBranding(tenant){
+  const titleEl = document.getElementById('lbl_osgb_title');
+  if (titleEl) titleEl.innerText = tenant && tenant.name ? tenant.name : 'Eses Software';
+  const area = titleEl ? titleEl.closest('.logo-area') : null;
+  if (!area) return;
+  let img = area.querySelector('.tenant-logo-img');
+  const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
+  if (logoUrl) {
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'tenant-logo-img';
+      img.alt = 'Logo';
+      area.insertBefore(img, titleEl);
+    }
+    img.src = logoUrl;
+  } else if (img) {
+    img.remove();
+  }
+}
+
+function resetLogoPreview(imgId){
+  const img=document.getElementById(imgId);
+  if(!img) return;
+  img.removeAttribute('src');
+  img.style.opacity='0.35';
+}
+
+function previewSelectedLogo(inputId, imgId){
+  const input=document.getElementById(inputId);
+  const img=document.getElementById(imgId);
+  if(!input || !img || !input.files || !input.files[0]) return;
+  img.src=URL.createObjectURL(input.files[0]);
+  img.style.opacity='1';
+}
+
+async function fileToCompressedLogo(file){
+  if(!file) return null;
+  if(file.size > 5 * 1024 * 1024) throw new Error('Logo dosyası en fazla 5 MB olabilir.');
+  if(file.type === 'image/svg+xml') {
+    if(file.size > 1024 * 1024) throw new Error('SVG logo en fazla 1 MB olabilir.');
+    return { blob:file, ext:'svg', contentType:'image/svg+xml' };
+  }
+  const bitmap = await new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload=()=>resolve(img);
+    img.onerror=()=>reject(new Error('Logo dosyası okunamadı.'));
+    img.src=URL.createObjectURL(file);
+  });
+  const maxSize = 512;
+  const ratio = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+  const w = Math.max(1, Math.round(bitmap.width * ratio));
+  const h = Math.max(1, Math.round(bitmap.height * ratio));
+  const canvas=document.createElement('canvas');
+  canvas.width=w; canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,w,h);
+  ctx.drawImage(bitmap,0,0,w,h);
+  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.82));
+  if(!blob) throw new Error('Logo sıkıştırılamadı.');
+  return { blob, ext:'webp', contentType:'image/webp' };
+}
+
+async function uploadLogoForTenant(tenantId, slug, inputId){
+  const input=document.getElementById(inputId);
+  if(!input || !input.files || !input.files[0]) return null;
+  const prepared=await fileToCompressedLogo(input.files[0]);
+  const safeSlug=slugify(slug || tenantId || 'tenant');
+  const path=`${tenantId}/${safeSlug}-logo-${Date.now()}.${prepared.ext}`;
+  const { error:uploadError } = await dbClient.storage.from(LOGO_BUCKET).upload(path, prepared.blob, { contentType:prepared.contentType, upsert:true });
+  if(uploadError) throw uploadError;
+  const { data } = dbClient.storage.from(LOGO_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function clearEditedLogo(){
+  document.getElementById('edit_tenant_logo').value='';
+  document.getElementById('edit_tenant_logo_file').value='';
+  resetLogoPreview('edit_tenant_logo_preview');
+  setEditStatus('Logo kaldırılmak üzere işaretlendi. Kaydet butonuna basınca logo kaldırılır.', true);
+}
+
+function clearForm(){ ['tenant_name','tenant_slug','tenant_logo','admin_name','admin_email'].forEach(id=>document.getElementById(id).value=''); const f=document.getElementById('tenant_logo_file'); if(f) f.value=''; resetLogoPreview('tenant_logo_preview'); document.getElementById('tenant_color').value='#2563eb'; document.getElementById('tenant_slug').dataset.touched=''; previewLoginLink(); setStatus(''); }
+async function createTenantWithAdmin(){
+  try{
+    const name=document.getElementById('tenant_name').value.trim();
+    const slug=slugify(document.getElementById('tenant_slug').value);
+    let logo=document.getElementById('tenant_logo').value.trim() || null;
+    const color=document.getElementById('tenant_color').value || '#2563eb';
+    const adminName=document.getElementById('admin_name').value.trim();
+    const adminEmail=document.getElementById('admin_email').value.trim().toLowerCase();
+    if(!name || !slug) throw new Error('Müşteri adı ve slug zorunlu.');
+    if(!adminName || !adminEmail) throw new Error('İlk admin adı ve e-postası zorunlu.');
+    const {data:tenant, error:tErr}=await dbClient.from('tenants').insert({name, slug, logo_url:null, primary_color:color, is_active:true}).select().single();
+    if(tErr) throw tErr;
+    logo = await uploadLogoForTenant(tenant.id, slug, 'tenant_logo_file');
+    if(logo){ const {error:logoErr}=await dbClient.from('tenants').update({logo_url:logo}).eq('id', tenant.id); if(logoErr) throw logoErr; }
+    const {error:sErr}=await dbClient.from('osgb_staff').insert({tenant_id:tenant.id, name_surname:adminName, staff_role:'Yönetici', certificate_class:'Yok', email:adminEmail, hire_date:new Date().toISOString().slice(0,10), is_active_manual:'Aktif', access_role:'admin', can_login:true, auth_invite_status:'not_sent'});
+    if(sErr) throw sErr;
+    setStatus(`Müşteri oluşturuldu. Giriş linki: ${tenantLoginUrl(slug)}`, true);
+    clearForm(); await loadTenants();
+  }catch(err){ setStatus('Hata: '+(err.message||err), false); }
+}
+async function loadTenants(){
+  const tbody=document.getElementById('tenants_tbody'); tbody.innerHTML='<tr><td colspan="5" class="muted">Yükleniyor...</td></tr>';
+  const {data:tenants,error}=await dbClient.from('tenants').select('*').order('created_at',{ascending:false});
+  if(error){ tbody.innerHTML=`<tr><td colspan="5" style="color:#b91c1c;">${escapeHtml(error.message)}</td></tr>`; return; }
+  document.getElementById('tenant_count').innerText=`${(tenants||[]).length} müşteri/tenant`;
+  if(!tenants || tenants.length===0){ tbody.innerHTML='<tr><td colspan="5" class="muted">Kayıtlı müşteri yok.</td></tr>'; return; }
+  tbody.innerHTML='';
+  for(const t of tenants){
+    const {data:admins}=await dbClient.from('osgb_staff').select('id,name_surname,email,access_role,can_login,is_active_manual,auth_invite_status,auth_invited_at').eq('tenant_id', t.id).in('access_role',['admin','super_admin']).order('access_role',{ascending:true});
+    const primaryAdmin=(admins||[]).find(a=>normalizeAccessRole(a.access_role)==='admin') || (admins||[])[0] || null;
+    const adminsHtml=(admins||[]).map(a=>`<strong>${escapeHtml(a.name_surname||'-')}</strong><br><span class="muted">${escapeHtml(a.email||'-')} • ${escapeHtml(roleLabel(normalizeAccessRole(a.access_role)))}</span><br>${inviteBadge(a.auth_invite_status)} ${a.can_login!==false?'<span class="badge badge-green">Giriş açık</span>':'<span class="badge badge-red">Giriş kapalı</span>'}`).join('<hr style="border:none;border-top:1px solid #e2e8f0;">') || '<span class="muted">Admin yok</span>';
+    const active=t.is_active!==false;
+    const safeUrl=tenantLoginUrl(t.slug);
+    const inviteButton=primaryAdmin ? `<button class="btn btn-blue btn-small" onclick="sendInvite('${primaryAdmin.id}')">Davet Gönder</button>` : '<span class="muted">Admin yok</span>';
+    tbody.innerHTML += `<tr>
+      <td>${t.logo_url?`<img src="${escapeHtml(t.logo_url)}" style="width:34px;height:34px;object-fit:contain;border:1px solid #e2e8f0;border-radius:8px;background:white;padding:3px;margin-right:6px;vertical-align:middle;">`:''}<strong>${escapeHtml(t.name)}</strong><br><span class="muted">slug: ${escapeHtml(t.slug)}</span></td>
+      <td><div class="link-box">${safeUrl}</div><button class="btn btn-secondary btn-small" onclick="copyText('${safeUrl}')">Kopyala</button></td>
+      <td>${adminsHtml}</td>
+      <td>${active?'<span class="badge badge-green">Aktif</span>':'<span class="badge badge-red">Pasif</span>'}</td>
+      <td><div class="action-stack">
+        <button class="btn btn-primary btn-small" onclick="editTenant('${t.id}')">Düzenle</button>
+        ${inviteButton}
+        <button class="btn ${active?'btn-danger':'btn-green'} btn-small" onclick="toggleTenant('${t.id}', ${active})">${active?'Pasifleştir':'Aktifleştir'}</button>
+      </div></td>
+    </tr>`;
+  }
+}
+function inviteBadge(status){ const s=(status||'not_sent').toString(); if(s==='sent') return '<span class="badge badge-green">Davet gönderildi</span>'; if(s==='failed') return '<span class="badge badge-red">Davet hatası</span>'; return '<span class="badge badge-gray">Davet yok</span>'; }
+function escapeHtml(v){ return (v||'').toString().replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+async function copyText(text){ await navigator.clipboard.writeText(text); alert('Giriş linki kopyalandı.'); }
+async function toggleTenant(id, isActive){ const {error}=await dbClient.from('tenants').update({is_active:!isActive}).eq('id', id); if(error){ alert(error.message); return; } loadTenants(); }
+async function editTenant(id){
+  setEditStatus('');
+  const {data:t,error}=await dbClient.from('tenants').select('*').eq('id',id).single();
+  if(error){ alert(error.message); return; }
+  const {data:admins}=await dbClient.from('osgb_staff').select('id,name_surname,email,access_role,can_login,is_active_manual,auth_invite_status').eq('tenant_id', id).in('access_role',['admin','super_admin']);
+  const admin=(admins||[]).find(a=>normalizeAccessRole(a.access_role)==='admin') || (admins||[])[0] || null;
+  document.getElementById('edit_tenant_id').value=t.id;
+  document.getElementById('edit_admin_id').value=admin ? admin.id : '';
+  document.getElementById('edit_tenant_name').value=t.name||'';
+  document.getElementById('edit_tenant_slug').value=t.slug||'';
+  document.getElementById('edit_tenant_logo').value=t.logo_url||''; document.getElementById('edit_tenant_logo_file').value=''; if(t.logo_url){ const img=document.getElementById('edit_tenant_logo_preview'); img.src=t.logo_url; img.style.opacity='1'; } else { resetLogoPreview('edit_tenant_logo_preview'); }
+  document.getElementById('edit_tenant_color').value=t.primary_color||'#2563eb';
+  document.getElementById('edit_tenant_active').value=(t.is_active!==false).toString();
+  document.getElementById('edit_admin_name').value=admin ? (admin.name_surname||'') : '';
+  document.getElementById('edit_admin_email').value=admin ? (admin.email||'') : '';
+  document.getElementById('edit_admin_role').value=admin ? (normalizeAccessRole(admin.access_role)||'admin') : 'admin';
+  document.getElementById('edit_admin_can_login').value=(!admin || admin.can_login!==false).toString();
+  document.getElementById('edit_panel').classList.remove('hidden');
+  previewEditLoginLink();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function cancelEdit(){ document.getElementById('edit_panel').classList.add('hidden'); setEditStatus(''); }
+async function saveEditedTenant(){
+  try{
+    const tenantId=document.getElementById('edit_tenant_id').value;
+    const adminId=document.getElementById('edit_admin_id').value;
+    const name=document.getElementById('edit_tenant_name').value.trim();
+    const slug=slugify(document.getElementById('edit_tenant_slug').value);
+    let logo=document.getElementById('edit_tenant_logo').value.trim() || null;
+    const color=document.getElementById('edit_tenant_color').value || '#2563eb';
+    const isActive=document.getElementById('edit_tenant_active').value==='true';
+    const adminName=document.getElementById('edit_admin_name').value.trim();
+    const adminEmail=document.getElementById('edit_admin_email').value.trim().toLowerCase();
+    const originalAdminRole = document.getElementById('edit_admin_role').dataset.originalRole || '';
+    const adminRole=document.getElementById('edit_admin_role').value;
+    const adminCanLogin=document.getElementById('edit_admin_can_login').value==='true';
+    if(!tenantId || !name || !slug) throw new Error('Müşteri adı ve slug zorunlu.');
+    if(!adminName || !adminEmail) throw new Error('Admin adı ve e-postası zorunlu.');
+    const uploadedLogo = await uploadLogoForTenant(tenantId, slug, 'edit_tenant_logo_file');
+    if(uploadedLogo) logo = uploadedLogo;
+    const {error:tErr}=await dbClient.from('tenants').update({name, slug, logo_url:logo, primary_color:color, is_active:isActive}).eq('id', tenantId);
+    if(tErr) throw tErr;
+    if(adminId){
+      const {error:aErr}=await dbClient.from('osgb_staff').update({name_surname:adminName, email:adminEmail, access_role:adminRole, can_login:adminCanLogin, is_active_manual:adminCanLogin?'Aktif':'Pasif'}).eq('id', adminId);
+      if(aErr) throw aErr;
+    } else {
+      const {data:newAdmin,error:iErr}=await dbClient.from('osgb_staff').insert({tenant_id:tenantId, name_surname:adminName, staff_role:'Yönetici', certificate_class:'Yok', email:adminEmail, hire_date:new Date().toISOString().slice(0,10), is_active_manual:adminCanLogin?'Aktif':'Pasif', access_role:adminRole, can_login:adminCanLogin, auth_invite_status:'not_sent'}).select('id').single();
+      if(iErr) throw iErr;
+      document.getElementById('edit_admin_id').value=newAdmin.id;
+    }
+    if(originalAdminRole === 'super_admin') setEditStatus('Müşteri bilgileri güncellendi. Super Admin kullanıcı bilgileri korunarak değiştirilmedi.', true); else setEditStatus('Kayıt güncellendi.', true);
+    await loadTenants();
+  }catch(err){ setEditStatus('Hata: '+(err.message||err), false); }
+}
+async function resetInviteForEditingAdmin(){ const id=document.getElementById('edit_admin_id').value; if(!id){ setEditStatus('Önce admin kaydını kaydetmelisin.', false); return; } await resetInvite(id); }
+async function sendInviteForEditingAdmin(){ const id=document.getElementById('edit_admin_id').value; if(!id){ setEditStatus('Önce admin kaydını kaydetmelisin.', false); return; } await sendInvite(id); }
+async function resetInvite(staffId){
+  const {error}=await dbClient.from('osgb_staff').update({auth_invite_status:'not_sent', auth_invited_at:null}).eq('id', staffId);
+  if(error){ setEditStatus('Davet durumu sıfırlanamadı: '+error.message, false); return; }
+  setEditStatus('Davet durumu sıfırlandı.', true); await loadTenants();
+}
+async function sendInvite(staffId){
+  if(!confirm('Bu kullanıcıya davet e-postası gönderilsin mi?')) return;
+  try{
+    const {data:{session}}=await dbClient.auth.getSession();
+    if(!session) throw new Error('Oturum bulunamadı. Yeniden giriş yap.');
+    const {data:staff,error:sErr}=await dbClient.from('osgb_staff').select('id,email,tenant_id,tenants(slug)').eq('id', staffId).single();
+    if(sErr) throw sErr;
+    const slug=staff.tenants && staff.tenants.slug ? staff.tenants.slug : '';
+    const resp=await fetch(`${SUPABASE_URL}/functions/v1/invite-staff-user`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
+      body:JSON.stringify({staff_id:staffId, site_origin:window.location.origin, redirect_to:tenantLoginUrl(slug)})
+    });
+    const result=await resp.json().catch(()=>({}));
+    if(!resp.ok || result.ok===false) throw new Error(result.error || JSON.stringify(result));
+    setEditStatus('Davet gönderildi: '+(result.email||staff.email), true);
+    await loadTenants();
+  }catch(err){ setEditStatus('Davet gönderilemedi: '+(err.message||err), false); alert('Davet gönderilemedi: '+(err.message||err)); }
+}
+async function handleLogout(){ await dbClient.auth.signOut(); window.location.href='login.html'; }
+window.onload=async()=>{ const auth=await requireSuperAdmin(); if(!auth) return; document.body.style.display='block'; resetLogoPreview('tenant_logo_preview'); resetLogoPreview('edit_tenant_logo_preview'); previewLoginLink(); loadTenants(); };
+</script>
 </body>
 </html>
