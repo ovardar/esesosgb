@@ -86,6 +86,7 @@
     }
 
     const payload = {
+      tenant_id: risk.tenant_id,
       local_id: risk.local_id,
       created_offline_at: risk.created_at || new Date().toISOString(),
       tenant_id: window.CURRENT_AUTH ? window.CURRENT_AUTH.tenant_id : null,
