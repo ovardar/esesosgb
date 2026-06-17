@@ -70,7 +70,6 @@
             <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
             <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
             <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
             <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
             <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
             <a id="menu_medical" href="medical.html" class="nav-btn active-page" style="display:none;">🩺 Hekim Sağlık Kartı</a>
@@ -131,6 +130,12 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let CURRENT_AUTH = null;
+    function tenantScoped(query) {
+        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) return query.eq('tenant_id', CURRENT_AUTH.tenant_id);
+        return query;
+    }
+
 
     // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
     // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
@@ -191,7 +196,6 @@
     }
 
     function canAccessPage(role, page) {
-        if (page === 'saas') return role === 'super_admin';
         if (role === 'super_admin' || role === 'admin') return true;
         if (page === 'risk') return role === 'uzman';
         if (page === 'medical') return role === 'hekim';
@@ -208,13 +212,10 @@
         const riskMenu = document.getElementById('menu_risk');
         const medicalMenu = document.getElementById('menu_medical');
         const staffMenu = document.getElementById('menu_staff');
-        const saasMenu = document.getElementById('menu_saas');
         if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
         if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
-        if (saasMenu && canAccessPage(role, 'saas')) saasMenu.style.display = 'inline-block';
         if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
         if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
-        if (saasMenu && !canAccessPage(role, 'saas')) saasMenu.style.display = 'none';
     }
 
     async function requireAuthAndRole(page) {
@@ -235,6 +236,8 @@
             window.location.href = 'dashboard.html';
             return null;
         }
+        CURRENT_AUTH = auth;
+        window.CURRENT_AUTH = auth;
         return auth;
     }
 
@@ -266,14 +269,14 @@
 
     async function fetchCompaniesToSelect() {
         const select = document.getElementById('company_select');
-        const { data } = await dbClient.from('customer_companies').select('id, company_name').order('company_name');
+        const { data } = await tenantScoped(dbClient.from('customer_companies').select('id, company_name')).order('company_name');
         select.innerHTML = '<option value="">-- Lütfen Firma Seçin --</option>';
         if (data) { data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; }); }
     }
 
     async function fetchMedicalRecords() {
         const tbody = document.getElementById('medical_table_body');
-        const { data } = await dbClient.from('worker_medical_records').select('*, customer_companies(company_name)').order('created_at', { ascending: false });
+        const { data } = await tenantScoped(dbClient.from('worker_medical_records').select('*, customer_companies(company_name)')).order('created_at', { ascending: false });
         tbody.innerHTML = '';
         if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Kayıtlı muayene kartı bulunmuyor.</td></tr>`; return; }
         data.forEach(m => {
@@ -287,7 +290,7 @@
         const wAge = parseInt(document.getElementById('worker_age').value); const wGender = document.getElementById('worker_gender').value;
         const gozVal = document.getElementById('goz').value; const kalpVal = document.getElementById('kalp').value; const kasVal = document.getElementById('kas').value; const decisionVal = document.getElementById('decision').value;
         if(!compId || !wName || !wAge || !gozVal || !kalpVal || !kasVal) { alert("Lütfen gerekli alanları doldurun!"); return; }
-        await dbClient.from('worker_medical_records').insert([{ company_id: compId, worker_name: wName, worker_age: wAge, worker_gender: wGender, goz_secure: gozVal, kalp_secure: kalpVal, kas_secure: kasVal, final_decision: decisionVal }]);
+        await dbClient.from('worker_medical_records').insert([{ tenant_id: CURRENT_AUTH ? CURRENT_AUTH.tenant_id : null, company_id: compId, worker_name: wName, worker_age: wAge, worker_gender: wGender, goz_secure: gozVal, kalp_secure: kalpVal, kas_secure: kasVal, final_decision: decisionVal }]);
         document.getElementById('worker_name').value = ''; document.getElementById('worker_age').value = ''; document.getElementById('goz').value = ''; document.getElementById('kalp').value = ''; document.getElementById('kas').value = ''; document.getElementById('law_warning').style.display = 'none'; fetchMedicalRecords();
     }
     async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }

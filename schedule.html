@@ -98,7 +98,6 @@
             <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
             <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
             <a href="schedule.html" class="nav-btn active-page">📅 Aylık Takvim</a>
-            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
             <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
             <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
             <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
@@ -169,6 +168,12 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let CURRENT_AUTH = null;
+    function tenantScoped(query) {
+        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) return query.eq('tenant_id', CURRENT_AUTH.tenant_id);
+        return query;
+    }
+
 
     // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
     // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
@@ -229,7 +234,6 @@
     }
 
     function canAccessPage(role, page) {
-        if (page === 'saas') return role === 'super_admin';
         if (role === 'super_admin' || role === 'admin') return true;
         if (page === 'risk') return role === 'uzman';
         if (page === 'medical') return role === 'hekim';
@@ -246,13 +250,10 @@
         const riskMenu = document.getElementById('menu_risk');
         const medicalMenu = document.getElementById('menu_medical');
         const staffMenu = document.getElementById('menu_staff');
-        const saasMenu = document.getElementById('menu_saas');
         if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
         if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
-        if (saasMenu && canAccessPage(role, 'saas')) saasMenu.style.display = 'inline-block';
         if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
         if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
-        if (saasMenu && !canAccessPage(role, 'saas')) saasMenu.style.display = 'none';
     }
 
     async function requireAuthAndRole(page) {
@@ -273,6 +274,8 @@
             window.location.href = 'dashboard.html';
             return null;
         }
+        CURRENT_AUTH = auth;
+        window.CURRENT_AUTH = auth;
         return auth;
     }
 
@@ -308,7 +311,7 @@
 
     async function populateStaffDropdowns() {
         const mainSelect = document.getElementById('visit_staff'); const modalSelect = document.getElementById('modal_visit_staff');
-        const { data } = await dbClient.from('osgb_staff').select('name_surname, staff_role').order('name_surname');
+        const { data } = await tenantScoped(dbClient.from('osgb_staff').select('name_surname, staff_role')).order('name_surname');
         let options = '<option value="">-- Personel Seçin --</option>';
         if (data) { data.forEach(s => { options += `<option value="${s.name_surname} (${s.staff_role})">${s.name_surname} (${s.staff_role})</option>`; }); }
         mainSelect.innerHTML = options; modalSelect.innerHTML = options;
@@ -316,7 +319,7 @@
 
     async function fetchCompaniesToSelect() {
         const select = document.getElementById('company_select');
-        const { data } = await dbClient.from('customer_companies').select('id, company_name').order('company_name');
+        const { data } = await tenantScoped(dbClient.from('customer_companies').select('id, company_name')).order('company_name');
         select.innerHTML = '<option value="">-- Tüm Portföyü / Genel Takvimi Gör --</option>';
         if (data) { data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; }); }
     }
@@ -332,13 +335,13 @@
         let firstDayIndex = new Date(year, month, 1).getDay() - 1; if (firstDayIndex === -1) firstDayIndex = 6;
         const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
 
-        let query = dbClient.from('field_schedules').select('*, customer_companies(company_name, danger_class)');
+        let query = tenantScoped(dbClient.from('field_schedules').select('*, customer_companies(company_name, danger_class)'));
         if(selectedCompanyId) { query = query.eq('company_id', selectedCompanyId); }
         const { data: schedules } = await query;
 
         if(selectedCompanyId && schedules) {
-            const { data: comp } = await dbClient.from('customer_companies').select('danger_class').eq('id', selectedCompanyId).single();
-            const { count } = await dbClient.from('workers').select('*', { count: 'exact', head: true }).eq('company_id', selectedCompanyId);
+            const { data: comp } = await tenantScoped(dbClient.from('customer_companies').select('danger_class')).eq('id', selectedCompanyId).single();
+            const { count } = await tenantScoped(dbClient.from('workers').select('*', { count: 'exact', head: true })).eq('company_id', selectedCompanyId);
             let katsayi = comp.danger_class === 'Tehlikeli' ? 20 : (comp.danger_class === 'Çok Tehlikeli' ? 40 : 10);
             let yasalGerekenDk = (count || 0) * katsayi;
             let planlananToplamDk = schedules.filter(s => new Date(s.visit_date).getMonth() === month).reduce((sum, s) => sum + s.planned_minutes, 0);
@@ -372,7 +375,7 @@
         const date = document.getElementById('visit_date').value;
         const mins = document.getElementById('visit_minutes').value;
         if(!compId || !staff || !date || !mins) { alert("Lütfen form alanlarını doldurun!"); return; }
-        await dbClient.from('field_schedules').insert([{ company_id: compId, assigned_staff: staff, visit_date: date, planned_minutes: parseInt(mins), notes: document.getElementById('visit_notes').value }]); 
+        await dbClient.from('field_schedules').insert([{ tenant_id: CURRENT_AUTH ? CURRENT_AUTH.tenant_id : null, company_id: compId, assigned_staff: staff, visit_date: date, planned_minutes: parseInt(mins), notes: document.getElementById('visit_notes').value }]); 
         document.getElementById('visit_minutes').value = ''; document.getElementById('visit_notes').value = ''; renderCalendarWithTasks(); 
     }
 </script>

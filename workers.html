@@ -68,7 +68,6 @@
             <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
             <a href="workers.html" class="nav-btn active-page">👥 Kadro Yönetimi</a>
             <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
             <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
             <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
             <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
@@ -115,6 +114,12 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let CURRENT_AUTH = null;
+    function tenantScoped(query) {
+        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) return query.eq('tenant_id', CURRENT_AUTH.tenant_id);
+        return query;
+    }
+
 
     // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
     // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
@@ -175,7 +180,6 @@
     }
 
     function canAccessPage(role, page) {
-        if (page === 'saas') return role === 'super_admin';
         if (role === 'super_admin' || role === 'admin') return true;
         if (page === 'risk') return role === 'uzman';
         if (page === 'medical') return role === 'hekim';
@@ -192,13 +196,10 @@
         const riskMenu = document.getElementById('menu_risk');
         const medicalMenu = document.getElementById('menu_medical');
         const staffMenu = document.getElementById('menu_staff');
-        const saasMenu = document.getElementById('menu_saas');
         if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
         if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
-        if (saasMenu && canAccessPage(role, 'saas')) saasMenu.style.display = 'inline-block';
         if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
         if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
-        if (saasMenu && !canAccessPage(role, 'saas')) saasMenu.style.display = 'none';
     }
 
     async function requireAuthAndRole(page) {
@@ -219,6 +220,8 @@
             window.location.href = 'dashboard.html';
             return null;
         }
+        CURRENT_AUTH = auth;
+        window.CURRENT_AUTH = auth;
         return auth;
     }
 
@@ -248,7 +251,7 @@
     async function fetchCompaniesToSelect() {
         const select = document.getElementById('company_select');
         try {
-            const { data } = await dbClient.from('customer_companies').select('id, company_name').order('company_name');
+            const { data } = await tenantScoped(dbClient.from('customer_companies').select('id, company_name')).order('company_name');
             if (data && data.length > 0) {
                 select.innerHTML = '<option value="">-- Lütfen Liste İçin Firma Seçin --</option>';
                 data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; });
@@ -261,7 +264,7 @@
         const tbody = document.getElementById('worker_table_body');
         if(!compId) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr>`; return; }
         try {
-            const { data } = await dbClient.from('workers').select('*').eq('company_id', compId).order('created_at', { ascending: false });
+            const { data } = await tenantScoped(dbClient.from('workers').select('*')).eq('company_id', compId).order('created_at', { ascending: false });
             if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Kayıtlı personel bulunmuyor.</td></tr>`; return; }
             tbody.innerHTML = '';
             data.forEach(w => { tbody.innerHTML += `<tr><td><strong>${w.full_name}</strong></td><td>${w.age}</td><td>${w.gender}</td><td>${w.job_title || '-'}</td></tr>`; });
@@ -277,7 +280,7 @@
         const statusDiv = document.getElementById('status');
 
         if(!compId || !name || !age) { statusDiv.style.color = "red"; statusDiv.innerText = "Eksik alanları doldurun!"; return; }
-        const { error } = await dbClient.from('workers').insert([{ company_id: compId, full_name: name, age: parseInt(age), gender: gender, job_title: job }]);
+        const { error } = await dbClient.from('workers').insert([{ tenant_id: CURRENT_AUTH ? CURRENT_AUTH.tenant_id : null, company_id: compId, full_name: name, age: parseInt(age), gender: gender, job_title: job }]);
         if (error) alert(error.message);
         else { document.getElementById('worker_name').value = ''; document.getElementById('worker_age').value = ''; document.getElementById('worker_job').value = ''; fetchWorkers(); }
     }

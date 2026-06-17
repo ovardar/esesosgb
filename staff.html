@@ -62,11 +62,6 @@
 
         .btn-edit-action { background: var(--primary); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-right: 4px; }
         .btn-delete-action { background: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .btn-invite-action { background: #10b981; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-right: 4px; margin-top: 4px; }
-        .btn-invite-action:disabled { opacity: 0.55; cursor: not-allowed; }
-        .invite-sent { color:#15803d; font-weight:800; }
-        .invite-failed { color:#b91c1c; font-weight:800; }
-        .invite-none { color:var(--text-muted); font-weight:700; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
         .modal-content { background: var(--bg-card); color: var(--text-main); padding: 25px; border-radius: 12px; width: 500px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 1px solid var(--border-color); }
@@ -139,11 +134,10 @@
                     <th>E-Posta</th>
                     <th>Giriş / Çıkış Tarihi</th>
                     <th style="text-align: center;">Erişim Durumu</th>
-                    <th>Davet</th>
                     <th>Aksiyonlar</th>
                 </tr>
             </thead>
-            <tbody id="staff_table_body"><tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Kadro yükleniyor...</td></tr></tbody>
+            <tbody id="staff_table_body"><tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Kadro yükleniyor...</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -160,7 +154,6 @@
         <div class="form-group" style="margin-bottom:12px;"><label>Kilit Durumu</label><select id="modal_is_active_manual"><option value="Otomatik">Otomatik</option><option value="Aktif">Manuel Aktif</option><option value="Pasif">Manuel Pasif</option></select></div>
         <div class="modal-buttons">
             <button class="btn-update" onclick="updateStaff()">Güncelle</button>
-            <button class="btn-update" style="background:#10b981;" onclick="inviteStaffFromModal()">Davet Gönder</button>
             <button class="btn-close" onclick="closeModal()">İptal</button>
         </div>
     </div>
@@ -170,6 +163,12 @@
     const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let CURRENT_AUTH = null;
+    function tenantScoped(query) {
+        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) return query.eq('tenant_id', CURRENT_AUTH.tenant_id);
+        return query;
+    }
+
     let CURRENT_AUTH = null;
 
     // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
@@ -271,6 +270,8 @@
             window.location.href = 'dashboard.html';
             return null;
         }
+        CURRENT_AUTH = auth;
+        window.CURRENT_AUTH = auth;
         return auth;
     }
 
@@ -341,59 +342,14 @@
         return true;
     }
 
-
-    function inviteStatusText(status, invitedAt) {
-        const s = (status || 'not_sent').toString();
-        if (s === 'sent') return `<span class="invite-sent">Gönderildi</span><br><small style="color:var(--text-muted);">${invitedAt ? new Date(invitedAt).toLocaleString('tr-TR') : ''}</small>`;
-        if (s === 'failed') return `<span class="invite-failed">Hata oluştu</span>`;
-        return `<span class="invite-none">Gönderilmedi</span>`;
-    }
-
-    async function callInviteFunction(staffId) {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) { alert('Oturum bulunamadı. Lütfen tekrar giriş yap.'); return false; }
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/invite-staff-user`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`,
-                'apikey': SUPABASE_KEY
-            },
-            body: JSON.stringify({
-                staff_id: staffId,
-                site_origin: window.location.origin
-            })
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok || !result.ok) {
-            alert('Davet gönderilemedi: ' + (result.error || response.statusText));
-            return false;
-        }
-        alert('Davet e-postası gönderildi: ' + (result.email || ''));
-        return true;
-    }
-
-    async function inviteStaff(staffId, email) {
-        if (!staffId) return;
-        if (!confirm(`${email || 'Bu kullanıcı'} için davet e-postası gönderilsin mi?`)) return;
-        const ok = await callInviteFunction(staffId);
-        if (ok) fetchStaff();
-    }
-
-    async function inviteStaffFromModal() {
-        const id = document.getElementById('modal_staff_id').value;
-        const email = document.getElementById('modal_staff_email').value;
-        await inviteStaff(id, email);
-    }
-
     async function fetchStaff() {
         const tbody = document.getElementById('staff_table_body');
         let query = dbClient.from('osgb_staff').select('*, tenants(name, slug)').order('created_at', { ascending: false });
         if (CURRENT_AUTH && CURRENT_AUTH.role !== 'super_admin' && CURRENT_AUTH.tenant_id) query = query.eq('tenant_id', CURRENT_AUTH.tenant_id);
         const { data, error } = await query;
         tbody.innerHTML = '';
-        if (error) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">Hata: ${error.message}</td></tr>`; return; }
-        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Kayıtlı personel yok.</td></tr>`; return; }
+        if (error) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Hata: ${error.message}</td></tr>`; return; }
+        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Kayıtlı personel yok.</td></tr>`; return; }
         data.forEach(s => {
             const accessRole = normalizeAccessRole(s.access_role) || normalizeAccessRole(s.staff_role) || 'uzman';
             const canLoginValue = s.can_login !== false;
@@ -408,8 +364,7 @@
                 <td><code>${s.email || '-'}</code></td>
                 <td>Giriş: ${s.hire_date || '-'}<br>Çıkış: ${s.termination_date || 'Devam'}</td>
                 <td style="text-align: center;"><span class="badge ${isSystemActive ? 'badge-active' : 'badge-passive'}">${isSystemActive ? '● AKTİF' : '○ PASİF'}</span></td>
-                <td>${inviteStatusText(s.auth_invite_status, s.auth_invited_at)}</td>
-                <td><button class="btn-edit-action" onclick="openStaffModal('${s.id}', '${name}', '${email}', '${manual}', '${accessRole}', '${canLoginValue}')">Düzenle</button><button class="btn-invite-action" onclick="inviteStaff('${s.id}', '${email}')">Davet Gönder</button><button class="btn-delete-action" onclick="deleteStaff('${s.id}')">Sil</button></td>
+                <td><button class="btn-edit-action" onclick="openStaffModal('${s.id}', '${name}', '${email}', '${manual}', '${accessRole}', '${canLoginValue}')">Düzenle</button><button class="btn-delete-action" onclick="deleteStaff('${s.id}')">Sil</button></td>
             </tr>`;
         });
     }
@@ -454,8 +409,7 @@
             is_active_manual: document.getElementById('is_active_manual').value,
             access_role: document.getElementById('access_role').value,
             can_login: document.getElementById('can_login').value === 'true',
-            tenant_id: CURRENT_AUTH ? CURRENT_AUTH.tenant_id : null,
-            auth_invite_status: 'not_sent'
+            tenant_id: CURRENT_AUTH ? CURRENT_AUTH.tenant_id : null
         };
         const { error } = await dbClient.from('osgb_staff').insert([payload]);
         if (error) { alert('Kayıt hatası: ' + error.message); return; }
