@@ -783,6 +783,16 @@
             .ppe-alert-grid { grid-template-columns: 1fr !important; }
         }
 
+
+        .periodic-alert-grid { grid-template-columns: repeat(4, minmax(190px, 1fr)) !important; }
+        .periodic-panel { margin-top: 4px !important; margin-bottom: 18px !important; }
+        @media (max-width: 1100px) {
+            .periodic-alert-grid { grid-template-columns: repeat(2, minmax(190px, 1fr)) !important; }
+        }
+        @media (max-width: 900px) {
+            .periodic-alert-grid { grid-template-columns: 1fr !important; }
+        }
+
     </style>
 </head>
 <body>
@@ -818,6 +828,7 @@
             <a id="menu_near_miss" href="near-miss-admin.html" class="nav-btn" style="display:none;">⚠️ Ramak Kala</a>
             <a id="menu_training" href="training.html" class="nav-btn" style="display:none;">🎓 Eğitim & Sertifika</a>
             <a id="menu_ppe" href="ppe.html" class="nav-btn" style="display:none;">🧤 KKD Zimmet</a>
+            <a id="menu_periodic" href="periodic.html" class="nav-btn" style="display:none;">🛠️ Periyodik Kontrol</a>
         </div>
     </div>
 
@@ -1001,6 +1012,47 @@
         </table>
     </div>
 
+
+    <div class="section-title">🛠️ Periyodik Kontrol Uyarıları</div>
+    <div class="kpi-grid periodic-alert-grid">
+        <div class="metric-box metric-red clickable" onclick="window.location.href='periodic.html'">
+            <div class="metric-title">Süresi Dolan Kontrol</div>
+            <div class="metric-value" id="stat_periodic_expired">0</div>
+            <div class="metric-sub">Kontrol tarihi geçmiş</div>
+        </div>
+        <div class="metric-box metric-amber clickable" onclick="window.location.href='periodic.html'">
+            <div class="metric-title">Kontrol Yaklaşıyor</div>
+            <div class="metric-value" id="stat_periodic_upcoming">0</div>
+            <div class="metric-sub">Önümüzdeki 30 gün</div>
+        </div>
+        <div class="metric-box metric-orange clickable" onclick="window.location.href='periodic.html'">
+            <div class="metric-title">Uygunsuzluk Var</div>
+            <div class="metric-value" id="stat_periodic_nonconformity">0</div>
+            <div class="metric-sub">Aksiyon gerektiren kontrol</div>
+        </div>
+        <div class="metric-box metric-slate clickable" onclick="window.location.href='periodic.html'">
+            <div class="metric-title">Rapor Bekleniyor</div>
+            <div class="metric-value" id="stat_periodic_report_pending">0</div>
+            <div class="metric-sub">Raporu tamamlanmamış</div>
+        </div>
+    </div>
+
+    <div class="panel periodic-panel">
+        <h3>🛠️ Kritik Periyodik Kontrol Uyarıları</h3>
+        <p>Süresi dolan, kontrol tarihi yaklaşan, uygunsuzluk içeren veya raporu bekleyen ekipman/kontrol kayıtları.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Uyarı</th>
+                    <th>Firma</th>
+                    <th>Kontrol / Ekipman</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody id="periodic_alerts_tbody"><tr><td colspan="4" class="empty-state">Periyodik kontrol uyarıları yükleniyor...</td></tr></tbody>
+        </table>
+    </div>
+
     <div id="operational_banner" class="operational-banner op-good" onclick="window.location.href='actions.html'">
         <div class="op-text">
             <h4 id="op_title">✅ Operasyonel durum iyi</h4>
@@ -1107,7 +1159,7 @@
 
     function canAccessPage(role, page) {
         if (role === 'super_admin' || role === 'admin') return true;
-        if (page === 'risk' || page === 'accidents' || page === 'near_miss' || page === 'training' || page === 'ppe') return role === 'uzman';
+        if (page === 'risk' || page === 'accidents' || page === 'near_miss' || page === 'training' || page === 'ppe' || page === 'periodic') return role === 'uzman';
         if (page === 'medical') return role === 'hekim';
         if (page === 'staff') return false;
         if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
@@ -1127,6 +1179,7 @@
         const nearMissMenu = document.getElementById('menu_near_miss');
         const trainingMenu = document.getElementById('menu_training');
         const ppeMenu = document.getElementById('menu_ppe');
+        const periodicMenu = document.getElementById('menu_periodic');
         if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
         if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
         if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
@@ -1135,6 +1188,7 @@
         if (nearMissMenu && canAccessPage(role, 'near_miss')) nearMissMenu.style.display = 'inline-block';
         if (trainingMenu && canAccessPage(role, 'training')) trainingMenu.style.display = 'inline-block';
         if (ppeMenu && canAccessPage(role, 'ppe')) ppeMenu.style.display = 'inline-block';
+        if (periodicMenu && canAccessPage(role, 'periodic')) periodicMenu.style.display = 'inline-block';
         if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
     }
 
@@ -1585,6 +1639,153 @@
         renderPpeAlerts(alerts);
     }
 
+
+    function periodicEffectiveStatus(row, today) {
+        if (!row) return '-';
+        const status = (row.status || '').toString().trim();
+        const result = (row.control_result || '').toString().trim();
+        const report = (row.report_status || '').toString().trim();
+        if (status === 'Kapandı') return 'Kapandı';
+        if (result === 'Uygunsuz' || status === 'Uygunsuzluk Var') return 'Uygunsuzluk Var';
+        if (report === 'Rapor Bekleniyor' || status === 'Rapor Bekleniyor') return 'Rapor Bekleniyor';
+        const soon = addDaysString(today, 30);
+        if (row.next_control_date && row.next_control_date < today) return 'Süresi Doldu';
+        if (row.next_control_date && row.next_control_date <= soon) return 'Kontrol Yaklaşıyor';
+        return status || 'Geçerli';
+    }
+
+    function periodicAlertBadge(status) {
+        if (status === 'Süresi Doldu') return '<span class="badge badge-red">Süresi Doldu</span>';
+        if (status === 'Kontrol Yaklaşıyor') return '<span class="badge badge-orange">Kontrol Yaklaşıyor</span>';
+        if (status === 'Uygunsuzluk Var') return '<span class="badge badge-red">Uygunsuzluk Var</span>';
+        if (status === 'Rapor Bekleniyor') return '<span class="badge badge-blue">Rapor Bekleniyor</span>';
+        if (status === 'Kapandı') return '<span class="badge badge-green">Kapandı</span>';
+        return '<span class="badge badge-green">Geçerli</span>';
+    }
+
+    function renderPeriodicAlerts(alerts, errorMessage) {
+        const tbody = document.getElementById('periodic_alerts_tbody');
+        if (!tbody) return;
+        if (errorMessage) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">Periyodik kontrol uyarıları yüklenemedi: ' + escapeHtml(errorMessage) + '</td></tr>';
+            return;
+        }
+        const list = (alerts || []).slice(0, 9);
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Kritik periyodik kontrol uyarısı yok.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = '';
+        list.forEach(a => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${escapeHtml(a.type)}</strong></td>
+                    <td>${escapeHtml(a.companyName || '-')}</td>
+                    <td>${escapeHtml(a.controlType || '-')}<br><small style="color:var(--text-muted);">${escapeHtml(a.equipment || '-')}</small><br><small style="color:var(--text-muted);">${escapeHtml(a.detail || '')}</small></td>
+                    <td>${periodicAlertBadge(a.status)}<br><a class="small-link" href="periodic.html">Aç</a></td>
+                </tr>`;
+        });
+    }
+
+    function buildPeriodicDashboard(controls, events, companies, today) {
+        const controlList = controls || [];
+        const alerts = [];
+        const expired = controlList.filter(c => periodicEffectiveStatus(c, today) === 'Süresi Doldu');
+        const upcoming = controlList.filter(c => periodicEffectiveStatus(c, today) === 'Kontrol Yaklaşıyor');
+        const nonconformity = controlList.filter(c => periodicEffectiveStatus(c, today) === 'Uygunsuzluk Var');
+        const reportPending = controlList.filter(c => periodicEffectiveStatus(c, today) === 'Rapor Bekleniyor');
+
+        expired.forEach(c => alerts.push({
+            priority: 1,
+            type: 'Süresi Dolan Kontrol',
+            status: 'Süresi Doldu',
+            companyName: c.customer_companies ? c.customer_companies.company_name : getCompanyNameById(companies, c.company_id),
+            controlType: c.control_type_name || '-',
+            equipment: c.equipment_name || '-',
+            detail: `Sonraki kontrol: ${c.next_control_date || '-'}`
+        }));
+        upcoming.forEach(c => alerts.push({
+            priority: 2,
+            type: 'Kontrol Yaklaşıyor',
+            status: 'Kontrol Yaklaşıyor',
+            companyName: c.customer_companies ? c.customer_companies.company_name : getCompanyNameById(companies, c.company_id),
+            controlType: c.control_type_name || '-',
+            equipment: c.equipment_name || '-',
+            detail: `Sonraki kontrol: ${c.next_control_date || '-'}`
+        }));
+        nonconformity.forEach(c => alerts.push({
+            priority: 3,
+            type: 'Uygunsuzluk Var',
+            status: 'Uygunsuzluk Var',
+            companyName: c.customer_companies ? c.customer_companies.company_name : getCompanyNameById(companies, c.company_id),
+            controlType: c.control_type_name || '-',
+            equipment: c.equipment_name || '-',
+            detail: c.notes || 'Uygunsuzluk takibi gerekli'
+        }));
+        reportPending.forEach(c => alerts.push({
+            priority: 4,
+            type: 'Rapor Bekleniyor',
+            status: 'Rapor Bekleniyor',
+            companyName: c.customer_companies ? c.customer_companies.company_name : getCompanyNameById(companies, c.company_id),
+            controlType: c.control_type_name || '-',
+            equipment: c.equipment_name || '-',
+            detail: `Son kontrol: ${c.last_control_date || '-'}`
+        }));
+
+        const eventList = events || [];
+        eventList.slice(0, 8).forEach(e => {
+            const row = controlList.find(c => String(c.id) === String(e.control_id));
+            if (!row) return;
+            const st = periodicEffectiveStatus(row, today);
+            if (['Süresi Doldu','Kontrol Yaklaşıyor','Uygunsuzluk Var','Rapor Bekleniyor'].includes(st)) return;
+            alerts.push({
+                priority: 5,
+                type: 'Son Periyodik Kontrol İşlemi',
+                status: st,
+                companyName: row.customer_companies ? row.customer_companies.company_name : getCompanyNameById(companies, row.company_id),
+                controlType: row.control_type_name || '-',
+                equipment: row.equipment_name || '-',
+                detail: `${e.event_type || 'İşlem'} • ${e.event_date || '-'}`
+            });
+        });
+
+        alerts.sort((a,b) => a.priority - b.priority || String(a.companyName).localeCompare(String(b.companyName), 'tr') || String(a.controlType).localeCompare(String(b.controlType), 'tr'));
+
+        setDashValue('stat_periodic_expired', expired.length);
+        setDashValue('stat_periodic_upcoming', upcoming.length);
+        setDashValue('stat_periodic_nonconformity', nonconformity.length);
+        setDashValue('stat_periodic_report_pending', reportPending.length);
+        renderPeriodicAlerts(alerts);
+    }
+
+    async function loadPeriodicDashboard(tenantId, companies, today) {
+        try {
+            const [controlsRes, eventsRes] = await Promise.all([
+                dbClient
+                    .from('periodic_controls')
+                    .select('*, customer_companies(company_name, tenant_id)')
+                    .eq('tenant_id', tenantId)
+                    .order('created_at', { ascending: false }),
+                dbClient
+                    .from('periodic_control_events')
+                    .select('*')
+                    .eq('tenant_id', tenantId)
+                    .order('created_at', { ascending: false })
+                    .limit(50)
+            ]);
+            if (controlsRes.error) throw controlsRes.error;
+            if (eventsRes.error) throw eventsRes.error;
+            buildPeriodicDashboard(controlsRes.data || [], eventsRes.data || [], companies || [], today);
+        } catch (err) {
+            setDashValue('stat_periodic_expired', 0);
+            setDashValue('stat_periodic_upcoming', 0);
+            setDashValue('stat_periodic_nonconformity', 0);
+            setDashValue('stat_periodic_report_pending', 0);
+            renderPeriodicAlerts([], err.message || err);
+            console.warn('Periyodik kontrol uyarıları yüklenemedi:', err.message || err);
+        }
+    }
+
     async function fetchDashboardStats(authContext) {
         try {
             const auth = authContext || CURRENT_AUTH || window.__CURRENT_AUTH_CONTEXT__;
@@ -1758,6 +1959,8 @@
             if (trainingEl) trainingEl.innerHTML = '<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">Eğitim uyarıları yüklenemedi.</td></tr>';
             const ppeEl = document.getElementById('ppe_alerts_tbody');
             if (ppeEl) ppeEl.innerHTML = '<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">KKD uyarıları yüklenemedi.</td></tr>'; 
+            const periodicEl = document.getElementById('periodic_alerts_tbody');
+            if (periodicEl) periodicEl.innerHTML = '<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">Periyodik kontrol uyarıları yüklenemedi.</td></tr>'; 
         }
     }
 
