@@ -773,6 +773,16 @@
             .training-alert-grid { grid-template-columns: 1fr !important; }
         }
 
+
+        .ppe-alert-grid { grid-template-columns: repeat(4, minmax(190px, 1fr)) !important; }
+        .ppe-panel { margin-top: 4px !important; margin-bottom: 18px !important; }
+        @media (max-width: 1100px) {
+            .ppe-alert-grid { grid-template-columns: repeat(2, minmax(190px, 1fr)) !important; }
+        }
+        @media (max-width: 900px) {
+            .ppe-alert-grid { grid-template-columns: 1fr !important; }
+        }
+
     </style>
 </head>
 <body>
@@ -807,6 +817,7 @@
             <a id="menu_accidents" href="accidents.html" class="nav-btn" style="display:none;">🚑 İş Kazaları</a>
             <a id="menu_near_miss" href="near-miss-admin.html" class="nav-btn" style="display:none;">⚠️ Ramak Kala</a>
             <a id="menu_training" href="training.html" class="nav-btn" style="display:none;">🎓 Eğitim & Sertifika</a>
+            <a id="menu_ppe" href="ppe.html" class="nav-btn" style="display:none;">🧤 KKD Zimmet</a>
         </div>
     </div>
 
@@ -949,6 +960,47 @@
         </table>
     </div>
 
+
+    <div class="section-title">🧤 KKD Zimmet Uyarıları</div>
+    <div class="kpi-grid ppe-alert-grid">
+        <div class="metric-box metric-green clickable" onclick="window.location.href='ppe.html'">
+            <div class="metric-title">Aktif KKD Zimmeti</div>
+            <div class="metric-value" id="stat_ppe_active">0</div>
+            <div class="metric-sub">Çalışan üzerinde aktif kayıt</div>
+        </div>
+        <div class="metric-box metric-amber clickable" onclick="window.location.href='ppe.html'">
+            <div class="metric-title">Yenileme Yaklaşıyor</div>
+            <div class="metric-value" id="stat_ppe_upcoming">0</div>
+            <div class="metric-sub">Önümüzdeki 30 gün</div>
+        </div>
+        <div class="metric-box metric-red clickable" onclick="window.location.href='ppe.html'">
+            <div class="metric-title">Süresi Dolan KKD</div>
+            <div class="metric-value" id="stat_ppe_expired">0</div>
+            <div class="metric-sub">Yenileme/değişim gerekli</div>
+        </div>
+        <div class="metric-box metric-slate clickable" onclick="window.location.href='ppe.html'">
+            <div class="metric-title">Kayıp / Hasarlı</div>
+            <div class="metric-value" id="stat_ppe_issue">0</div>
+            <div class="metric-sub">Kapanmış problemli zimmet</div>
+        </div>
+    </div>
+
+    <div class="panel ppe-panel">
+        <h3>🧤 Kritik KKD Uyarıları</h3>
+        <p>Süresi dolan, yenilemesi yaklaşan, kayıp/hasarlı ve son işlem gören KKD zimmetleri.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Uyarı</th>
+                    <th>Firma / Çalışan</th>
+                    <th>KKD</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody id="ppe_alerts_tbody"><tr><td colspan="4" class="empty-state">KKD uyarıları yükleniyor...</td></tr></tbody>
+        </table>
+    </div>
+
     <div id="operational_banner" class="operational-banner op-good" onclick="window.location.href='actions.html'">
         <div class="op-text">
             <h4 id="op_title">✅ Operasyonel durum iyi</h4>
@@ -1055,7 +1107,7 @@
 
     function canAccessPage(role, page) {
         if (role === 'super_admin' || role === 'admin') return true;
-        if (page === 'risk' || page === 'accidents' || page === 'near_miss' || page === 'training') return role === 'uzman';
+        if (page === 'risk' || page === 'accidents' || page === 'near_miss' || page === 'training' || page === 'ppe') return role === 'uzman';
         if (page === 'medical') return role === 'hekim';
         if (page === 'staff') return false;
         if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
@@ -1074,6 +1126,7 @@
         const accidentsMenu = document.getElementById('menu_accidents');
         const nearMissMenu = document.getElementById('menu_near_miss');
         const trainingMenu = document.getElementById('menu_training');
+        const ppeMenu = document.getElementById('menu_ppe');
         if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
         if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
         if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
@@ -1081,6 +1134,7 @@
         if (accidentsMenu && canAccessPage(role, 'accidents')) accidentsMenu.style.display = 'inline-block';
         if (nearMissMenu && canAccessPage(role, 'near_miss')) nearMissMenu.style.display = 'inline-block';
         if (trainingMenu && canAccessPage(role, 'training')) trainingMenu.style.display = 'inline-block';
+        if (ppeMenu && canAccessPage(role, 'ppe')) ppeMenu.style.display = 'inline-block';
         if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
     }
 
@@ -1429,6 +1483,108 @@
         setDashValue('stat_training_split', split.length);
         renderTrainingAlerts(alerts);
     }
+
+
+    function ppeEffectiveStatus(row, today) {
+        if (!row) return '-';
+        if (row.status && row.status !== 'Aktif') return row.status;
+        const soon = addDaysString(today, 30);
+        if (row.renewal_date && row.renewal_date < today) return 'Süresi Doldu';
+        if (row.renewal_date && row.renewal_date <= soon) return 'Yenileme Yaklaşıyor';
+        return row.status || 'Aktif';
+    }
+
+    function ppeAlertBadge(status) {
+        if (status === 'Süresi Doldu') return '<span class="badge badge-red">Süresi Doldu</span>';
+        if (status === 'Yenileme Yaklaşıyor') return '<span class="badge badge-orange">Yenileme Yaklaşıyor</span>';
+        if (status === 'Kayıp' || status === 'Hasarlı') return '<span class="badge badge-red">' + escapeHtml(status) + '</span>';
+        if (status === 'İade Edildi' || status === 'Değiştirildi') return '<span class="badge badge-blue">' + escapeHtml(status) + '</span>';
+        return '<span class="badge badge-green">Aktif</span>';
+    }
+
+    function renderPpeAlerts(alerts) {
+        const tbody = document.getElementById('ppe_alerts_tbody');
+        if (!tbody) return;
+        const list = (alerts || []).slice(0, 9);
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Kritik KKD uyarısı yok.</td></tr>';
+            return;
+        }
+        tbody.innerHTML = '';
+        list.forEach(a => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${escapeHtml(a.type)}</strong></td>
+                    <td>${escapeHtml(a.companyName || '-')}<br><small style="color:var(--text-muted);">${escapeHtml(a.workerName || '-')}</small></td>
+                    <td>${escapeHtml(a.ppeType || '-')}<br><small style="color:var(--text-muted);">${escapeHtml(a.detail || '')}</small></td>
+                    <td>${ppeAlertBadge(a.status)}<br><a class="small-link" href="ppe.html">Aç</a></td>
+                </tr>`;
+        });
+    }
+
+    function buildPpeDashboard(assignments, events, companies, today) {
+        const assignmentList = assignments || [];
+        const eventList = events || [];
+        const alerts = [];
+
+        const active = assignmentList.filter(a => ppeEffectiveStatus(a, today) === 'Aktif');
+        const upcoming = assignmentList.filter(a => ppeEffectiveStatus(a, today) === 'Yenileme Yaklaşıyor');
+        const expired = assignmentList.filter(a => ppeEffectiveStatus(a, today) === 'Süresi Doldu');
+        const issue = assignmentList.filter(a => ['Kayıp','Hasarlı'].includes(ppeEffectiveStatus(a, today)));
+
+        expired.forEach(a => alerts.push({
+            priority: 1,
+            type: 'Süresi Dolan KKD',
+            status: 'Süresi Doldu',
+            companyName: a.customer_companies ? a.customer_companies.company_name : getCompanyNameById(companies, a.company_id),
+            workerName: a.worker_name || '-',
+            ppeType: a.ppe_type_name || '-',
+            detail: `Yenileme tarihi: ${a.renewal_date || '-'}`
+        }));
+        upcoming.forEach(a => alerts.push({
+            priority: 2,
+            type: 'Yenileme Yaklaşıyor',
+            status: 'Yenileme Yaklaşıyor',
+            companyName: a.customer_companies ? a.customer_companies.company_name : getCompanyNameById(companies, a.company_id),
+            workerName: a.worker_name || '-',
+            ppeType: a.ppe_type_name || '-',
+            detail: `Yenileme tarihi: ${a.renewal_date || '-'}`
+        }));
+        issue.forEach(a => alerts.push({
+            priority: 3,
+            type: ppeEffectiveStatus(a, today),
+            status: ppeEffectiveStatus(a, today),
+            companyName: a.customer_companies ? a.customer_companies.company_name : getCompanyNameById(companies, a.company_id),
+            workerName: a.worker_name || '-',
+            ppeType: a.ppe_type_name || '-',
+            detail: a.return_note || a.notes || 'İşlem geçmişi kontrol edilmeli'
+        }));
+
+        eventList.slice(0, 10).forEach(e => {
+            const row = assignmentList.find(a => String(a.id) === String(e.assignment_id));
+            if (!row) return;
+            const st = ppeEffectiveStatus(row, today);
+            if (['Süresi Doldu','Yenileme Yaklaşıyor','Kayıp','Hasarlı'].includes(st)) return;
+            alerts.push({
+                priority: 5,
+                type: 'Son KKD İşlemi',
+                status: st,
+                companyName: row.customer_companies ? row.customer_companies.company_name : getCompanyNameById(companies, row.company_id),
+                workerName: row.worker_name || '-',
+                ppeType: row.ppe_type_name || '-',
+                detail: `${e.event_type || 'İşlem'} • ${e.event_date || '-'}`
+            });
+        });
+
+        alerts.sort((a,b) => a.priority - b.priority || String(a.companyName).localeCompare(String(b.companyName), 'tr') || String(a.workerName).localeCompare(String(b.workerName), 'tr'));
+
+        setDashValue('stat_ppe_active', active.length);
+        setDashValue('stat_ppe_upcoming', upcoming.length);
+        setDashValue('stat_ppe_expired', expired.length);
+        setDashValue('stat_ppe_issue', issue.length);
+        renderPpeAlerts(alerts);
+    }
+
     async function fetchDashboardStats(authContext) {
         try {
             const auth = authContext || CURRENT_AUTH || window.__CURRENT_AUTH_CONTEXT__;
@@ -1438,7 +1594,7 @@
             const today = todayString();
             const { start, end } = currentMonthRange();
 
-            const [companiesRes, workersRes, risksRes, visitsRes, medicalTestsRes, healthFollowupsRes, nearMissRes, trainingCompletionsRes, trainingSessionsRes] = await Promise.all([
+            const [companiesRes, workersRes, risksRes, visitsRes, medicalTestsRes, healthFollowupsRes, nearMissRes, trainingCompletionsRes, trainingSessionsRes, ppeAssignmentsRes, ppeEventsRes] = await Promise.all([
                 dbClient
                     .from('customer_companies')
                     .select('id, company_name, danger_class')
@@ -1491,7 +1647,20 @@
                 dbClient
                     .from('training_attendance_entries')
                     .select('id, completion_id, attended_hours')
+                    .eq('tenant_id', tenantId),
+
+                dbClient
+                    .from('ppe_assignments')
+                    .select('*, customer_companies(company_name, tenant_id)')
                     .eq('tenant_id', tenantId)
+                    .order('created_at', { ascending: false }),
+
+                dbClient
+                    .from('ppe_assignment_events')
+                    .select('*')
+                    .eq('tenant_id', tenantId)
+                    .order('created_at', { ascending: false })
+                    .limit(50)
             ]);
 
             if (companiesRes.error) throw companiesRes.error;
@@ -1503,6 +1672,8 @@
             if (nearMissRes.error) throw nearMissRes.error;
             if (trainingCompletionsRes.error) throw trainingCompletionsRes.error;
             if (trainingSessionsRes.error) throw trainingSessionsRes.error;
+            if (ppeAssignmentsRes.error) throw ppeAssignmentsRes.error;
+            if (ppeEventsRes.error) throw ppeEventsRes.error;
 
             const companies = companiesRes.data || [];
             const risks = risksRes.data || [];
@@ -1512,6 +1683,8 @@
             const nearMissReports = nearMissRes.data || [];
             const trainingCompletions = trainingCompletionsRes.data || [];
             const trainingSessions = trainingSessionsRes.data || [];
+            const ppeAssignments = ppeAssignmentsRes.data || [];
+            const ppeEvents = ppeEventsRes.data || [];
             const workers = workersRes.data || [];
             const workerCount = workers.length;
 
@@ -1566,6 +1739,7 @@
             renderHealthAlerts(medicalTests, healthFollowups, companies, today, weekEnd);
             renderNearMissAlerts(nearMissReports);
             buildTrainingDashboard(trainingCompletions, trainingSessions, workers, companies, today);
+            buildPpeDashboard(ppeAssignments, ppeEvents, companies, today);
 
             updateOperationalBanner(overdueDofs, openDofs, progressDofs);
             renderPriorityDofs(activeRisks, today);
@@ -1582,6 +1756,8 @@
             if (nearMissEl) nearMissEl.innerHTML = '<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">Ramak kala bildirimleri yüklenemedi.</td></tr>';
             const trainingEl = document.getElementById('training_alerts_tbody');
             if (trainingEl) trainingEl.innerHTML = '<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">Eğitim uyarıları yüklenemedi.</td></tr>';
+            const ppeEl = document.getElementById('ppe_alerts_tbody');
+            if (ppeEl) ppeEl.innerHTML = '<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">KKD uyarıları yüklenemedi.</td></tr>'; 
         }
     }
 
