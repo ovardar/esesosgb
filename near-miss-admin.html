@@ -8,6 +8,13 @@
   <style>
     :root{--bg-main:#f4f6f9;--bg-card:#fff;--text-main:#1e293b;--text-muted:#64748b;--primary:#0f766e;--border-color:#e2e8f0;--table-header:#f8fafc;--danger:#dc2626;--success:#059669;--warning:#f97316;--info:#0284c7}
     *{box-sizing:border-box}body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at top left,rgba(15,118,110,.13),transparent 30rem),linear-gradient(180deg,#f8fafc,#edf2f7);color:var(--text-main);padding:30px;display:none;margin:0}.card{background:rgba(255,255,255,.94);padding:0;border-radius:18px;max-width:1240px;margin:0 auto;box-shadow:0 8px 24px rgba(15,23,42,.08);border:1px solid var(--border-color);overflow:hidden}.global-header{padding:18px 22px 14px;margin-bottom:0;background:linear-gradient(135deg,#0f766e 0%,#059669 58%,#047857 100%);color:white;border-bottom:0}.top-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:15px}.logo-area{font-size:18px;font-weight:500;display:flex;align-items:center;gap:10px;min-width:0}.logo-area span[id^="lbl_"]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tenant-logo-img{width:34px;height:34px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid rgba(255,255,255,.35);padding:3px;box-sizing:border-box;flex:0 0 auto}.controls-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.user-info{font-size:13px;color:white;font-weight:600;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.logout-btn{background:rgba(239,68,68,.92);color:white;border:none;padding:7px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:800}.nav-container{display:flex;gap:7px;justify-content:flex-start;background:rgba(255,255,255,.10);padding:8px;border-radius:14px;border:1px solid rgba(255,255,255,.16);flex-wrap:wrap;overflow-x:auto}.nav-btn{background:rgba(255,255,255,.10);color:rgba(255,255,255,.86);padding:9px 13px;border-radius:10px;text-decoration:none;font-weight:800;font-size:12.5px;border:1px solid rgba(255,255,255,.10);white-space:nowrap}.nav-btn.active-page{background:white;color:#047857!important;box-shadow:0 8px 18px rgba(15,23,42,.22)}h2{margin:22px 22px 4px;font-size:clamp(22px,2.6vw,31px);letter-spacing:-.035em}.page-desc{margin:0 22px 20px;color:var(--text-muted);font-size:14px;max-width:960px}.section-title{margin:24px 22px 11px;display:inline-flex;align-items:center;gap:7px;color:#334155;background:rgba(255,255,255,.72);border:1px solid rgba(226,232,240,.9);padding:7px 11px;border-radius:999px;box-shadow:0 1px 2px rgba(15,23,42,.05);font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:15px;margin:0 22px 18px}.metric-box{padding:16px 18px;border-radius:18px;color:white;min-height:94px;box-shadow:0 18px 38px rgba(15,23,42,.13)}.metric-title{font-size:12px;font-weight:800;opacity:.95}.metric-value{font-size:32px;font-weight:900;margin-top:5px}.metric-green{background:linear-gradient(135deg,#10b981,#047857)}.metric-orange{background:linear-gradient(135deg,#f97316,#c2410c)}.metric-blue{background:linear-gradient(135deg,#0284c7,#0369a1)}.metric-red{background:linear-gradient(135deg,#dc2626,#991b1b)}.panel{background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.94));border:1px solid rgba(203,213,225,.85);border-radius:18px;padding:18px;box-shadow:0 12px 30px rgba(15,23,42,.07);margin:0 22px 24px}.panel h3{margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid rgba(226,232,240,.95);font-size:17px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}.toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:12px}.toolbar .field{min-width:180px;flex:1}label{display:block;margin-bottom:5px;color:#0f172a;font-weight:750;font-size:13px}input,select,textarea{width:100%;padding:10px;border:1px solid var(--border-color);border-radius:10px;background:#fff;color:var(--text-main);font-family:inherit}.btn{border:none;border-radius:10px;padding:9px 11px;font-weight:850;cursor:pointer;font-size:12px}.btn-blue{background:linear-gradient(135deg,#0284c7,#0369a1);color:white}.btn-green{background:linear-gradient(135deg,#16a34a,#047857);color:white}.btn-secondary{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}.btn-small{padding:7px 9px;font-size:11px}table{width:100%;border-collapse:separate;border-spacing:0;background:white;box-shadow:inset 0 0 0 1px rgba(226,232,240,.75);border-radius:12px;overflow:hidden;margin-top:14px;font-size:12px}th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--border-color);vertical-align:top;line-height:1.35}th{background:#f1f5f9;color:#475569;font-weight:850;text-transform:uppercase;letter-spacing:.035em;font-size:11px}tbody tr:nth-child(even) td{background:rgba(248,250,252,.65)}.badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;white-space:nowrap;letter-spacing:.02em}.badge-red{background:#fee2e2;color:#b91c1c}.badge-orange{background:#ffedd5;color:#c2410c}.badge-green{background:#dcfce7;color:#15803d}.badge-blue{background:#dbeafe;color:#1d4ed8}.badge-gray{background:#e2e8f0;color:#475569}.empty-state{text-align:center;color:var(--text-muted);padding:18px}.file-link{color:var(--primary);font-weight:850;text-decoration:none}.file-link:hover{text-decoration:underline}.new-row td{background:#f0fdf4!important}.action-stack{display:flex;flex-direction:column;gap:5px}@media(max-width:980px){body{padding:12px}.top-row,.controls-group{align-items:stretch}.top-row{flex-direction:column}.kpi-grid{grid-template-columns:1fr 1fr;margin-left:14px;margin-right:14px}.panel{margin-left:14px;margin-right:14px}table{display:block;overflow-x:auto;white-space:nowrap}}@media(max-width:560px){.kpi-grid{grid-template-columns:1fr}}
+
+    .link-generator-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px}
+    .public-link-box{border:1px dashed #93c5fd;background:#eff6ff;color:#1e40af;border-radius:12px;padding:10px;word-break:break-all;font-weight:800;font-size:12px}
+    .qr-box{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px}
+    .qr-box img{width:148px;height:148px;border:1px solid #cbd5e1;border-radius:12px;background:white;padding:7px}
+    .qr-help{color:var(--text-muted);font-size:12px;line-height:1.45;max-width:620px}
+    @media(max-width:980px){.link-generator-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -39,6 +46,33 @@
     <div class="metric-box metric-orange"><div class="metric-title">Yeni</div><div class="metric-value" id="stat_new">0</div></div>
     <div class="metric-box metric-blue"><div class="metric-title">İnceleniyor</div><div class="metric-value" id="stat_review">0</div></div>
     <div class="metric-box metric-red"><div class="metric-title">DÖF'e Dönüşen</div><div class="metric-value" id="stat_dof">0</div></div>
+  </div>
+
+  <div class="section-title">🔗 Saha Bildirim Linki / QR Üretici</div>
+  <div class="panel">
+    <h3>Firma Bazlı Ramak Kala Bildirim Linki</h3>
+    <p style="color:var(--text-muted);font-size:12px;margin-top:-4px;">Saha çalışanları sisteme giriş yapmadan bu link veya QR üzerinden bildirim gönderebilir. QR yoksa public formda OSGB kısa kodu ile firma seçerek de bildirim yapılabilir.</p>
+    <div class="link-generator-grid">
+      <div>
+        <label>OSGB Kısa Kodu</label>
+        <input id="public_tenant_slug" disabled placeholder="Tenant kısa kodu yükleniyor...">
+      </div>
+      <div>
+        <label>Firma</label>
+        <select id="public_company_select" onchange="renderPublicNearMissLink()"><option value="">Firmalar yükleniyor...</option></select>
+      </div>
+      <button class="btn btn-blue" onclick="renderPublicNearMissLink()">Link / QR Oluştur</button>
+    </div>
+    <div class="public-link-box" id="public_near_miss_link">Firma seçince link oluşur.</div>
+    <div class="action-stack" style="flex-direction:row;gap:8px;flex-wrap:wrap;margin-top:10px;">
+      <button class="btn btn-secondary btn-small" onclick="copyPublicNearMissLink()">Linki Kopyala</button>
+      <button class="btn btn-green btn-small" onclick="openPublicNearMissLink()">Formu Aç</button>
+      <button class="btn btn-secondary btn-small" onclick="downloadQrCode()">QR Kod İndir</button>
+    </div>
+    <div class="qr-box" id="qr_box" style="display:none;">
+      <img id="qr_img" alt="Ramak Kala QR Kod">
+      <div class="qr-help">Bu QR kodu firma panolarına, üretim alanlarına, yemekhane girişine veya şantiye noktalarına yapıştırabilirsiniz. QR okutulduğunda çalışan firma seçmeden doğrudan ilgili ramak kala formunu açar.</div>
+    </div>
   </div>
 
   <div class="section-title">📋 Bildirim Havuzu</div>
@@ -73,7 +107,62 @@ function escapeHtml(v){return(v||'').toString().replace(/[&<>'"]/g,c=>({'&':'&am
 function shortText(t,l){if(!t)return'-';return t.length>l?t.substring(0,l)+'...':t;}
 function statusBadge(s){if(s==='DÖF\'e Dönüştürüldü')return'<span class="badge badge-red">DÖF</span>';if(s==='Kapatıldı')return'<span class="badge badge-green">Kapatıldı</span>';if(s==='İnceleniyor')return'<span class="badge badge-blue">İnceleniyor</span>';return'<span class="badge badge-orange">Yeni</span>';}
 function todayString(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-window.onload=async function(){const auth=await requireAuthAndRole('near_miss');if(!auth)return;CURRENT_AUTH=auth;if(!CURRENT_AUTH.tenant_id){alert('Tenant bilgisi bulunamadı.');return;}document.body.style.display='block';await fetchReports();};
+function publicNearMissBaseUrl(){ return `${window.location.origin}/near-miss.html`; }
+function currentTenantSlug(){ return CURRENT_AUTH && CURRENT_AUTH.tenant && CURRENT_AUTH.tenant.slug ? CURRENT_AUTH.tenant.slug : ''; }
+function buildPublicNearMissLink(){
+  const slug=(document.getElementById('public_tenant_slug').value || currentTenantSlug() || '').trim();
+  const companyId=document.getElementById('public_company_select').value || '';
+  if(!slug) return '';
+  const url=new URL(publicNearMissBaseUrl());
+  url.searchParams.set('tenant', slug);
+  if(companyId) url.searchParams.set('company', companyId);
+  return url.toString();
+}
+function renderPublicNearMissLink(){
+  const link=buildPublicNearMissLink();
+  const box=document.getElementById('public_near_miss_link');
+  const qrBox=document.getElementById('qr_box');
+  const qrImg=document.getElementById('qr_img');
+  if(!link){ box.innerText='Tenant bilgisi bulunamadı.'; qrBox.style.display='none'; return; }
+  box.innerText=link;
+  qrImg.src=`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(link)}`;
+  qrBox.style.display='flex';
+}
+async function copyPublicNearMissLink(){
+  const link=buildPublicNearMissLink();
+  if(!link){ alert('Önce firma seçerek link oluşturun.'); return; }
+  await navigator.clipboard.writeText(link);
+  alert('Ramak Kala bildirim linki kopyalandı.');
+}
+function openPublicNearMissLink(){
+  const link=buildPublicNearMissLink();
+  if(!link){ alert('Önce firma seçerek link oluşturun.'); return; }
+  window.open(link, '_blank');
+}
+async function downloadQrCode(){
+  const img=document.getElementById('qr_img');
+  const link=buildPublicNearMissLink();
+  if(!img || !link){ alert('Önce firma seçerek QR oluşturun.'); return; }
+  const a=document.createElement('a');
+  a.href=img.src;
+  a.download='ramak-kala-qr.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+async function loadCompaniesForPublicLinks(){
+  const select=document.getElementById('public_company_select');
+  if(!select || !CURRENT_AUTH || !CURRENT_AUTH.tenant_id) return;
+  const slugEl=document.getElementById('public_tenant_slug');
+  if(slugEl) slugEl.value=currentTenantSlug();
+  const {data,error}=await dbClient.from('customer_companies').select('id, company_name').eq('tenant_id',CURRENT_AUTH.tenant_id).order('company_name');
+  if(error){ select.innerHTML='<option value="">Firma listesi alınamadı</option>'; return; }
+  select.innerHTML='<option value="">Tenant genel linki</option>';
+  (data||[]).forEach(c=>{ select.innerHTML += `<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`; });
+  renderPublicNearMissLink();
+}
+
+window.onload=async function(){const auth=await requireAuthAndRole('near_miss');if(!auth)return;CURRENT_AUTH=auth;if(!CURRENT_AUTH.tenant_id){alert('Tenant bilgisi bulunamadı.');return;}document.body.style.display='block';await loadCompaniesForPublicLinks();await fetchReports();};
 async function fetchReports(){const tbody=document.getElementById('reports_tbody');tbody.innerHTML='<tr><td colspan="5" class="empty-state">Bildirimler yükleniyor...</td></tr>';const{data,error}=await dbClient.from('near_miss_reports').select('*, customer_companies(company_name, tenant_id)').eq('tenant_id',CURRENT_AUTH.tenant_id).order('created_at',{ascending:false}).limit(100);if(error){tbody.innerHTML=`<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">Ramak kala kayıtları yüklenemedi: ${escapeHtml(error.message)}</td></tr>`;return;}REPORT_ROWS=data||[];updateStats();renderReports();}
 function updateStats(){document.getElementById('stat_total').innerText=REPORT_ROWS.length;document.getElementById('stat_new').innerText=REPORT_ROWS.filter(r=>(r.status||'Yeni')==='Yeni').length;document.getElementById('stat_review').innerText=REPORT_ROWS.filter(r=>r.status==='İnceleniyor').length;document.getElementById('stat_dof').innerText=REPORT_ROWS.filter(r=>r.converted_to_dof===true||r.status==="DÖF'e Dönüştürüldü").length;}
 function renderReports(){const tbody=document.getElementById('reports_tbody');const sf=document.getElementById('status_filter').value;const tf=(document.getElementById('text_filter').value||'').toLowerCase().trim();let rows=[...REPORT_ROWS];if(sf)rows=rows.filter(r=>(r.status||'Yeni')===sf);if(tf)rows=rows.filter(r=>[r.customer_companies&&r.customer_companies.company_name,r.incident_location,r.description,r.hazard_type,r.reporter_name].join(' ').toLowerCase().includes(tf));if(rows.length===0){tbody.innerHTML='<tr><td colspan="5" class="empty-state">Filtreye uygun bildirim yok.</td></tr>';return;}tbody.innerHTML='';rows.forEach(r=>{const comp=r.customer_companies?r.customer_companies.company_name:'Genel / Firma seçilmemiş';const fileHtml=r.file_url?`<br><a class="file-link" href="${escapeHtml(r.file_url)}" target="_blank">Dosya</a>`:'';const reporter=r.reporter_type==='İsimli'?`${r.reporter_name||'-'} ${r.reporter_phone?'• '+r.reporter_phone:''}`:'Anonim';tbody.innerHTML+=`<tr class="${(r.status||'Yeni')==='Yeni'?'new-row':''}"><td><strong>${escapeHtml(comp)}</strong><br><small>${escapeHtml(reporter)}</small>${fileHtml}</td><td><strong>${escapeHtml(r.hazard_type||'-')}</strong><br><small>${escapeHtml(r.incident_date||'-')}</small><br>${escapeHtml(r.incident_location||'-')}</td><td>${escapeHtml(shortText(r.description||'-',135))}<br><small>Öneri: ${escapeHtml(shortText(r.suggested_action||'-',90))}</small></td><td>${statusBadge(r.status||'Yeni')}</td><td><div class="action-stack"><button class="btn btn-secondary btn-small" onclick="setReportStatus('${escapeHtml(r.id)}','İnceleniyor')">İnceleniyor</button><button class="btn btn-green btn-small" onclick="setReportStatus('${escapeHtml(r.id)}','Kapatıldı')">Kapat</button><button class="btn btn-blue btn-small" onclick="convertNearMissToDof('${escapeHtml(r.id)}')">DÖF'e Dönüştür</button></div></td></tr>`;});}
