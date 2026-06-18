@@ -669,6 +669,18 @@
     color: var(--text-muted);
     opacity: 0.75;
 }
+
+
+/* Eğitim dosyası modalı */
+.worker-action-btn{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;border:0;border-radius:9px;padding:7px 10px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+.worker-training-modal{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}
+.worker-training-card{width:min(1040px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 24px 70px rgba(15,23,42,.28)}
+.worker-training-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px;border-bottom:1px solid #e2e8f0;background:#f8fafc}
+.worker-training-head h3{margin:0;font-size:19px;letter-spacing:-.02em}.worker-training-head p{margin:5px 0 0;color:#64748b;font-size:12px}.worker-training-body{padding:18px}
+.edu-summary-grid{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px;margin-bottom:16px}.edu-summary-box{border:1px solid #e2e8f0;background:#f8fafc;border-radius:14px;padding:12px}.edu-summary-box span{display:block;font-size:11px;color:#64748b;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.edu-summary-box strong{display:block;font-size:24px;color:#0f172a;line-height:1.1;margin-top:5px}.edu-section{margin-top:18px}.edu-section h4{margin:0 0 8px;font-size:14px;color:#334155}.edu-table{width:100%;border-collapse:separate;border-spacing:0;background:white;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 0 1px #e2e8f0;font-size:12px}.edu-table th,.edu-table td{padding:9px 10px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}.edu-table th{background:#f1f5f9;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.035em}.edu-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}.edu-print-btn{background:#0f172a;color:white;border:0;border-radius:10px;padding:9px 12px;font-weight:900;cursor:pointer}.edu-close-btn{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:9px 12px;font-weight:900;cursor:pointer}.edu-badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900}.edu-badge.green{background:#dcfce7;color:#15803d}.edu-badge.orange{background:#ffedd5;color:#c2410c}.edu-badge.red{background:#fee2e2;color:#b91c1c}.edu-badge.blue{background:#dbeafe;color:#1d4ed8}.edu-badge.gray{background:#e2e8f0;color:#475569}.edu-code{font-family:Consolas,monospace;font-size:11px;word-break:break-all}
+@media(max-width:900px){.edu-summary-grid{grid-template-columns:1fr 1fr}.worker-training-card{max-height:94vh}.edu-table{display:block;overflow-x:auto;white-space:nowrap}}
+@media print{body>*:not(.worker-training-modal){display:none!important}.worker-training-modal{position:static!important;display:block!important;background:white!important;padding:0!important}.worker-training-card{box-shadow:none!important;border:0!important;max-height:none!important;width:100%!important}.worker-training-head,.worker-training-body{padding:10px!important}.edu-actions,.edu-close-btn,.edu-print-btn{display:none!important}.edu-summary-grid{grid-template-columns:repeat(5,1fr)!important}.edu-table{font-size:11px!important}}
+
     </style>
 </head>
 <body>
@@ -692,6 +704,7 @@
             <a href="workers.html" class="nav-btn active-page">👥 Kadro Yönetimi</a>
             <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
             <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
+            <a id="menu_training" href="training.html" class="nav-btn" style="display:none;">🎓 Eğitim & Sertifika</a>
         </div>
     </div>
 
@@ -724,17 +737,35 @@
         <th class="sortable-th" onclick="sortWorkersBy('age')">Yaş <span id="sort_age" class="sort-indicator"></span></th>
         <th class="sortable-th" onclick="sortWorkersBy('gender')">Cinsiyet <span id="sort_gender" class="sort-indicator"></span></th>
         <th class="sortable-th" onclick="sortWorkersBy('job_title')">Görevi / Unvanı <span id="sort_job_title" class="sort-indicator"></span></th>
+        <th>Eğitimler</th>
     </tr>
     <tr class="worker-filter-row">
         <th><input class="worker-filter-input" data-field="full_name" oninput="applyWorkerFilters()" placeholder="Ad soyad filtrele"></th>
         <th><input class="worker-filter-input" data-field="age" oninput="applyWorkerFilters()" placeholder="Yaş"></th>
         <th><input class="worker-filter-input" data-field="gender" oninput="applyWorkerFilters()" placeholder="Cinsiyet"></th>
         <th><input class="worker-filter-input" data-field="job_title" oninput="applyWorkerFilters()" placeholder="Görev / unvan"></th>
+        <th></th>
     </tr>
 </thead>
-            <tbody id="worker_table_body"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr></tbody>
+            <tbody id="worker_table_body"><tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr></tbody>
         </table>
     </div>
+</div>
+
+
+<div class="worker-training-modal" id="worker_training_modal">
+  <div class="worker-training-card">
+    <div class="worker-training-head">
+      <div>
+        <h3 id="worker_training_title">Çalışan Eğitim Dosyası</h3>
+        <p id="worker_training_subtitle">Eğitim ve sertifika bilgileri yükleniyor...</p>
+      </div>
+      <button class="edu-close-btn" onclick="closeWorkerTrainingModal()">Kapat</button>
+    </div>
+    <div class="worker-training-body" id="worker_training_body">
+      <div class="empty-state">Eğitim bilgileri yükleniyor...</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -742,6 +773,7 @@
     const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
     const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let CURRENT_AUTH = null;
+    let COMPANY_ROWS = [];
     let workerTableRows = [];
 let workerSortField = '';
 let workerSortDirection = 'asc';
@@ -806,7 +838,7 @@ let workerSortDirection = 'asc';
 
     function canAccessPage(role, page) {
         if (role === 'super_admin' || role === 'admin') return true;
-        if (page === 'risk') return role === 'uzman';
+        if (page === 'risk' || page === 'accidents' || page === 'near_miss' || page === 'training') return role === 'uzman';
         if (page === 'medical') return role === 'hekim';
         if (page === 'staff') return false;
         if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
@@ -822,11 +854,13 @@ let workerSortDirection = 'asc';
         const medicalMenu = document.getElementById('menu_medical');
         const staffMenu = document.getElementById('menu_staff');
         const saasMenu = document.getElementById('menu_saas');
+        const trainingMenu = document.getElementById('menu_training');
         if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
         if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
         if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
         if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
         if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
+        if (trainingMenu && canAccessPage(role, 'training')) trainingMenu.style.display = 'inline-block';
     }
 
 
@@ -897,9 +931,10 @@ let workerSortDirection = 'asc';
     async function fetchCompaniesToSelect() {
         const select = document.getElementById('company_select');
         try {
-            let query = dbClient.from('customer_companies').select('id, company_name').order('company_name');
+            let query = dbClient.from('customer_companies').select('id, company_name, danger_class').order('company_name');
             if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) query = query.eq('tenant_id', CURRENT_AUTH.tenant_id);
             const { data } = await query;
+            COMPANY_ROWS = data || [];
             if (data && data.length > 0) {
                 select.innerHTML = '<option value="">-- Lütfen Liste İçin Firma Seçin --</option>';
                 data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; });
@@ -913,7 +948,7 @@ let workerSortDirection = 'asc';
 
     if (!compId) {
         workerTableRows = [];
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr>`;
         return;
     }
 
@@ -934,7 +969,7 @@ let workerSortDirection = 'asc';
 
         if (!data || data.length === 0) {
             workerTableRows = [];
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Kayıtlı personel bulunmuyor.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Kayıtlı personel bulunmuyor.</td></tr>`;
             return;
         }
 
@@ -950,7 +985,7 @@ let workerSortDirection = 'asc';
 
     } catch (err) {
         console.error(err.message);
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`;
     }
 }
 function escapeHtml(value) {
@@ -1016,7 +1051,7 @@ function renderWorkerTable() {
     updateWorkerSortIndicators();
 
     if (!rows || rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Filtreye uygun çalışan bulunamadı.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Filtreye uygun çalışan bulunamadı.</td></tr>`;
         return;
     }
 
@@ -1029,6 +1064,7 @@ function renderWorkerTable() {
                 <td>${escapeHtml(w.age)}</td>
                 <td>${escapeHtml(w.gender)}</td>
                 <td>${escapeHtml(w.job_title || '-')}</td>
+                <td><button class="worker-action-btn" onclick="openWorkerTrainingModal('${escapeHtml(w.id)}')">Eğitimler</button></td>
             </tr>
         `;
     });
@@ -1069,6 +1105,166 @@ function updateWorkerSortIndicators() {
         }
     });
 }
+
+function getCurrentCompany() {
+    const compId = document.getElementById('company_select').value;
+    return (COMPANY_ROWS || []).find(c => String(c.id) === String(compId)) || null;
+}
+
+function getDangerHoursForTraining(dangerClass) {
+    const dc = (dangerClass || '').toString().trim().toLowerCase();
+    if (dc.includes('çok')) return 16;
+    if (dc === 'tehlikeli' || dc.includes('tehlikeli')) return 12;
+    return 8;
+}
+
+function defaultRequiredTrainings(company) {
+    const hours = getDangerHoursForTraining(company && company.danger_class);
+    return [
+        { training_type: 'Temel İş Sağlığı ve Güvenliği Eğitimi', required_hours: hours },
+        { training_type: 'Yangın Eğitimi', required_hours: hours },
+        { training_type: 'Acil Durum Eğitimi', required_hours: hours },
+        { training_type: 'KKD Kullanım Eğitimi', required_hours: hours },
+        { training_type: 'İlk Yardım Bilgilendirme', required_hours: 4 }
+    ];
+}
+
+function todayString() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function plusDaysString(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function trainingCompletionStatus(row) {
+    const req = Number(row.required_hours || 0);
+    const done = Number(row.completed_hours || 0);
+    if (done >= req && req > 0) return 'Tamamlandı';
+    if (done <= 0) return 'Hiç Katılmadı';
+    return 'Eksik';
+}
+
+function trainingRenewalState(row) {
+    if (!row || trainingCompletionStatus(row) !== 'Tamamlandı') return 'Yok';
+    if (!row.renewal_date) return 'Yok';
+    const today = todayString();
+    const soon = plusDaysString(30);
+    if (row.renewal_date < today) return 'Geçerliliği Doldu';
+    if (row.renewal_date <= soon) return 'Yenileme Yaklaşıyor';
+    return 'Geçerli';
+}
+
+function eduBadge(text, type) {
+    return `<span class="edu-badge ${type || 'gray'}">${escapeHtml(text)}</span>`;
+}
+
+function verifyLink(row) {
+    return `${window.location.origin}/training-verify.html?code=${encodeURIComponent(row.verification_code || '')}`;
+}
+
+async function fetchRequiredTrainingCatalog(company) {
+    // İleride Supabase'de training_required_catalog tablosu varsa onu kullanır; yoksa varsayılan listeyle çalışır.
+    try {
+        let q = dbClient.from('training_required_catalog').select('*').eq('tenant_id', CURRENT_AUTH.tenant_id).eq('is_active', true);
+        const { data, error } = await q;
+        if (error || !data || data.length === 0) return defaultRequiredTrainings(company);
+        const danger = (company && company.danger_class || '').toString().toLowerCase();
+        return data
+            .filter(x => !x.danger_class || danger.includes((x.danger_class || '').toString().toLowerCase()) || x.danger_class === 'Tümü')
+            .map(x => ({ training_type: x.training_type || x.title, required_hours: Number(x.required_hours || getDangerHoursForTraining(company && company.danger_class)) }))
+            .filter(x => x.training_type);
+    } catch (err) {
+        return defaultRequiredTrainings(company);
+    }
+}
+
+async function openWorkerTrainingModal(workerId) {
+    const worker = workerTableRows.find(w => String(w.id) === String(workerId));
+    const company = getCurrentCompany();
+    const modal = document.getElementById('worker_training_modal');
+    const body = document.getElementById('worker_training_body');
+    const title = document.getElementById('worker_training_title');
+    const subtitle = document.getElementById('worker_training_subtitle');
+    if (!worker || !company) { alert('Çalışan veya firma bilgisi bulunamadı.'); return; }
+
+    title.innerText = `${worker.full_name || '-'} - Eğitim ve Sertifika Dosyası`;
+    subtitle.innerText = `${company.company_name || '-'} | ${company.danger_class || 'Tehlike sınıfı belirtilmemiş'} | Kadro Yönetimi`;
+    body.innerHTML = '<div class="empty-state">Eğitim bilgileri yükleniyor...</div>';
+    modal.style.display = 'flex';
+
+    const [reqs, compRes, sessRes] = await Promise.all([
+        fetchRequiredTrainingCatalog(company),
+        dbClient.from('training_completions').select('*').eq('tenant_id', CURRENT_AUTH.tenant_id).eq('company_id', company.id).eq('worker_id', worker.id),
+        dbClient.from('training_attendance_entries').select('*').eq('tenant_id', CURRENT_AUTH.tenant_id).eq('company_id', company.id).eq('worker_id', worker.id).order('session_date', { ascending: false })
+    ]);
+
+    if (compRes.error) {
+        body.innerHTML = `<div class="empty-state" style="color:#b91c1c;">Eğitim dosyaları alınamadı: ${escapeHtml(compRes.error.message)}</div>`;
+        return;
+    }
+    if (sessRes.error) {
+        body.innerHTML = `<div class="empty-state" style="color:#b91c1c;">Oturum geçmişi alınamadı: ${escapeHtml(sessRes.error.message)}</div>`;
+        return;
+    }
+
+    renderWorkerTrainingReport(worker, company, reqs, compRes.data || [], sessRes.data || []);
+}
+
+function renderWorkerTrainingReport(worker, company, requirements, completions, sessions) {
+    const body = document.getElementById('worker_training_body');
+    const byType = new Map();
+    (completions || []).forEach(c => byType.set(c.training_type, c));
+
+    const completed = completions.filter(c => trainingCompletionStatus(c) === 'Tamamlandı');
+    const incomplete = completions.filter(c => trainingCompletionStatus(c) !== 'Tamamlandı' && Number(c.completed_hours || 0) > 0);
+    const never = (requirements || []).filter(r => !byType.has(r.training_type));
+    const expired = completed.filter(c => trainingRenewalState(c) === 'Geçerliliği Doldu');
+    const upcoming = completed.filter(c => trainingRenewalState(c) === 'Yenileme Yaklaşıyor');
+
+    const completedRows = completed.map(c => {
+        const state = trainingRenewalState(c);
+        const badge = state === 'Geçerliliği Doldu' ? eduBadge(state, 'red') : state === 'Yenileme Yaklaşıyor' ? eduBadge(state, 'orange') : eduBadge(state, 'blue');
+        const cert = c.certificate_no ? `<strong>${escapeHtml(c.certificate_no)}</strong><br><span class="edu-code">${escapeHtml(c.verification_code || '-')}</span><br><a class="small-link" href="${escapeHtml(verifyLink(c))}" target="_blank">Doğrula</a>` : '-';
+        return `<tr><td><strong>${escapeHtml(c.training_type)}</strong></td><td>${escapeHtml(c.required_hours || 0)} saat</td><td>${escapeHtml(c.completed_hours || 0)} saat</td><td>${escapeHtml(c.completed_at || c.last_session_date || '-')}</td><td>${escapeHtml(c.renewal_date || '-')}<br>${badge}</td><td>${cert}</td></tr>`;
+    }).join('') || '<tr><td colspan="6" class="empty-state">Tamamlanan eğitim bulunmuyor.</td></tr>';
+
+    const incompleteRows = incomplete.map(c => {
+        const missing = Math.max(0, Number(c.required_hours || 0) - Number(c.completed_hours || 0));
+        return `<tr><td><strong>${escapeHtml(c.training_type)}</strong></td><td>${escapeHtml(c.required_hours || 0)} saat</td><td>${escapeHtml(c.completed_hours || 0)} saat</td><td>${missing} saat</td><td>${escapeHtml(c.last_session_date || '-')}</td><td>${eduBadge('Eksik', 'orange')}</td></tr>`;
+    }).join('') || '<tr><td colspan="6" class="empty-state">Devam eden / eksik eğitim bulunmuyor.</td></tr>';
+
+    const neverRows = never.map(r => `<tr><td><strong>${escapeHtml(r.training_type)}</strong></td><td>${escapeHtml(r.required_hours || 0)} saat</td><td>${eduBadge('Hiç Katılmadı', 'red')}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">Zorunlu olup hiç katılmadığı eğitim görünmüyor.</td></tr>';
+
+    const sessionRows = (sessions || []).map(s => `<tr><td>${escapeHtml(s.session_date || '-')}</td><td>${escapeHtml(s.training_type || '-')}</td><td>${escapeHtml(s.attendance_status || '-')}</td><td>${escapeHtml(s.attended_hours || 0)} saat</td><td>${escapeHtml(s.trainer_name || '-')}</td><td>${escapeHtml(s.notes || '-')}</td></tr>`).join('') || '<tr><td colspan="6" class="empty-state">Katılım oturumu yok.</td></tr>';
+
+    body.innerHTML = `
+        <div class="edu-summary-grid">
+            <div class="edu-summary-box"><span>Zorunlu Eğitim</span><strong>${requirements.length}</strong></div>
+            <div class="edu-summary-box"><span>Tamamlanan</span><strong>${completed.length}</strong></div>
+            <div class="edu-summary-box"><span>Eksik / Devam</span><strong>${incomplete.length}</strong></div>
+            <div class="edu-summary-box"><span>Hiç Katılmadı</span><strong>${never.length}</strong></div>
+            <div class="edu-summary-box"><span>Yenileme Uyarısı</span><strong>${expired.length + upcoming.length}</strong></div>
+        </div>
+        <div class="edu-actions"><button class="edu-print-btn" onclick="printWorkerTrainingReport()">🖨️ Yazdır</button></div>
+        <div class="edu-section"><h4>✅ Tamamlanan Eğitimler ve Sertifikalar</h4><table class="edu-table"><thead><tr><th>Eğitim</th><th>Gerekli</th><th>Tamamlanan</th><th>Tamamlanma</th><th>Yenileme</th><th>Sertifika</th></tr></thead><tbody>${completedRows}</tbody></table></div>
+        <div class="edu-section"><h4>⚠️ Eksik / Devam Eden Eğitimler</h4><table class="edu-table"><thead><tr><th>Eğitim</th><th>Gerekli</th><th>Tamamlanan</th><th>Eksik</th><th>Son Katılım</th><th>Durum</th></tr></thead><tbody>${incompleteRows}</tbody></table></div>
+        <div class="edu-section"><h4>🚫 Zorunlu Olup Hiç Katılmadığı Eğitimler</h4><table class="edu-table"><thead><tr><th>Eğitim</th><th>Zorunlu Süre</th><th>Durum</th></tr></thead><tbody>${neverRows}</tbody></table></div>
+        <div class="edu-section"><h4>🧾 Katılım / Oturum Geçmişi</h4><table class="edu-table"><thead><tr><th>Tarih</th><th>Eğitim</th><th>Katılım</th><th>Süre</th><th>Eğitmen</th><th>Not</th></tr></thead><tbody>${sessionRows}</tbody></table></div>
+    `;
+}
+
+function closeWorkerTrainingModal() {
+    document.getElementById('worker_training_modal').style.display = 'none';
+}
+
+function printWorkerTrainingReport() {
+    window.print();
+}
+
     async function saveWorker() {
         const compId = document.getElementById('company_select').value;
         const name = document.getElementById('worker_name').value;
