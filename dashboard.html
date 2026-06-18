@@ -756,6 +756,13 @@
             .health-alert-grid { grid-template-columns: 1fr !important; }
         }
 
+
+        .near-miss-alert-grid { grid-template-columns: repeat(3, minmax(190px, 1fr)) !important; }
+        .near-miss-panel { margin-top: 4px !important; margin-bottom: 18px !important; }
+        @media (max-width: 900px) {
+            .near-miss-alert-grid { grid-template-columns: 1fr !important; }
+        }
+
     </style>
 </head>
 <body>
@@ -787,6 +794,8 @@
             <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
             <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
             <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
+            <a id="menu_accidents" href="accidents.html" class="nav-btn" style="display:none;">🚑 İş Kazaları</a>
+            <a id="menu_near_miss" href="near-miss-admin.html" class="nav-btn" style="display:none;">⚠️ Ramak Kala</a>
         </div>
     </div>
 
@@ -845,6 +854,42 @@
                 </tr>
             </thead>
             <tbody id="health_alerts_tbody"><tr><td colspan="4" class="empty-state">Sağlık uyarıları yükleniyor...</td></tr></tbody>
+        </table>
+    </div>
+
+
+    <div class="section-title">⚠️ Ramak Kala Uyarıları</div>
+    <div class="kpi-grid near-miss-alert-grid">
+        <div class="metric-box metric-orange clickable" onclick="window.location.href='near-miss-admin.html'">
+            <div class="metric-title">Yeni Ramak Kala</div>
+            <div class="metric-value" id="stat_near_miss_new">0</div>
+            <div class="metric-sub">Henüz incelenmemiş bildirim</div>
+        </div>
+        <div class="metric-box metric-blue clickable" onclick="window.location.href='near-miss-admin.html'">
+            <div class="metric-title">İncelenen Ramak Kala</div>
+            <div class="metric-value" id="stat_near_miss_review">0</div>
+            <div class="metric-sub">Takipteki bildirim</div>
+        </div>
+        <div class="metric-box metric-green clickable" onclick="window.location.href='near-miss-admin.html'">
+            <div class="metric-title">DÖF'e Dönüşen Ramak Kala</div>
+            <div class="metric-value" id="stat_near_miss_dof">0</div>
+            <div class="metric-sub">Aksiyon havuzuna aktarıldı</div>
+        </div>
+    </div>
+
+    <div class="panel near-miss-panel">
+        <h3>⚠️ Son Ramak Kala Bildirimleri</h3>
+        <p>Yeni ve incelenen saha/ofis ramak kala bildirimleri.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Firma / Bildiren</th>
+                    <th>Olay</th>
+                    <th>Açıklama</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody id="near_miss_alerts_tbody"><tr><td colspan="4" class="empty-state">Ramak kala bildirimleri yükleniyor...</td></tr></tbody>
         </table>
     </div>
 
@@ -954,7 +999,7 @@
 
     function canAccessPage(role, page) {
         if (role === 'super_admin' || role === 'admin') return true;
-        if (page === 'risk') return role === 'uzman';
+        if (page === 'risk' || page === 'accidents' || page === 'near_miss') return role === 'uzman';
         if (page === 'medical') return role === 'hekim';
         if (page === 'staff') return false;
         if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
@@ -970,10 +1015,14 @@
         const medicalMenu = document.getElementById('menu_medical');
         const staffMenu = document.getElementById('menu_staff');
         const saasMenu = document.getElementById('menu_saas');
+        const accidentsMenu = document.getElementById('menu_accidents');
+        const nearMissMenu = document.getElementById('menu_near_miss');
         if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
         if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
         if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
         if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
+        if (accidentsMenu && canAccessPage(role, 'accidents')) accidentsMenu.style.display = 'inline-block';
+        if (nearMissMenu && canAccessPage(role, 'near_miss')) nearMissMenu.style.display = 'inline-block';
         if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
     }
 
@@ -1148,6 +1197,49 @@
         return row.worker_name || row.worker_full_name || row.worker_id || '-';
     }
 
+
+    function normalizeNearMissStatus(status) {
+        return status || 'Yeni';
+    }
+
+    function nearMissStatusBadge(status) {
+        const st = normalizeNearMissStatus(status);
+        if (st === "DÖF'e Dönüştürüldü") return '<span class="badge badge-green">DÖF</span>';
+        if (st === 'Kapatıldı') return '<span class="badge badge-green">Kapatıldı</span>';
+        if (st === 'İnceleniyor') return '<span class="badge badge-blue">İnceleniyor</span>';
+        return '<span class="badge badge-orange">Yeni</span>';
+    }
+
+    function renderNearMissAlerts(reports) {
+        const tbody = document.getElementById('near_miss_alerts_tbody');
+        if (!tbody) return;
+
+        const list = (reports || [])
+            .filter(r => ['Yeni', 'İnceleniyor'].includes(normalizeNearMissStatus(r.status)))
+            .slice(0, 7);
+
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Yeni veya incelenen ramak kala bildirimi yok.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        list.forEach(r => {
+            const compName = r.customer_companies ? r.customer_companies.company_name : 'Genel / Firma seçilmemiş';
+            const reporter = r.reporter_type === 'İsimli'
+                ? `${r.reporter_name || '-'}${r.reporter_phone ? ' • ' + r.reporter_phone : ''}`
+                : 'Anonim';
+            const fileHtml = r.file_url ? '<br><a class="small-link" href="' + escapeHtml(r.file_url) + '" target="_blank">Dosya</a>' : '';
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${escapeHtml(compName)}</strong><br><small style="color:var(--text-muted);">${escapeHtml(reporter)}</small>${fileHtml}</td>
+                    <td><strong>${escapeHtml(r.hazard_type || '-')}</strong><br><small style="color:var(--text-muted);">${escapeHtml(r.incident_date || '-')}</small><br>${escapeHtml(r.incident_location || '-')}</td>
+                    <td>${escapeHtml(shortText(r.description || '-', 120))}<br><a class="small-link" href="near-miss-admin.html">Aç</a></td>
+                    <td>${nearMissStatusBadge(r.status)}</td>
+                </tr>`;
+        });
+    }
+
     async function fetchDashboardStats(authContext) {
         try {
             const auth = authContext || CURRENT_AUTH || window.__CURRENT_AUTH_CONTEXT__;
@@ -1157,7 +1249,7 @@
             const today = todayString();
             const { start, end } = currentMonthRange();
 
-            const [companiesRes, workersRes, risksRes, visitsRes, medicalTestsRes, healthFollowupsRes] = await Promise.all([
+            const [companiesRes, workersRes, risksRes, visitsRes, medicalTestsRes, healthFollowupsRes, nearMissRes] = await Promise.all([
                 dbClient
                     .from('customer_companies')
                     .select('id, company_name, danger_class')
@@ -1192,7 +1284,14 @@
                 dbClient
                     .from('worker_health_followups')
                     .select('*')
+                    .eq('tenant_id', tenantId),
+
+                dbClient
+                    .from('near_miss_reports')
+                    .select('*, customer_companies(company_name, tenant_id)')
                     .eq('tenant_id', tenantId)
+                    .order('created_at', { ascending: false })
+                    .limit(50)
             ]);
 
             if (companiesRes.error) throw companiesRes.error;
@@ -1201,12 +1300,14 @@
             if (visitsRes.error) throw visitsRes.error;
             if (medicalTestsRes.error) throw medicalTestsRes.error;
             if (healthFollowupsRes.error) throw healthFollowupsRes.error;
+            if (nearMissRes.error) throw nearMissRes.error;
 
             const companies = companiesRes.data || [];
             const risks = risksRes.data || [];
             const visits = visitsRes.data || [];
             const medicalTests = medicalTestsRes.data || [];
             const healthFollowups = healthFollowupsRes.data || [];
+            const nearMissReports = nearMissRes.data || [];
             const workerCount = workersRes.count || 0;
 
             const cokCount = companies.filter(c => (c.danger_class || '').toString().trim().toLowerCase() === 'çok tehlikeli').length;
@@ -1233,6 +1334,10 @@
                 f.next_followup_date <= weekEnd
             ).length;
 
+            const nearMissNew = nearMissReports.filter(r => normalizeNearMissStatus(r.status) === 'Yeni').length;
+            const nearMissReview = nearMissReports.filter(r => normalizeNearMissStatus(r.status) === 'İnceleniyor').length;
+            const nearMissDof = nearMissReports.filter(r => r.converted_to_dof === true || normalizeNearMissStatus(r.status) === "DÖF'e Dönüştürüldü").length;
+
             setDashValue('stat_danger_cok', cokCount);
             setDashValue('stat_danger_tehlike', tehlikeCount);
             setDashValue('stat_danger_az', azCount);
@@ -1249,8 +1354,12 @@
             setDashValue('stat_overdue_medical_tests', overdueMedicalTests);
             setDashValue('stat_upcoming_health_followups', upcomingHealthFollowups);
             setDashValue('stat_abnormal_medical_tests', abnormalMedicalTests);
+            setDashValue('stat_near_miss_new', nearMissNew);
+            setDashValue('stat_near_miss_review', nearMissReview);
+            setDashValue('stat_near_miss_dof', nearMissDof);
 
             renderHealthAlerts(medicalTests, healthFollowups, companies, today, weekEnd);
+            renderNearMissAlerts(nearMissReports);
 
             updateOperationalBanner(overdueDofs, openDofs, progressDofs);
             renderPriorityDofs(activeRisks, today);
@@ -1263,6 +1372,8 @@
             if (visitEl) visitEl.innerHTML = '<tr><td colspan="3" class="empty-state" style="color:#b91c1c;">Ziyaretler yüklenemedi.</td></tr>';
             const healthEl = document.getElementById('health_alerts_tbody');
             if (healthEl) healthEl.innerHTML = '<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">Sağlık uyarıları yüklenemedi.</td></tr>';
+            const nearMissEl = document.getElementById('near_miss_alerts_tbody');
+            if (nearMissEl) nearMissEl.innerHTML = '<tr><td colspan="4" class="empty-state" style="color:#b91c1c;">Ramak kala bildirimleri yüklenemedi.</td></tr>';
         }
     }
 
