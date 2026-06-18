@@ -15,6 +15,8 @@
     .qr-box img{width:148px;height:148px;border:1px solid #cbd5e1;border-radius:12px;background:white;padding:7px}
     .qr-help{color:var(--text-muted);font-size:12px;line-height:1.45;max-width:620px}
     @media(max-width:980px){.link-generator-grid{grid-template-columns:1fr}}
+
+    .office-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.office-form-grid .full{grid-column:1/-1}.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}.modal-card{width:min(920px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 24px 70px rgba(15,23,42,.28)}.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #e2e8f0;background:#f8fafc}.modal-head h3{margin:0;font-size:18px}.modal-body{padding:18px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-box{border:1px solid #e2e8f0;background:#f8fafc;border-radius:12px;padding:10px}.detail-box span{display:block;font-size:11px;color:var(--text-muted);font-weight:850;text-transform:uppercase;letter-spacing:.04em}.detail-box strong{display:block;margin-top:4px;color:#0f172a}.modal-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}.btn-red{background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff}.btn:disabled{opacity:.55;cursor:not-allowed}.office-status{margin-top:10px;font-size:12px;font-weight:850}.office-status.ok{color:#15803d}.office-status.err{color:#b91c1c}@media(max-width:760px){.office-form-grid,.detail-grid{grid-template-columns:1fr}.office-form-grid .full{grid-column:auto}.modal-card{max-height:94vh}}
   </style>
 </head>
 <body>
@@ -46,6 +48,23 @@
     <div class="metric-box metric-orange"><div class="metric-title">Yeni</div><div class="metric-value" id="stat_new">0</div></div>
     <div class="metric-box metric-blue"><div class="metric-title">İnceleniyor</div><div class="metric-value" id="stat_review">0</div></div>
     <div class="metric-box metric-red"><div class="metric-title">DÖF'e Dönüşen</div><div class="metric-value" id="stat_dof">0</div></div>
+  </div>
+
+  <div class="section-title">🧑‍💼 Ofis İçinden Ramak Kala Bildirimi</div>
+  <div class="panel">
+    <h3>Ofis Kullanıcısı Bildirim Girişi</h3>
+    <p style="color:var(--text-muted);font-size:12px;margin-top:-4px;">Sisteme giriş yapan ofis/İSG kullanıcısı, sahadan gelen sözlü bildirimleri veya kendi gözlemini buradan kaydedebilir.</p>
+    <div class="office-form-grid">
+      <div><label>Firma</label><select id="office_company_select"><option value="">Firmalar yükleniyor...</option></select></div>
+      <div><label>Olay Tarihi</label><input type="date" id="office_incident_date"></div>
+      <div><label>Tehlike Türü</label><select id="office_hazard_type"><option value="Düşme / Kayma Riski">Düşme / Kayma Riski</option><option value="Elektrik Tehlikesi">Elektrik Tehlikesi</option><option value="Makine / Ekipman Tehlikesi">Makine / Ekipman Tehlikesi</option><option value="Kimyasal / Toz / Gaz">Kimyasal / Toz / Gaz</option><option value="Yangın / Patlama Riski">Yangın / Patlama Riski</option><option value="Ergonomi / Elle Taşıma">Ergonomi / Elle Taşıma</option><option value="KKD Eksikliği">KKD Eksikliği</option><option value="Diğer">Diğer</option></select></div>
+      <div><label>Olay Yeri</label><input id="office_incident_location" placeholder="Örn. Depo girişi, üretim hattı"></div>
+      <div class="full"><label>Açıklama</label><textarea id="office_description" rows="3" placeholder="Ramak kala/tehlikeli durum açıklaması"></textarea></div>
+      <div class="full"><label>Önerilen Aksiyon</label><textarea id="office_suggested_action" rows="2" placeholder="Varsa önerilen düzeltici/önleyici faaliyet"></textarea></div>
+      <div><label>Fotoğraf / Dosya</label><input type="file" id="office_file" accept="image/png,image/jpeg,image/webp,application/pdf"></div>
+      <div style="display:flex;align-items:end;"><button class="btn btn-green" style="width:100%;" onclick="saveOfficeNearMiss()">Ofis Bildirimini Kaydet</button></div>
+    </div>
+    <div id="office_status" class="office-status"></div>
   </div>
 
   <div class="section-title">🔗 Saha Bildirim Linki / QR Üretici</div>
@@ -89,11 +108,47 @@
     </table>
   </div>
 </div>
+
+<div class="modal-backdrop" id="detail_modal">
+  <div class="modal-card">
+    <div class="modal-head"><h3>Ramak Kala Bildirim Detayı</h3><button class="btn btn-secondary btn-small" onclick="closeDetailModal()">Kapat</button></div>
+    <div class="modal-body">
+      <div id="detail_modal_content" class="detail-grid"></div>
+      <div class="modal-actions">
+        <select id="detail_status_select" style="max-width:220px;"><option value="Yeni">Yeni</option><option value="İnceleniyor">İnceleniyor</option><option value="Kapatıldı">Kapatıldı</option><option value="DÖF'e Dönüştürüldü">DÖF'e Dönüştürüldü</option></select>
+        <button class="btn btn-secondary" onclick="saveDetailStatus()">Durumu Kaydet</button>
+        <button class="btn btn-blue" onclick="openDofModalFromDetail()">DÖF'e Dönüştür</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="dof_modal">
+  <div class="modal-card">
+    <div class="modal-head"><h3>Ramak Kala Bildiriminden DÖF Oluştur</h3><button class="btn btn-secondary btn-small" onclick="closeDofModal()">Kapat</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="dof_report_id">
+      <div class="detail-grid">
+        <div><label>DÖF Başlığı</label><input id="dof_hazard_title"></div>
+        <div><label>Sorumlu Kişi</label><input id="dof_responsible_person" placeholder="Örn. İSG Uzmanı / Birim amiri"></div>
+        <div><label>Hedef Tarih</label><input type="date" id="dof_target_date"></div>
+        <div><label>Risk Seviyesi</label><select id="dof_risk_level"><option value="low">Düşük</option><option value="medium" selected>Orta</option><option value="high">Yüksek</option><option value="critical">Kritik</option></select></div>
+        <div style="grid-column:1/-1;"><label>Aksiyon Planı</label><textarea id="dof_action_plan" rows="4"></textarea></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeDofModal()">Vazgeç</button>
+        <button class="btn btn-blue" id="dof_save_btn" onclick="saveDofFromModal()">DÖF Oluştur</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL="https://dnvuizausfcjzkcsynql.supabase.co";
 const SUPABASE_KEY="sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
 const dbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let CURRENT_AUTH=null; let REPORT_ROWS=[];
+const FILE_BUCKET='near-miss-files';
+let CURRENT_AUTH=null; let REPORT_ROWS=[]; let SELECTED_REPORT_ID=null;
 function normalizeAccessRole(value){const v=(value||'').toString().trim().toLowerCase();if(['super_admin','super admin','saas_admin','sistem sahibi'].includes(v))return'super_admin';if(['admin','yonetici','yönetici'].includes(v))return'admin';if(['uzman','isg_uzmani','isg uzmanı','iş güvenliği uzmanı'].includes(v))return'uzman';if(['hekim','isyeri hekimi','işyeri hekimi'].includes(v))return'hekim';if(['dsp','diğer sağlık personeli','diger saglik personeli'].includes(v))return'dsp';if(['firma_yetkilisi','firma yetkilisi','musteri','müşteri'].includes(v))return'firma_yetkilisi';return'';}
 function inferAccessRoleFromEmail(email){const e=(email||'').toLowerCase();if(e.includes('orhan.vardar@gmail.com'))return'super_admin';if(e.includes('admin'))return'admin';if(e.includes('hekim'))return'hekim';if(e.includes('dsp'))return'dsp';if(e.includes('firma')||e.includes('musteri')||e.includes('müşteri'))return'firma_yetkilisi';if(e.includes('uzman'))return'uzman';return'uzman';}
 function isStaffAccessActive(record){if(!record)return true;if(record.can_login===false)return false;if(record.is_active_manual==='Aktif')return true;if(record.is_active_manual==='Pasif')return false;return true;}
@@ -107,6 +162,13 @@ function escapeHtml(v){return(v||'').toString().replace(/[&<>'"]/g,c=>({'&':'&am
 function shortText(t,l){if(!t)return'-';return t.length>l?t.substring(0,l)+'...':t;}
 function statusBadge(s){if(s==='DÖF\'e Dönüştürüldü')return'<span class="badge badge-red">DÖF</span>';if(s==='Kapatıldı')return'<span class="badge badge-green">Kapatıldı</span>';if(s==='İnceleniyor')return'<span class="badge badge-blue">İnceleniyor</span>';return'<span class="badge badge-orange">Yeni</span>';}
 function todayString(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+
+function addDaysString(days){const d=new Date();d.setDate(d.getDate()+days);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function safeStorageName(value){return(value||'dosya').toString().trim().replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ._-]/g,'_').substring(0,90)||'dosya';}
+function setOfficeStatus(msg,ok){const el=document.getElementById('office_status');if(!el)return;el.className='office-status '+(ok?'ok':'err');el.innerText=msg||'';}
+async function uploadNearMissFile(file,companyId){if(!file)return{url:null,path:null};if(!CURRENT_AUTH||!CURRENT_AUTH.tenant_id)throw new Error('Tenant bilgisi bulunamadı.');if(file.size>10*1024*1024)throw new Error('Dosya en fazla 10 MB olabilir.');const path=`${CURRENT_AUTH.tenant_id}/${companyId||'genel'}/${Date.now()}_${safeStorageName(file.name)}`;const{error}=await dbClient.storage.from(FILE_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});if(error)throw new Error('Dosya yüklenemedi. near-miss-files bucket ve Storage izinlerini kontrol edin. Detay: '+error.message);const{data}=dbClient.storage.from(FILE_BUCKET).getPublicUrl(path);return{url:data&&data.publicUrl?data.publicUrl:null,path};}
+async function saveOfficeNearMiss(){try{setOfficeStatus('',true);const companyId=document.getElementById('office_company_select').value;const incidentDate=document.getElementById('office_incident_date').value;const hazardType=document.getElementById('office_hazard_type').value;const location=document.getElementById('office_incident_location').value.trim();const description=document.getElementById('office_description').value.trim();const suggestedAction=document.getElementById('office_suggested_action').value.trim()||null;const file=document.getElementById('office_file').files[0]||null;if(!companyId||!incidentDate||!hazardType||!location||!description)throw new Error('Firma, olay tarihi, tehlike türü, olay yeri ve açıklama zorunlu.');const fileInfo=await uploadNearMissFile(file,companyId);const{error}=await dbClient.from('near_miss_reports').insert([{tenant_id:CURRENT_AUTH.tenant_id,company_id:companyId,incident_date:incidentDate,incident_location:location,hazard_type:hazardType,description:description,suggested_action:suggestedAction,reporter_type:'İsimli',reporter_name:CURRENT_AUTH.email||'Ofis Kullanıcısı',reporter_phone:null,file_url:fileInfo.url,file_path:fileInfo.path,status:'Yeni'}]);if(error)throw error;['office_incident_location','office_description','office_suggested_action'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('office_file').value='';setOfficeStatus('Ofis bildirimi kaydedildi.',true);await fetchReports();}catch(err){setOfficeStatus('Hata: '+(err.message||err),false);}}
+
 function publicNearMissBaseUrl(){ return `${window.location.origin}/near-miss.html`; }
 function currentTenantSlug(){ return CURRENT_AUTH && CURRENT_AUTH.tenant && CURRENT_AUTH.tenant.slug ? CURRENT_AUTH.tenant.slug : ''; }
 function buildPublicNearMissLink(){
@@ -152,22 +214,35 @@ async function downloadQrCode(){
 }
 async function loadCompaniesForPublicLinks(){
   const select=document.getElementById('public_company_select');
+  const officeSelect=document.getElementById('office_company_select');
+  const officeDate=document.getElementById('office_incident_date');
+  if(officeDate&&!officeDate.value) officeDate.value=todayString();
   if(!select || !CURRENT_AUTH || !CURRENT_AUTH.tenant_id) return;
   const slugEl=document.getElementById('public_tenant_slug');
   if(slugEl) slugEl.value=currentTenantSlug();
   const {data,error}=await dbClient.from('customer_companies').select('id, company_name').eq('tenant_id',CURRENT_AUTH.tenant_id).order('company_name');
-  if(error){ select.innerHTML='<option value="">Firma listesi alınamadı</option>'; return; }
+  if(error){ select.innerHTML='<option value="">Firma listesi alınamadı</option>'; if(officeSelect)officeSelect.innerHTML='<option value="">Firma listesi alınamadı</option>'; return; }
   select.innerHTML='<option value="">Tenant genel linki</option>';
-  (data||[]).forEach(c=>{ select.innerHTML += `<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`; });
+  if(officeSelect) officeSelect.innerHTML='<option value="">-- Firma Seçin --</option>';
+  (data||[]).forEach(c=>{ const opt=`<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`; select.innerHTML += opt; if(officeSelect) officeSelect.innerHTML += opt; });
   renderPublicNearMissLink();
 }
 
 window.onload=async function(){const auth=await requireAuthAndRole('near_miss');if(!auth)return;CURRENT_AUTH=auth;if(!CURRENT_AUTH.tenant_id){alert('Tenant bilgisi bulunamadı.');return;}document.body.style.display='block';await loadCompaniesForPublicLinks();await fetchReports();};
 async function fetchReports(){const tbody=document.getElementById('reports_tbody');tbody.innerHTML='<tr><td colspan="5" class="empty-state">Bildirimler yükleniyor...</td></tr>';const{data,error}=await dbClient.from('near_miss_reports').select('*, customer_companies(company_name, tenant_id)').eq('tenant_id',CURRENT_AUTH.tenant_id).order('created_at',{ascending:false}).limit(100);if(error){tbody.innerHTML=`<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">Ramak kala kayıtları yüklenemedi: ${escapeHtml(error.message)}</td></tr>`;return;}REPORT_ROWS=data||[];updateStats();renderReports();}
 function updateStats(){document.getElementById('stat_total').innerText=REPORT_ROWS.length;document.getElementById('stat_new').innerText=REPORT_ROWS.filter(r=>(r.status||'Yeni')==='Yeni').length;document.getElementById('stat_review').innerText=REPORT_ROWS.filter(r=>r.status==='İnceleniyor').length;document.getElementById('stat_dof').innerText=REPORT_ROWS.filter(r=>r.converted_to_dof===true||r.status==="DÖF'e Dönüştürüldü").length;}
-function renderReports(){const tbody=document.getElementById('reports_tbody');const sf=document.getElementById('status_filter').value;const tf=(document.getElementById('text_filter').value||'').toLowerCase().trim();let rows=[...REPORT_ROWS];if(sf)rows=rows.filter(r=>(r.status||'Yeni')===sf);if(tf)rows=rows.filter(r=>[r.customer_companies&&r.customer_companies.company_name,r.incident_location,r.description,r.hazard_type,r.reporter_name].join(' ').toLowerCase().includes(tf));if(rows.length===0){tbody.innerHTML='<tr><td colspan="5" class="empty-state">Filtreye uygun bildirim yok.</td></tr>';return;}tbody.innerHTML='';rows.forEach(r=>{const comp=r.customer_companies?r.customer_companies.company_name:'Genel / Firma seçilmemiş';const fileHtml=r.file_url?`<br><a class="file-link" href="${escapeHtml(r.file_url)}" target="_blank">Dosya</a>`:'';const reporter=r.reporter_type==='İsimli'?`${r.reporter_name||'-'} ${r.reporter_phone?'• '+r.reporter_phone:''}`:'Anonim';tbody.innerHTML+=`<tr class="${(r.status||'Yeni')==='Yeni'?'new-row':''}"><td><strong>${escapeHtml(comp)}</strong><br><small>${escapeHtml(reporter)}</small>${fileHtml}</td><td><strong>${escapeHtml(r.hazard_type||'-')}</strong><br><small>${escapeHtml(r.incident_date||'-')}</small><br>${escapeHtml(r.incident_location||'-')}</td><td>${escapeHtml(shortText(r.description||'-',135))}<br><small>Öneri: ${escapeHtml(shortText(r.suggested_action||'-',90))}</small></td><td>${statusBadge(r.status||'Yeni')}</td><td><div class="action-stack"><button class="btn btn-secondary btn-small" onclick="setReportStatus('${escapeHtml(r.id)}','İnceleniyor')">İnceleniyor</button><button class="btn btn-green btn-small" onclick="setReportStatus('${escapeHtml(r.id)}','Kapatıldı')">Kapat</button><button class="btn btn-blue btn-small" onclick="convertNearMissToDof('${escapeHtml(r.id)}')">DÖF'e Dönüştür</button></div></td></tr>`;});}
+function renderReports(){const tbody=document.getElementById('reports_tbody');const sf=document.getElementById('status_filter').value;const tf=(document.getElementById('text_filter').value||'').toLowerCase().trim();let rows=[...REPORT_ROWS];if(sf)rows=rows.filter(r=>(r.status||'Yeni')===sf);if(tf)rows=rows.filter(r=>[r.customer_companies&&r.customer_companies.company_name,r.incident_location,r.description,r.hazard_type,r.reporter_name].join(' ').toLowerCase().includes(tf));if(rows.length===0){tbody.innerHTML='<tr><td colspan="5" class="empty-state">Filtreye uygun bildirim yok.</td></tr>';return;}tbody.innerHTML='';rows.forEach(r=>{const comp=r.customer_companies?r.customer_companies.company_name:'Genel / Firma seçilmemiş';const fileHtml=r.file_url?`<br><a class="file-link" href="${escapeHtml(r.file_url)}" target="_blank">Dosya</a>`:'';const reporter=r.reporter_type==='İsimli'?`${r.reporter_name||'-'} ${r.reporter_phone?'• '+r.reporter_phone:''}`:'Anonim';tbody.innerHTML+=`<tr class="${(r.status||'Yeni')==='Yeni'?'new-row':''}"><td><strong>${escapeHtml(comp)}</strong><br><small>${escapeHtml(reporter)}</small>${fileHtml}</td><td><strong>${escapeHtml(r.hazard_type||'-')}</strong><br><small>${escapeHtml(r.incident_date||'-')}</small><br>${escapeHtml(r.incident_location||'-')}</td><td>${escapeHtml(shortText(r.description||'-',135))}<br><small>Öneri: ${escapeHtml(shortText(r.suggested_action||'-',90))}</small></td><td>${statusBadge(r.status||'Yeni')}</td><td><div class="action-stack"><button class="btn btn-secondary btn-small" onclick="openReportDetail('${escapeHtml(r.id)}')">Detay</button><button class="btn btn-blue btn-small" onclick="openDofModal('${escapeHtml(r.id)}')">DÖF'e Dönüştür</button></div></td></tr>`;});}
 async function setReportStatus(id,status){const{error}=await dbClient.from('near_miss_reports').update({status}).eq('id',id).eq('tenant_id',CURRENT_AUTH.tenant_id);if(error){alert('Durum güncellenemedi: '+error.message);return;}await fetchReports();}
-async function convertNearMissToDof(id){const r=REPORT_ROWS.find(x=>String(x.id)===String(id));if(!r){alert('Bildirim bulunamadı.');return;}if(!r.company_id){alert('DÖF oluşturmak için bildirimin firma bilgisi olmalı. QR linkte company parametresiyle gelen bildirimlerde DÖF oluşturulabilir.');return;}if(!confirm('Bu ramak kala bildiriminden DÖF oluşturulsun mu?'))return;const{error}=await dbClient.from('risk_assessments').insert([{tenant_id:CURRENT_AUTH.tenant_id,company_id:r.company_id,hazard_title:`Ramak kala: ${r.hazard_type||''} - ${r.incident_location||''}`.trim(),action_plan:r.suggested_action||r.description||'Ramak kala bildirimi için düzeltici/önleyici faaliyet planlanmalıdır.',responsible_person:'İSG Uzmanı',probability_o:2,frequency_f:2,severity_s:3,risk_score:12,target_date:todayString(),status:'Açık',image_url:r.file_url||null,image_path:r.file_path||null}]);if(error){alert('DÖF oluşturulamadı: '+error.message);return;}await dbClient.from('near_miss_reports').update({converted_to_dof:true,status:"DÖF'e Dönüştürüldü"}).eq('id',id).eq('tenant_id',CURRENT_AUTH.tenant_id);alert('DÖF oluşturuldu. Aksiyon Havuzu üzerinden takip edebilirsiniz.');await fetchReports();}
+function getReport(id){return REPORT_ROWS.find(x=>String(x.id)===String(id));}
+function openReportDetail(id){const r=getReport(id);if(!r){alert('Bildirim bulunamadı.');return;}SELECTED_REPORT_ID=id;const comp=r.customer_companies?r.customer_companies.company_name:'Genel / Firma seçilmemiş';const reporter=r.reporter_type==='İsimli'?`${r.reporter_name||'-'} ${r.reporter_phone?'• '+r.reporter_phone:''}`:'Anonim';const fileHtml=r.file_url?`<a class="file-link" href="${escapeHtml(r.file_url)}" target="_blank">Dosyayı Aç</a>`:'Dosya yok';document.getElementById('detail_modal_content').innerHTML=`<div class="detail-box"><span>Firma</span><strong>${escapeHtml(comp)}</strong></div><div class="detail-box"><span>Bildiren</span><strong>${escapeHtml(reporter)}</strong></div><div class="detail-box"><span>Olay Tarihi</span><strong>${escapeHtml(r.incident_date||'-')}</strong></div><div class="detail-box"><span>Tehlike Türü</span><strong>${escapeHtml(r.hazard_type||'-')}</strong></div><div class="detail-box"><span>Olay Yeri</span><strong>${escapeHtml(r.incident_location||'-')}</strong></div><div class="detail-box"><span>Dosya</span><strong>${fileHtml}</strong></div><div class="detail-box" style="grid-column:1/-1;"><span>Açıklama</span><strong>${escapeHtml(r.description||'-')}</strong></div><div class="detail-box" style="grid-column:1/-1;"><span>Önerilen Aksiyon</span><strong>${escapeHtml(r.suggested_action||'-')}</strong></div>`;document.getElementById('detail_status_select').value=r.status||'Yeni';document.getElementById('detail_modal').style.display='flex';}
+function closeDetailModal(){document.getElementById('detail_modal').style.display='none';}
+async function saveDetailStatus(){if(!SELECTED_REPORT_ID)return;await setReportStatus(SELECTED_REPORT_ID,document.getElementById('detail_status_select').value);closeDetailModal();}
+function openDofModalFromDetail(){if(!SELECTED_REPORT_ID)return;closeDetailModal();openDofModal(SELECTED_REPORT_ID);}
+function riskValuesFromLevel(level){if(level==='critical')return{probability_o:5,frequency_f:1,severity_s:5,risk_score:25};if(level==='high')return{probability_o:3,frequency_f:2,severity_s:3,risk_score:18};if(level==='low')return{probability_o:1,frequency_f:1,severity_s:6,risk_score:6};return{probability_o:2,frequency_f:2,severity_s:3,risk_score:12};}
+function openDofModal(id){const r=getReport(id);if(!r){alert('Bildirim bulunamadı.');return;}if(!r.company_id){alert('DÖF oluşturmak için bildirimin firma bilgisi olmalı. Tenant genel linkinden gelen bildirimlerde önce firma bilgisiyle yeni kayıt alınmalı veya firma bazlı QR/link kullanılmalı.');return;}document.getElementById('dof_report_id').value=id;document.getElementById('dof_hazard_title').value=`Ramak kala: ${r.hazard_type||''} - ${r.incident_location||''}`.trim();document.getElementById('dof_responsible_person').value='İSG Uzmanı';document.getElementById('dof_target_date').value=addDaysString(7);document.getElementById('dof_risk_level').value='medium';document.getElementById('dof_action_plan').value=r.suggested_action||r.description||'Ramak kala bildirimi için düzeltici/önleyici faaliyet planlanmalıdır.';document.getElementById('dof_modal').style.display='flex';}
+function closeDofModal(){document.getElementById('dof_modal').style.display='none';}
+async function convertNearMissToDof(id){openDofModal(id);}
+async function saveDofFromModal(){const id=document.getElementById('dof_report_id').value;const r=getReport(id);if(!r){alert('Bildirim bulunamadı.');return;}const title=document.getElementById('dof_hazard_title').value.trim();const action=document.getElementById('dof_action_plan').value.trim();const responsible=document.getElementById('dof_responsible_person').value.trim()||'İSG Uzmanı';const targetDate=document.getElementById('dof_target_date').value||todayString();const risk=riskValuesFromLevel(document.getElementById('dof_risk_level').value);if(!title||!action){alert('DÖF başlığı ve aksiyon planı zorunlu.');return;}const btn=document.getElementById('dof_save_btn');btn.disabled=true;const{error}=await dbClient.from('risk_assessments').insert([{tenant_id:CURRENT_AUTH.tenant_id,company_id:r.company_id,hazard_title:title,action_plan:action,responsible_person:responsible,probability_o:risk.probability_o,frequency_f:risk.frequency_f,severity_s:risk.severity_s,risk_score:risk.risk_score,target_date:targetDate,status:'Açık',image_url:r.file_url||null,image_path:r.file_path||null}]);btn.disabled=false;if(error){alert('DÖF oluşturulamadı: '+error.message);return;}await dbClient.from('near_miss_reports').update({converted_to_dof:true,status:"DÖF'e Dönüştürüldü"}).eq('id',id).eq('tenant_id',CURRENT_AUTH.tenant_id);closeDofModal();alert('DÖF oluşturuldu. Aksiyon Havuzu üzerinden takip edebilirsiniz.');await fetchReports();}
 async function handleLogout(){await dbClient.auth.signOut();window.location.href='login.html';}
 </script>
 </body>
