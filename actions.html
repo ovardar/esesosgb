@@ -1,1115 +1,439 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OSGB SaaS - DÖF Aksiyon Havuzu</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --bg-main: #f4f6f9;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --accent-green: #10b981;
-            --accent-green-hover: #059669;
-            --border-color: #e2e8f0;
-            --table-header: #f8fafc;
-            --danger: #ef4444;
-            --warning: #f97316;
-            --info: #0ea5e9;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; }
-        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1200px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 18px; border-bottom: 1px solid var(--border-color); padding-bottom: 14px; }
-        .back-btn { background: #1e293b; color: white; border: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; }
-        .back-btn:hover { background: #0f172a; }
-        .title-block h2 { margin: 0; font-size: 21px; }
-        .title-block p { margin: 4px 0 0 0; color: var(--text-muted); font-size: 13px; }
-        .user-info { color: var(--text-muted); font-size: 13px; font-weight: 600; }
-        .logout-btn { background: #ef4444; color: white; border: none; padding: 7px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .header-actions { display:flex; gap:10px; align-items:center; }
-
-        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 18px 0 20px 0; }
-        .stat-box { color: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
-        .stat-label { font-size: 12px; font-weight: 700; opacity: 0.92; }
-        .stat-value { font-size: 28px; font-weight: 900; margin-top: 4px; }
-        .stat-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-        .stat-orange { background: linear-gradient(135deg, #f97316, #c2410c); }
-        .stat-blue { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
-        .stat-green { background: linear-gradient(135deg, #10b981, #047857); }
-
-        .toolbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: var(--table-header); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-        .filters { display:flex; gap:8px; flex-wrap:wrap; }
-        .filter-btn { border: 1px solid var(--border-color); background: white; color: var(--text-main); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 12px; }
-        .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-        .refresh-btn { background: var(--accent-green); color: white; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 800; font-size: 12px; }
-        .refresh-btn:hover { background: var(--accent-green-hover); }
-        .search-input { min-width: 230px; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 10px; font-size: 13px; }
-
-        .grid-sections { display: grid; grid-template-columns: 1.6fr 0.9fr; gap: 18px; margin-top: 8px; }
-        .panel { background: white; border: 1px solid var(--border-color); border-radius: 10px; padding: 18px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); overflow: hidden; }
-        .panel-title { margin: 0 0 8px 0; padding-bottom: 8px; border-bottom: 2px solid var(--primary); color: var(--primary); display: flex; justify-content: space-between; align-items: center; }
-        .panel-help { color: var(--text-muted); font-size: 12px; margin: 4px 0 12px 0; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 12px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: top; }
-        th { background-color: var(--table-header); color: var(--text-muted); font-weight: 700; }
-        tr:hover { background: #f8fafc; }
-        .overdue-row { background-color: #fff5f5; }
-        .closed-row { opacity: 0.68; background: #f8fafc; }
-        .risk-title { font-weight: 800; color: var(--text-main); }
-        .action-plan { margin-top: 4px; color: var(--text-muted); font-size: 11px; line-height: 1.35; }
-        .close-note { margin-top: 5px; color: #047857; font-size: 11px; line-height: 1.35; }
-        .badge { padding: 4px 7px; border-radius: 999px; font-size: 10px; font-weight: 800; display:inline-block; white-space: nowrap; }
-        .badge-open { background: #fee2e2; color: #b91c1c; }
-        .badge-progress { background: #ffedd5; color: #c2410c; }
-        .badge-closed { background: #dcfce7; color: #15803d; }
-        .badge-overdue { background: #7f1d1d; color: white; margin-left: 4px; }
-        .photo-link { color: var(--primary); font-weight: 800; text-decoration: none; }
-        .photo-none { color: #94a3b8; }
-        .score { font-weight: 900; color: #b91c1c; }
-
-        .btn-sm { border: none; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-weight: 800; font-size: 11px; margin: 2px; }
-        .btn-progress { background: #f97316; color: white; }
-        .btn-close { background: #10b981; color: white; }
-        .btn-detail { background: #2563eb; color: white; }
-        .btn-disabled { background: #e2e8f0; color: #64748b; cursor: not-allowed; }
-        .muted { color: var(--text-muted); }
-        .empty-state { text-align:center; color:#16a34a; font-weight:bold; padding: 20px; }
-        .status-line { margin-top: 10px; font-weight: 700; font-size: 12px; }
-
-        .visit-table td, .visit-table th { padding: 9px; }
-        .visit-date { font-weight: 800; color: #ea580c; }
-
-        @media (max-width: 900px) {
-            body { padding: 12px; }
-            .card { padding: 15px; }
-            .topbar { align-items: flex-start; flex-direction: column; }
-            .header-actions { width:100%; justify-content:space-between; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .grid-sections { grid-template-columns: 1fr; }
-            .toolbar { align-items: stretch; }
-            .search-input { width: 100%; min-width: 0; box-sizing: border-box; }
-            table { font-size: 11px; }
-            th, td { padding: 8px; }
-        }
-    
-
-        /* ================================
-           v24 UI POLISH - ortak arayuz duzeltmeleri
-           ================================ */
-        :root {
-            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.10);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
-            --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        .card {
-            width: min(100%, 1240px) !important;
-            max-width: 1240px !important;
-            border-radius: var(--radius-lg) !important;
-            box-shadow: var(--shadow-md) !important;
-        }
-
-        .global-header {
-            background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        .top-row {
-            gap: 14px;
-            align-items: center !important;
-        }
-
-        .logo-area {
-            min-width: 0;
-            font-size: 17px !important;
-            letter-spacing: 0 !important;
-            gap: 10px !important;
-        }
-
-        .logo-area span[id^="lbl_"] {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .tenant-logo-img {
-            width: 36px !important;
-            height: 36px !important;
-            padding: 4px !important;
-            border-radius: 10px !important;
-            box-shadow: var(--shadow-sm);
-            flex: 0 0 auto;
-        }
-
-        .logo-badge {
-            border-radius: 999px !important;
-            padding: 4px 9px !important;
-            font-size: 11px !important;
-            letter-spacing: .02em;
-            flex: 0 0 auto;
-        }
-
-        .controls-group {
-            gap: 10px !important;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .theme-selector-container {
-            border-radius: 999px !important;
-            padding: 6px 10px !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .theme-btn {
-            width: 18px !important;
-            height: 18px !important;
-            transition: transform .15s ease, box-shadow .15s ease;
-        }
-        .theme-btn:hover { transform: translateY(-1px) scale(1.08); box-shadow: 0 3px 8px rgba(15,23,42,.18); }
-
-        .user-info {
-            background: var(--table-header);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 7px 11px;
-            max-width: 280px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .logout-btn,
-        button,
-        .btn,
-        input[type="submit"] {
-            border-radius: 10px !important;
-            font-weight: 750 !important;
-            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-        }
-        button:hover,
-        .logout-btn:hover,
-        .btn:hover,
-        input[type="submit"]:hover {
-            transform: translateY(-1px);
-            filter: brightness(.98);
-            box-shadow: var(--shadow-sm);
-        }
-        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
-
-        .nav-container {
-            justify-content: flex-start !important;
-            gap: 7px !important;
-            padding: 8px !important;
-            border-radius: 14px !important;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .nav-btn {
-            white-space: nowrap;
-            border-radius: 10px !important;
-            padding: 9px 13px !important;
-            font-size: 12.5px !important;
-            box-shadow: none;
-        }
-        .nav-btn.active-page { box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important; }
-
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        h1 { font-size: clamp(24px, 3vw, 34px); }
-        h2 { font-size: clamp(20px, 2.4vw, 28px); }
-        h3 { font-size: clamp(16px, 1.8vw, 20px); }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px !important;
-            color: var(--text-main) !important;
-            font-size: 13px !important;
-            letter-spacing: .04em !important;
-        }
-
-        .panel,
-        .form-card,
-        .table-card,
-        .sub-card,
-        .mini-card,
-        .info-card {
-            border-radius: var(--radius-md) !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .metric-box {
-            border-radius: 14px !important;
-            box-shadow: 0 10px 24px rgba(15,23,42,.10) !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .metric-box:after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,.20), transparent 45%);
-            pointer-events: none;
-        }
-        .metric-title, .metric-sub, .metric-value { position: relative; z-index: 1; }
-
-        input,
-        select,
-        textarea {
-            border: 1px solid var(--border-color) !important;
-            border-radius: 10px !important;
-            background: var(--bg-card);
-            color: var(--text-main);
-            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--primary) !important;
-            box-shadow: var(--focus-ring) !important;
-        }
-        label { font-weight: 700; color: var(--text-main); }
-
-        table {
-            border-collapse: separate !important;
-            border-spacing: 0 !important;
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        th {
-            font-size: 11px !important;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            white-space: nowrap;
-        }
-        td { line-height: 1.45; }
-        tbody tr { transition: background .12s ease; }
-        tbody tr:hover { background: rgba(37, 99, 235, 0.035); }
-        .empty-state {
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            background: var(--table-header);
-        }
-
-        .badge {
-            border-radius: 999px !important;
-            letter-spacing: .02em;
-            padding: 4px 8px !important;
-        }
-
-        .small-link { text-underline-offset: 3px; }
-
-        .operational-banner {
-            box-shadow: var(--shadow-sm);
-            border: 0 !important;
-        }
-
-        @media (max-width: 900px) {
-            body { padding: 12px !important; }
-            .card { padding: 16px !important; border-radius: 16px !important; }
-            .top-row { align-items: stretch !important; }
-            .controls-group { justify-content: flex-start; }
-            .user-info { max-width: 100%; }
-            .nav-container { flex-wrap: nowrap !important; justify-content: flex-start !important; }
-            .nav-btn { flex: 0 0 auto; }
-            table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
-            th, td { padding: 9px 10px !important; }
-        }
-
-        @media (max-width: 520px) {
-            .logo-area { font-size: 15px !important; }
-            .tenant-logo-img { width: 32px !important; height: 32px !important; }
-            .theme-selector-container { width: 100%; justify-content: center; }
-            .logout-btn { width: 100%; }
-        }
-
-    
-
-        /* ================================
-           v25 PRODUCT DESIGN SYSTEM - derin arayuz revizyonu
-           ================================ */
-        :root {
-            --brand-50: #eff6ff;
-            --brand-100: #dbeafe;
-            --brand-500: #2563eb;
-            --brand-600: #1d4ed8;
-            --brand-700: #1e40af;
-            --ink-900: #0f172a;
-            --ink-700: #334155;
-            --ink-500: #64748b;
-            --surface-0: #ffffff;
-            --surface-1: #f8fafc;
-            --surface-2: #eef2f7;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --info: #0284c7;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(37,99,235,.15), transparent 32rem),
-                radial-gradient(circle at top right, rgba(14,165,233,.12), transparent 28rem),
-                linear-gradient(180deg, #f8fafc 0%, #edf2f7 52%, #e9eef6 100%) !important;
-            color: var(--ink-900) !important;
-        }
-
-        .card {
-            padding: 0 !important;
-            overflow: hidden;
-            background: rgba(255,255,255,.92) !important;
-            backdrop-filter: blur(10px);
-        }
-
-        .global-header {
-            padding: 18px 22px 14px !important;
-            margin-bottom: 0 !important;
-            background: linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,64,175,.92)) !important;
-            color: white;
-            border-bottom: 0 !important;
-        }
-        .global-header .logo-area,
-        .global-header .user-info,
-        .global-header .theme-selector-container span { color: white !important; }
-        .global-header .theme-selector-container,
-        .global-header .user-info {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-container {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.16) !important;
-            margin-top: 12px;
-        }
-        .global-header .nav-btn {
-            background: rgba(255,255,255,.10) !important;
-            color: rgba(255,255,255,.86) !important;
-            border: 1px solid rgba(255,255,255,.10);
-        }
-        .global-header .nav-btn:hover {
-            background: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-btn.active-page {
-            background: white !important;
-            color: var(--brand-700) !important;
-            box-shadow: 0 8px 18px rgba(15,23,42,.22) !important;
-        }
-        .global-header .tenant-logo-img {
-            width: 42px !important;
-            height: 42px !important;
-            background: white !important;
-            border-color: rgba(255,255,255,.35) !important;
-        }
-        .global-header .logo-badge {
-            background: rgba(255,255,255,.18) !important;
-            border: 1px solid rgba(255,255,255,.18);
-        }
-        .logout-btn { background: rgba(239,68,68,.92) !important; }
-
-        .card > h1,
-        .card > h2,
-        .card > .page-desc,
-        .card > .section-title,
-        .card > .dashboard-grid,
-        .card > .kpi-grid,
-        .card > .operational-banner,
-        .card > .content-grid,
-        .card > .grid,
-        .card > .panel,
-        .card > form,
-        .card > table,
-        .card > div:not(.global-header) {
-            margin-left: 22px;
-            margin-right: 22px;
-        }
-        .card > h1,
-        .card > h2 {
-            margin-top: 22px !important;
-            margin-bottom: 4px !important;
-            font-size: clamp(22px, 2.6vw, 31px) !important;
-            letter-spacing: -0.035em;
-            color: var(--ink-900);
-        }
-        .page-desc {
-            max-width: 780px;
-            color: var(--ink-500) !important;
-            font-size: 14px !important;
-            margin-bottom: 20px !important;
-        }
-
-        .section-title {
-            margin-top: 24px !important;
-            margin-bottom: 11px !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--ink-700) !important;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(226,232,240,.9);
-            padding: 7px 11px;
-            border-radius: 999px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .panel {
-            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)) !important;
-            border: 1px solid rgba(203,213,225,.85) !important;
-            box-shadow: 0 12px 30px rgba(15,23,42,.07) !important;
-            border-radius: 18px !important;
-        }
-        .panel h3 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            border-bottom: 1px solid rgba(226,232,240,.95) !important;
-            padding-bottom: 12px !important;
-            margin-bottom: 14px !important;
-            color: var(--ink-900);
-            letter-spacing: -0.01em;
-        }
-        .panel h3::after {
-            content: "";
-            flex: 1;
-            height: 3px;
-            max-width: 56px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: .7;
-        }
-
-        .dashboard-grid,
-        .kpi-grid {
-            gap: 16px !important;
-        }
-        .metric-box {
-            position: relative;
-            overflow: hidden;
-            min-height: 104px !important;
-            padding: 18px 19px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 18px 38px rgba(15,23,42,.13) !important;
-        }
-        .metric-box::before {
-            content: "";
-            position: absolute;
-            inset: -40% -30% auto auto;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.17);
-        }
-        .metric-title { font-size: 12.5px !important; text-transform: uppercase; letter-spacing: .045em; }
-        .metric-value { font-size: 34px !important; letter-spacing: -0.045em; }
-        .metric-sub { font-size: 12px !important; }
-        .metric-box.clickable:hover {
-            transform: translateY(-3px);
-            filter: saturate(1.04);
-        }
-
-        .content-grid {
-            margin-bottom: 24px;
-            align-items: start;
-        }
-        .operational-banner {
-            min-height: 86px;
-            padding: 20px 22px !important;
-            border-radius: 20px !important;
-        }
-        .op-text h4 { font-size: 18px !important; letter-spacing: -0.015em; }
-        .op-badge { border-radius: 16px !important; }
-
-        table {
-            background: white;
-            box-shadow: inset 0 0 0 1px rgba(226,232,240,.75);
-        }
-        th {
-            background: #f1f5f9 !important;
-            color: #475569 !important;
-        }
-        td {
-            background-clip: padding-box;
-        }
-        tbody tr:nth-child(even) td { background: rgba(248,250,252,.65); }
-
-        .btn-primary,
-        button.btn-primary {
-            background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-blue,
-        button.btn-blue {
-            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-secondary,
-        button.btn-secondary {
-            background: #f1f5f9 !important;
-            color: #334155 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        .btn-danger,
-        button.btn-danger {
-            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .status.ok {
-            background: #ecfdf5 !important;
-            color: #047857 !important;
-            border: 1px solid #a7f3d0 !important;
-        }
-        .status.err {
-            background: #fef2f2 !important;
-            color: #b91c1c !important;
-            border: 1px solid #fecaca !important;
-        }
-
-        /* SaaS Yonetimi urun paneli revizyonu */
-        .grid {
-            grid-template-columns: 420px minmax(0, 1fr) !important;
-            gap: 22px !important;
-            align-items: start !important;
-            margin-bottom: 24px;
-        }
-        .grid > div:first-child {
-            position: sticky;
-            top: 18px;
-            align-self: start;
-        }
-        .edit-panel {
-            border: 1px solid rgba(37,99,235,.22) !important;
-            background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
-        }
-        .link-box {
-            border-radius: 12px !important;
-            border: 1px solid #bfdbfe !important;
-            background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
-            color: #1e40af !important;
-            font-weight: 750;
-        }
-        .logo-upload-box {
-            border: 1px dashed #93c5fd !important;
-            background: #f8fbff !important;
-            border-radius: 16px !important;
-        }
-        .logo-preview {
-            width: 56px !important;
-            height: 56px !important;
-            border-radius: 14px !important;
-            box-shadow: var(--shadow-sm);
-        }
-        .actions {
-            gap: 9px !important;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .actions + .button-help,
-        .button-help {
-            margin-top: 10px;
-            display: grid;
-            gap: 7px;
-            color: var(--ink-500);
-            font-size: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 11px 12px;
-        }
-        .button-help strong { color: var(--ink-700); }
-
-        @media (max-width: 1040px) {
-            .grid { grid-template-columns: 1fr !important; }
-            .grid > div:first-child { position: static; }
-        }
-        @media (max-width: 900px) {
-            .card > h1,
-            .card > h2,
-            .card > .page-desc,
-            .card > .section-title,
-            .card > .dashboard-grid,
-            .card > .kpi-grid,
-            .card > .operational-banner,
-            .card > .content-grid,
-            .card > .grid,
-            .card > .panel,
-            .card > form,
-            .card > table,
-            .card > div:not(.global-header) {
-                margin-left: 14px !important;
-                margin-right: 14px !important;
-            }
-            .global-header { padding: 15px !important; }
-            .metric-box { min-height: 92px !important; }
-        }
-
-    
-
-        /* v26.2 hotfix: keep v26 visual system, add branding/table/layout fixes */
-        .logo-area { font-weight: 500 !important; letter-spacing: .01em !important; font-size: 18px !important; }
-        .logo-area #lbl_osgb_title { font-weight: 500 !important; }
-        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
-        table, thead, tbody, tr, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; }
-        table { font-size: 13px !important; border-collapse: separate !important; border-spacing: 0 !important; }
-        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
-        tbody td { padding: 9px 11px !important; }
-        .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
-        .page-desc { max-width: none !important; }
-
-    
-        /* v26.2 topbar logo */
-        .topbar-logo-area { flex: 0 0 auto; margin-right: 10px; }
-        @media(max-width:900px){ .topbar-logo-area { width:100%; justify-content:center; margin:0 0 8px; } }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <div class="topbar">
-        <div class="logo-area topbar-logo-area"><span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span></div>
-        <a href="dashboard.html" class="back-btn">← Yönetim Paneline Dön</a>
-        <div class="title-block">
-            <h2>🚨 DÖF Aksiyon Havuzu</h2>
-            <p>Açık, devam eden, geciken ve kapatılan risk/DÖF kayıtlarını tek merkezden takip edin.</p>
-        </div>
-        <div class="header-actions">
-            <span class="user-info">👤 <span id="current_user_email">...</span></span>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean" style="display: none;">
+    <div class="card">
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
             <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
         </div>
-    </div>
-
-    <div class="stats-grid">
-        <div class="stat-box stat-red"><div class="stat-label">Geciken DÖF</div><div class="stat-value" id="stat_overdue">0</div></div>
-        <div class="stat-box stat-orange"><div class="stat-label">Açık DÖF</div><div class="stat-value" id="stat_open">0</div></div>
-        <div class="stat-box stat-blue"><div class="stat-label">Devam Eden</div><div class="stat-value" id="stat_progress">0</div></div>
-        <div class="stat-box stat-green"><div class="stat-label">Kapalı</div><div class="stat-value" id="stat_closed">0</div></div>
-    </div>
-
-    <div class="toolbar">
-        <div class="filters">
-            <button class="filter-btn active" data-filter="active" onclick="setFilter('active')">Aktif DÖF</button>
-            <button class="filter-btn" data-filter="overdue" onclick="setFilter('overdue')">Geciken</button>
-            <button class="filter-btn" data-filter="Açık" onclick="setFilter('Açık')">Açık</button>
-            <button class="filter-btn" data-filter="Devam Ediyor" onclick="setFilter('Devam Ediyor')">Devam Eden</button>
-            <button class="filter-btn" data-filter="Kapalı" onclick="setFilter('Kapalı')">Kapalı</button>
-            <button class="filter-btn" data-filter="all" onclick="setFilter('all')">Tümü</button>
+        <div class="nav-container">
+          <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+          <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display: none">🧩 SaaS Yönetimi</a>
+          <a id="menu_staff" href="staff.html" class="nav-btn" style="display: none">🔑 Personel Yönetimi</a>
+          <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+          <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+          <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+          <a id="menu_risk" href="risk.html" class="nav-btn" style="display: none">🦺 Uzman Risk Motoru</a>
+          <a id="menu_medical" href="medical.html" class="nav-btn" style="display: none">🩺 Hekim Sağlık Kartı</a>
+          <a href="actions.html" class="nav-btn active-page">🚨 DÖF Aksiyon Havuzu</a>
         </div>
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <input class="search-input" id="search_input" type="text" placeholder="Firma, bulgu, sorumlu ara..." oninput="renderDofTable()">
-            <button class="refresh-btn" onclick="refreshAll()">Yenile</button>
-        </div>
-    </div>
+      </div>
 
-    <div class="grid-sections">
-        <div class="panel">
-            <h3 class="panel-title">📋 DÖF Takip Matrisi <span id="cnt_visible" class="badge badge-open">0</span></h3>
-            <p class="panel-help">Risk Motoru'ndan gelen kayıtlar artık önerilen önlem, sorumlu kişi, termin ve kapanış açıklamasıyla takip edilir.</p>
-            <div style="overflow-x:auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Firma</th>
-                            <th>Bulgu / Önerilen Önlem</th>
-                            <th>Sorumlu</th>
-                            <th>Skor</th>
-                            <th>Termin</th>
-                            <th>Foto</th>
-                            <th>Durum</th>
-                            <th>İşlem</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dof_tbody">
-                        <tr><td colspan="8" style="text-align:center; color:#94a3b8;">Veriler taranıyor...</td></tr>
-                    </tbody>
-                </table>
+      <div class="crm-page-shell">
+        <div class="page-header-row" style="margin-bottom: 24px;">
+          <div class="page-title-group">
+            <h2 style="font-size: clamp(24px, 2.2vw, 34px); letter-spacing: -0.03em; color: #0f172a; font-weight: 800; margin: 0 0 6px;">🚨 DÖF Aksiyon Havuzu</h2>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0;">Açık, devam eden, geciken ve kapatılan risk/DÖF kayıtlarını tek merkezden takip edin.</p>
+          </div>
+        </div>
+
+        <!-- Stats Grid (Çift Hiyerarşili Grid) -->
+        <div class="crm-double-stats-grid" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+          <div class="stats-section-premium">
+            <div class="stats-cards-wrapper" style="display: flex; gap: 16px; flex-wrap: wrap;">
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#ef4444"></div>
+                <span class="number" id="stat_overdue">0</span>
+                <span class="label">Geciken DÖF</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#f59e0b"></div>
+                <span class="number" id="stat_open">0</span>
+                <span class="label">Açık DÖF</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#3b82f6"></div>
+                <span class="number" id="stat_progress">0</span>
+                <span class="label">Devam Eden</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#10b981"></div>
+                <span class="number" id="stat_closed">0</span>
+                <span class="label">Kapalı DÖF</span>
+              </div>
             </div>
-            <div class="status-line" id="dof_status"></div>
+          </div>
         </div>
 
-        <div class="panel">
-            <h3 class="panel-title" style="border-color:#ea580c; color:#ea580c;">📅 Bu Ayki Saha Ziyaretleri <span id="cnt_visits" class="badge" style="background:#ffedd5; color:#c2410c;">0</span></h3>
-            <p class="panel-help">DÖF takibi ile saha ziyaret planı birlikte izlenir.</p>
-            <table class="visit-table">
+        <!-- Toolbar (Arama & Filtreler) -->
+        <div class="crm-toolbar-premium" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div class="filters" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="nav-btn active-page filter-btn" data-filter="active" onclick="setFilter('active')">Aktif DÖF</button>
+            <button class="nav-btn filter-btn" data-filter="overdue" onclick="setFilter('overdue')">Geciken</button>
+            <button class="nav-btn filter-btn" data-filter="Açık" onclick="setFilter('Açık')">Açık</button>
+            <button class="nav-btn filter-btn" data-filter="Devam Ediyor" onclick="setFilter('Devam Ediyor')">Devam Eden</button>
+            <button class="nav-btn filter-btn" data-filter="Kapalı" onclick="setFilter('Kapalı')">Kapalı</button>
+            <button class="nav-btn filter-btn" data-filter="all" onclick="setFilter('all')">Tümü</button>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <input
+              class="search-input"
+              id="search_input"
+              type="text"
+              placeholder="Firma, bulgu, sorumlu ara..."
+              oninput="renderDofTable()"
+              style="padding: 10px 14px; min-width: 250px; border: 1px solid var(--uc-line); border-radius: 10px;"
+            />
+            <button class="btn-add-lead-btn" onclick="refreshAll()" style="background: var(--uc-primary); border: none; padding: 10px 18px; border-radius: 999px; font-weight: 700; color:#fff; cursor:pointer;">🔄 Yenile</button>
+          </div>
+        </div>
+
+        <!-- Grid Layout (Takip Matrisi & Saha Ziyaretleri) -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
+          <!-- Sol Sütun: DÖF Takip Matrisi -->
+          <div class="stat-card-premium" style="padding: 24px;">
+            <h3 style="margin: 0 0 8px; font-size: 16px; color: var(--uc-text); font-weight: 800; display: flex; align-items: center; justify-content: space-between;">
+              <span>📋 DÖF Takip Matrisi</span>
+              <span id="cnt_visible" class="badge" style="background: var(--uc-primary-soft); color: var(--uc-primary); font-size: 12px; padding: 4px 10px; border-radius: 999px; font-weight: 800;">0</span>
+            </h3>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0 0 20px;">
+              Risk Motoru'ndan gelen kayıtlar artık önerilen önlem, sorumlu kişi, termin ve kapanış açıklamasıyla takip edilir.
+            </p>
+            <div class="table-container-premium" style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
                 <thead>
-                    <tr>
-                        <th>Tarih</th>
-                        <th>Firma</th>
-                        <th>Sorumlu</th>
-                        <th>Süre</th>
-                    </tr>
+                  <tr>
+                    <th style="padding: 12px 16px;">Firma</th>
+                    <th style="padding: 12px 16px;">Bulgu / Önerilen Önlem</th>
+                    <th style="padding: 12px 16px;">Sorumlu</th>
+                    <th style="padding: 12px 16px;">Skor</th>
+                    <th style="padding: 12px 16px;">Termin</th>
+                    <th style="padding: 12px 16px;">Foto</th>
+                    <th style="padding: 12px 16px;">Durum</th>
+                    <th style="padding: 12px 16px;">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody id="dof_tbody">
+                  <tr>
+                    <td colspan="8" style="text-align: center; color: #94a3b8; padding: 24px;">Veriler taranıyor...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="status-line" id="dof_status" style="margin-top: 12px; font-size: 13px; font-weight: 600;"></div>
+          </div>
+
+          <!-- Sağ Sütun: Bu Ayki Saha Ziyaretleri -->
+          <div class="stat-card-premium" style="padding: 24px;">
+            <h3 style="margin: 0 0 8px; font-size: 16px; color: #ea580c; font-weight: 800; display: flex; align-items: center; justify-content: space-between;">
+              <span>📅 Bu Ayki Saha Ziyaretleri</span>
+              <span id="cnt_visits" class="badge" style="background: #ffedd5; color: #c2410c; font-size: 12px; padding: 4px 10px; border-radius: 999px; font-weight: 800;">0</span>
+            </h3>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0 0 20px;">DÖF takibi ile saha ziyaret planı birlikte izlenir.</p>
+            <div class="table-container-premium" style="overflow-x: auto;">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr>
+                    <th style="padding: 12px 16px;">Tarih</th>
+                    <th style="padding: 12px 16px;">Firma</th>
+                    <th style="padding: 12px 16px;">Sorumlu</th>
+                    <th style="padding: 12px 16px;">Süre</th>
+                  </tr>
                 </thead>
                 <tbody id="current_visits_tbody">
-                    <tr><td colspan="4" style="text-align:center; color:#94a3b8;">Ziyaret planları listeleniyor...</td></tr>
+                  <tr>
+                    <td colspan="4" style="text-align: center; color: #94a3b8; padding: 24px;">Ziyaret planları listeleniyor...</td>
+                  </tr>
                 </tbody>
-            </table>
+              </table>
+            </div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-    const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <script>
+      let allDofs = [];
+      let currentFilter = 'active';
+      let CURRENT_AUTH = null;
 
-    let allDofs = [];
-    let currentFilter = 'active';
-    let CURRENT_AUTH = null;
-
-    function normalizeAccessRole(value) {
-        const v = (value || '').toString().trim().toLowerCase();
-        if (['super_admin', 'super admin', 'saas_admin', 'sistem sahibi'].includes(v)) return 'super_admin';
-        if (['admin', 'yonetici', 'yönetici'].includes(v)) return 'admin';
-        if (['uzman', 'isg_uzmani', 'isg uzmanı', 'iş güvenliği uzmanı'].includes(v)) return 'uzman';
-        if (['hekim', 'isyeri hekimi', 'işyeri hekimi'].includes(v)) return 'hekim';
-        if (['dsp', 'diğer sağlık personeli', 'diger saglik personeli'].includes(v)) return 'dsp';
-        if (['firma_yetkilisi', 'firma yetkilisi', 'musteri', 'müşteri'].includes(v)) return 'firma_yetkilisi';
-        return '';
-    }
-
-    function inferAccessRoleFromEmail(email) {
-        const e = (email || '').toLowerCase();
-        if (e.includes('orhan.vardar@gmail.com')) return 'super_admin';
-        if (e.includes('admin')) return 'admin';
-        if (e.includes('hekim')) return 'hekim';
-        if (e.includes('dsp')) return 'dsp';
-        if (e.includes('firma') || e.includes('musteri') || e.includes('müşteri')) return 'firma_yetkilisi';
-        if (e.includes('uzman')) return 'uzman';
-        return 'uzman';
-    }
-
-    function roleLabel(role) {
-        return { super_admin: 'Super Admin', admin: 'Admin', uzman: 'İSG Uzmanı', hekim: 'İşyeri Hekimi', dsp: 'DSP', firma_yetkilisi: 'Firma Yetkilisi' }[role] || role || 'Rol yok';
-    }
-
-    function isStaffAccessActive(record) {
-        if (!record) return true;
-        if (record.can_login === false) return false;
-        if (record.is_active_manual === 'Aktif') return true;
-        if (record.is_active_manual === 'Pasif') return false;
-        const today = new Date(); today.setHours(0,0,0,0);
-        if (record.hire_date) {
-            const hire = new Date(record.hire_date); hire.setHours(0,0,0,0);
-            if (hire > today) return false;
-        }
-        if (record.termination_date) {
-            const term = new Date(record.termination_date); term.setHours(0,0,0,0);
-            if (term <= today) return false;
-        }
-        return true;
-    }
-
-    async function getCurrentAuthContext() {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) return { session: null, email: '', role: '', canLogin: false, staff: null, tenant_id: null, tenant: null };
-        const email = session.user.email || '';
-        let staff = null;
-        try {
-            const { data } = await dbClient
-                .from('osgb_staff')
-                .select('*, tenants(id, name, slug, logo_url, primary_color, is_active)')
-                .ilike('email', email)
-                .maybeSingle();
-            staff = data || null;
-        } catch (err) {
-            console.warn('Rol/tenant kaydı okunamadı:', err.message);
-        }
-        const role = normalizeAccessRole(staff && staff.access_role) || normalizeAccessRole(staff && staff.staff_role) || inferAccessRoleFromEmail(email);
-        const canLogin = isStaffAccessActive(staff);
-        return { session, email, role, canLogin, staff, tenant: staff && staff.tenants ? staff.tenants : null, tenant_id: staff ? staff.tenant_id : null };
-    }
-
-    function setTenantBranding(tenant) {
-        const titleEl = document.getElementById('lbl_osgb_title');
-        if (titleEl) titleEl.innerText = (tenant && tenant.name) ? tenant.name : 'Eses Software';
-        const area = titleEl ? titleEl.closest('.logo-area') : null;
-        if (!area) return;
-        let img = area.querySelector('.tenant-logo-img');
-        const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
-        if (logoUrl) {
-            if (!img) {
-                img = document.createElement('img');
-                img.className = 'tenant-logo-img';
-                img.alt = 'Logo';
-                area.insertBefore(img, titleEl);
-            }
-            img.src = logoUrl;
-        } else if (img) {
-            img.remove();
-        }
-    }
-
-    function normalizeFilterParam(rawFilter) {
+      function normalizeFilterParam(rawFilter) {
         const value = (rawFilter || '').trim().toLowerCase();
         const filterMap = {
-            'active': 'active',
-            'aktif': 'active',
-            'overdue': 'overdue',
-            'geciken': 'overdue',
-            'open': 'Açık',
-            'acik': 'Açık',
-            'açık': 'Açık',
-            'progress': 'Devam Ediyor',
-            'devam': 'Devam Ediyor',
-            'devam-ediyor': 'Devam Ediyor',
-            'devam_ediyor': 'Devam Ediyor',
-            'closed': 'Kapalı',
-            'kapali': 'Kapalı',
-            'kapalı': 'Kapalı',
-            'all': 'all',
-            'tum': 'all',
-            'tümü': 'all'
+          active: 'active',
+          aktif: 'active',
+          overdue: 'overdue',
+          geciken: 'overdue',
+          open: 'Açık',
+          acik: 'Açık',
+          açık: 'Açık',
+          progress: 'Devam Ediyor',
+          devam: 'Devam Ediyor',
+          'devam-ediyor': 'Devam Ediyor',
+          devam_ediyor: 'Devam Ediyor',
+          closed: 'Kapalı',
+          kapali: 'Kapalı',
+          kapalı: 'Kapalı',
+          all: 'all',
+          tum: 'all',
+          tümü: 'all'
         };
         return filterMap[value] || 'active';
-    }
+      }
 
-    function applyInitialFilterFromUrl() {
+      function applyInitialFilterFromUrl() {
         const params = new URLSearchParams(window.location.search);
         currentFilter = normalizeFilterParam(params.get('filter'));
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.filter === currentFilter);
+        document.querySelectorAll('.filter-btn').forEach((btn) => {
+          btn.classList.toggle('active', btn.dataset.filter === currentFilter);
         });
-    }
+      }
 
-    window.onload = async function() {
-        const auth = await getCurrentAuthContext();
-        if (!auth.session) { window.location.href = "login.html"; return; }
-        if (!auth.canLogin) {
-            await dbClient.auth.signOut();
-            alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
-            window.location.href = 'login.html';
-            return;
-        }
-        if (!auth.tenant_id) {
-            alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
-            await dbClient.auth.signOut();
-            window.location.href = 'login.html';
-            return;
-        }
+      window.onload = async function () {
+        const auth = await requireAuthAndRole('actions');
+        if (!auth) return;
         CURRENT_AUTH = auth;
         window.CURRENT_AUTH = CURRENT_AUTH;
-        document.body.style.display = "block";
-        document.getElementById('current_user_email').innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-        setTenantBranding(auth.tenant);
+        document.body.style.display = 'block';
         applyInitialFilterFromUrl();
         await refreshAll();
-    };
+      };
 
-    async function refreshAll() {
+      async function refreshAll() {
         await fetchDofs();
         await fetchGlobalVisits();
-    }
+      }
 
-    function todayAtStart() {
+      function todayAtStart() {
         const d = new Date();
         d.setHours(0, 0, 0, 0);
         return d;
-    }
+      }
 
-    function isOverdue(dof) {
+      function isOverdue(dof) {
         if (!dof || dof.status === 'Kapalı' || !dof.target_date) return false;
         const target = new Date(dof.target_date + 'T00:00:00');
         return target < todayAtStart();
-    }
+      }
 
-    function escapeHTML(value) {
+      function escapeHTML(value) {
         if (value === null || value === undefined) return '';
-        return value.toString()
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
+        return value
+          .toString()
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
 
-    function statusBadge(status) {
-        if (status === 'Kapalı') return '<span class="badge badge-closed">Kapalı</span>';
-        if (status === 'Devam Ediyor') return '<span class="badge badge-progress">Devam Ediyor</span>';
-        return '<span class="badge badge-open">Açık</span>';
-    }
+      function statusBadge(status) {
+        if (status === 'Kapalı') return '<span class="badge" style="background:#dcfce7; color:#15803d; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700;">Kapalı</span>';
+        if (status === 'Devam Ediyor') return '<span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700;">İşlemde</span>';
+        return '<span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700;">Açık</span>';
+      }
 
-    function filterToUrlValue(filter) {
+      function filterToUrlValue(filter) {
         if (filter === 'Açık') return 'open';
         if (filter === 'Devam Ediyor') return 'progress';
         if (filter === 'Kapalı') return 'closed';
         return filter;
-    }
+      }
 
-    function setFilter(filter) {
+      function setFilter(filter) {
         currentFilter = filter;
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.filter === filter);
+        document.querySelectorAll('.filter-btn').forEach((btn) => {
+          btn.classList.toggle('active-page', btn.dataset.filter === filter);
         });
         const url = new URL(window.location.href);
         url.searchParams.set('filter', filterToUrlValue(filter));
         window.history.replaceState({}, '', url.toString());
         renderDofTable();
-    }
+      }
 
-    async function fetchDofs() {
+      async function fetchDofs() {
         const tbody = document.getElementById('dof_tbody');
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8;">DÖF kayıtları yükleniyor...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding: 24px;">DÖF kayıtları yükleniyor...</td></tr>`;
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            allDofs = [];
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#b91c1c; font-weight:bold;">Tenant bilgisi bulunamadı.</td></tr>`;
-            updateStats();
-            return;
+          allDofs = [];
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#b91c1c; font-weight:bold; padding: 24px;">Tenant bilgisi bulunamadı.</td></tr>`;
+          updateStats();
+          return;
         }
 
         const { data, error } = await dbClient
-            .from('risk_assessments')
-            .select('*, customer_companies!inner(company_name, tenant_id)')
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
-            .order('target_date', { ascending: true })
-            .order('created_at', { ascending: false });
+          .from('risk_assessments')
+          .select('*, customer_companies!inner(company_name, tenant_id)')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
+          .order('target_date', { ascending: true })
+          .order('created_at', { ascending: false });
 
         if (error) {
-            allDofs = [];
-            updateStats();
-            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#b91c1c; font-weight:bold;">Hata: ${escapeHTML(error.message)}</td></tr>`;
-            return;
+          allDofs = [];
+          updateStats();
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#b91c1c; font-weight:bold; padding: 24px;">Hata: ${escapeHTML(error.message)}</td></tr>`;
+          return;
         }
 
         allDofs = data || [];
         updateStats();
         renderDofTable();
-    }
+      }
 
-    function updateStats() {
-        const open = allDofs.filter(d => d.status === 'Açık' || !d.status).length;
-        const progress = allDofs.filter(d => d.status === 'Devam Ediyor').length;
-        const closed = allDofs.filter(d => d.status === 'Kapalı').length;
-        const overdue = allDofs.filter(d => isOverdue(d)).length;
+      function updateStats() {
+        const open = allDofs.filter((d) => d.status === 'Açık' || !d.status).length;
+        const progress = allDofs.filter((d) => d.status === 'Devam Ediyor').length;
+        const closed = allDofs.filter((d) => d.status === 'Kapalı').length;
+        const overdue = allDofs.filter((d) => isOverdue(d)).length;
         document.getElementById('stat_open').innerText = open;
         document.getElementById('stat_progress').innerText = progress;
         document.getElementById('stat_closed').innerText = closed;
         document.getElementById('stat_overdue').innerText = overdue;
-    }
+      }
 
-    function getFilteredDofs() {
+      function getFilteredDofs() {
         const search = (document.getElementById('search_input').value || '').trim().toLowerCase();
-        return allDofs.filter(d => {
-            const status = d.status || 'Açık';
-            let matchesFilter = true;
-            if (currentFilter === 'active') matchesFilter = status !== 'Kapalı';
-            else if (currentFilter === 'overdue') matchesFilter = isOverdue(d);
-            else if (currentFilter === 'all') matchesFilter = true;
-            else matchesFilter = status === currentFilter;
+        return allDofs.filter((d) => {
+          const status = d.status || 'Açık';
+          let matchesFilter = true;
+          if (currentFilter === 'active') matchesFilter = status !== 'Kapalı';
+          else if (currentFilter === 'overdue') matchesFilter = isOverdue(d);
+          else if (currentFilter === 'all') matchesFilter = true;
+          else matchesFilter = status === currentFilter;
 
-            if (!matchesFilter) return false;
-            if (!search) return true;
-            const compName = d.customer_companies ? d.customer_companies.company_name : '';
-            const combined = [compName, d.hazard_title, d.action_plan, d.responsible_person, status].join(' ').toLowerCase();
-            return combined.includes(search);
+          if (!matchesFilter) return false;
+          if (!search) return true;
+          const compName = d.customer_companies ? d.customer_companies.company_name : '';
+          const combined = [compName, d.hazard_title, d.action_plan, d.responsible_person, status]
+            .join(' ')
+            .toLowerCase();
+          return combined.includes(search);
         });
-    }
+      }
 
-    function renderDofTable() {
+      function renderDofTable() {
         const tbody = document.getElementById('dof_tbody');
         const visible = getFilteredDofs();
         document.getElementById('cnt_visible').innerText = visible.length;
 
         if (visible.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="empty-state">✓ Seçili filtreye uygun DÖF kaydı yok.</td></tr>`;
-            document.getElementById('dof_status').innerText = '';
-            return;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--uc-text-muted); padding: 24px;">✓ Seçili filtreye uygun DÖF kaydı yok.</td></tr>`;
+          document.getElementById('dof_status').innerText = '';
+          return;
         }
 
         tbody.innerHTML = '';
-        visible.forEach(d => {
-            const compName = d.customer_companies ? d.customer_companies.company_name : 'Bilinmeyen Şirket';
-            const overdue = isOverdue(d);
-            const isClosed = d.status === 'Kapalı';
-            const rowClass = isClosed ? 'closed-row' : (overdue ? 'overdue-row' : '');
-            const photoCell = d.image_url ? `<a href="${escapeHTML(d.image_url)}" target="_blank" class="photo-link">📷 Var</a>` : `<span class="photo-none">Yok</span>`;
-            const terminCell = overdue ? `<span style="color:#b91c1c; font-weight:900;">🚨 ${escapeHTML(d.target_date || '-')}</span><br><span class="badge badge-overdue">Gecikti</span>` : escapeHTML(d.target_date || '-');
-            const closeNote = d.close_note ? `<div class="close-note">✅ Kapanış: ${escapeHTML(d.close_note)}</div>` : '';
-            const actionPlan = d.action_plan ? `<div class="action-plan">🛠️ ${escapeHTML(d.action_plan)}</div>` : `<div class="action-plan">Önerilen önlem girilmemiş.</div>`;
-            const responsible = d.responsible_person ? escapeHTML(d.responsible_person) : '<span class="muted">Atanmamış</span>';
-            const actions = isClosed
-                ? `<button class="btn-sm btn-disabled" disabled>Kapatıldı</button>`
-                : `<button class="btn-sm btn-progress" onclick="markInProgress('${d.id}')">Devam Ediyor</button><button class="btn-sm btn-close" onclick="closeDof('${d.id}')">Kapat</button>`;
+        visible.forEach((d) => {
+          const compName = d.customer_companies ? d.customer_companies.company_name : 'Bilinmeyen Şirket';
+          const overdue = isOverdue(d);
+          const isClosed = d.status === 'Kapalı';
+          const rowClass = isClosed ? 'closed-row' : overdue ? 'overdue-row' : '';
+          const photoCell = d.image_url
+            ? `<a href="${escapeHTML(d.image_url)}" target="_blank" style="color: var(--uc-primary); font-weight: 700; text-decoration: none;">📷 Var</a>`
+            : `<span style="color: var(--uc-text-muted);">Yok</span>`;
+          const terminCell = overdue
+            ? `<span style="color:#b91c1c; font-weight:900;">🚨 ${escapeHTML(d.target_date || '-')}</span><br><span style="background:#fee2e2; color:#b91c1c; font-size:10px; padding:2px 6px; border-radius:4px; font-weight:700; display:inline-block; margin-top:2px;">Gecikti</span>`
+            : escapeHTML(d.target_date || '-');
+          const closeNote = d.close_note ? `<div style="font-size: 11px; color: #16a34a; margin-top: 4px; font-weight: 600;">✅ Kapanış: ${escapeHTML(d.close_note)}</div>` : '';
+          const actionPlan = d.action_plan
+            ? `<div style="font-size:12px; color:var(--uc-text-muted); margin-top:4px;">🛠️ ${escapeHTML(d.action_plan)}</div>`
+            : `<div style="font-size:12px; color:var(--uc-text-muted); margin-top:4px;">Önerilen önlem girilmemiş.</div>`;
+          const responsible = d.responsible_person
+            ? escapeHTML(d.responsible_person)
+            : '<span style="color: var(--uc-text-muted);">Atanmamış</span>';
+          
+          let actions = '';
+          if (isClosed) {
+            actions = `<button disabled style="background:#f1f5f9; color:#94a3b8; border:1px solid var(--uc-line); border-radius:6px; padding:6px 12px; font-size:11px; cursor:not-allowed; font-weight:700;">Kapatıldı</button>`;
+          } else {
+            actions = `
+              <div style="display: flex; gap: 6px;">
+                <button onclick="markInProgress('${d.id}')" style="background:#e0f2fe; color:#0369a1; border:none; border-radius:6px; padding:6px 10px; font-size:11px; cursor:pointer; font-weight:700; transition: opacity 0.15s ease;">İşlemde</button>
+                <button onclick="closeDof('${d.id}')" style="background:#dcfce7; color:#15803d; border:none; border-radius:6px; padding:6px 10px; font-size:11px; cursor:pointer; font-weight:700; transition: opacity 0.15s ease;">Kapat</button>
+              </div>
+            `;
+          }
 
-            tbody.innerHTML += `
-                <tr class="${rowClass}">
-                    <td><strong>${escapeHTML(compName)}</strong></td>
-                    <td><div class="risk-title">${escapeHTML(d.hazard_title || '-')}</div>${actionPlan}${closeNote}</td>
-                    <td>${responsible}</td>
-                    <td><span class="score">${escapeHTML(d.risk_score || '-')}</span></td>
-                    <td>${terminCell}</td>
-                    <td>${photoCell}</td>
-                    <td>${statusBadge(d.status || 'Açık')}</td>
-                    <td>${actions}</td>
+          tbody.innerHTML += `
+                <tr class="${rowClass}" style="border-bottom: 1px solid var(--uc-line);">
+                    <td style="padding: 12px 16px; font-size:13px;"><strong>${escapeHTML(compName)}</strong></td>
+                    <td style="padding: 12px 16px; font-size:13px;"><div style="font-weight:700;">${escapeHTML(d.hazard_title || '-')}</div>${actionPlan}${closeNote}</td>
+                    <td style="padding: 12px 16px; font-size:13px;">${responsible}</td>
+                    <td style="padding: 12px 16px; font-size:13px;"><span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; font-weight:700; font-size:12px;">${escapeHTML(d.risk_score || '-')}</span></td>
+                    <td style="padding: 12px 16px; font-size:13px;">${terminCell}</td>
+                    <td style="padding: 12px 16px; font-size:13px;">${photoCell}</td>
+                    <td style="padding: 12px 16px; font-size:13px;">${statusBadge(d.status || 'Açık')}</td>
+                    <td style="padding: 12px 16px; font-size:13px;">${actions}</td>
                 </tr>
             `;
         });
 
-        const overdueCount = visible.filter(d => isOverdue(d)).length;
-        document.getElementById('dof_status').innerText = overdueCount > 0 ? `${overdueCount} gecikmiş DÖF kaydı bu filtrede görünüyor.` : '';
+        const overdueCount = visible.filter((d) => isOverdue(d)).length;
+        document.getElementById('dof_status').innerText =
+          overdueCount > 0 ? `${overdueCount} gecikmiş DÖF kaydı bu filtrede görünüyor.` : '';
         document.getElementById('dof_status').style.color = overdueCount > 0 ? '#b91c1c' : '#16a34a';
-    }
+      }
 
-    async function markInProgress(id) {
-        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) { alert('Tenant bilgisi bulunamadı.'); return; }
+      async function markInProgress(id) {
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
         const { error } = await dbClient
-            .from('risk_assessments')
-            .update({ status: 'Devam Ediyor' })
-            .eq('id', id)
-            .eq('tenant_id', CURRENT_AUTH.tenant_id);
-        if (error) { alert('Durum güncellenemedi: ' + error.message); return; }
+          .from('risk_assessments')
+          .update({ status: 'Devam Ediyor' })
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id);
+        if (error) {
+          alert('Durum güncellenemedi: ' + error.message);
+          return;
+        }
         await fetchDofs();
-    }
+      }
 
-    async function closeDof(id) {
+      async function closeDof(id) {
         const note = prompt('Bu DÖF nasıl giderildi? Kapanış açıklamasını yazın:');
         if (note === null) return;
         const cleanNote = note.trim();
-        if (!cleanNote) { alert('Kapanış açıklaması boş olamaz.'); return; }
+        if (!cleanNote) {
+          alert('Kapanış açıklaması boş olamaz.');
+          return;
+        }
 
-        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) { alert('Tenant bilgisi bulunamadı.'); return; }
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
 
         const { error } = await dbClient
-            .from('risk_assessments')
-            .update({
-                status: 'Kapalı',
-                close_note: cleanNote,
-                closed_at: new Date().toISOString()
-            })
-            .eq('id', id)
-            .eq('tenant_id', CURRENT_AUTH.tenant_id);
+          .from('risk_assessments')
+          .update({
+            status: 'Kapalı',
+            close_note: cleanNote,
+            closed_at: new Date().toISOString()
+          })
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id);
 
-        if (error) { alert('DÖF kapatılamadı: ' + error.message); return; }
+        if (error) {
+          alert('DÖF kapatılamadı: ' + error.message);
+          return;
+        }
         await fetchDofs();
-    }
+      }
 
-    async function fetchGlobalVisits() {
+      async function fetchGlobalVisits() {
         const tbody = document.getElementById('current_visits_tbody');
         const now = new Date();
         const year = now.getFullYear();
@@ -1119,43 +443,45 @@
         const end = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-01`;
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
-            document.getElementById('cnt_visits').innerText = '0';
-            return;
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
+          document.getElementById('cnt_visits').innerText = '0';
+          return;
         }
 
         const { data, error } = await dbClient
-            .from('field_schedules')
-            .select('*, customer_companies!inner(company_name, tenant_id)')
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
-            .gte('visit_date', start)
-            .lt('visit_date', end)
-            .order('visit_date', { ascending: true });
+          .from('field_schedules')
+          .select('*, customer_companies!inner(company_name, tenant_id)')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
+          .gte('visit_date', start)
+          .lt('visit_date', end)
+          .order('visit_date', { ascending: true });
 
         if (error) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Hata: ${escapeHTML(error.message)}</td></tr>`;
-            return;
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Hata: ${escapeHTML(error.message)}</td></tr>`;
+          return;
         }
 
         if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Bu ay için planlanmış ziyaret yok.</td></tr>`;
-            document.getElementById('cnt_visits').innerText = '0';
-            return;
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">Bu ay için planlanmış ziyaret yok.</td></tr>`;
+          document.getElementById('cnt_visits').innerText = '0';
+          return;
         }
 
         document.getElementById('cnt_visits').innerText = data.length;
         tbody.innerHTML = '';
-        data.forEach(v => {
-            const compName = v.customer_companies ? v.customer_companies.company_name : 'Bilinmeyen Şirket';
-            tbody.innerHTML += `<tr><td class="visit-date">${escapeHTML(v.visit_date)}</td><td><strong>${escapeHTML(compName)}</strong></td><td>${escapeHTML(v.assigned_staff || 'Atanmamış')}</td><td>⏱️ ${escapeHTML(v.planned_minutes || '-')} dk</td></tr>`;
+        data.forEach((v) => {
+          const compName = v.customer_companies ? v.customer_companies.company_name : 'Bilinmeyen Şirket';
+          tbody.innerHTML += `
+            <tr style="border-bottom: 1px solid var(--uc-line);">
+              <td class="visit-date" style="padding: 12px 16px; font-size:13px;">${escapeHTML(v.visit_date)}</td>
+              <td style="padding: 12px 16px; font-size:13px;"><strong>${escapeHTML(compName)}</strong></td>
+              <td style="padding: 12px 16px; font-size:13px;">${escapeHTML(v.assigned_staff || 'Atanmamış')}</td>
+              <td style="padding: 12px 16px; font-size:13px;">⏱️ ${escapeHTML(v.planned_minutes || '-')} dk</td>
+            </tr>
+          `;
         });
-    }
-
-    async function handleLogout() {
-        await dbClient.auth.signOut();
-        window.location.href = 'login.html';
-    }
-</script>
-</body>
+      }
+    </script>
+  </body>
 </html>

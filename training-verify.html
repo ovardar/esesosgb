@@ -1,23 +1,155 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eğitim Sertifika Doğrulama</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body{margin:0;min-height:100vh;background:linear-gradient(180deg,#f8fafc,#eef2ff);font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:#0f172a;padding:18px;display:flex;align-items:center;justify-content:center}.card{width:min(720px,100%);background:#fff;border:1px solid #e2e8f0;border-radius:22px;box-shadow:0 18px 42px rgba(15,23,42,.10);overflow:hidden}.hero{background:linear-gradient(135deg,#4c1d95,#7c3aed);color:white;padding:22px}.hero h1{margin:0;font-size:clamp(22px,4vw,32px)}.body{padding:22px}.status{padding:14px;border-radius:14px;font-weight:850}.ok{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}.err{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px}.box span{display:block;color:#64748b;font-size:11px;font-weight:850;text-transform:uppercase;letter-spacing:.04em}.box strong{display:block;margin-top:5px;font-size:15px}@media(max-width:640px){.grid{grid-template-columns:1fr}}
-  </style>
-</head>
-<body>
-<div class="card"><div class="hero"><h1>🎓 Sertifika Doğrulama</h1><p>QR kod veya doğrulama linki ile eğitim sertifikasını kontrol edin.</p></div><div class="body"><div id="status" class="status">Sertifika bilgisi kontrol ediliyor...</div><div id="result" class="grid"></div></div></div>
-<script>
-const SUPABASE_URL="https://dnvuizausfcjzkcsynql.supabase.co";
-const SUPABASE_KEY="sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-const dbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-function qs(name){return new URLSearchParams(window.location.search).get(name)||'';}
-function escapeHtml(v){return(v||'').toString().replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-window.onload=async function(){const code=qs('code');const status=document.getElementById('status');const result=document.getElementById('result');if(!code){status.className='status err';status.innerText='Doğrulama kodu bulunamadı.';return;}const{data,error}=await dbClient.from('training_certificate_verifications').select('*').eq('verification_code',code).maybeSingle();if(error||!data){status.className='status err';status.innerText='Sertifika doğrulanamadı veya kayıt bulunamadı.';return;}status.className='status ok';status.innerText='Sertifika doğrulandı.';const fields=[['Sertifika No',data.certificate_no],['Firma',data.company_name_snapshot],['Çalışan',data.worker_name_snapshot],['Eğitim',data.training_type],['Eğitim Tarihi',data.training_date],['Yenileme Tarihi',data.renewal_date],['Katılım Durumu',data.attendance_status],['Doğrulama Kodu',data.verification_code]];result.innerHTML=fields.map(([k,v])=>`<div class="box"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v||'-')}</strong></div>`).join('');};
-</script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eğitim Sertifika Doğrulama</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: linear-gradient(180deg, #f8fafc, #eef2ff);
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Arial,
+          sans-serif;
+        color: #0f172a;
+        padding: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .card {
+        width: min(720px, 100%);
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 22px;
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);
+        overflow: hidden;
+      }
+      .hero {
+        background: linear-gradient(135deg, #4c1d95, #7c3aed);
+        color: white;
+        padding: 22px;
+      }
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(22px, 4vw, 32px);
+      }
+      .body {
+        padding: 22px;
+      }
+      .status {
+        padding: 14px;
+        border-radius: 14px;
+        font-weight: 850;
+      }
+      .ok {
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+      }
+      .err {
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 12px;
+      }
+      .box span {
+        display: block;
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 850;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .box strong {
+        display: block;
+        margin-top: 5px;
+        font-size: 15px;
+      }
+      @media (max-width: 640px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="hero">
+        <h1>🎓 Sertifika Doğrulama</h1>
+        <p>QR kod veya doğrulama linki ile eğitim sertifikasını kontrol edin.</p>
+      </div>
+      <div class="body">
+        <div id="status" class="status">Sertifika bilgisi kontrol ediliyor...</div>
+        <div id="result" class="grid"></div>
+      </div>
+    </div>
+    <script>
+      const SUPABASE_URL = 'https://dnvuizausfcjzkcsynql.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY';
+      const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      function qs(name) {
+        return new URLSearchParams(window.location.search).get(name) || '';
+      }
+      function escapeHtml(v) {
+        return (v || '')
+          .toString()
+          .replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+      }
+      window.onload = async function () {
+        const code = qs('code');
+        const status = document.getElementById('status');
+        const result = document.getElementById('result');
+        if (!code) {
+          status.className = 'status err';
+          status.innerText = 'Doğrulama kodu bulunamadı.';
+          return;
+        }
+        const { data, error } = await dbClient
+          .from('training_certificate_verifications')
+          .select('*')
+          .eq('verification_code', code)
+          .maybeSingle();
+        if (error || !data) {
+          status.className = 'status err';
+          status.innerText = 'Sertifika doğrulanamadı veya kayıt bulunamadı.';
+          return;
+        }
+        status.className = 'status ok';
+        status.innerText = 'Sertifika doğrulandı.';
+        const fields = [
+          ['Sertifika No', data.certificate_no],
+          ['Firma', data.company_name_snapshot],
+          ['Çalışan', data.worker_name_snapshot],
+          ['Eğitim', data.training_type],
+          ['Eğitim Tarihi', data.training_date],
+          ['Yenileme Tarihi', data.renewal_date],
+          ['Katılım Durumu', data.attendance_status],
+          ['Doğrulama Kodu', data.verification_code]
+        ];
+        result.innerHTML = fields
+          .map(
+            ([k, v]) => `<div class="box"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v || '-')}</strong></div>`
+          )
+          .join('');
+      };
+    </script>
+  </body>
 </html>

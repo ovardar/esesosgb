@@ -1,1186 +1,774 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OSGB SaaS - Gelişmiş Saha Takvimi</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSGB SaaS - Ziyaret Takibi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --bg-main: #f4f6f9;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --accent-green: #10b981;
-            --accent-green-hover: #059669;
-            --border-color: #e2e8f0;
-            --table-header: #f8fafc;
-            --nav-inactive-bg: #e2e8f0;
-            --nav-inactive-text: #475569;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; transition: background 0.3s; }
-        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        
-        /* 🏛️ GLOBAL STANDART ÜST BAR */
-        .global-header { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .logo-area { font-size: 18px; font-weight: 800; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
-        .logo-badge { background: var(--primary); color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-        .controls-group { display: flex; align-items: center; gap: 20px; }
-        .theme-selector-container { display: flex; gap: 6px; align-items: center; background: var(--table-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); }
-        .theme-btn { width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .user-info { font-size: 13px; color: var(--text-muted); font-weight: 600; }
-        .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        
-        .nav-container { display: flex; gap: 8px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
-        .nav-btn { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.2s ease; }
-        .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
-        .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-        
-        /* 🖊️ FORM ALANI DÜZELTMELERİ */
-        .form-container { margin-top: 15px; }
-        .grid-4 { display: grid; grid-template-columns: 1.5fr 1.5fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
-        label { display: block; margin-bottom: 6px; color: var(--text-muted); font-weight: 600; font-size: 13px; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; background: var(--bg-card); color: var(--text-main); font-size: 14px; }
-        
-        button.submit-btn { background: var(--accent-green); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 5px; }
-        button.submit-btn:hover { background: var(--accent-green-hover); }
-        
-        /* 📅 TAKVİM STİLLERİ */
-        .calendar-container { margin-top: 30px; border-top: 2px solid var(--border-color); padding-top: 20px; }
-        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; color: var(--text-main); }
-        .month-nav-btn { background: var(--text-main); color: var(--bg-card); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .calendar-day-name { background: var(--table-header); text-align: center; padding: 8px; font-weight: 600; font-size: 12px; color: var(--text-muted); border-radius: 4px; border: 1px solid var(--border-color); }
-        .calendar-cell { background: var(--bg-card); border: 1px solid var(--border-color); min-height: 105px; padding: 6px; border-radius: 6px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
-        .calendar-cell-empty { background: var(--table-header); border: 1px dashed var(--border-color); opacity: 0.5; }
-        
-        .task-badge { font-size: 11px; padding: 4px; border-radius: 4px; margin-top: 4px; font-weight: bold; color: white; line-height: 1.2; cursor: pointer; }
-        .task-incomplete { background: #f97316; }
-        .task-complete { background: var(--accent-green); }
-        
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 100; justify-content: center; align-items: center; }
-        .modal-content { background: var(--bg-card); color: var(--text-main); padding: 25px; border-radius: 12px; width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 1px solid var(--border-color); }
-        .modal-buttons { display: flex; gap: 10px; margin-top: 15px; }
-        .btn-update { background: var(--accent-green); color: white; border: none; padding: 10px; border-radius: 6px; flex: 1; font-weight: bold; cursor: pointer; }
-        .btn-delete { background: #ef4444; color: white; border: none; padding: 10px; border-radius: 6px; flex: 1; font-weight: bold; cursor: pointer; }
-        .btn-close { background: var(--nav-inactive-text); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; }
-        #status { margin-top: 10px; text-align: center; font-weight: bold; }
-            .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
-    
-
-        /* ================================
-           v24 UI POLISH - ortak arayuz duzeltmeleri
-           ================================ */
-        :root {
-            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.10);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
-            --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        .card {
-            width: min(100%, 1240px) !important;
-            max-width: 1240px !important;
-            border-radius: var(--radius-lg) !important;
-            box-shadow: var(--shadow-md) !important;
-        }
-
-        .global-header {
-            background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        .top-row {
-            gap: 14px;
-            align-items: center !important;
-        }
-
-        .logo-area {
-            min-width: 0;
-            font-size: 17px !important;
-            letter-spacing: 0 !important;
-            gap: 10px !important;
-        }
-
-        .logo-area span[id^="lbl_"] {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .tenant-logo-img {
-            width: 36px !important;
-            height: 36px !important;
-            padding: 4px !important;
-            border-radius: 10px !important;
-            box-shadow: var(--shadow-sm);
-            flex: 0 0 auto;
-        }
-
-        .logo-badge {
-            border-radius: 999px !important;
-            padding: 4px 9px !important;
-            font-size: 11px !important;
-            letter-spacing: .02em;
-            flex: 0 0 auto;
-        }
-
-        .controls-group {
-            gap: 10px !important;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .theme-selector-container {
-            border-radius: 999px !important;
-            padding: 6px 10px !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .theme-btn {
-            width: 18px !important;
-            height: 18px !important;
-            transition: transform .15s ease, box-shadow .15s ease;
-        }
-        .theme-btn:hover { transform: translateY(-1px) scale(1.08); box-shadow: 0 3px 8px rgba(15,23,42,.18); }
-
-        .user-info {
-            background: var(--table-header);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 7px 11px;
-            max-width: 280px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .logout-btn,
-        button,
-        .btn,
-        input[type="submit"] {
-            border-radius: 10px !important;
-            font-weight: 750 !important;
-            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-        }
-        button:hover,
-        .logout-btn:hover,
-        .btn:hover,
-        input[type="submit"]:hover {
-            transform: translateY(-1px);
-            filter: brightness(.98);
-            box-shadow: var(--shadow-sm);
-        }
-        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
-
-        .nav-container {
-            justify-content: flex-start !important;
-            gap: 7px !important;
-            padding: 8px !important;
-            border-radius: 14px !important;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .nav-btn {
-            white-space: nowrap;
-            border-radius: 10px !important;
-            padding: 9px 13px !important;
-            font-size: 12.5px !important;
-            box-shadow: none;
-        }
-        .nav-btn.active-page { box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important; }
-
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        h1 { font-size: clamp(24px, 3vw, 34px); }
-        h2 { font-size: clamp(20px, 2.4vw, 28px); }
-        h3 { font-size: clamp(16px, 1.8vw, 20px); }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px !important;
-            color: var(--text-main) !important;
-            font-size: 13px !important;
-            letter-spacing: .04em !important;
-        }
-
-        .panel,
-        .form-card,
-        .table-card,
-        .sub-card,
-        .mini-card,
-        .info-card {
-            border-radius: var(--radius-md) !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .metric-box {
-            border-radius: 14px !important;
-            box-shadow: 0 10px 24px rgba(15,23,42,.10) !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .metric-box:after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,.20), transparent 45%);
-            pointer-events: none;
-        }
-        .metric-title, .metric-sub, .metric-value { position: relative; z-index: 1; }
-
-        input,
-        select,
-        textarea {
-            border: 1px solid var(--border-color) !important;
-            border-radius: 10px !important;
-            background: var(--bg-card);
-            color: var(--text-main);
-            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--primary) !important;
-            box-shadow: var(--focus-ring) !important;
-        }
-        label { font-weight: 700; color: var(--text-main); }
-
-        table {
-            border-collapse: separate !important;
-            border-spacing: 0 !important;
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        th {
-            font-size: 11px !important;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            white-space: nowrap;
-        }
-        td { line-height: 1.45; }
-        tbody tr { transition: background .12s ease; }
-        tbody tr:hover { background: rgba(37, 99, 235, 0.035); }
-        .empty-state {
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            background: var(--table-header);
-        }
-
-        .badge {
-            border-radius: 999px !important;
-            letter-spacing: .02em;
-            padding: 4px 8px !important;
-        }
-
-        .small-link { text-underline-offset: 3px; }
-
-        .operational-banner {
-            box-shadow: var(--shadow-sm);
-            border: 0 !important;
-        }
-
-        @media (max-width: 900px) {
-            body { padding: 12px !important; }
-            .card { padding: 16px !important; border-radius: 16px !important; }
-            .top-row { align-items: stretch !important; }
-            .controls-group { justify-content: flex-start; }
-            .user-info { max-width: 100%; }
-            .nav-container { flex-wrap: nowrap !important; justify-content: flex-start !important; }
-            .nav-btn { flex: 0 0 auto; }
-            table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
-            th, td { padding: 9px 10px !important; }
-        }
-
-        @media (max-width: 520px) {
-            .logo-area { font-size: 15px !important; }
-            .tenant-logo-img { width: 32px !important; height: 32px !important; }
-            .theme-selector-container { width: 100%; justify-content: center; }
-            .logout-btn { width: 100%; }
-        }
-
-    
-
-        /* ================================
-           v25 PRODUCT DESIGN SYSTEM - derin arayuz revizyonu
-           ================================ */
-        :root {
-            --brand-50: #eff6ff;
-            --brand-100: #dbeafe;
-            --brand-500: #2563eb;
-            --brand-600: #1d4ed8;
-            --brand-700: #1e40af;
-            --ink-900: #0f172a;
-            --ink-700: #334155;
-            --ink-500: #64748b;
-            --surface-0: #ffffff;
-            --surface-1: #f8fafc;
-            --surface-2: #eef2f7;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --info: #0284c7;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(37,99,235,.15), transparent 32rem),
-                radial-gradient(circle at top right, rgba(14,165,233,.12), transparent 28rem),
-                linear-gradient(180deg, #f8fafc 0%, #edf2f7 52%, #e9eef6 100%) !important;
-            color: var(--ink-900) !important;
-        }
-
-        .card {
-            padding: 0 !important;
-            overflow: hidden;
-            background: rgba(255,255,255,.92) !important;
-            backdrop-filter: blur(10px);
-        }
-
-        .global-header {
-            padding: 18px 22px 14px !important;
-            margin-bottom: 0 !important;
-            background: linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,64,175,.92)) !important;
-            color: white;
-            border-bottom: 0 !important;
-        }
-        .global-header .logo-area,
-        .global-header .user-info,
-        .global-header .theme-selector-container span { color: white !important; }
-        .global-header .theme-selector-container,
-        .global-header .user-info {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-container {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.16) !important;
-            margin-top: 12px;
-        }
-        .global-header .nav-btn {
-            background: rgba(255,255,255,.10) !important;
-            color: rgba(255,255,255,.86) !important;
-            border: 1px solid rgba(255,255,255,.10);
-        }
-        .global-header .nav-btn:hover {
-            background: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-btn.active-page {
-            background: white !important;
-            color: var(--brand-700) !important;
-            box-shadow: 0 8px 18px rgba(15,23,42,.22) !important;
-        }
-        .global-header .tenant-logo-img {
-            width: 42px !important;
-            height: 42px !important;
-            background: white !important;
-            border-color: rgba(255,255,255,.35) !important;
-        }
-        .global-header .logo-badge {
-            background: rgba(255,255,255,.18) !important;
-            border: 1px solid rgba(255,255,255,.18);
-        }
-        .logout-btn { background: rgba(239,68,68,.92) !important; }
-
-        .card > h1,
-        .card > h2,
-        .card > .page-desc,
-        .card > .section-title,
-        .card > .dashboard-grid,
-        .card > .kpi-grid,
-        .card > .operational-banner,
-        .card > .content-grid,
-        .card > .grid,
-        .card > .panel,
-        .card > form,
-        .card > table,
-        .card > div:not(.global-header) {
-            margin-left: 22px;
-            margin-right: 22px;
-        }
-        .card > h1,
-        .card > h2 {
-            margin-top: 22px !important;
-            margin-bottom: 4px !important;
-            font-size: clamp(22px, 2.6vw, 31px) !important;
-            letter-spacing: -0.035em;
-            color: var(--ink-900);
-        }
-        .page-desc {
-            max-width: 780px;
-            color: var(--ink-500) !important;
-            font-size: 14px !important;
-            margin-bottom: 20px !important;
-        }
-
-        .section-title {
-            margin-top: 24px !important;
-            margin-bottom: 11px !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--ink-700) !important;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(226,232,240,.9);
-            padding: 7px 11px;
-            border-radius: 999px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .panel {
-            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)) !important;
-            border: 1px solid rgba(203,213,225,.85) !important;
-            box-shadow: 0 12px 30px rgba(15,23,42,.07) !important;
-            border-radius: 18px !important;
-        }
-        .panel h3 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            border-bottom: 1px solid rgba(226,232,240,.95) !important;
-            padding-bottom: 12px !important;
-            margin-bottom: 14px !important;
-            color: var(--ink-900);
-            letter-spacing: -0.01em;
-        }
-        .panel h3::after {
-            content: "";
-            flex: 1;
-            height: 3px;
-            max-width: 56px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: .7;
-        }
-
-        .dashboard-grid,
-        .kpi-grid {
-            gap: 16px !important;
-        }
-        .metric-box {
-            position: relative;
-            overflow: hidden;
-            min-height: 104px !important;
-            padding: 18px 19px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 18px 38px rgba(15,23,42,.13) !important;
-        }
-        .metric-box::before {
-            content: "";
-            position: absolute;
-            inset: -40% -30% auto auto;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.17);
-        }
-        .metric-title { font-size: 12.5px !important; text-transform: uppercase; letter-spacing: .045em; }
-        .metric-value { font-size: 34px !important; letter-spacing: -0.045em; }
-        .metric-sub { font-size: 12px !important; }
-        .metric-box.clickable:hover {
-            transform: translateY(-3px);
-            filter: saturate(1.04);
-        }
-
-        .content-grid {
-            margin-bottom: 24px;
-            align-items: start;
-        }
-        .operational-banner {
-            min-height: 86px;
-            padding: 20px 22px !important;
-            border-radius: 20px !important;
-        }
-        .op-text h4 { font-size: 18px !important; letter-spacing: -0.015em; }
-        .op-badge { border-radius: 16px !important; }
-
-        table {
-            background: white;
-            box-shadow: inset 0 0 0 1px rgba(226,232,240,.75);
-        }
-        th {
-            background: #f1f5f9 !important;
-            color: #475569 !important;
-        }
-        td {
-            background-clip: padding-box;
-        }
-        tbody tr:nth-child(even) td { background: rgba(248,250,252,.65); }
-
-        .btn-primary,
-        button.btn-primary {
-            background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-blue,
-        button.btn-blue {
-            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-secondary,
-        button.btn-secondary {
-            background: #f1f5f9 !important;
-            color: #334155 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        .btn-danger,
-        button.btn-danger {
-            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .status.ok {
-            background: #ecfdf5 !important;
-            color: #047857 !important;
-            border: 1px solid #a7f3d0 !important;
-        }
-        .status.err {
-            background: #fef2f2 !important;
-            color: #b91c1c !important;
-            border: 1px solid #fecaca !important;
-        }
-
-        /* SaaS Yonetimi urun paneli revizyonu */
-        .grid {
-            grid-template-columns: 420px minmax(0, 1fr) !important;
-            gap: 22px !important;
-            align-items: start !important;
-            margin-bottom: 24px;
-        }
-        .grid > div:first-child {
-            position: sticky;
-            top: 18px;
-            align-self: start;
-        }
-        .edit-panel {
-            border: 1px solid rgba(37,99,235,.22) !important;
-            background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
-        }
-        .link-box {
-            border-radius: 12px !important;
-            border: 1px solid #bfdbfe !important;
-            background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
-            color: #1e40af !important;
-            font-weight: 750;
-        }
-        .logo-upload-box {
-            border: 1px dashed #93c5fd !important;
-            background: #f8fbff !important;
-            border-radius: 16px !important;
-        }
-        .logo-preview {
-            width: 56px !important;
-            height: 56px !important;
-            border-radius: 14px !important;
-            box-shadow: var(--shadow-sm);
-        }
-        .actions {
-            gap: 9px !important;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .actions + .button-help,
-        .button-help {
-            margin-top: 10px;
-            display: grid;
-            gap: 7px;
-            color: var(--ink-500);
-            font-size: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 11px 12px;
-        }
-        .button-help strong { color: var(--ink-700); }
-
-        @media (max-width: 1040px) {
-            .grid { grid-template-columns: 1fr !important; }
-            .grid > div:first-child { position: static; }
-        }
-        @media (max-width: 900px) {
-            .card > h1,
-            .card > h2,
-            .card > .page-desc,
-            .card > .section-title,
-            .card > .dashboard-grid,
-            .card > .kpi-grid,
-            .card > .operational-banner,
-            .card > .content-grid,
-            .card > .grid,
-            .card > .panel,
-            .card > form,
-            .card > table,
-            .card > div:not(.global-header) {
-                margin-left: 14px !important;
-                margin-right: 14px !important;
-            }
-            .global-header { padding: 15px !important; }
-            .metric-box { min-height: 92px !important; }
-        }
-
-    
-
-        /* v26.2 hotfix: keep v26 visual system, add branding/table/layout fixes */
-        .logo-area { font-weight: 500 !important; letter-spacing: .01em !important; font-size: 18px !important; }
-        .logo-area #lbl_osgb_title { font-weight: 500 !important; }
-        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
-        table, thead, tbody, tr, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; }
-        table { font-size: 13px !important; border-collapse: separate !important; border-spacing: 0 !important; }
-        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
-        tbody td { padding: 9px 11px !important; }
-        .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
-        .page-desc { max-width: none !important; }
-
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
-    <div class="global-header">
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean-schedule.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean">
+    <div class="card">
+      <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
+      <div class="global-header">
         <div class="top-row">
-            <div class="logo-area"><span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span></div>
-            <div class="controls-group">
-                <div class="theme-selector-container">
-                    <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-right: 2px;">🎨 TEMA:</span>
-                    <div class="theme-btn" style="background: #2563eb;" onclick="setTheme('isgm')" title="İSGM Kurumsal"></div>
-                    <div class="theme-btn" style="background: #10b981;" onclick="setTheme('hekim-dark')" title="Hekim Gece Modu"></div>
-                    <div class="theme-btn" style="background: #c2410c;" onclick="setTheme('eskisehir')" title="Eskişehir Tuğlası"></div>
-                    <div class="theme-btn" style="background: #1e293b;" onclick="setTheme('kartal')" title="Kartal Yuvası"></div>
-                    <div class="theme-btn" style="background: #556b2f;" onclick="setTheme('doga')" title="Doğa & Çevre"></div>
-                </div>
-                <div class="user-info">👤 <span id="current_user_email">...</span></div>
-                <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
-            </div>
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
         </div>
 
-        <div class="nav-container">
-            <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
-            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
-            <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
-            <a href="schedule.html" class="nav-btn active-page">📅 Aylık Takvim</a>
-            <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
-            <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
-            <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
-            <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
-        </div>
-    </div>
+        <div class="nav-container"></div>
+      </div>
 
-    <h2>📅 Gelişmiş Saha Ziyaret Takvimi & Planlayıcı</h2>
-    
-    <!-- 🖊️ NİZAMİ FORM ALANI -->
-    <div class="form-container">
-        <div class="grid-4">
-            <div class="form-group">
-                <label>Ziyaret Edilecek Firma</label>
-                <select id="company_select" onchange="renderCalendarWithTasks()">
-                    <option value="">Firmalar yükleniyor...</option>
-                </select>
+      <div class="schedule-page-shell">
+        <div class="page-header-row" style="margin-bottom:12px;">
+          <div class="page-title-group">
+            <h2>📅 Ziyaret Takibi</h2>
+            <p>Planlanan ve gerçekleşen saha ziyaretlerini yönetin, hedefleri takip edin.</p>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div class="view-toggle-container" style="display: none;">
+              <button class="view-toggle-btn active" id="toggle_calendar">Takvim</button>
+              <button class="view-toggle-btn" id="toggle_list_view">Liste</button>
             </div>
-            <div class="form-group">
-                <label>Gidecek Personel</label>
-                <select id="visit_staff"><option value="">Personeller yükleniyor...</option></select>
-            </div>
-            <div class="form-group">
-                <label>Ziyaret Tarihi</label>
-                <input type="date" id="visit_date">
-            </div>
-            <div class="form-group">
-                <label>Süre (Dk)</label>
-                <input type="number" id="visit_minutes" placeholder="60">
-            </div>
+          </div>
         </div>
-        <div class="form-group">
-            <label>Ziyaret Notu / Faaliyet İçeriği</label>
-            <textarea id="visit_notes" rows="2" placeholder="Ziyaret hedefleri, denetim konusu notları..."></textarea>
-        </div>
-        <button class="submit-btn" onclick="saveSchedule()">Ziyaret Planını Takvime İşle</button>
-    </div>
-    <div id="status"></div>
 
-    <div class="calendar-container">
-        <div class="calendar-header">
+        <!-- Firma Filtresi -->
+        <div class="crm-toolbar-premium" style="align-items:center; margin-bottom:14px;">
+          <div style="min-width:220px; display:flex; align-items:center; gap:8px;">
+            <label style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.4px;">Firma Seçimi:</label>
+            <select id="company_select" onchange="handleCompanyChange()" style="flex:1;">
+              <option value="">Firmalar yükleniyor...</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Ziyaret Gerçekleşme ve Hedef Özet Paneli -->
+        <div class="stat-card-premium" id="visit_stats_card" style="padding: 20px; margin-bottom: 20px; display: none;">
+          <h3 style="margin: 0 0 12px; font-size: 15px; color: var(--uc-text); font-weight: 800;">📊 Ziyaret Gerçekleşme ve Hedef Durumu</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+            <!-- Uzman -->
+            <div style="padding: 12px; border-radius: 12px; background: var(--uc-bg-soft); border: 1px solid var(--uc-border); display: flex; flex-direction: column; justify-content: center;">
+              <h4 style="margin: 0 0 6px; font-size: 12px; color: var(--uc-text-muted); font-weight: 700; text-transform: uppercase;">🦺 İSG UZMANI</h4>
+              <div style="font-size: 20px; font-weight: 800; color: var(--uc-text);" id="stat_uzman_visits">-</div>
+              <div style="font-size: 11px; color: var(--uc-text-muted); margin-top: 4px;" id="stat_uzman_visits_desc">Gerçekleşen / Planlanan / Hedef</div>
+            </div>
+            <!-- Hekim -->
+            <div style="padding: 12px; border-radius: 12px; background: var(--uc-bg-soft); border: 1px solid var(--uc-border); display: flex; flex-direction: column; justify-content: center;">
+              <h4 style="margin: 0 0 6px; font-size: 12px; color: var(--uc-text-muted); font-weight: 700; text-transform: uppercase;">🩺 İŞYERİ HEKİMİ</h4>
+              <div style="font-size: 20px; font-weight: 800; color: var(--uc-text);" id="stat_hekim_visits">-</div>
+              <div style="font-size: 11px; color: var(--uc-text-muted); margin-top: 4px;" id="stat_hekim_visits_desc">Gerçekleşen / Planlanan / Hedef</div>
+            </div>
+            <!-- Süre -->
+            <div style="padding: 12px; border-radius: 12px; background: var(--uc-bg-soft); border: 1px solid var(--uc-border); display: flex; flex-direction: column; justify-content: center;">
+              <h4 style="margin: 0 0 6px; font-size: 12px; color: var(--uc-text-muted); font-weight: 700; text-transform: uppercase;">⏱️ AYLIK YASAL SÜRE</h4>
+              <div style="font-size: 15px; font-weight: 800; color: var(--uc-text);" id="stat_duration_summary">-</div>
+              <div style="font-size: 11px; color: var(--uc-text-muted); margin-top: 4px;" id="lbl_süre_durumu">Hedef durum hesaplanıyor...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Firma Hedef Konfigürasyonu -->
+        <div class="stat-card-premium" id="visit_target_config" style="padding: 20px; margin-bottom: 20px; display: none;">
+          <h3 style="margin: 0 0 4px; font-size: 15px; color: var(--uc-text); font-weight: 800;">⚙️ Aylık Ziyaret Hedefleri</h3>
+          <p style="color: var(--uc-text-muted); font-size: 12px; margin: 0 0 12px;">Seçilen firma için aylık yapılması hedeflenen ziyaret sayılarını belirleyin.</p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end;">
+            <div class="form-group-premium">
+              <label>Uzman Ziyaret Hedefi (Aylık Sayı)</label>
+              <input type="number" id="target_uzman_visits_input" min="0" placeholder="Örn: 2" />
+            </div>
+            <div class="form-group-premium">
+              <label>Hekim Ziyaret Hedefi (Aylık Sayı)</label>
+              <input type="number" id="target_hekim_visits_input" min="0" placeholder="Örn: 1" />
+            </div>
+            <button class="btn btn-teal" style="height: 48px; min-width: 140px; margin-bottom: 2px;" onclick="updateVisitTargets()">Hedefi Güncelle</button>
+          </div>
+        </div>
+
+        <!-- Yeni Ziyaret Ekleme Formu -->
+        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleNewVisitForm()">
             <div>
-                <button class="month-nav-btn" onclick="changeMonth(-1)">◀ Önceki Ay</button>
-                <span id="lbl_month_year" style="font-size: 18px; margin: 0 15px;">Haziran 2026</span>
-                <button class="month-nav-btn" onclick="changeMonth(1)">Sonraki Ay ▶</button>
+              <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">➕ Yeni Ziyaret Ekle</h3>
+              <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0;">Sisteme yeni bir planlı veya gerçekleşen ziyaret kaydı ekleyin.</p>
             </div>
-            <span id="lbl_süre_durumu" style="font-weight: bold; font-size: 14px;"></span>
+            <span id="visit_form_arrow" style="font-size: 20px; color: var(--uc-text-muted); transition: transform 0.2s ease;">▾</span>
+          </div>
+
+          <div id="visit_form_panel" class="is-collapsed" style="transition: all 0.3s ease; max-height: 0; overflow: hidden; opacity: 0; margin-top: 0;">
+            <div style="padding-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+              <div class="form-group-premium">
+                <label>Firma</label>
+                <select id="visit_company">
+                  <option value="">-- Firma Seçin --</option>
+                </select>
+              </div>
+              <div class="form-group-premium">
+                <label>Personel</label>
+                <select id="visit_staff">
+                  <option value="">Personeller yükleniyor...</option>
+                </select>
+              </div>
+              <div class="form-group-premium">
+                <label>Tarih</label>
+                <input type="date" id="visit_date" />
+              </div>
+              <div class="form-group-premium">
+                <label>Süre (dk)</label>
+                <input type="number" id="visit_minutes" placeholder="Süre (dk)" />
+              </div>
+              <div class="form-group-premium">
+                <label>Durum</label>
+                <select id="visit_status">
+                  <option value="planned">Planlandı</option>
+                  <option value="completed">Gerçekleşti</option>
+                  <option value="cancelled">İptal Edildi</option>
+                </select>
+              </div>
+              <div class="form-group-premium">
+                <label>Notlar</label>
+                <input type="text" id="visit_notes" placeholder="Kısa not (isteğe bağlı)" />
+              </div>
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+              <button class="btn btn-blue btn-premium" style="height: 44px; min-width: 160px;" onclick="saveSchedule()">Ziyareti Planla</button>
+            </div>
+          </div>
         </div>
-        <div class="calendar-grid" id="calendar_grid_body"></div>
-    </div>
-</div>
+        <div id="status"></div>
 
-<div id="taskModal" class="modal">
-    <div class="modal-content">
-        <h3>📝 Planı Düzenle</h3>
-        <input type="hidden" id="modal_task_id">
-        <div class="form-group"><label>Yeni Tarih</label><input type="date" id="modal_visit_date"></div>
-        <div class="form-group"><label>Yeni Süre</label><input type="number" id="modal_visit_minutes"></div>
-        <div class="form-group"><label>Personel Değiştir</label><select id="modal_visit_staff"></select></div>
-        <div class="modal-buttons">
-            <button class="btn-update" onclick="updateTask()">Kaydet</button>
-            <button class="btn-delete" onclick="deleteTask()">Sil</button>
-            <button class="btn-close" onclick="closeModal()">Kapat</button>
+        <!-- Takvim Alanı -->
+        <div class="calendar-container">
+          <div class="calendar-header">
+            <div>
+              <a href="#" class="card-actions-btn month-nav-btn prev-month-btn" data-direction="-1" aria-label="Önceki ay">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="icon icon-left" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor" />
+                </svg>
+                <span class="btn-label">Önceki Ay</span>
+              </a>
+              <span id="lbl_month_year" style="font-size: 18px; margin: 0 15px; font-weight:700">Haziran 2026</span>
+              <a href="#" class="card-actions-btn month-nav-btn next-month-btn" data-direction="1" aria-label="Sonraki ay">
+                <span class="btn-label">Sonraki Ay</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" class="icon icon-right" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" fill="currentColor" />
+                </svg>
+              </a>
+            </div>
+          </div>
+          <div class="calendar-weekdays" id="calendar_weekdays"></div>
+          <div class="calendar-grid" id="calendar_grid_body"></div>
         </div>
+      </div><!-- /schedule-page-shell -->
+    </div><!-- /card -->
+
+    <!-- Düzenleme Modalı -->
+    <div class="modal-backdrop-premium" id="task_modal_backdrop">
+      <div class="modal-card-premium">
+        <div class="modal-header-premium">
+          <h3 id="modal_title">📝 Planı Düzenle</h3>
+          <button class="modal-close-btn" id="modal_close_btn">&times;</button>
+        </div>
+        <div class="modal-body-premium">
+          <input type="hidden" id="modal_task_id" />
+          <div class="modal-grid-premium">
+            <div class="form-group-premium full-width">
+              <label>Firma Seçimi</label>
+              <select id="modal_company"></select>
+            </div>
+            <div class="form-group-premium">
+              <label>Yeni Tarih</label>
+              <input type="date" id="modal_visit_date" />
+            </div>
+            <div class="form-group-premium">
+              <label>Yeni Süre (dk)</label>
+              <input type="number" id="modal_visit_minutes" />
+            </div>
+            <div class="form-group-premium full-width">
+              <label>Personel Atama</label>
+              <select id="modal_visit_staff"></select>
+            </div>
+            <div class="form-group-premium full-width">
+              <label>Ziyaret Durumu</label>
+              <select id="modal_visit_status">
+                <option value="planned">Planlandı</option>
+                <option value="completed">Gerçekleşti</option>
+                <option value="cancelled">İptal Edildi</option>
+              </select>
+            </div>
+            <div class="form-group-premium full-width">
+              <label>Notlar</label>
+              <textarea id="modal_visit_notes" rows="4"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-premium">
+          <button class="btn-secondary-premium" id="btn_delete">Sil</button>
+          <button class="btn-secondary-premium" id="btn_close">Kapat</button>
+          <button class="btn-add-lead-btn" id="btn_update">Kaydet</button>
+        </div>
+      </div>
     </div>
-</div>
 
-<script>
-    const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <script>
+      let currentAuth = null;
+      let currentDate = new Date(2026, 5, 1);
+      const MONTH_NAMES = [
+        'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+        'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+      ];
+      const DAY_NAMES = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+      const TARGETS_STORAGE_KEY = 'company_visit_targets';
 
-    // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
-    // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
-    // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
-    function normalizeAccessRole(value) {
-        const v = (value || '').toString().trim().toLowerCase();
-        if (['super_admin', 'super admin', 'saas_admin', 'sistem sahibi'].includes(v)) return 'super_admin';
-        if (['admin', 'yonetici', 'yönetici'].includes(v)) return 'admin';
-        if (['uzman', 'isg_uzmani', 'isg uzmanı', 'iş güvenliği uzmanı'].includes(v)) return 'uzman';
-        if (['hekim', 'isyeri hekimi', 'işyeri hekimi'].includes(v)) return 'hekim';
-        if (['dsp', 'diğer sağlık personeli', 'diger saglik personeli'].includes(v)) return 'dsp';
-        if (['firma_yetkilisi', 'firma yetkilisi', 'musteri', 'müşteri'].includes(v)) return 'firma_yetkilisi';
-        return '';
-    }
+      // 🔐 ZİYARET DURUM PARSE & FORMAT YARDIMCILARI
+      function parseVisitStatus(notes) {
+        const rawNotes = notes || '';
+        let status = 'planned'; // varsayılan
+        let cleanNotes = rawNotes;
 
-    function inferAccessRoleFromEmail(email) {
-        const e = (email || '').toLowerCase();
-        if (e.includes('orhan.vardar@gmail.com')) return 'super_admin';
-        if (e.includes('admin')) return 'admin';
-        if (e.includes('hekim')) return 'hekim';
-        if (e.includes('dsp')) return 'dsp';
-        if (e.includes('firma') || e.includes('musteri') || e.includes('müşteri')) return 'firma_yetkilisi';
-        if (e.includes('uzman')) return 'uzman';
-        return 'uzman';
-    }
-
-    function isStaffAccessActive(record) {
-        if (!record) return true;
-        if (record.can_login === false) return false;
-        if (record.is_active_manual === 'Aktif') return true;
-        if (record.is_active_manual === 'Pasif') return false;
-        const today = new Date(); today.setHours(0,0,0,0);
-        if (record.hire_date) {
-            const hire = new Date(record.hire_date); hire.setHours(0,0,0,0);
-            if (hire > today) return false;
+        const match = rawNotes.match(/\[status:(planned|completed|cancelled)\]/);
+        if (match) {
+          status = match[1];
+          cleanNotes = rawNotes.replace(/\[status:(planned|completed|cancelled)\]/, '').trim();
         }
-        if (record.termination_date) {
-            const term = new Date(record.termination_date); term.setHours(0,0,0,0);
-            if (term <= today) return false;
-        }
-        return true;
-    }
+        return { status, cleanNotes };
+      }
 
-    async function getCurrentAuthContext() {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) return { session: null, email: '', role: '', canLogin: false, staff: null };
-        const email = session.user.email || '';
-        let staff = null;
+      function formatVisitNotesWithStatus(notes, status) {
+        const cleanNotes = (notes || '').replace(/\[status:(planned|completed|cancelled)\]/g, '').trim();
+        return `${cleanNotes} [status:${status}]`.trim();
+      }
+
+      // ⚙️ FİRMA ZİYARET HEDEF YARDIMCILARI
+      function getCompanyVisitTargets(companyId) {
+        if (!companyId) return { uzman_target: 0, hekim_target: 0 };
+        const stored = localStorage.getItem(TARGETS_STORAGE_KEY);
+        if (!stored) return { uzman_target: 0, hekim_target: 0 };
         try {
-            const { data } = await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email', email).maybeSingle();
-            staff = data || null;
-        } catch (err) {
-            console.warn('Rol kaydı okunamadı, e-posta bazlı geçici role dönülüyor:', err.message);
+          const targets = JSON.parse(stored);
+          return targets[companyId] || { uzman_target: 0, hekim_target: 0 };
+        } catch (e) {
+          return { uzman_target: 0, hekim_target: 0 };
         }
-        const role = normalizeAccessRole(staff && staff.access_role) || normalizeAccessRole(staff && staff.staff_role) || inferAccessRoleFromEmail(email);
-        const canLogin = isStaffAccessActive(staff);
-        return { session, email, role, canLogin, staff, tenant: staff && staff.tenants ? staff.tenants : null, tenant_id: staff ? staff.tenant_id : null };
-    }
+      }
 
-    function canAccessPage(role, page) {
-        if (role === 'super_admin' || role === 'admin') return true;
-        if (page === 'risk') return role === 'uzman';
-        if (page === 'medical') return role === 'hekim';
-        if (page === 'staff') return false;
-        if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
-        return true;
-    }
+      function updateVisitTargets() {
+        const companyId = document.getElementById('company_select').value;
+        if (!companyId) return;
 
-    function roleLabel(role) {
-        return { super_admin: 'Super Admin', admin: 'Admin', uzman: 'İSG Uzmanı', hekim: 'İşyeri Hekimi', dsp: 'DSP', firma_yetkilisi: 'Firma Yetkilisi' }[role] || role || 'Rol yok';
-    }
+        const uzmanVal = document.getElementById('target_uzman_visits_input').value;
+        const hekimVal = document.getElementById('target_hekim_visits_input').value;
 
-    function applyRoleBasedNavigation(role) {
-        const riskMenu = document.getElementById('menu_risk');
-        const medicalMenu = document.getElementById('menu_medical');
-        const staffMenu = document.getElementById('menu_staff');
-        const saasMenu = document.getElementById('menu_saas');
-        if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
-        if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
-        if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
-        if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
-        if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
-    }
-
-
-    function setTenantBranding(tenant) {
-        const titleEl = document.getElementById('lbl_osgb_title');
-        if (titleEl) titleEl.innerText = (tenant && tenant.name) ? tenant.name : 'Eses Software';
-        const area = titleEl ? titleEl.closest('.logo-area') : null;
-        if (!area) return;
-        let img = area.querySelector('.tenant-logo-img');
-        const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
-        if (logoUrl) {
-            if (!img) {
-                img = document.createElement('img');
-                img.className = 'tenant-logo-img';
-                img.alt = 'Logo';
-                area.insertBefore(img, titleEl);
-            }
-            img.src = logoUrl;
-        } else if (img) {
-            img.remove();
+        const stored = localStorage.getItem(TARGETS_STORAGE_KEY);
+        let targets = {};
+        if (stored) {
+          try { targets = JSON.parse(stored); } catch (e) {}
         }
-    }
+        targets[companyId] = {
+          uzman_target: parseInt(uzmanVal) || 0,
+          hekim_target: parseInt(hekimVal) || 0
+        };
+        localStorage.setItem(TARGETS_STORAGE_KEY, JSON.stringify(targets));
 
-    async function requireAuthAndRole(page) {
-        const auth = await getCurrentAuthContext();
-        if (!auth.session) { window.location.href = 'login.html'; return null; }
-        if (!auth.canLogin) {
-            await dbClient.auth.signOut();
-            alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
-            window.location.href = 'login.html';
-            return null;
+        alert('Hedef ziyaret sayıları başarıyla güncellendi.');
+        renderCalendarWithTasks();
+      }
+
+      function handleCompanyChange() {
+        const selectedCompanyId = document.getElementById('company_select').value;
+        const targetPanel = document.getElementById('visit_target_config');
+        const statsCard = document.getElementById('visit_stats_card');
+
+        if (selectedCompanyId) {
+          targetPanel.style.display = 'block';
+          statsCard.style.display = 'block';
+          const targets = getCompanyVisitTargets(selectedCompanyId);
+          document.getElementById('target_uzman_visits_input').value = targets.uzman_target || '';
+          document.getElementById('target_hekim_visits_input').value = targets.hekim_target || '';
+        } else {
+          targetPanel.style.display = 'none';
+          statsCard.style.display = 'none';
         }
-        const userInfo = document.getElementById('current_user_email');
-        if (userInfo) userInfo.innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-        setTenantBranding(auth.tenant);
-        applyRoleBasedNavigation(auth.role);
-        if (page && !canAccessPage(auth.role, page)) {
-            window.location.href = 'dashboard.html';
-            return null;
+
+        renderCalendarWithTasks();
+      }
+
+      window.onload = async function () {
+        const auth = await requireAuthAndRole('schedule');
+        if (!auth) return;
+
+        currentAuth = auth;
+
+        if (!currentAuth.tenant_id) {
+          alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen Personel Yönetimi kaydını kontrol edin.');
+          await dbClient.auth.signOut();
+          window.location.href = 'login.html';
+          return;
         }
-        return auth;
-    }
-    let currentAuth = null;
-    let currentDate = new Date(2026, 5, 1);
-    const MONTH_NAMES = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-    const DAY_NAMES = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
 
-    const themes = {
-        isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--primary-hover': '#1d4ed8', '--accent-green': '#10b981', '--accent-green-hover': '#059669', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
-        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
-        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
-    };
+        document.body.style.display = 'block';
 
-    function setTheme(themeName) {
-        const theme = themes[themeName]; if(!theme) return;
-        Object.keys(theme).forEach(key => { document.documentElement.style.setProperty(key, theme[key]); });
-        localStorage.setItem('selected_theme', themeName);
-    }
+        await fetchCompaniesToSelect();
+        await populateStaffDropdowns();
+        renderCalendarWithTasks();
+      };
 
-   window.onload = async function() {
-    const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
-    setTheme(activeTheme);
+      async function changeMonth(direction) {
+        currentDate.setMonth(currentDate.getMonth() + direction);
+        renderCalendarWithTasks();
+      }
 
-    const auth = await requireAuthAndRole('schedule');
-    if (!auth) return;
+      async function populateStaffDropdowns() {
+        const mainSelect = document.getElementById('visit_staff');
+        const modalSelect = document.getElementById('modal_visit_staff');
 
-    currentAuth = auth;
+        if (!currentAuth || !currentAuth.tenant_id) {
+          mainSelect.innerHTML = '<option value="">Tenant bilgisi bulunamadı</option>';
+          modalSelect.innerHTML = '<option value="">Tenant bilgisi bulunamadı</option>';
+          return;
+        }
 
-    if (!currentAuth.tenant_id) {
-        alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen SaaS Yönetimi veya Personel Yönetimi kaydını kontrol edin.');
-        await dbClient.auth.signOut();
-        window.location.href = 'login.html';
-        return;
-    }
+        const { data, error } = await dbClient
+          .from('osgb_staff')
+          .select('name_surname, staff_role')
+          .eq('tenant_id', currentAuth.tenant_id)
+          .order('name_surname');
 
-    document.body.style.display = "block";
+        if (error) {
+          console.error('Personel listesi alınamadı:', error);
+          mainSelect.innerHTML = '<option value="">Personel listesi alınamadı</option>';
+          modalSelect.innerHTML = '<option value="">Personel listesi alınamadı</option>';
+          return;
+        }
 
-    await fetchCompaniesToSelect();
-    await populateStaffDropdowns();
-    renderCalendarWithTasks();
-};
+        let options = '<option value="">-- Personel Seçin --</option>';
 
-    async function changeMonth(direction) { currentDate.setMonth(currentDate.getMonth() + direction); renderCalendarWithTasks(); }
-    async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
-
-    async function populateStaffDropdowns() {
-    const mainSelect = document.getElementById('visit_staff');
-    const modalSelect = document.getElementById('modal_visit_staff');
-
-    if (!currentAuth || !currentAuth.tenant_id) {
-        mainSelect.innerHTML = '<option value="">Tenant bilgisi bulunamadı</option>';
-        modalSelect.innerHTML = '<option value="">Tenant bilgisi bulunamadı</option>';
-        return;
-    }
-
-    const { data, error } = await dbClient
-        .from('osgb_staff')
-        .select('name_surname, staff_role')
-        .eq('tenant_id', currentAuth.tenant_id)
-        .order('name_surname');
-
-    if (error) {
-        console.error('Personel listesi alınamadı:', error);
-        mainSelect.innerHTML = '<option value="">Personel listesi alınamadı</option>';
-        modalSelect.innerHTML = '<option value="">Personel listesi alınamadı</option>';
-        return;
-    }
-
-    let options = '<option value="">-- Personel Seçin --</option>';
-
-    if (data && data.length > 0) {
-        data.forEach(s => {
+        if (data && data.length > 0) {
+          data.forEach((s) => {
             options += `<option value="${s.name_surname} (${s.staff_role})">${s.name_surname} (${s.staff_role})</option>`;
-        });
-    } else {
-        options += '<option value="">Bu tenant için personel yok</option>';
-    }
+          });
+        } else {
+          options += '<option value="">Bu tenant için personel yok</option>';
+        }
 
-    mainSelect.innerHTML = options;
-    modalSelect.innerHTML = options;
-}
+        mainSelect.innerHTML = options;
+        modalSelect.innerHTML = options;
+      }
 
-    async function fetchCompaniesToSelect() {
-    const select = document.getElementById('company_select');
+      async function fetchCompaniesToSelect() {
+        const select = document.getElementById('company_select');
+        const modalSelect = document.getElementById('modal_company');
+        const visitSelect = document.getElementById('visit_company');
 
-    if (!currentAuth || !currentAuth.tenant_id) {
-        select.innerHTML = '<option value="">Tenant bilgisi bulunamadı</option>';
-        return;
-    }
+        if (!currentAuth || !currentAuth.tenant_id) {
+          select.innerHTML = '<option value="">Tenant bilgisi bulunamadı</option>';
+          modalSelect.innerHTML = '<option value="">Tenant bilgisi bulunamadı</option>';
+          visitSelect.innerHTML = '<option value="">Tenant bilgisi bulunamadı</option>';
+          return;
+        }
 
-    const { data, error } = await dbClient
-        .from('customer_companies')
-        .select('id, company_name')
-        .eq('tenant_id', currentAuth.tenant_id)
-        .order('company_name');
+        const { data, error } = await dbClient
+          .from('customer_companies')
+          .select('id, company_name')
+          .eq('tenant_id', currentAuth.tenant_id)
+          .order('company_name');
 
-    if (error) {
-        console.error('Firma listesi alınamadı:', error);
-        select.innerHTML = '<option value="">Firma listesi alınamadı</option>';
-        return;
-    }
+        if (error) {
+          console.error('Firma listesi alınamadı:', error);
+          select.innerHTML = '<option value="">Firma listesi alınamadı</option>';
+          modalSelect.innerHTML = '<option value="">Firma listesi alınamadı</option>';
+          visitSelect.innerHTML = '<option value="">Firma listesi alınamadı</option>';
+          return;
+        }
 
-    select.innerHTML = '<option value="">-- Tüm Portföyü / Genel Takvimi Gör --</option>';
+        select.innerHTML = '<option value="">-- Genel Takvim (Tüm Portföy) --</option>';
+        modalSelect.innerHTML = '<option value="">-- Firma Seçin --</option>';
+        visitSelect.innerHTML = '<option value="">-- Firma Seçin --</option>';
 
-    if (data && data.length > 0) {
-        data.forEach(c => {
+        if (data && data.length > 0) {
+          data.forEach((c) => {
             select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
-        });
-    }
-}
+            modalSelect.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
+            visitSelect.innerHTML += `<option value="${c.id}">${c.company_name}</option>`;
+          });
+        }
+      }
 
-    async function renderCalendarWithTasks() {
-    const grid = document.getElementById('calendar_grid_body');
-    const selectedCompanyId = document.getElementById('company_select').value;
-    const lblSüre = document.getElementById('lbl_süre_durumu');
+      async function renderCalendarWithTasks() {
+        const grid = document.getElementById('calendar_grid_body');
+        const selectedCompanyId = document.getElementById('company_select').value;
+        const lblSüre = document.getElementById('lbl_süre_durumu');
 
-    if (!currentAuth || !currentAuth.tenant_id) {
-        grid.innerHTML = '<div style="grid-column:1/-1; padding:14px; color:#b91c1c;">Tenant bilgisi bulunamadı.</div>';
-        return;
-    }
+        const visitCompanySelect = document.getElementById('visit_company');
+        if (visitCompanySelect) {
+          visitCompanySelect.value = selectedCompanyId;
+        }
 
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+        if (!currentAuth || !currentAuth.tenant_id) {
+          grid.innerHTML = '<div style="grid-column:1/-1; padding:14px; color:#b91c1c;">Tenant bilgisi bulunamadı.</div>';
+          return;
+        }
 
-    document.getElementById('lbl_month_year').innerText = `${MONTH_NAMES[month]} ${year}`;
-    grid.innerHTML = '';
-    if (lblSüre) lblSüre.innerHTML = '';
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
 
-    DAY_NAMES.forEach(d => {
-        grid.innerHTML += `<div class="calendar-day-name">${d}</div>`;
-    });
+        document.getElementById('lbl_month_year').innerText = `${MONTH_NAMES[month]} ${year}`;
+        grid.innerHTML = '';
 
-    let firstDayIndex = new Date(year, month, 1).getDay() - 1;
-    if (firstDayIndex === -1) firstDayIndex = 6;
+        const weekdaysContainer = document.getElementById('calendar_weekdays');
+        if (weekdaysContainer) {
+          weekdaysContainer.innerHTML = DAY_NAMES.map(d => `<div class="calendar-day-name">${d}</div>`).join('');
+        }
 
-    const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+        let firstDayIndex = new Date(year, month, 1).getDay() - 1;
+        if (firstDayIndex === -1) firstDayIndex = 6;
 
-    let query = dbClient
-        .from('field_schedules')
-        .select('*, customer_companies!inner(company_name, danger_class, tenant_id)')
-        .eq('tenant_id', currentAuth.tenant_id);
+        const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
 
-    if (selectedCompanyId) {
-        query = query.eq('company_id', selectedCompanyId);
-    }
+        let query = dbClient
+          .from('field_schedules')
+          .select('*, customer_companies!inner(company_name, danger_class, tenant_id)')
+          .eq('tenant_id', currentAuth.tenant_id);
 
-    const { data: schedules, error: scheduleError } = await query;
+        if (selectedCompanyId) {
+          query = query.eq('company_id', selectedCompanyId);
+        }
 
-    if (scheduleError) {
-        console.error('Takvim kayıtları alınamadı:', scheduleError);
-        grid.innerHTML += `<div style="grid-column:1/-1; padding:14px; color:#b91c1c;">Takvim kayıtları alınamadı: ${scheduleError.message}</div>`;
-        return;
-    }
+        const { data: schedules, error: scheduleError } = await query;
 
-    if (selectedCompanyId && schedules) {
-        const { data: comp, error: compError } = await dbClient
+        if (scheduleError) {
+          console.error('Takvim kayıtları alınamadı:', scheduleError);
+          grid.innerHTML += `<div style="grid-column:1/-1; padding:14px; color:#b91c1c;">Takvim kayıtları alınamadı: ${scheduleError.message}</div>`;
+          return;
+        }
+
+        // İSTATİSTİKLERİN HESAPLANMASI
+        if (selectedCompanyId && schedules) {
+          const targets = getCompanyVisitTargets(selectedCompanyId);
+
+          // Bu aya ait ziyaretler
+          const monthlySchedules = schedules.filter((s) => {
+            const d = new Date(s.visit_date);
+            return d.getFullYear() === year && d.getMonth() === month;
+          });
+
+          // Uzman Ziyaretleri
+          const uzmanPlanlanan = monthlySchedules.filter(s => (s.assigned_staff || '').toLowerCase().includes('uzman'));
+          const uzmanGerceklesen = uzmanPlanlanan.filter(s => parseVisitStatus(s.notes).status === 'completed');
+
+          // Hekim Ziyaretleri
+          const hekimPlanlanan = monthlySchedules.filter(s => (s.assigned_staff || '').toLowerCase().includes('hekim'));
+          const hekimGerceklesen = hekimPlanlanan.filter(s => parseVisitStatus(s.notes).status === 'completed');
+
+          document.getElementById('stat_uzman_visits').innerHTML = `
+            <span style="color:var(--uc-teal);">${uzmanGerceklesen.length}</span> 
+            <span style="font-size:14px; color:var(--uc-text-muted); font-weight:normal;">/ ${uzmanPlanlanan.length} Planlanan / ${targets.uzman_target} Hedef</span>
+          `;
+          document.getElementById('stat_hekim_visits').innerHTML = `
+            <span style="color:var(--uc-teal);">${hekimGerceklesen.length}</span> 
+            <span style="font-size:14px; color:var(--uc-text-muted); font-weight:normal;">/ ${hekimPlanlanan.length} Planlanan / ${targets.hekim_target} Hedef</span>
+          `;
+
+          // Süre ve Yasal Hedef Hesabı
+          const { data: comp, error: compError } = await dbClient
             .from('customer_companies')
             .select('danger_class')
             .eq('id', selectedCompanyId)
             .eq('tenant_id', currentAuth.tenant_id)
             .single();
 
-        const { count, error: countError } = await dbClient
+          const { count, error: countError } = await dbClient
             .from('workers')
             .select('*', { count: 'exact', head: true })
             .eq('company_id', selectedCompanyId)
             .eq('tenant_id', currentAuth.tenant_id);
 
-        if (!compError && !countError && comp) {
-            let katsayi = comp.danger_class === 'Tehlikeli' ? 20 : (comp.danger_class === 'Çok Tehlikeli' ? 40 : 10);
+          if (!compError && !countError && comp) {
+            let katsayi = comp.danger_class === 'Tehlikeli' ? 20 : comp.danger_class === 'Çok Tehlikeli' ? 40 : 10;
             let yasalGerekenDk = (count || 0) * katsayi;
 
-            let planlananToplamDk = schedules
-                .filter(s => new Date(s.visit_date).getMonth() === month)
-                .reduce((sum, s) => sum + (Number(s.planned_minutes) || 0), 0);
+            let planlananToplamDk = monthlySchedules
+              .filter(s => parseVisitStatus(s.notes).status !== 'cancelled')
+              .reduce((sum, s) => sum + (Number(s.planned_minutes) || 0), 0);
 
-            lblSüre.innerHTML = planlananToplamDk >= yasalGerekenDk
-                ? `<span style="color:var(--accent-green);">✓ Aylık Yasal Hedef Tamamlandı (${planlananToplamDk}/${yasalGerekenDk} dk)</span>`
-                : `<span style="color:#f97316;">⚠️ Eksik Süre Var (${planlananToplamDk}/${yasalGerekenDk} dk Planlandı)</span>`;
+            document.getElementById('stat_duration_summary').innerText = `${planlananToplamDk} / ${yasalGerekenDk} dk`;
+
+            if (lblSüre) {
+              lblSüre.innerHTML = planlananToplamDk >= yasalGerekenDk
+                ? `<span style="color:var(--uc-teal); font-weight:700;">✓ Yasal Süre Hedefi Tamamlandı</span>`
+                : `<span style="color:var(--uc-orange); font-weight:700;">⚠️ Eksik Süre Planı Var</span>`;
+            }
+          }
         }
-    }
 
-    for (let i = 0; i < firstDayIndex; i++) {
-        grid.innerHTML += `<div class="calendar-cell calendar-cell-empty"></div>`;
-    }
+        for (let i = 0; i < firstDayIndex; i++) {
+          grid.innerHTML += `<div class="calendar-cell calendar-cell-empty"></div>`;
+        }
 
-    for (let day = 1; day <= totalDaysInMonth; day++) {
-        const dayString = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-        const todaysTasks = (schedules || []).filter(s => s.visit_date === dayString);
+        for (let day = 1; day <= totalDaysInMonth; day++) {
+          const dayString = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+          const todaysTasks = (schedules || []).filter((s) => s.visit_date === dayString);
 
-        let taskHTML = '';
+          let taskHTML = '';
 
-        todaysTasks.forEach(task => {
+          todaysTasks.forEach((task) => {
             const companyName = task.customer_companies && task.customer_companies.company_name
-                ? task.customer_companies.company_name
-                : 'Firma';
+              ? task.customer_companies.company_name
+              : 'Firma';
 
-            const shortCompanyName = companyName.length > 5
-                ? companyName.substring(0, 5) + '..'
-                : companyName;
+            const shortCompanyName = companyName.length > 12 ? companyName.substring(0, 12) + '..' : companyName;
+            const assignedSafe = (task.assigned_staff || '').replace(/'/g, "\\'");
+            
+            const { status, cleanNotes } = parseVisitStatus(task.notes);
+            const fullTitle = `${companyName} — ${task.planned_minutes} dk\nNot: ${cleanNotes}`;
 
-            taskHTML += `<div class="task-badge task-complete" onclick="openModal('${task.id}', '${task.visit_date}', '${task.planned_minutes}', '${task.assigned_staff || ''}')">🏢 ${shortCompanyName}<br>⏱️ ${task.planned_minutes} dk</div>`;
+            // Duruma göre badge rengi
+            let badgeVariant = 'badge-default'; // planned
+            let statusIcon = '🔵';
+            if (status === 'completed') {
+              badgeVariant = 'badge-normal'; // yeşil stil
+              statusIcon = '🟢';
+            } else if (status === 'cancelled') {
+              badgeVariant = 'badge-danger'; // kırmızı stil
+              statusIcon = '🔴';
+            }
+
+            const noteSafe = (task.notes || '').replace(/'/g, "\\'").replace(/\n/g, ' ');
+            taskHTML += `
+              <div class="task-badge ${badgeVariant}" title="${fullTitle}" 
+                   data-task-id="${task.id}" 
+                   data-visit-date="${task.visit_date}" 
+                   data-minutes="${task.planned_minutes}" 
+                   data-assigned="${assignedSafe}" 
+                   data-notes="${noteSafe}" 
+                   data-company-id="${task.company_id}">
+                <span class="company-name">${statusIcon} ${shortCompanyName}</span>
+                <small>⏱️ ${task.planned_minutes} dk</small>
+              </div>`;
+          });
+
+          grid.innerHTML += `<div class="calendar-cell"><div class="day-number">${day}</div><div class="task-list">${taskHTML}</div></div>`;
+        }
+      }
+
+      function openModal(id, date, minutes, staff, notes, companyId) {
+        document.getElementById('modal_title').innerText = id ? '📝 Planı Düzenle' : '➕ Yeni Ziyaret Ekle';
+        document.getElementById('modal_task_id').value = id;
+        document.getElementById('modal_company').value = companyId || '';
+        document.getElementById('modal_visit_date').value = date || '';
+        document.getElementById('modal_visit_minutes').value = minutes || '';
+        document.getElementById('modal_visit_staff').value = staff || '';
+        
+        const { status, cleanNotes } = parseVisitStatus(notes);
+        document.getElementById('modal_visit_status').value = status;
+        document.getElementById('modal_visit_notes').value = cleanNotes;
+        
+        document.getElementById('task_modal_backdrop').classList.add('open');
+      }
+
+      document.addEventListener('click', function (e) {
+        const badge = e.target.closest && e.target.closest('.task-badge');
+        if (!badge) return;
+        const id = badge.dataset.taskId;
+        const date = badge.dataset.visitDate;
+        const mins = badge.dataset.minutes;
+        const assigned = badge.dataset.assigned || '';
+        const notes = badge.dataset.notes || '';
+        const companyId = badge.dataset.companyId || '';
+        openModal(id, date, mins, assigned, notes, companyId);
+      });
+
+      document.getElementById('btn_update').addEventListener('click', updateTask);
+      document.getElementById('btn_delete').addEventListener('click', deleteTask);
+      document.getElementById('btn_close').addEventListener('click', closeModal);
+      document.getElementById('modal_close_btn').addEventListener('click', closeModal);
+      
+      function closeModal() {
+        document.getElementById('task_modal_backdrop').classList.remove('open');
+      }
+
+      function toggleNewVisitForm() {
+        const panel = document.getElementById('visit_form_panel');
+        const arrow = document.getElementById('visit_form_arrow');
+        const isCollapsed = panel.classList.contains('is-collapsed');
+        if (isCollapsed) {
+          panel.classList.remove('is-collapsed');
+          panel.style.maxHeight = '500px';
+          panel.style.opacity = '1';
+          panel.style.marginTop = '16px';
+          arrow.style.transform = 'rotate(180deg)';
+        } else {
+          panel.classList.add('is-collapsed');
+          panel.style.maxHeight = '0';
+          panel.style.opacity = '0';
+          panel.style.marginTop = '0';
+          arrow.style.transform = 'rotate(0deg)';
+        }
+      }
+
+      document.querySelectorAll('.month-nav-btn[data-direction]').forEach((el) => {
+        el.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          const dir = parseInt(el.getAttribute('data-direction')) || 0;
+          changeMonth(dir);
         });
+      });
 
-        grid.innerHTML += `<div class="calendar-cell"><span style="font-weight: bold; opacity: 0.7;">${day}</span><div style="overflow-y: auto; max-height: 75px; width:100%;">${taskHTML}</div></div>`;
-    }
-}
+      async function updateTask() {
+        const id = document.getElementById('modal_task_id').value;
 
-    function openModal(id, date, minutes, staff) {
-        document.getElementById('modal_task_id').value = id; document.getElementById('modal_visit_date').value = date;
-        document.getElementById('modal_visit_minutes').value = minutes; document.getElementById('modal_visit_staff').value = staff;
-        document.getElementById('taskModal').style.display = 'flex';
-    }
-    function closeModal() { document.getElementById('taskModal').style.display = 'none'; }
-    async function updateTask() {
-    const id = document.getElementById('modal_task_id').value;
+        if (!currentAuth || !currentAuth.tenant_id) {
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
 
-    if (!currentAuth || !currentAuth.tenant_id) {
-        alert('Tenant bilgisi bulunamadı.');
-        return;
-    }
+        const newCompany = document.getElementById('modal_company').value;
+        const newDate = document.getElementById('modal_visit_date').value;
+        const newMins = parseInt(document.getElementById('modal_visit_minutes').value);
+        const newStaff = document.getElementById('modal_visit_staff').value;
+        const newStatus = document.getElementById('modal_visit_status').value;
+        const rawNotes = document.getElementById('modal_visit_notes').value || '';
+        
+        const finalNotes = formatVisitNotesWithStatus(rawNotes, newStatus);
 
-    await dbClient
-        .from('field_schedules')
-        .update({
-            visit_date: document.getElementById('modal_visit_date').value,
-            planned_minutes: parseInt(document.getElementById('modal_visit_minutes').value),
-            assigned_staff: document.getElementById('modal_visit_staff').value
-        })
-        .eq('id', id)
-        .eq('tenant_id', currentAuth.tenant_id);
+        if (!newCompany) { alert('Lütfen firma seçin.'); return; }
+        if (!newDate) { alert('Lütfen tarih seçin.'); return; }
+        if (!newMins || newMins <= 0) { alert('Lütfen geçerli bir süre girin.'); return; }
 
-    closeModal();
-    renderCalendarWithTasks();
-}
-    async function deleteTask() {
-    if (!confirm("Silinsin mi?")) return;
+        let error;
+        if (id) {
+          const res = await dbClient
+            .from('field_schedules')
+            .update({
+              company_id: newCompany,
+              visit_date: newDate,
+              planned_minutes: newMins,
+              assigned_staff: newStaff,
+              notes: finalNotes
+            })
+            .eq('id', id)
+            .eq('tenant_id', currentAuth.tenant_id);
+          error = res.error;
+        } else {
+          const res = await dbClient
+            .from('field_schedules')
+            .insert([
+              {
+                tenant_id: currentAuth.tenant_id,
+                company_id: newCompany,
+                visit_date: newDate,
+                planned_minutes: newMins,
+                assigned_staff: newStaff,
+                notes: finalNotes
+              }
+            ]);
+          error = res.error;
+        }
 
-    if (!currentAuth || !currentAuth.tenant_id) {
-        alert('Tenant bilgisi bulunamadı.');
-        return;
-    }
+        if (error) {
+          alert('Ziyaret planı kaydedilemedi: ' + error.message);
+          return;
+        }
 
-    await dbClient
-        .from('field_schedules')
-        .delete()
-        .eq('id', document.getElementById('modal_task_id').value)
-        .eq('tenant_id', currentAuth.tenant_id);
+        closeModal();
+        renderCalendarWithTasks();
+      }
 
-    closeModal();
-    renderCalendarWithTasks();
-}
-    async function saveSchedule() {
-    const compId = document.getElementById('company_select').value;
-    const staff = document.getElementById('visit_staff').value;
-    const date = document.getElementById('visit_date').value;
-    const mins = document.getElementById('visit_minutes').value;
+      async function deleteTask() {
+        if (!confirm('Silinsin mi?')) return;
 
-    if (!currentAuth || !currentAuth.tenant_id) {
-        alert('Tenant bilgisi bulunamadı.');
-        return;
-    }
+        if (!currentAuth || !currentAuth.tenant_id) {
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
 
-    if (!compId || !staff || !date || !mins) {
-        alert("Lütfen form alanlarını doldurun!");
-        return;
-    }
+        await dbClient
+          .from('field_schedules')
+          .delete()
+          .eq('id', document.getElementById('modal_task_id').value)
+          .eq('tenant_id', currentAuth.tenant_id);
 
-    const { data: companyCheck, error: companyCheckError } = await dbClient
-        .from('customer_companies')
-        .select('id')
-        .eq('id', compId)
-        .eq('tenant_id', currentAuth.tenant_id)
-        .maybeSingle();
+        closeModal();
+        renderCalendarWithTasks();
+      }
 
-    if (companyCheckError || !companyCheck) {
-        alert('Seçilen firma bu tenant altında bulunamadı.');
-        return;
-    }
+      async function saveSchedule() {
+        const compId = document.getElementById('visit_company').value;
+        const staff = document.getElementById('visit_staff').value;
+        const date = document.getElementById('visit_date').value;
+        const mins = document.getElementById('visit_minutes').value;
+        const status = document.getElementById('visit_status').value;
+        const rawNotes = document.getElementById('visit_notes').value || '';
 
-    const { error } = await dbClient
-        .from('field_schedules')
-        .insert([{
+        const finalNotes = formatVisitNotesWithStatus(rawNotes, status);
+
+        if (!currentAuth || !currentAuth.tenant_id) {
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
+
+        if (!compId || !staff || !date || !mins) {
+          alert('Lütfen form alanlarını doldurun!');
+          return;
+        }
+
+        const { data: companyCheck, error: companyCheckError } = await dbClient
+          .from('customer_companies')
+          .select('id')
+          .eq('id', compId)
+          .eq('tenant_id', currentAuth.tenant_id)
+          .maybeSingle();
+
+        if (companyCheckError || !companyCheck) {
+          alert('Seçilen firma bu tenant altında bulunamadı.');
+          return;
+        }
+
+        const { error } = await dbClient.from('field_schedules').insert([
+          {
             tenant_id: currentAuth.tenant_id,
             company_id: compId,
             assigned_staff: staff,
             visit_date: date,
             planned_minutes: parseInt(mins),
-            notes: document.getElementById('visit_notes').value
-        }]);
+            notes: finalNotes
+          }
+        ]);
 
-    if (error) {
-        alert('Ziyaret planı kaydedilemedi: ' + error.message);
-        return;
-    }
+        if (error) {
+          alert('Ziyaret planı kaydedilemedi: ' + error.message);
+          return;
+        }
 
-    document.getElementById('visit_minutes').value = '';
-    document.getElementById('visit_notes').value = '';
+        // Formu temizle ve kapat
+        document.getElementById('visit_company').value = '';
+        document.getElementById('visit_staff').value = '';
+        document.getElementById('visit_date').value = '';
+        document.getElementById('visit_minutes').value = '';
+        document.getElementById('visit_notes').value = '';
+        document.getElementById('visit_status').value = 'planned';
 
-    renderCalendarWithTasks();
-}
-</script>
-</body>
+        const panel = document.getElementById('visit_form_panel');
+        panel.classList.add('is-collapsed');
+        panel.style.maxHeight = '0';
+        panel.style.opacity = '0';
+        panel.style.marginTop = '0';
+        document.getElementById('visit_form_arrow').style.transform = 'rotate(0deg)';
+
+        renderCalendarWithTasks();
+      }
+    </script>
+  </body>
 </html>

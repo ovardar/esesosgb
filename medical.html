@@ -1,1202 +1,551 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OSGB SaaS - Hekim Sağlık Kartı</title>
+    <!-- Google Fonts - Manrope -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --bg-main: #f4f6f9;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --accent-green: #10b981;
-            --accent-green-hover: #059669;
-            --border-color: #e2e8f0;
-            --table-header: #f8fafc;
-            --nav-inactive-bg: #e2e8f0;
-            --nav-inactive-text: #475569;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; transition: background 0.3s; }
-        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        
-        /* 🏛️ GLOBAL STANDART ÜST BAR */
-        .global-header { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .logo-area { font-size: 18px; font-weight: 800; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
-        .logo-badge { background: var(--primary); color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-        .controls-group { display: flex; align-items: center; gap: 20px; }
-        .user-info { font-size: 13px; color: var(--text-muted); font-weight: 600; }
-        .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        
-        .nav-container { display: flex; gap: 8px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
-        .nav-btn { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.2s ease; }
-        .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
-        .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-weight: 600; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; background: var(--bg-card); color: var(--text-main); }
-        .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; }
-        button.save-btn { background: var(--accent-green); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button.save-btn:hover { background: var(--accent-green-hover); }
-        
-        .warning-box { background-color: #fef2f2; border: 1px dashed #ef4444; color: #b91c1c; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-weight: bold; font-size: 14px; display: none; }
-        .table-container { margin-top: 35px; border-top: 2px solid var(--border-color); padding-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background-color: var(--table-header); color: var(--text-muted); font-weight: 600; }
-        .badge-decision { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 11px; }
-            .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
-    
-
-        /* ================================
-           v24 UI POLISH - ortak arayuz duzeltmeleri
-           ================================ */
-        :root {
-            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.10);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
-            --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        .card {
-            width: min(100%, 1240px) !important;
-            max-width: 1240px !important;
-            border-radius: var(--radius-lg) !important;
-            box-shadow: var(--shadow-md) !important;
-        }
-
-        .global-header {
-            background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        .top-row {
-            gap: 14px;
-            align-items: center !important;
-        }
-
-        .logo-area {
-            min-width: 0;
-            font-size: 17px !important;
-            letter-spacing: 0 !important;
-            gap: 10px !important;
-        }
-
-        .logo-area span[id^="lbl_"] {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .tenant-logo-img {
-            width: 36px !important;
-            height: 36px !important;
-            padding: 4px !important;
-            border-radius: 10px !important;
-            box-shadow: var(--shadow-sm);
-            flex: 0 0 auto;
-        }
-
-        .logo-badge {
-            border-radius: 999px !important;
-            padding: 4px 9px !important;
-            font-size: 11px !important;
-            letter-spacing: .02em;
-            flex: 0 0 auto;
-        }
-
-        .controls-group {
-            gap: 10px !important;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .theme-selector-container {
-            border-radius: 999px !important;
-            padding: 6px 10px !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .theme-btn {
-            width: 18px !important;
-            height: 18px !important;
-            transition: transform .15s ease, box-shadow .15s ease;
-        }
-        .theme-btn:hover { transform: translateY(-1px) scale(1.08); box-shadow: 0 3px 8px rgba(15,23,42,.18); }
-
-        .user-info {
-            background: var(--table-header);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 7px 11px;
-            max-width: 280px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .logout-btn,
-        button,
-        .btn,
-        input[type="submit"] {
-            border-radius: 10px !important;
-            font-weight: 750 !important;
-            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-        }
-        button:hover,
-        .logout-btn:hover,
-        .btn:hover,
-        input[type="submit"]:hover {
-            transform: translateY(-1px);
-            filter: brightness(.98);
-            box-shadow: var(--shadow-sm);
-        }
-        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
-
-        .nav-container {
-            justify-content: flex-start !important;
-            gap: 7px !important;
-            padding: 8px !important;
-            border-radius: 14px !important;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .nav-btn {
-            white-space: nowrap;
-            border-radius: 10px !important;
-            padding: 9px 13px !important;
-            font-size: 12.5px !important;
-            box-shadow: none;
-        }
-        .nav-btn.active-page { box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important; }
-
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        h1 { font-size: clamp(24px, 3vw, 34px); }
-        h2 { font-size: clamp(20px, 2.4vw, 28px); }
-        h3 { font-size: clamp(16px, 1.8vw, 20px); }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px !important;
-            color: var(--text-main) !important;
-            font-size: 13px !important;
-            letter-spacing: .04em !important;
-        }
-
-        .panel,
-        .form-card,
-        .table-card,
-        .sub-card,
-        .mini-card,
-        .info-card {
-            border-radius: var(--radius-md) !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .metric-box {
-            border-radius: 14px !important;
-            box-shadow: 0 10px 24px rgba(15,23,42,.10) !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .metric-box:after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,.20), transparent 45%);
-            pointer-events: none;
-        }
-        .metric-title, .metric-sub, .metric-value { position: relative; z-index: 1; }
-
-        input,
-        select,
-        textarea {
-            border: 1px solid var(--border-color) !important;
-            border-radius: 10px !important;
-            background: var(--bg-card);
-            color: var(--text-main);
-            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--primary) !important;
-            box-shadow: var(--focus-ring) !important;
-        }
-        label { font-weight: 700; color: var(--text-main); }
-
-        table {
-            border-collapse: separate !important;
-            border-spacing: 0 !important;
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        th {
-            font-size: 11px !important;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            white-space: nowrap;
-        }
-        td { line-height: 1.45; }
-        tbody tr { transition: background .12s ease; }
-        tbody tr:hover { background: rgba(37, 99, 235, 0.035); }
-        .empty-state {
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            background: var(--table-header);
-        }
-
-        .badge {
-            border-radius: 999px !important;
-            letter-spacing: .02em;
-            padding: 4px 8px !important;
-        }
-
-        .small-link { text-underline-offset: 3px; }
-
-        .operational-banner {
-            box-shadow: var(--shadow-sm);
-            border: 0 !important;
-        }
-
-        @media (max-width: 900px) {
-            body { padding: 12px !important; }
-            .card { padding: 16px !important; border-radius: 16px !important; }
-            .top-row { align-items: stretch !important; }
-            .controls-group { justify-content: flex-start; }
-            .user-info { max-width: 100%; }
-            .nav-container { flex-wrap: nowrap !important; justify-content: flex-start !important; }
-            .nav-btn { flex: 0 0 auto; }
-            table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
-            th, td { padding: 9px 10px !important; }
-        }
-
-        @media (max-width: 520px) {
-            .logo-area { font-size: 15px !important; }
-            .tenant-logo-img { width: 32px !important; height: 32px !important; }
-            .theme-selector-container { width: 100%; justify-content: center; }
-            .logout-btn { width: 100%; }
-        }
-
-    
-
-        /* ================================
-           v25 PRODUCT DESIGN SYSTEM - derin arayuz revizyonu
-           ================================ */
-        :root {
-            --brand-50: #eff6ff;
-            --brand-100: #dbeafe;
-            --brand-500: #2563eb;
-            --brand-600: #1d4ed8;
-            --brand-700: #1e40af;
-            --ink-900: #0f172a;
-            --ink-700: #334155;
-            --ink-500: #64748b;
-            --surface-0: #ffffff;
-            --surface-1: #f8fafc;
-            --surface-2: #eef2f7;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --info: #0284c7;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(37,99,235,.15), transparent 32rem),
-                radial-gradient(circle at top right, rgba(14,165,233,.12), transparent 28rem),
-                linear-gradient(180deg, #f8fafc 0%, #edf2f7 52%, #e9eef6 100%) !important;
-            color: var(--ink-900) !important;
-        }
-
-        .card {
-            padding: 0 !important;
-            overflow: hidden;
-            background: rgba(255,255,255,.92) !important;
-            backdrop-filter: blur(10px);
-        }
-
-        .global-header {
-            padding: 18px 22px 14px !important;
-            margin-bottom: 0 !important;
-            background: linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,64,175,.92)) !important;
-            color: white;
-            border-bottom: 0 !important;
-        }
-        .global-header .logo-area,
-        .global-header .user-info,
-        .global-header .theme-selector-container span { color: white !important; }
-        .global-header .theme-selector-container,
-        .global-header .user-info {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-container {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.16) !important;
-            margin-top: 12px;
-        }
-        .global-header .nav-btn {
-            background: rgba(255,255,255,.10) !important;
-            color: rgba(255,255,255,.86) !important;
-            border: 1px solid rgba(255,255,255,.10);
-        }
-        .global-header .nav-btn:hover {
-            background: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-btn.active-page {
-            background: white !important;
-            color: var(--brand-700) !important;
-            box-shadow: 0 8px 18px rgba(15,23,42,.22) !important;
-        }
-        .global-header .tenant-logo-img {
-            width: 42px !important;
-            height: 42px !important;
-            background: white !important;
-            border-color: rgba(255,255,255,.35) !important;
-        }
-        .global-header .logo-badge {
-            background: rgba(255,255,255,.18) !important;
-            border: 1px solid rgba(255,255,255,.18);
-        }
-        .logout-btn { background: rgba(239,68,68,.92) !important; }
-
-        .card > h1,
-        .card > h2,
-        .card > .page-desc,
-        .card > .section-title,
-        .card > .dashboard-grid,
-        .card > .kpi-grid,
-        .card > .operational-banner,
-        .card > .content-grid,
-        .card > .grid,
-        .card > .panel,
-        .card > form,
-        .card > table,
-        .card > div:not(.global-header) {
-            margin-left: 22px;
-            margin-right: 22px;
-        }
-        .card > h1,
-        .card > h2 {
-            margin-top: 22px !important;
-            margin-bottom: 4px !important;
-            font-size: clamp(22px, 2.6vw, 31px) !important;
-            letter-spacing: -0.035em;
-            color: var(--ink-900);
-        }
-        .page-desc {
-            max-width: 780px;
-            color: var(--ink-500) !important;
-            font-size: 14px !important;
-            margin-bottom: 20px !important;
-        }
-
-        .section-title {
-            margin-top: 24px !important;
-            margin-bottom: 11px !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--ink-700) !important;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(226,232,240,.9);
-            padding: 7px 11px;
-            border-radius: 999px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .panel {
-            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)) !important;
-            border: 1px solid rgba(203,213,225,.85) !important;
-            box-shadow: 0 12px 30px rgba(15,23,42,.07) !important;
-            border-radius: 18px !important;
-        }
-        .panel h3 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            border-bottom: 1px solid rgba(226,232,240,.95) !important;
-            padding-bottom: 12px !important;
-            margin-bottom: 14px !important;
-            color: var(--ink-900);
-            letter-spacing: -0.01em;
-        }
-        .panel h3::after {
-            content: "";
-            flex: 1;
-            height: 3px;
-            max-width: 56px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: .7;
-        }
-
-        .dashboard-grid,
-        .kpi-grid {
-            gap: 16px !important;
-        }
-        .metric-box {
-            position: relative;
-            overflow: hidden;
-            min-height: 104px !important;
-            padding: 18px 19px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 18px 38px rgba(15,23,42,.13) !important;
-        }
-        .metric-box::before {
-            content: "";
-            position: absolute;
-            inset: -40% -30% auto auto;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.17);
-        }
-        .metric-title { font-size: 12.5px !important; text-transform: uppercase; letter-spacing: .045em; }
-        .metric-value { font-size: 34px !important; letter-spacing: -0.045em; }
-        .metric-sub { font-size: 12px !important; }
-        .metric-box.clickable:hover {
-            transform: translateY(-3px);
-            filter: saturate(1.04);
-        }
-
-        .content-grid {
-            margin-bottom: 24px;
-            align-items: start;
-        }
-        .operational-banner {
-            min-height: 86px;
-            padding: 20px 22px !important;
-            border-radius: 20px !important;
-        }
-        .op-text h4 { font-size: 18px !important; letter-spacing: -0.015em; }
-        .op-badge { border-radius: 16px !important; }
-
-        table {
-            background: white;
-            box-shadow: inset 0 0 0 1px rgba(226,232,240,.75);
-        }
-        th {
-            background: #f1f5f9 !important;
-            color: #475569 !important;
-        }
-        td {
-            background-clip: padding-box;
-        }
-        tbody tr:nth-child(even) td { background: rgba(248,250,252,.65); }
-
-        .btn-primary,
-        button.btn-primary {
-            background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-blue,
-        button.btn-blue {
-            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-secondary,
-        button.btn-secondary {
-            background: #f1f5f9 !important;
-            color: #334155 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        .btn-danger,
-        button.btn-danger {
-            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .status.ok {
-            background: #ecfdf5 !important;
-            color: #047857 !important;
-            border: 1px solid #a7f3d0 !important;
-        }
-        .status.err {
-            background: #fef2f2 !important;
-            color: #b91c1c !important;
-            border: 1px solid #fecaca !important;
-        }
-
-        /* SaaS Yonetimi urun paneli revizyonu */
-        .grid {
-            grid-template-columns: 420px minmax(0, 1fr) !important;
-            gap: 22px !important;
-            align-items: start !important;
-            margin-bottom: 24px;
-        }
-        .grid > div:first-child {
-            position: sticky;
-            top: 18px;
-            align-self: start;
-        }
-        .edit-panel {
-            border: 1px solid rgba(37,99,235,.22) !important;
-            background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
-        }
-        .link-box {
-            border-radius: 12px !important;
-            border: 1px solid #bfdbfe !important;
-            background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
-            color: #1e40af !important;
-            font-weight: 750;
-        }
-        .logo-upload-box {
-            border: 1px dashed #93c5fd !important;
-            background: #f8fbff !important;
-            border-radius: 16px !important;
-        }
-        .logo-preview {
-            width: 56px !important;
-            height: 56px !important;
-            border-radius: 14px !important;
-            box-shadow: var(--shadow-sm);
-        }
-        .actions {
-            gap: 9px !important;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .actions + .button-help,
-        .button-help {
-            margin-top: 10px;
-            display: grid;
-            gap: 7px;
-            color: var(--ink-500);
-            font-size: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 11px 12px;
-        }
-        .button-help strong { color: var(--ink-700); }
-
-        @media (max-width: 1040px) {
-            .grid { grid-template-columns: 1fr !important; }
-            .grid > div:first-child { position: static; }
-        }
-        @media (max-width: 900px) {
-            .card > h1,
-            .card > h2,
-            .card > .page-desc,
-            .card > .section-title,
-            .card > .dashboard-grid,
-            .card > .kpi-grid,
-            .card > .operational-banner,
-            .card > .content-grid,
-            .card > .grid,
-            .card > .panel,
-            .card > form,
-            .card > table,
-            .card > div:not(.global-header) {
-                margin-left: 14px !important;
-                margin-right: 14px !important;
-            }
-            .global-header { padding: 15px !important; }
-            .metric-box { min-height: 92px !important; }
-        }
-
-    
-
-        /* v26.2 hotfix: keep v26 visual system, add branding/table/layout fixes */
-        .logo-area { font-weight: 500 !important; letter-spacing: .01em !important; font-size: 18px !important; }
-        .logo-area #lbl_osgb_title { font-weight: 500 !important; }
-        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
-        table, thead, tbody, tr, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; }
-        table { font-size: 13px !important; border-collapse: separate !important; border-spacing: 0 !important; }
-        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
-        tbody td { padding: 9px 11px !important; }
-        .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
-        .page-desc { max-width: none !important; }
-
-
-        /* Hekim Sağlık Kartı tablo filtreleme ve sıralama */
-        .sortable-th {
-            cursor: pointer;
-            user-select: none;
-            position: relative;
-        }
-        .sortable-th:hover { color: var(--primary); }
-        .sort-indicator {
-            font-size: 10px;
-            margin-left: 4px;
-            opacity: 0.75;
-        }
-        .medical-filter-row th {
-            background: var(--bg-card) !important;
-            padding: 6px 8px !important;
-        }
-        .medical-filter-input {
-            width: 100%;
-            min-width: 80px;
-            padding: 7px 8px !important;
-            font-size: 12px !important;
-            border-radius: 8px !important;
-        }
-        .medical-filter-input::placeholder {
-            color: var(--text-muted);
-            opacity: 0.75;
-        }
-
-
-        /* Sprint 1 - Tetkik/Lab Arşivi ve Kronik Hasta/Aşı Takibi */
-        .medical-module-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            align-items: start;
-        }
-        .medical-module-panel {
-            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94));
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 18px;
-            box-shadow: var(--shadow-sm);
-        }
-        .medical-module-panel h3 {
-            margin: 0 0 8px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
-            font-size: 17px;
-        }
-        .module-help {
-            margin: 0 0 14px;
-            color: var(--text-muted);
-            font-size: 12px;
-        }
-        .module-row-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .module-row-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-        }
-        .module-btn {
-            width: 100%;
-            border: none;
-            color: white;
-            background: linear-gradient(135deg, var(--primary), #1d4ed8);
-            padding: 11px 12px;
-            border-radius: 10px;
-            font-weight: 850;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-        .module-btn.green { background: linear-gradient(135deg, #16a34a, #047857); }
-        .module-mini-table { font-size: 12px; margin-top: 14px; }
-        .module-mini-table th, .module-mini-table td { padding: 8px !important; vertical-align: top; }
-        .badge-lab-normal { background:#dcfce7; color:#15803d; }
-        .badge-lab-abnormal { background:#fee2e2; color:#b91c1c; }
-        .badge-lab-watch { background:#ffedd5; color:#c2410c; }
-        .badge-follow-active { background:#dbeafe; color:#1d4ed8; }
-        .badge-follow-due { background:#fee2e2; color:#b91c1c; }
-        .abnormal-row td { background:#fff5f5 !important; }
-        .due-row td { background:#fff7ed !important; }
-        .file-link { color: var(--primary); font-weight: 800; text-decoration: none; }
-        .file-link:hover { text-decoration: underline; }
-        .module-status { margin-top: 9px; font-size: 12px; font-weight: 800; }
-        .module-status.ok { color:#15803d; }
-        .module-status.err { color:#b91c1c; }
-        @media (max-width: 980px) {
-            .medical-module-grid, .module-row-2, .module-row-3 { grid-template-columns: 1fr; }
-        }
-
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
-    <div class="global-header">
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean-medical.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean">
+    <div class="card">
+      <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
+      <div class="global-header">
         <div class="top-row">
-            <div class="logo-area"><span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span></div>
-            <div class="controls-group">
-                <div class="user-info">👤 <span id="current_user_email">...</span></div>
-                <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
-            </div>
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
         </div>
 
         <div class="nav-container">
-            <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
-            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
-            <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
-            <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-            <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
-            <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
-            <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
-            <a id="menu_medical" href="medical.html" class="nav-btn active-page" style="display:none;">🩺 Hekim Sağlık Kartı</a>
+          <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+          <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display: none">🧩 SaaS Yönetimi</a>
+          <a id="menu_staff" href="staff.html" class="nav-btn" style="display: none">🔑 Personel Yönetimi</a>
+          <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+          <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+          <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+          <a id="menu_risk" href="risk.html" class="nav-btn" style="display: none">🦺 Uzman Risk Motoru</a>
+          <a id="menu_medical" href="medical.html" class="nav-btn active-page" style="display: none"
+            >🩺 Hekim Sağlık Kartı</a
+          >
         </div>
-    </div>
+      </div>
 
-    <h2>🩺 Periyodik Muayene & Sağlık Kartı Girişi</h2>
-    <p style="color: var(--text-muted); font-size: 14px;">Çalışan bilgilerini ve klinik bulguları girin. Sistem yaş/mevzuat kontrolü yapacaktır.</p>
-    
-    <div class="form-group">
-        <label>İlgili Müşteri Firma</label>
-        <select id="company_select"><option value="">Firmalar yükleniyor...</option></select>
-    </div>
+      <div class="medical-page-shell">
+        <h2>🩺 Periyodik Muayene & Sağlık Kartı Girişi</h2>
+        <p class="page-desc">
+          Çalışan bilgilerini ve klinik bulguları girin. Sistem yaş/mevzuat kontrolü yapacaktır.
+        </p>
 
-    <div class="grid-3">
-        <div class="form-group"><label>Çalışan Adı Soyadı</label><input type="text" id="worker_name" placeholder="Örn: Ahmet Yılmaz"></div>
-        <div class="form-group"><label>Yaş</label><input type="number" id="worker_age" oninput="checkMedicalLawConstraint()" placeholder="Örn: 25"></div>
-        <div class="form-group"><label>Cinsiyet</label><select id="worker_gender"><option value="Erkek">Erkek</option><option value="Kadın">Kadın</option></select></div>
-    </div>
+        <div class="panel">
+          <div class="form-row">
+            <div class="form-group double">
+              <label>İlgili Müşteri Firma</label>
+              <select id="company_select">
+                <option value="">Firmalar yükleniyor...</option>
+              </select>
+            </div>
+            <div class="form-group double">
+              <label>Kanaat ve Sonuç Kararı</label>
+              <select id="decision" onchange="checkMedicalLawConstraint()">
+                <option value="Ağır ve Tehlikeli İşlerde Çalışabilir">Ağır ve Tehlikeli İşlerde Çalışabilir</option>
+                <option value="Yüksekte Çalışabilir">Yüksekte Çalışabilir</option>
+                <option value="Kısıtlamalarla Çalışabilir">Kısıtlamalarla Çalışabilir</option>
+                <option value="Sahada Çalışması Uygun Değildir">Sahada Çalışması Uygun Değildir</option>
+              </select>
+            </div>
+          </div>
 
-    <div class="form-group"><label>Göz Muayene Bulguları (Ek-2)</label><input type="text" id="goz" placeholder="Örn: Sol 0.8, Sağ 1.0 Tam"></div>
-    <div class="form-group"><label>Kardiyovasküler (Kalp/Tansiyon) Bulguları</label><input type="text" id="kalp" placeholder="Örn: TA: 120/80 mmHg"></div>
-    <div class="form-group"><label>Kas-İskelet Sistemi Bulguları</label><input type="text" id="kas" placeholder="Örn: Hareket kısıtlılığı yok"></div>
-
-    <div class="form-group">
-        <label>Kanaat ve Sonucu Kararı</label>
-        <select id="decision" onchange="checkMedicalLawConstraint()">
-            <option value="Ağır ve Tehlikeli İşlerde Çalışabilir">Ağır ve Tehlikeli İşlerde Çalışabilir</option>
-            <option value="Yüksekte Çalışabilir">Yüksekte Çalışabilir</option>
-            <option value="Kısıtlamalarla Çalışabilir">Kısıtlamalarla Çalışabilir</option>
-            <option value="Sahada Çalışması Uygun Değildir">Sahada Çalışması Uygun Değildir</option>
-        </select>
-    </div>
-
-    <div id="law_warning" class="warning-box">
-        ⚠️ İSG Mevzuat Uyarısı: 18 yaş altı çalışanlar kanunen ağır, tehlikeli veya yüksekte çalışma gerektiren işlerde görevlendirilemez!
-    </div>
-
-    <button class="save-btn" onclick="saveMedical()">Sağlık Kartını Onayla ve Kaydet (Canlı)</button>
-
-    <div class="table-container medical-module-grid">
-        <div class="medical-module-panel">
-            <h3>🧪 Tetkik ve Lab Arşivi</h3>
-            <p class="module-help">Odyometri, SFT, Akciğer grafisi ve diğer tetkikleri çalışan kartına PDF/görsel olarak ekleyin. Referans dışı sonuçlar otomatik vurgulanır.</p>
-
+          <div class="form-row">
+            <div class="form-group double">
+              <label>Çalışan Adı Soyadı</label>
+              <input type="text" id="worker_name" placeholder="Örn: Ahmet Yılmaz" />
+            </div>
             <div class="form-group">
-                <label>Firma</label>
-                <select id="test_company_select" onchange="fetchWorkersForSelect(this.value, 'test_worker_select')"><option value="">Firmalar yükleniyor...</option></select>
+              <label>Yaş</label>
+              <input type="number" id="worker_age" oninput="checkMedicalLawConstraint()" placeholder="Örn: 25" />
             </div>
-            <div class="module-row-2">
-                <div class="form-group"><label>Çalışan</label><select id="test_worker_select"><option value="">Önce firma seçin</option></select></div>
-                <div class="form-group"><label>Tetkik Türü</label><select id="test_type"><option value="Odyometri">Odyometri</option><option value="SFT">SFT</option><option value="Akciğer Grafisi">Akciğer Grafisi</option><option value="Kan Tahlili">Kan Tahlili</option><option value="Göz Muayenesi">Göz Muayenesi</option><option value="Diğer">Diğer</option></select></div>
+            <div class="form-group">
+              <label>Cinsiyet</label>
+              <select id="worker_gender">
+                <option value="Erkek">Erkek</option>
+                <option value="Kadın">Kadın</option>
+              </select>
             </div>
-            <div class="module-row-3">
-                <div class="form-group"><label>Sonuç Tarihi</label><input type="date" id="test_date"></div>
-                <div class="form-group"><label>Sonuç Durumu</label><select id="test_result_status"><option value="Normal">Normal</option><option value="Referans Dışı">Referans Dışı</option><option value="Takip Gerekli">Takip Gerekli</option></select></div>
-                <div class="form-group"><label>Sonraki Kontrol</label><input type="date" id="test_next_check_date"></div>
-            </div>
-            <div class="form-group"><label>PDF/Görsel Dosya</label><input type="file" id="test_file" accept="application/pdf,image/png,image/jpeg,image/webp"></div>
-            <div class="form-group"><label>Hekim Notu</label><textarea id="test_note" rows="2" placeholder="Kısa değerlendirme / takip önerisi"></textarea></div>
-            <button class="module-btn" onclick="saveMedicalTest()">Tetkiki Arşive Kaydet</button>
-            <div id="test_status" class="module-status"></div>
+          </div>
 
-            <table class="module-mini-table">
-                <thead><tr><th>Çalışan</th><th>Tetkik</th><th>Durum</th><th>Dosya</th></tr></thead>
-                <tbody id="medical_tests_tbody"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Tetkikler yükleniyor...</td></tr></tbody>
-            </table>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Göz Muayene Bulguları (Ek-2)</label>
+              <input type="text" id="goz" placeholder="Örn: Sol 0.8, Sağ 1.0 Tam" />
+            </div>
+            <div class="form-group">
+              <label>Kardiyovasküler Bulgular (Kalp/Tansiyon)</label>
+              <input type="text" id="kalp" placeholder="Örn: TA: 120/80 mmHg" />
+            </div>
+            <div class="form-group">
+              <label>Kas-İskelet Sistemi Bulguları</label>
+              <input type="text" id="kas" placeholder="Örn: Hareket kısıtlılığı yok" />
+            </div>
+          </div>
+
+          <div id="law_warning" class="warning-box">
+            ⚠️ İSG Mevzuat Uyarısı: 18 yaş altı çalışanlar kanunen ağır, tehlikeli veya yüksekte çalışma gerektiren işlerde
+            görevlendirilemez!
+          </div>
+
+          <div class="form-row" style="justify-content: flex-end; margin-bottom: 0; margin-top: 12px;">
+            <button class="save-btn" onclick="saveMedical()">🩺 Sağlık Kartını Onayla ve Kaydet</button>
+          </div>
+        </div>
+
+      <div class="medical-module-grid">
+        <div class="medical-module-panel">
+          <h3>🧪 Tetkik ve Lab Arşivi</h3>
+          <p class="module-help">
+            Odyometri, SFT, Akciğer grafisi ve diğer tetkikleri çalışan kartına PDF/görsel olarak ekleyin. Referans dışı
+            sonuçlar otomatik vurgulanır.
+          </p>
+
+          <div class="form-row">
+            <div class="form-group double">
+              <label>Firma</label>
+              <select id="test_company_select" onchange="fetchWorkersForSelect(this.value, 'test_worker_select')">
+                <option value="">Firmalar yükleniyor...</option>
+              </select>
+            </div>
+            <div class="form-group double">
+              <label>Çalışan</label>
+              <select id="test_worker_select">
+                <option value="">Önce firma seçin</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Tetkik Türü</label>
+              <select id="test_type">
+                <option value="Odyometri">Odyometri</option>
+                <option value="SFT">SFT</option>
+                <option value="Akciğer Grafisi">Akciğer Grafisi</option>
+                <option value="Kan Tahlili">Kan Tahlili</option>
+                <option value="Göz Muayenesi">Göz Muayenesi</option>
+                <option value="Diğer">Diğer</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Sonuç Tarihi</label>
+              <input type="date" id="test_date" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Sonuç Durumu</label>
+              <select id="test_result_status">
+                <option value="Normal">Normal</option>
+                <option value="Referans Dışı">Referans Dışı</option>
+                <option value="Takip Gerekli">Takip Gerekli</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Sonraki Kontrol</label>
+              <input type="date" id="test_next_check_date" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group double">
+              <label>PDF/Görsel Dosya</label>
+              <input type="file" id="test_file" accept="application/pdf,image/png,image/jpeg,image/webp" />
+            </div>
+            <div class="form-group double">
+              <label>Hekim Notu</label>
+              <input id="test_note" placeholder="Kısa değerlendirme / takip önerisi" />
+            </div>
+          </div>
+
+          <button class="module-btn" onclick="saveMedicalTest()">🧪 Tetkiki Arşive Kaydet</button>
+          <div id="test_status" class="module-status"></div>
+
+          <table class="module-mini-table">
+            <thead>
+              <tr>
+                <th>Çalışan</th>
+                <th>Tetkik</th>
+                <th>Durum</th>
+                <th>Dosya</th>
+              </tr>
+            </thead>
+            <tbody id="medical_tests_tbody">
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted)">Tetkikler yükleniyor...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <div class="medical-module-panel">
-            <h3>💉 Kronik Hasta & Aşı Takibi</h3>
-            <p class="module-help">Diyabet, hipertansiyon gibi kronik takipler ve aşı/periyodik kontrol tarihleri için otomatik gecikme ve yaklaşan takip uyarıları oluşturun.</p>
+          <h3>💉 Kronik Hasta & Aşı Takibi</h3>
+          <p class="module-help">
+            Diyabet, hipertansiyon gibi kronik takipler ve aşı/periyodik kontrol tarihleri için otomatik gecikme ve
+            yaklaşan takip uyarıları oluşturun.
+          </p>
 
+          <div class="form-row">
+            <div class="form-group double">
+              <label>Firma</label>
+              <select id="follow_company_select" onchange="fetchWorkersForSelect(this.value, 'follow_worker_select')">
+                <option value="">Firmalar yükleniyor...</option>
+              </select>
+            </div>
+            <div class="form-group double">
+              <label>Çalışan</label>
+              <select id="follow_worker_select">
+                <option value="">Önce firma seçin</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
             <div class="form-group">
-                <label>Firma</label>
-                <select id="follow_company_select" onchange="fetchWorkersForSelect(this.value, 'follow_worker_select')"><option value="">Firmalar yükleniyor...</option></select>
+              <label>Takip Türü</label>
+              <select id="followup_type">
+                <option value="Kronik Hastalık">Kronik Hastalık</option>
+                <option value="Aşı">Aşı</option>
+                <option value="Periyodik Tetkik">Periyodik Tetkik</option>
+                <option value="Kontrol Muayenesi">Kontrol Muayenesi</option>
+                <option value="Diğer">Diğer</option>
+              </select>
             </div>
-            <div class="module-row-2">
-                <div class="form-group"><label>Çalışan</label><select id="follow_worker_select"><option value="">Önce firma seçin</option></select></div>
-                <div class="form-group"><label>Takip Türü</label><select id="followup_type"><option value="Kronik Hastalık">Kronik Hastalık</option><option value="Aşı">Aşı</option><option value="Periyodik Tetkik">Periyodik Tetkik</option><option value="Kontrol Muayenesi">Kontrol Muayenesi</option><option value="Diğer">Diğer</option></select></div>
+            <div class="form-group double">
+              <label>Takip Başlığı</label>
+              <input id="followup_title" placeholder="Hipertansiyon, aşı yenileme vb." />
             </div>
-            <div class="form-group"><label>Takip Başlığı</label><input id="followup_title" placeholder="Örn. Hipertansiyon takibi, Tetanoz aşı yenileme"></div>
-            <div class="module-row-3">
-                <div class="form-group"><label>Son İşlem Tarihi</label><input type="date" id="followup_last_date"></div>
-                <div class="form-group"><label>Sonraki Takip Tarihi</label><input type="date" id="followup_next_date"></div>
-                <div class="form-group"><label>Durum</label><select id="followup_status"><option value="Aktif">Aktif</option><option value="Tamamlandı">Tamamlandı</option><option value="Pasif">Pasif</option></select></div>
-            </div>
-            <div class="form-group"><label>Not</label><textarea id="followup_note" rows="2" placeholder="Klinik not / hatırlatma açıklaması"></textarea></div>
-            <button class="module-btn green" onclick="saveHealthFollowup()">Takibi Kaydet</button>
-            <div id="followup_status_line" class="module-status"></div>
+          </div>
 
-            <table class="module-mini-table">
-                <thead><tr><th>Çalışan</th><th>Takip</th><th>Sonraki Tarih</th><th>Durum</th></tr></thead>
-                <tbody id="health_followups_tbody"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Takipler yükleniyor...</td></tr></tbody>
-            </table>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Son İşlem Tarihi</label>
+              <input type="date" id="followup_last_date" />
+            </div>
+            <div class="form-group">
+              <label>Sonraki Takip</label>
+              <input type="date" id="followup_next_date" />
+            </div>
+            <div class="form-group">
+              <label>Durum</label>
+              <select id="followup_status">
+                <option value="Aktif">Aktif</option>
+                <option value="Tamamlandı">Tamamlandı</option>
+                <option value="Pasif">Pasif</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full">
+              <label>Klinik Not</label>
+              <input id="followup_note" placeholder="Klinik not / hatırlatma açıklaması" />
+            </div>
+          </div>
+
+          <button class="module-btn green" onclick="saveHealthFollowup()">💉 Takibi Kaydet</button>
+          <div id="followup_status_line" class="module-status"></div>
+
+          <table class="module-mini-table">
+            <thead>
+              <tr>
+                <th>Çalışan</th>
+                <th>Takip</th>
+                <th>Sonraki Tarih</th>
+                <th>Durum</th>
+              </tr>
+            </thead>
+            <tbody id="health_followups_tbody">
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted)">Takipler yükleniyor...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-    </div>
+      </div>
 
-
-    <div class="table-container">
+      <div class="table-container">
         <h3>📋 Geçmiş Periyodik Muayene Kartları (Canlı)</h3>
         <table>
-            <thead>
-                <tr>
-                    <th class="sortable-th" onclick="sortMedicalBy('company_name')">Firma Unvanı <span id="sort_company_name" class="sort-indicator"></span></th>
-                    <th class="sortable-th" onclick="sortMedicalBy('worker_name')">Çalışan Adı (Yaş/Cinsiyet) <span id="sort_worker_name" class="sort-indicator"></span></th>
-                    <th class="sortable-th" onclick="sortMedicalBy('clinical_text')">Klinik Bulgular (Göz/Kalp) <span id="sort_clinical_text" class="sort-indicator"></span></th>
-                    <th class="sortable-th" onclick="sortMedicalBy('final_decision')">Hekim Kararı <span id="sort_final_decision" class="sort-indicator"></span></th>
-                </tr>
-                <tr class="medical-filter-row">
-                    <th><input class="medical-filter-input" data-field="company_name" oninput="applyMedicalFilters()" placeholder="Firma filtrele"></th>
-                    <th><input class="medical-filter-input" data-field="worker_text" oninput="applyMedicalFilters()" placeholder="Ad / yaş / cinsiyet"></th>
-                    <th><input class="medical-filter-input" data-field="clinical_text" oninput="applyMedicalFilters()" placeholder="Göz / kalp / kas"></th>
-                    <th><input class="medical-filter-input" data-field="final_decision" oninput="applyMedicalFilters()" placeholder="Karar filtrele"></th>
-                </tr>
-            </thead>
-            <tbody id="medical_table_body"><tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Veriler yükleniyor...</td></tr></tbody>
+          <thead>
+            <tr>
+              <th class="sortable-th" onclick="sortMedicalBy('company_name')">
+                Firma Unvanı <span id="sort_company_name" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortMedicalBy('worker_name')">
+                Çalışan Adı (Yaş/Cinsiyet) <span id="sort_worker_name" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortMedicalBy('clinical_text')">
+                Klinik Bulgular (Göz/Kalp) <span id="sort_clinical_text" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortMedicalBy('final_decision')">
+                Hekim Kararı <span id="sort_final_decision" class="sort-indicator"></span>
+              </th>
+            </tr>
+            <tr class="medical-filter-row">
+              <th>
+                <input
+                  class="medical-filter-input"
+                  data-field="company_name"
+                  oninput="applyMedicalFilters()"
+                  placeholder="Firma filtrele"
+                />
+              </th>
+              <th>
+                <input
+                  class="medical-filter-input"
+                  data-field="worker_text"
+                  oninput="applyMedicalFilters()"
+                  placeholder="Ad / yaş / cinsiyet"
+                />
+              </th>
+              <th>
+                <input
+                  class="medical-filter-input"
+                  data-field="clinical_text"
+                  oninput="applyMedicalFilters()"
+                  placeholder="Göz / kalp / kas"
+                />
+              </th>
+              <th>
+                <input
+                  class="medical-filter-input"
+                  data-field="final_decision"
+                  oninput="applyMedicalFilters()"
+                  placeholder="Karar filtrele"
+                />
+              </th>
+            </tr>
+          </thead>
+          <tbody id="medical_table_body">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-muted)">Veriler yükleniyor...</td>
+            </tr>
+          </tbody>
         </table>
+      </div>
     </div>
-</div>
+  </div>
 
-<script>
-    const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let CURRENT_AUTH = null;
-    let medicalTableRows = [];
-    let medicalSortField = '';
-    let medicalSortDirection = 'asc';
-    let lastTenantCompanies = [];
-    const MEDICAL_FILE_BUCKET = 'medical-files';
+    <script>
+      let CURRENT_AUTH = null;
+      let medicalTableRows = [];
+      let medicalSortField = '';
+      let medicalSortDirection = 'asc';
+      let lastTenantCompanies = [];
+      const MEDICAL_FILE_BUCKET = 'medical-files';
 
-    // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
-    // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
-    // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
-    function normalizeAccessRole(value) {
-        const v = (value || '').toString().trim().toLowerCase();
-        if (['super_admin', 'super admin', 'saas_admin', 'sistem sahibi'].includes(v)) return 'super_admin';
-        if (['admin', 'yonetici', 'yönetici'].includes(v)) return 'admin';
-        if (['uzman', 'isg_uzmani', 'isg uzmanı', 'iş güvenliği uzmanı'].includes(v)) return 'uzman';
-        if (['hekim', 'isyeri hekimi', 'işyeri hekimi'].includes(v)) return 'hekim';
-        if (['dsp', 'diğer sağlık personeli', 'diger saglik personeli'].includes(v)) return 'dsp';
-        if (['firma_yetkilisi', 'firma yetkilisi', 'musteri', 'müşteri'].includes(v)) return 'firma_yetkilisi';
-        return '';
-    }
-
-    function inferAccessRoleFromEmail(email) {
-        const e = (email || '').toLowerCase();
-        if (e.includes('orhan.vardar@gmail.com')) return 'super_admin';
-        if (e.includes('admin')) return 'admin';
-        if (e.includes('hekim')) return 'hekim';
-        if (e.includes('dsp')) return 'dsp';
-        if (e.includes('firma') || e.includes('musteri') || e.includes('müşteri')) return 'firma_yetkilisi';
-        if (e.includes('uzman')) return 'uzman';
-        return 'uzman';
-    }
-
-    function isStaffAccessActive(record) {
-        if (!record) return true;
-        if (record.can_login === false) return false;
-        if (record.is_active_manual === 'Aktif') return true;
-        if (record.is_active_manual === 'Pasif') return false;
-        const today = new Date(); today.setHours(0,0,0,0);
-        if (record.hire_date) {
-            const hire = new Date(record.hire_date); hire.setHours(0,0,0,0);
-            if (hire > today) return false;
-        }
-        if (record.termination_date) {
-            const term = new Date(record.termination_date); term.setHours(0,0,0,0);
-            if (term <= today) return false;
-        }
-        return true;
-    }
-
-    async function getCurrentAuthContext() {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) return { session: null, email: '', role: '', canLogin: false, staff: null };
-        const email = session.user.email || '';
-        let staff = null;
-        try {
-            const { data } = await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email', email).maybeSingle();
-            staff = data || null;
-        } catch (err) {
-            console.warn('Rol kaydı okunamadı, e-posta bazlı geçici role dönülüyor:', err.message);
-        }
-        const role = normalizeAccessRole(staff && staff.access_role) || normalizeAccessRole(staff && staff.staff_role) || inferAccessRoleFromEmail(email);
-        const canLogin = isStaffAccessActive(staff);
-        return { session, email, role, canLogin, staff, tenant: staff && staff.tenants ? staff.tenants : null, tenant_id: staff ? staff.tenant_id : null };
-    }
-
-    function canAccessPage(role, page) {
-        if (role === 'super_admin' || role === 'admin') return true;
-        if (page === 'risk') return role === 'uzman';
-        if (page === 'medical') return role === 'hekim';
-        if (page === 'staff') return false;
-        if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
-        return true;
-    }
-
-    function roleLabel(role) {
-        return { super_admin: 'Super Admin', admin: 'Admin', uzman: 'İSG Uzmanı', hekim: 'İşyeri Hekimi', dsp: 'DSP', firma_yetkilisi: 'Firma Yetkilisi' }[role] || role || 'Rol yok';
-    }
-
-    function applyRoleBasedNavigation(role) {
-        const riskMenu = document.getElementById('menu_risk');
-        const medicalMenu = document.getElementById('menu_medical');
-        const staffMenu = document.getElementById('menu_staff');
-        const saasMenu = document.getElementById('menu_saas');
-        if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
-        if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
-        if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
-        if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
-        if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
-    }
-
-
-    function setTenantBranding(tenant) {
-        const titleEl = document.getElementById('lbl_osgb_title');
-        if (titleEl) titleEl.innerText = (tenant && tenant.name) ? tenant.name : 'Eses Software';
-        const area = titleEl ? titleEl.closest('.logo-area') : null;
-        if (!area) return;
-        let img = area.querySelector('.tenant-logo-img');
-        const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
-        if (logoUrl) {
-            if (!img) {
-                img = document.createElement('img');
-                img.className = 'tenant-logo-img';
-                img.alt = 'Logo';
-                area.insertBefore(img, titleEl);
-            }
-            img.src = logoUrl;
-        } else if (img) {
-            img.remove();
-        }
-    }
-
-    async function requireAuthAndRole(page) {
-        const auth = await getCurrentAuthContext();
-        if (!auth.session) { window.location.href = 'login.html'; return null; }
-        if (!auth.canLogin) {
-            await dbClient.auth.signOut();
-            alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
-            window.location.href = 'login.html';
-            return null;
-        }
-        const userInfo = document.getElementById('current_user_email');
-        if (userInfo) userInfo.innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-        setTenantBranding(auth.tenant);
-        applyRoleBasedNavigation(auth.role);
-        if (page && !canAccessPage(auth.role, page)) {
-            window.location.href = 'dashboard.html';
-            return null;
-        }
-        return auth;
-    }
-
-
-    const themes = {
-        isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--primary-hover': '#1d4ed8', '--accent-green': '#10b981', '--accent-green-hover': '#059669', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
-        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
-        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
-    };
-
-    window.onload = async function() {
-        const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
-        if (themes[activeTheme]) { Object.keys(themes[activeTheme]).forEach(key => { document.documentElement.style.setProperty(key, themes[activeTheme][key]); }); }
-
+      // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
+      // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
+      // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
+      window.onload = async function () {
         const auth = await requireAuthAndRole('medical');
         if (!auth) return;
 
         CURRENT_AUTH = auth;
 
         if (!CURRENT_AUTH.tenant_id) {
-            alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
-            await dbClient.auth.signOut();
-            window.location.href = 'login.html';
-            return;
+          alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
+          await dbClient.auth.signOut();
+          window.location.href = 'login.html';
+          return;
         }
 
-        document.body.style.display = "block";
+        document.body.style.display = 'block';
         await fetchCompaniesToSelect();
         setDefaultModuleDates();
         fetchMedicalRecords();
         fetchMedicalTests();
         fetchHealthFollowups();
-    };
+      };
 
-    function checkMedicalLawConstraint() {
+      function checkMedicalLawConstraint() {
         const age = parseInt(document.getElementById('worker_age').value);
         const decision = document.getElementById('decision').value;
         const warningBox = document.getElementById('law_warning');
-        if (age < 18 && (decision === "Ağır ve Tehlikeli İşlerde Çalışabilir" || decision === "Yüksekte Çalışabilir")) { warningBox.style.display = 'block'; } else { warningBox.style.display = 'none'; }
-    }
+        if (age < 18 && (decision === 'Ağır ve Tehlikeli İşlerde Çalışabilir' || decision === 'Yüksekte Çalışabilir')) {
+          warningBox.style.display = 'block';
+        } else {
+          warningBox.style.display = 'none';
+        }
+      }
 
-    async function fetchCompaniesToSelect() {
+      async function fetchCompaniesToSelect() {
         const select = document.getElementById('company_select');
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            select.innerHTML = '<option value="">Tenant bilgisi bulunamadı</option>';
-            return;
+          select.innerHTML = '<option value="">Tenant bilgisi bulunamadı</option>';
+          return;
         }
 
         const { data, error } = await dbClient
-            .from('customer_companies')
-            .select('id, company_name, tenant_id')
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .order('company_name');
+          .from('customer_companies')
+          .select('id, company_name, tenant_id')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .order('company_name');
 
         if (error) {
-            console.error('Firma listesi alınamadı:', error);
-            select.innerHTML = '<option value="">Firma listesi alınamadı</option>';
-            return;
+          console.error('Firma listesi alınamadı:', error);
+          select.innerHTML = '<option value="">Firma listesi alınamadı</option>';
+          return;
         }
 
         lastTenantCompanies = data || [];
         populateCompanySelect(select, lastTenantCompanies, '-- Lütfen Firma Seçin --');
-        populateCompanySelect(document.getElementById('test_company_select'), lastTenantCompanies, '-- Tetkik için firma seçin --');
-        populateCompanySelect(document.getElementById('follow_company_select'), lastTenantCompanies, '-- Takip için firma seçin --');
-    }
+        populateCompanySelect(
+          document.getElementById('test_company_select'),
+          lastTenantCompanies,
+          '-- Tetkik için firma seçin --'
+        );
+        populateCompanySelect(
+          document.getElementById('follow_company_select'),
+          lastTenantCompanies,
+          '-- Takip için firma seçin --'
+        );
+      }
 
-    async function fetchMedicalRecords() {
+      async function fetchMedicalRecords() {
         const tbody = document.getElementById('medical_table_body');
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            medicalTableRows = [];
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
-            return;
+          medicalTableRows = [];
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
+          return;
         }
 
         const { data, error } = await dbClient
-            .from('worker_medical_records')
-            .select('*, customer_companies!inner(company_name, tenant_id)')
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
-            .order('created_at', { ascending: false });
+          .from('worker_medical_records')
+          .select('*, customer_companies!inner(company_name, tenant_id)')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
+          .order('created_at', { ascending: false });
 
         if (error) {
-            medicalTableRows = [];
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Hata: ${error.message}</td></tr>`;
-            return;
+          medicalTableRows = [];
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Hata: ${error.message}</td></tr>`;
+          return;
         }
 
         if (!data || data.length === 0) {
-            medicalTableRows = [];
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Kayıtlı muayene kartı bulunmuyor.</td></tr>`;
-            return;
+          medicalTableRows = [];
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Kayıtlı muayene kartı bulunmuyor.</td></tr>`;
+          return;
         }
 
-        medicalTableRows = data.map(m => {
-            const compName = m.customer_companies ? m.customer_companies.company_name : 'Bilinmeyen Firma';
-            const workerAge = m.worker_age !== null && m.worker_age !== undefined ? Number(m.worker_age) : '';
-            const workerGender = m.worker_gender || '';
-            const workerName = m.worker_name || 'Belirtilmedi';
-            const goz = m.goz_secure || '';
-            const kalp = m.kalp_secure || '';
-            const kas = m.kas_secure || '';
-            const decision = m.final_decision || '';
+        medicalTableRows = data.map((m) => {
+          const compName = m.customer_companies ? m.customer_companies.company_name : 'Bilinmeyen Firma';
+          const workerAge = m.worker_age !== null && m.worker_age !== undefined ? Number(m.worker_age) : '';
+          const workerGender = m.worker_gender || '';
+          const workerName = m.worker_name || 'Belirtilmedi';
+          const goz = m.goz_secure || '';
+          const kalp = m.kalp_secure || '';
+          const kas = m.kas_secure || '';
+          const decision = m.final_decision || '';
 
-            return {
-                id: m.id,
-                company_name: compName,
-                worker_name: workerName,
-                worker_age: workerAge,
-                worker_gender: workerGender,
-                worker_text: `${workerName} ${workerAge} ${workerGender}`,
-                goz_secure: goz,
-                kalp_secure: kalp,
-                kas_secure: kas,
-                clinical_text: `${goz} ${kalp} ${kas}`,
-                final_decision: decision
-            };
+          return {
+            id: m.id,
+            company_name: compName,
+            worker_name: workerName,
+            worker_age: workerAge,
+            worker_gender: workerGender,
+            worker_text: `${workerName} ${workerAge} ${workerGender}`,
+            goz_secure: goz,
+            kalp_secure: kalp,
+            kas_secure: kas,
+            clinical_text: `${goz} ${kalp} ${kas}`,
+            final_decision: decision
+          };
         });
 
         renderMedicalTable();
-    }
+      }
 
-    function escapeHtml(value) {
+      function escapeHtml(value) {
         return (value || '').toString().replace(/[&<>'"]/g, function (char) {
-            return {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                "'": '&#39;',
-                '"': '&quot;'
-            }[char];
+          return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+          }[char];
         });
-    }
+      }
 
-    function getMedicalFilteredRows() {
+      function getMedicalFilteredRows() {
         const filters = {};
 
-        document.querySelectorAll('.medical-filter-input').forEach(input => {
-            const field = input.dataset.field;
-            const value = (input.value || '').toString().trim().toLowerCase();
-            if (field && value) filters[field] = value;
+        document.querySelectorAll('.medical-filter-input').forEach((input) => {
+          const field = input.dataset.field;
+          const value = (input.value || '').toString().trim().toLowerCase();
+          if (field && value) filters[field] = value;
         });
 
         let rows = [...medicalTableRows];
 
-        Object.keys(filters).forEach(field => {
-            const value = filters[field];
-            rows = rows.filter(row => {
-                const cellValue = row[field] !== undefined && row[field] !== null
-                    ? row[field].toString().toLowerCase()
-                    : '';
-                return cellValue.includes(value);
-            });
+        Object.keys(filters).forEach((field) => {
+          const value = filters[field];
+          rows = rows.filter((row) => {
+            const cellValue =
+              row[field] !== undefined && row[field] !== null ? row[field].toString().toLowerCase() : '';
+            return cellValue.includes(value);
+          });
         });
 
         if (medicalSortField) {
-            rows.sort((a, b) => {
-                const av = a[medicalSortField];
-                const bv = b[medicalSortField];
+          rows.sort((a, b) => {
+            const av = a[medicalSortField];
+            const bv = b[medicalSortField];
 
-                if (typeof av === 'number' && typeof bv === 'number') {
-                    return medicalSortDirection === 'asc' ? av - bv : bv - av;
-                }
+            if (typeof av === 'number' && typeof bv === 'number') {
+              return medicalSortDirection === 'asc' ? av - bv : bv - av;
+            }
 
-                return medicalSortDirection === 'asc'
-                    ? (av || '').toString().localeCompare((bv || '').toString(), 'tr')
-                    : (bv || '').toString().localeCompare((av || '').toString(), 'tr');
-            });
+            return medicalSortDirection === 'asc'
+              ? (av || '').toString().localeCompare((bv || '').toString(), 'tr')
+              : (bv || '').toString().localeCompare((av || '').toString(), 'tr');
+          });
         }
 
         return rows;
-    }
+      }
 
-    function renderMedicalTable() {
+      function renderMedicalTable() {
         const tbody = document.getElementById('medical_table_body');
         const rows = getMedicalFilteredRows();
 
         updateMedicalSortIndicators();
 
         if (!rows || rows.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Filtreye uygun muayene kartı bulunamadı.</td></tr>`;
-            return;
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Filtreye uygun muayene kartı bulunamadı.</td></tr>`;
+          return;
         }
 
         tbody.innerHTML = '';
 
-        rows.forEach(m => {
-            tbody.innerHTML += `
+        rows.forEach((m) => {
+          tbody.innerHTML += `
                 <tr>
                     <td><strong>${escapeHtml(m.company_name)}</strong></td>
                     <td>${escapeHtml(m.worker_name)} (${escapeHtml(m.worker_age || '-')} / ${escapeHtml(m.worker_gender || '-')})</td>
@@ -1205,281 +554,298 @@
                 </tr>
             `;
         });
-    }
+      }
 
-    function applyMedicalFilters() {
+      function applyMedicalFilters() {
         renderMedicalTable();
-    }
+      }
 
-    function sortMedicalBy(field) {
+      function sortMedicalBy(field) {
         if (medicalSortField === field) {
-            medicalSortDirection = medicalSortDirection === 'asc' ? 'desc' : 'asc';
+          medicalSortDirection = medicalSortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            medicalSortField = field;
-            medicalSortDirection = 'asc';
+          medicalSortField = field;
+          medicalSortDirection = 'asc';
         }
 
         renderMedicalTable();
-    }
+      }
 
-    function updateMedicalSortIndicators() {
+      function updateMedicalSortIndicators() {
         const fields = ['company_name', 'worker_name', 'clinical_text', 'final_decision'];
 
-        fields.forEach(field => {
-            const el = document.getElementById(`sort_${field}`);
-            if (!el) return;
-            el.innerText = field === medicalSortField
-                ? (medicalSortDirection === 'asc' ? '▲' : '▼')
-                : '';
+        fields.forEach((field) => {
+          const el = document.getElementById(`sort_${field}`);
+          if (!el) return;
+          el.innerText = field === medicalSortField ? (medicalSortDirection === 'asc' ? '▲' : '▼') : '';
         });
-    }
+      }
 
-
-    function populateCompanySelect(select, companies, placeholder) {
+      function populateCompanySelect(select, companies, placeholder) {
         if (!select) return;
         select.innerHTML = `<option value="">${escapeHtml(placeholder || '-- Firma Seçin --')}</option>`;
-        (companies || []).forEach(c => {
-            select.innerHTML += `<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`;
+        (companies || []).forEach((c) => {
+          select.innerHTML += `<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`;
         });
-    }
+      }
 
-    function setDefaultModuleDates() {
+      function setDefaultModuleDates() {
         const today = new Date().toISOString().slice(0, 10);
-        ['test_date', 'followup_last_date'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el && !el.value) el.value = today;
+        ['test_date', 'followup_last_date'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el && !el.value) el.value = today;
         });
-    }
+      }
 
-    async function fetchWorkersForSelect(companyId, selectId) {
+      async function fetchWorkersForSelect(companyId, selectId) {
         const select = document.getElementById(selectId);
         if (!select) return;
         if (!companyId) {
-            select.innerHTML = '<option value="">Önce firma seçin</option>';
-            return;
+          select.innerHTML = '<option value="">Önce firma seçin</option>';
+          return;
         }
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            select.innerHTML = '<option value="">Tenant bilgisi yok</option>';
-            return;
+          select.innerHTML = '<option value="">Tenant bilgisi yok</option>';
+          return;
         }
         select.innerHTML = '<option value="">Çalışanlar yükleniyor...</option>';
         const { data, error } = await dbClient
-            .from('workers')
-            .select('id, full_name, age, gender, job_title')
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .eq('company_id', companyId)
-            .order('full_name');
+          .from('workers')
+          .select('id, full_name, age, gender, job_title')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('company_id', companyId)
+          .order('full_name');
         if (error) {
-            select.innerHTML = `<option value="">Çalışan listesi alınamadı</option>`;
-            console.error(error);
-            return;
+          select.innerHTML = `<option value="">Çalışan listesi alınamadı</option>`;
+          console.error(error);
+          return;
         }
         select.innerHTML = '<option value="">-- Çalışan Seçin --</option>';
-        (data || []).forEach(w => {
-            const label = `${w.full_name || 'İsimsiz'}${w.job_title ? ' • ' + w.job_title : ''}`;
-            select.innerHTML += `<option value="${escapeHtml(w.id)}" data-name="${escapeHtml(w.full_name || '')}">${escapeHtml(label)}</option>`;
+        (data || []).forEach((w) => {
+          const label = `${w.full_name || 'İsimsiz'}${w.job_title ? ' • ' + w.job_title : ''}`;
+          select.innerHTML += `<option value="${escapeHtml(w.id)}" data-name="${escapeHtml(w.full_name || '')}">${escapeHtml(label)}</option>`;
         });
-    }
+      }
 
-    function getSelectedWorkerName(selectId) {
+      function getSelectedWorkerName(selectId) {
         const select = document.getElementById(selectId);
         if (!select || !select.value) return '';
         const option = select.options[select.selectedIndex];
-        return option ? (option.dataset.name || option.textContent || '') : '';
-    }
+        return option ? option.dataset.name || option.textContent || '' : '';
+      }
 
-    function moduleStatus(id, message, ok) {
+      function moduleStatus(id, message, ok) {
         const el = document.getElementById(id);
         if (!el) return;
         el.className = 'module-status ' + (ok ? 'ok' : 'err');
         el.innerText = message || '';
-    }
+      }
 
-    function safeStorageName(value) {
-        return (value || 'dosya').toString().trim()
+      function safeStorageName(value) {
+        return (
+          (value || 'dosya')
+            .toString()
+            .trim()
             .replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ._-]/g, '_')
-            .substring(0, 90) || 'dosya';
-    }
+            .substring(0, 90) || 'dosya'
+        );
+      }
 
-    async function uploadMedicalFile(file, companyId, workerId) {
+      async function uploadMedicalFile(file, companyId, workerId) {
         if (!file) return { url: null, path: null };
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) throw new Error('Tenant bilgisi bulunamadı.');
         if (file.size > 10 * 1024 * 1024) throw new Error('Dosya en fazla 10 MB olabilir.');
         const path = `${CURRENT_AUTH.tenant_id}/${companyId || 'company'}/${workerId || 'worker'}/${Date.now()}_${safeStorageName(file.name)}`;
         const { error } = await dbClient.storage
-            .from(MEDICAL_FILE_BUCKET)
-            .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
-        if (error) throw new Error('Dosya yüklenemedi. medical-files bucket ve Storage izinlerini kontrol edin. Detay: ' + error.message);
+          .from(MEDICAL_FILE_BUCKET)
+          .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+        if (error)
+          throw new Error(
+            'Dosya yüklenemedi. medical-files bucket ve Storage izinlerini kontrol edin. Detay: ' + error.message
+          );
         const { data } = dbClient.storage.from(MEDICAL_FILE_BUCKET).getPublicUrl(path);
         return { url: data && data.publicUrl ? data.publicUrl : null, path };
-    }
+      }
 
-    function labStatusBadge(status) {
+      function labStatusBadge(status) {
         const s = status || 'Normal';
         if (s === 'Referans Dışı') return '<span class="badge badge-lab-abnormal">Referans Dışı</span>';
         if (s === 'Takip Gerekli') return '<span class="badge badge-lab-watch">Takip Gerekli</span>';
         return '<span class="badge badge-lab-normal">Normal</span>';
-    }
+      }
 
-    function isDue(dateValue) {
+      function isDue(dateValue) {
         if (!dateValue) return false;
-        const today = new Date(); today.setHours(0,0,0,0);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         const d = new Date(dateValue + 'T00:00:00');
         return !Number.isNaN(d.getTime()) && d <= today;
-    }
+      }
 
-    async function saveMedicalTest() {
+      async function saveMedicalTest() {
         try {
-            moduleStatus('test_status', '', true);
-            if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) throw new Error('Tenant bilgisi bulunamadı.');
-            const companyId = document.getElementById('test_company_select').value;
-            const workerId = document.getElementById('test_worker_select').value;
-            const workerName = getSelectedWorkerName('test_worker_select');
-            const testType = document.getElementById('test_type').value;
-            const testDate = document.getElementById('test_date').value;
-            const resultStatus = document.getElementById('test_result_status').value;
-            const nextCheckDate = document.getElementById('test_next_check_date').value || null;
-            const doctorNote = document.getElementById('test_note').value.trim() || null;
-            const file = document.getElementById('test_file').files[0] || null;
-            if (!companyId || !workerId || !testType || !testDate) throw new Error('Firma, çalışan, tetkik türü ve sonuç tarihi zorunlu.');
+          moduleStatus('test_status', '', true);
+          if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) throw new Error('Tenant bilgisi bulunamadı.');
+          const companyId = document.getElementById('test_company_select').value;
+          const workerId = document.getElementById('test_worker_select').value;
+          const workerName = getSelectedWorkerName('test_worker_select');
+          const testType = document.getElementById('test_type').value;
+          const testDate = document.getElementById('test_date').value;
+          const resultStatus = document.getElementById('test_result_status').value;
+          const nextCheckDate = document.getElementById('test_next_check_date').value || null;
+          const doctorNote = document.getElementById('test_note').value.trim() || null;
+          const file = document.getElementById('test_file').files[0] || null;
+          if (!companyId || !workerId || !testType || !testDate)
+            throw new Error('Firma, çalışan, tetkik türü ve sonuç tarihi zorunlu.');
 
-            const fileInfo = await uploadMedicalFile(file, companyId, workerId);
-            const { error } = await dbClient.from('worker_medical_tests').insert([{
-                tenant_id: CURRENT_AUTH.tenant_id,
-                company_id: companyId,
-                worker_id: workerId,
-                worker_name: workerName,
-                test_type: testType,
-                test_date: testDate,
-                result_status: resultStatus,
-                doctor_note: doctorNote,
-                next_check_date: nextCheckDate,
-                file_url: fileInfo.url,
-                file_path: fileInfo.path
-            }]);
-            if (error) throw error;
-            document.getElementById('test_file').value = '';
-            document.getElementById('test_note').value = '';
-            document.getElementById('test_next_check_date').value = '';
-            moduleStatus('test_status', 'Tetkik kaydı arşive eklendi.', true);
-            await fetchMedicalTests();
+          const fileInfo = await uploadMedicalFile(file, companyId, workerId);
+          const { error } = await dbClient.from('worker_medical_tests').insert([
+            {
+              tenant_id: CURRENT_AUTH.tenant_id,
+              company_id: companyId,
+              worker_id: workerId,
+              worker_name: workerName,
+              test_type: testType,
+              test_date: testDate,
+              result_status: resultStatus,
+              doctor_note: doctorNote,
+              next_check_date: nextCheckDate,
+              file_url: fileInfo.url,
+              file_path: fileInfo.path
+            }
+          ]);
+          if (error) throw error;
+          document.getElementById('test_file').value = '';
+          document.getElementById('test_note').value = '';
+          document.getElementById('test_next_check_date').value = '';
+          moduleStatus('test_status', 'Tetkik kaydı arşive eklendi.', true);
+          await fetchMedicalTests();
         } catch (err) {
-            moduleStatus('test_status', 'Hata: ' + (err.message || err), false);
+          moduleStatus('test_status', 'Hata: ' + (err.message || err), false);
         }
-    }
+      }
 
-    async function fetchMedicalTests() {
+      async function fetchMedicalTests() {
         const tbody = document.getElementById('medical_tests_tbody');
         if (!tbody) return;
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>';
-            return;
+          tbody.innerHTML =
+            '<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>';
+          return;
         }
         const { data, error } = await dbClient
-            .from('worker_medical_tests')
-            .select('*, customer_companies!inner(company_name, tenant_id)')
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
-            .order('created_at', { ascending: false })
-            .limit(8);
+          .from('worker_medical_tests')
+          .select('*, customer_companies!inner(company_name, tenant_id)')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
+          .order('created_at', { ascending: false })
+          .limit(8);
         if (error) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Tetkik tablosu yüklenemedi: ${escapeHtml(error.message)}</td></tr>`;
-            return;
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Tetkik tablosu yüklenemedi: ${escapeHtml(error.message)}</td></tr>`;
+          return;
         }
         if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Henüz tetkik kaydı yok.</td></tr>';
-            return;
+          tbody.innerHTML =
+            '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Henüz tetkik kaydı yok.</td></tr>';
+          return;
         }
         tbody.innerHTML = '';
-        data.forEach(t => {
-            const rowClass = t.result_status === 'Referans Dışı' ? 'abnormal-row' : '';
-            const fileHtml = t.file_url ? `<a class="file-link" href="${escapeHtml(t.file_url)}" target="_blank">Dosya</a>` : '<span style="color:var(--text-muted);">Yok</span>';
-            tbody.innerHTML += `<tr class="${rowClass}">
+        data.forEach((t) => {
+          const rowClass = t.result_status === 'Referans Dışı' ? 'abnormal-row' : '';
+          const fileHtml = t.file_url
+            ? `<a class="file-link" href="${escapeHtml(t.file_url)}" target="_blank">Dosya</a>`
+            : '<span style="color:var(--text-muted);">Yok</span>';
+          tbody.innerHTML += `<tr class="${rowClass}">
                 <td><strong>${escapeHtml(t.worker_name || '-')}</strong><br><small>${escapeHtml(t.customer_companies ? t.customer_companies.company_name : '-')}</small></td>
                 <td>${escapeHtml(t.test_type || '-')}<br><small>${escapeHtml(t.test_date || '-')}</small></td>
                 <td>${labStatusBadge(t.result_status)}${t.next_check_date ? `<br><small>Kontrol: ${escapeHtml(t.next_check_date)}</small>` : ''}</td>
                 <td>${fileHtml}</td>
             </tr>`;
         });
-    }
+      }
 
-    async function saveHealthFollowup() {
+      async function saveHealthFollowup() {
         try {
-            moduleStatus('followup_status_line', '', true);
-            if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) throw new Error('Tenant bilgisi bulunamadı.');
-            const companyId = document.getElementById('follow_company_select').value;
-            const workerId = document.getElementById('follow_worker_select').value;
-            const workerName = getSelectedWorkerName('follow_worker_select');
-            const followupType = document.getElementById('followup_type').value;
-            const title = document.getElementById('followup_title').value.trim();
-            const lastDate = document.getElementById('followup_last_date').value || null;
-            const nextDate = document.getElementById('followup_next_date').value;
-            const status = document.getElementById('followup_status').value;
-            const note = document.getElementById('followup_note').value.trim() || null;
-            if (!companyId || !workerId || !followupType || !title || !nextDate) throw new Error('Firma, çalışan, takip türü, başlık ve sonraki takip tarihi zorunlu.');
-            const { error } = await dbClient.from('worker_health_followups').insert([{
-                tenant_id: CURRENT_AUTH.tenant_id,
-                company_id: companyId,
-                worker_id: workerId,
-                worker_name: workerName,
-                followup_type: followupType,
-                title: title,
-                last_date: lastDate,
-                next_date: nextDate,
-                status: status,
-                note: note
-            }]);
-            if (error) throw error;
-            document.getElementById('followup_title').value = '';
-            document.getElementById('followup_note').value = '';
-            moduleStatus('followup_status_line', 'Sağlık takibi kaydedildi.', true);
-            await fetchHealthFollowups();
+          moduleStatus('followup_status_line', '', true);
+          if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) throw new Error('Tenant bilgisi bulunamadı.');
+          const companyId = document.getElementById('follow_company_select').value;
+          const workerId = document.getElementById('follow_worker_select').value;
+          const workerName = getSelectedWorkerName('follow_worker_select');
+          const followupType = document.getElementById('followup_type').value;
+          const title = document.getElementById('followup_title').value.trim();
+          const lastDate = document.getElementById('followup_last_date').value || null;
+          const nextDate = document.getElementById('followup_next_date').value;
+          const status = document.getElementById('followup_status').value;
+          const note = document.getElementById('followup_note').value.trim() || null;
+          if (!companyId || !workerId || !followupType || !title || !nextDate)
+            throw new Error('Firma, çalışan, takip türü, başlık ve sonraki takip tarihi zorunlu.');
+          const { error } = await dbClient.from('worker_health_followups').insert([
+            {
+              tenant_id: CURRENT_AUTH.tenant_id,
+              company_id: companyId,
+              worker_id: workerId,
+              worker_name: workerName,
+              followup_type: followupType,
+              title: title,
+              last_date: lastDate,
+              next_date: nextDate,
+              status: status,
+              note: note
+            }
+          ]);
+          if (error) throw error;
+          document.getElementById('followup_title').value = '';
+          document.getElementById('followup_note').value = '';
+          moduleStatus('followup_status_line', 'Sağlık takibi kaydedildi.', true);
+          await fetchHealthFollowups();
         } catch (err) {
-            moduleStatus('followup_status_line', 'Hata: ' + (err.message || err), false);
+          moduleStatus('followup_status_line', 'Hata: ' + (err.message || err), false);
         }
-    }
+      }
 
-    function followupBadge(item) {
+      function followupBadge(item) {
         if (item.status === 'Tamamlandı') return '<span class="badge badge-lab-normal">Tamamlandı</span>';
         if (isDue(item.next_date)) return '<span class="badge badge-follow-due">Gecikti / Bugün</span>';
         return '<span class="badge badge-follow-active">Aktif</span>';
-    }
+      }
 
-    async function fetchHealthFollowups() {
+      async function fetchHealthFollowups() {
         const tbody = document.getElementById('health_followups_tbody');
         if (!tbody) return;
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>';
-            return;
+          tbody.innerHTML =
+            '<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>';
+          return;
         }
         const { data, error } = await dbClient
-            .from('worker_health_followups')
-            .select('*, customer_companies!inner(company_name, tenant_id)')
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
-            .order('next_date', { ascending: true })
-            .limit(8);
+          .from('worker_health_followups')
+          .select('*, customer_companies!inner(company_name, tenant_id)')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
+          .order('next_date', { ascending: true })
+          .limit(8);
         if (error) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Takip tablosu yüklenemedi: ${escapeHtml(error.message)}</td></tr>`;
-            return;
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#b91c1c;">Takip tablosu yüklenemedi: ${escapeHtml(error.message)}</td></tr>`;
+          return;
         }
         if (!data || data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Henüz sağlık takibi yok.</td></tr>';
-            return;
+          tbody.innerHTML =
+            '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Henüz sağlık takibi yok.</td></tr>';
+          return;
         }
         tbody.innerHTML = '';
-        data.forEach(f => {
-            const rowClass = f.status !== 'Tamamlandı' && isDue(f.next_date) ? 'due-row' : '';
-            tbody.innerHTML += `<tr class="${rowClass}">
+        data.forEach((f) => {
+          const rowClass = f.status !== 'Tamamlandı' && isDue(f.next_date) ? 'due-row' : '';
+          tbody.innerHTML += `<tr class="${rowClass}">
                 <td><strong>${escapeHtml(f.worker_name || '-')}</strong><br><small>${escapeHtml(f.customer_companies ? f.customer_companies.company_name : '-')}</small></td>
                 <td>${escapeHtml(f.followup_type || '-')}<br><small>${escapeHtml(f.title || '-')}</small></td>
                 <td>${escapeHtml(f.next_date || '-')}</td>
                 <td>${followupBadge(f)}</td>
             </tr>`;
         });
-    }
+      }
 
-    async function saveMedical() {
+      async function saveMedical() {
         const compId = document.getElementById('company_select').value;
         const wName = document.getElementById('worker_name').value;
         const wAge = parseInt(document.getElementById('worker_age').value);
@@ -1490,44 +856,44 @@
         const decisionVal = document.getElementById('decision').value;
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            alert('Tenant bilgisi bulunamadı.');
-            return;
+          alert('Tenant bilgisi bulunamadı.');
+          return;
         }
 
-        if(!compId || !wName || !wAge || !gozVal || !kalpVal || !kasVal) {
-            alert("Lütfen gerekli alanları doldurun!");
-            return;
+        if (!compId || !wName || !wAge || !gozVal || !kalpVal || !kasVal) {
+          alert('Lütfen gerekli alanları doldurun!');
+          return;
         }
 
         const { data: companyCheck, error: companyCheckError } = await dbClient
-            .from('customer_companies')
-            .select('id')
-            .eq('id', compId)
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .maybeSingle();
+          .from('customer_companies')
+          .select('id')
+          .eq('id', compId)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .maybeSingle();
 
         if (companyCheckError || !companyCheck) {
-            alert('Seçilen firma bu tenant altında bulunamadı.');
-            return;
+          alert('Seçilen firma bu tenant altında bulunamadı.');
+          return;
         }
 
-        const { error } = await dbClient
-            .from('worker_medical_records')
-            .insert([{
-                tenant_id: CURRENT_AUTH.tenant_id,
-                company_id: compId,
-                worker_name: wName,
-                worker_age: wAge,
-                worker_gender: wGender,
-                goz_secure: gozVal,
-                kalp_secure: kalpVal,
-                kas_secure: kasVal,
-                final_decision: decisionVal
-            }]);
+        const { error } = await dbClient.from('worker_medical_records').insert([
+          {
+            tenant_id: CURRENT_AUTH.tenant_id,
+            company_id: compId,
+            worker_name: wName,
+            worker_age: wAge,
+            worker_gender: wGender,
+            goz_secure: gozVal,
+            kalp_secure: kalpVal,
+            kas_secure: kasVal,
+            final_decision: decisionVal
+          }
+        ]);
 
         if (error) {
-            alert('Sağlık kartı kaydedilemedi: ' + error.message);
-            return;
+          alert('Sağlık kartı kaydedilemedi: ' + error.message);
+          return;
         }
 
         document.getElementById('worker_name').value = '';
@@ -1537,8 +903,7 @@
         document.getElementById('kas').value = '';
         document.getElementById('law_warning').style.display = 'none';
         fetchMedicalRecords();
-    }
-    async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
-</script>
-</body>
+      }
+    </script>
+  </body>
 </html>

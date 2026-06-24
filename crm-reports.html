@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSGB SaaS – CRM Raporları</title>
+    <meta name="description" content="CRM satış pipeline analizi, kazanım/kayıp oranları, teklif hacmi ve görev raporları." />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean-crm-reports.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean">
+    <div class="card">
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
+        </div>
+        <div class="nav-container"></div>
+      </div>
+
+      <div class="crm-reports-page-shell">
+
+      <!-- Page Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h1 style="margin:0 0 4px;font-size:24px;font-weight:800;">📈 CRM Satış Raporları</h1>
+          <p style="margin:0;font-size:13px;color:var(--text-muted);">Pipeline analizi, kazanım oranları, teklif hacmi ve görev performansı.</p>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <a href="crm.html" style="display:flex;align-items:center;gap:6px;padding:9px 16px;border:1.5px solid var(--border-color);border-radius:9px;font-size:13px;font-weight:600;text-decoration:none;color:var(--text-main);">💼 CRM'e Git</a>
+        </div>
+      </div>
+
+      <!-- Tarih Filtresi -->
+      <div class="date-filter-bar">
+        <label>Başlangıç:</label>
+        <input type="date" id="filter_start" />
+        <label>Bitiş:</label>
+        <input type="date" id="filter_end" />
+        <label>Sorumlu:</label>
+        <select id="filter_rep">
+          <option value="">Tümü</option>
+        </select>
+        <button class="btn-filter" onclick="applyFilters()">🔍 Filtrele</button>
+        <button class="btn-filter" style="background:var(--bg-main);color:var(--text-main);border:1px solid var(--border-color);" onclick="resetFilters()">↺ Sıfırla</button>
+        <span id="filter_status" style="font-size:12px;color:var(--text-muted);"></span>
+      </div>
+
+      <!-- ── KPI Karolar ── -->
+      <div class="section-header"><h2>📊 Genel Metrikler</h2></div>
+      <div class="report-grid">
+        <div class="rpt-card">
+          <div class="rpt-card-top"><span class="rpt-icon">📋</span><span class="rpt-label">Toplam Fırsat</span></div>
+          <div class="rpt-value" id="kpi_total_leads">—</div>
+          <div class="rpt-sub">Tüm aktif leadler</div>
+        </div>
+        <div class="rpt-card">
+          <div class="rpt-card-top"><span class="rpt-icon">🏆</span><span class="rpt-label">Kazanılan</span></div>
+          <div class="rpt-value" id="kpi_won" style="color:#059669;">—</div>
+          <div class="rpt-sub" id="kpi_win_rate">Kazanım oranı: —</div>
+        </div>
+        <div class="rpt-card">
+          <div class="rpt-card-top"><span class="rpt-icon">❌</span><span class="rpt-label">Kaybedilen</span></div>
+          <div class="rpt-value" id="kpi_lost" style="color:#dc2626;">—</div>
+          <div class="rpt-sub" id="kpi_loss_rate">Kayıp oranı: —</div>
+        </div>
+        <div class="rpt-card">
+          <div class="rpt-card-top"><span class="rpt-icon">💰</span><span class="rpt-label">Teklif Hacmi</span></div>
+          <div class="rpt-value" id="kpi_offer_vol" style="font-size:22px;">—</div>
+          <div class="rpt-sub">Hazırlanan + Gönderilen teklifler</div>
+        </div>
+        <div class="rpt-card">
+          <div class="rpt-card-top"><span class="rpt-icon">📄</span><span class="rpt-label">Toplam Teklif</span></div>
+          <div class="rpt-value" id="kpi_total_offers">—</div>
+          <div class="rpt-sub">Dönem içi teklif sayısı</div>
+        </div>
+        <div class="rpt-card">
+          <div class="rpt-card-top"><span class="rpt-icon">💎</span><span class="rpt-label">Ort. Teklif Değeri</span></div>
+          <div class="rpt-value" id="kpi_avg_offer" style="font-size:22px;">—</div>
+          <div class="rpt-sub">Teklif başına ortalama tutar</div>
+        </div>
+        <div class="rpt-card">
+          <div class="rpt-card-top"><span class="rpt-icon">✅</span><span class="rpt-label">Açık Görev</span></div>
+          <div class="rpt-value" id="kpi_open_tasks">—</div>
+          <div class="rpt-sub" id="kpi_overdue_tasks">Geciken: —</div>
+        </div>
+        <div class="rpt-card">
+          <div class="rpt-card-top"><span class="rpt-icon">⚡</span><span class="rpt-label">Aktivite</span></div>
+          <div class="rpt-value" id="kpi_activities">—</div>
+          <div class="rpt-sub">Dönem içi toplam aktivite</div>
+        </div>
+      </div>
+
+      <!-- ── Pipeline + Kazanım/Kayıp ── -->
+      <div class="report-content">
+        <!-- Pipeline Funnel -->
+        <div class="rpt-panel">
+          <div class="section-header">
+            <h3>🔻 Satış Pipeline (Aşama Bazlı)</h3>
+          </div>
+          <p class="rpt-desc">Her aşamadaki fırsat sayısını ve oranını gösterir.</p>
+          <div id="funnel_container">
+            <p style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Yükleniyor...</p>
+          </div>
+        </div>
+
+        <!-- Win / Loss Ring -->
+        <div class="rpt-panel" style="text-align:center;">
+          <div class="section-header" style="justify-content:center;"><h3>📊 Kazanım / Kayıp Oranı</h3></div>
+          <p class="rpt-desc">Sonuçlanan leadlerin dağılımı.</p>
+          <div id="winloss_ring_wrap" style="margin-top:12px;">
+            <div class="winloss-ring" id="winloss_ring" style="background:conic-gradient(#22c55e 0deg, #22c55e 0deg, #ef4444 0deg, #ef4444 360deg);">
+              <span id="winloss_pct" style="font-size:20px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.4);">—</span>
+            </div>
+            <div class="winloss-legend">
+              <span><span class="legend-dot" style="background:#22c55e;"></span>Kazanılan</span>
+              <span><span class="legend-dot" style="background:#ef4444;"></span>Kaybedilen</span>
+              <span><span class="legend-dot" style="background:#94a3b8;"></span>Askıda</span>
+            </div>
+            <div id="winloss_detail" style="margin-top:16px;font-size:13px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Son Aktiviteler + Lead Kaynağı ── -->
+      <div class="report-content">
+        <!-- Son Aktiviteler -->
+        <div class="rpt-panel">
+          <div class="section-header">
+            <h3>📞 Aktivite Özeti (Türlere Göre)</h3>
+          </div>
+          <p class="rpt-desc">Dönem içinde yapılan tüm aktivitelerin türlere göre dağılımı.</p>
+          <div id="activity_summary_container">
+            <p style="text-align:center;color:var(--text-muted);font-size:13px;padding:16px;">Yükleniyor...</p>
+          </div>
+        </div>
+
+        <!-- Tehlike Sınıfı Dağılımı -->
+        <div class="rpt-panel">
+          <div class="section-header">
+            <h3>⚠️ Fırsat Tehlike Sınıfı Dağılımı</h3>
+          </div>
+          <p class="rpt-desc">Leadlerin tehlike sınıfına göre segmentasyonu.</p>
+          <div id="danger_dist_container">
+            <p style="text-align:center;color:var(--text-muted);font-size:13px;padding:16px;">Yükleniyor...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Son Teklifler ── -->
+      <div class="report-full">
+        <div class="rpt-panel">
+          <div class="section-header">
+            <h3>📄 Son Teklifler</h3>
+            <a href="crm.html" style="font-size:12px;color:var(--primary);font-weight:600;text-decoration:none;">Tümünü Gör →</a>
+          </div>
+          <p class="rpt-desc">Dönem içinde oluşturulan tekliflerin listesi (en son 15 kayıt).</p>
+          <table class="rpt-table">
+            <thead>
+              <tr>
+                <th>Teklif No</th>
+                <th>Firma</th>
+                <th>Tutar (₺)</th>
+                <th>Durum</th>
+                <th>Tarih</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="offers_tbody">
+              <tr class="empty-row"><td colspan="6">Teklifler yükleniyor...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Son Aktiviteler Listesi ── -->
+      <div class="report-full">
+        <div class="rpt-panel">
+          <div class="section-header">
+            <h3>📋 Son CRM Aktiviteleri</h3>
+          </div>
+          <p class="rpt-desc">Tüm leadlerdeki son aktivite kayıtları (en son 15 kayıt).</p>
+          <table class="rpt-table">
+            <thead>
+              <tr>
+                <th>Tür</th>
+                <th>Fırsat / Firma</th>
+                <th>Özet</th>
+                <th>Tarih</th>
+                <th>Yapan</th>
+              </tr>
+            </thead>
+            <tbody id="activities_tbody">
+              <tr class="empty-row"><td colspan="5">Aktiviteler yükleniyor...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── Geciken Görevler ── -->
+      <div class="report-full">
+        <div class="rpt-panel">
+          <div class="section-header">
+            <h3>⏰ Açık ve Geciken CRM Görevleri</h3>
+          </div>
+          <p class="rpt-desc">Son tarihi yaklaşan veya geçen tüm açık görevler. Tıklayarak fırsat detayına gidin.</p>
+          <table class="rpt-table">
+            <thead>
+              <tr>
+                <th>Görev</th>
+                <th>Fırsat / Firma</th>
+                <th>Öncelik</th>
+                <th>Son Tarih</th>
+                <th>Durum</th>
+              </tr>
+            </thead>
+            <tbody id="tasks_tbody">
+              <tr class="empty-row"><td colspan="5">Görevler yükleniyor...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      </div><!-- /crm-reports-page-shell -->
+    </div><!-- /card -->
+
+    <script>
+      const STAGE_ORDER = [
+        'Yeni Kayıt', 'Görüşme', 'Teklif', 'Sözleşme'
+      ];
+      const STAGE_COLORS = {
+        'Yeni Kayıt': '#6366f1',
+        'Görüşme':   '#0ea5e9',
+        'Teklif':     '#f97316',
+        'Sözleşme':  '#14b8a6'
+      };
+      const ACT_ICONS = { Telefon:'📞', Toplantı:'🤝', 'E-posta':'✉️', WhatsApp:'💬', Ziyaret:'🚗', Not:'📌' };
+
+      let CURRENT_AUTH = null;
+      let ALL_LEADS = [];
+      let ALL_OFFERS = [];
+      let ALL_ACTIVITIES = [];
+      let ALL_TASKS = [];
+
+      /* ── Init ── */
+      window.onload = async function () {
+        // Default tarih aralığı: bu yılın başından bugüne
+        const now = new Date();
+        const yearStart = `${now.getFullYear()}-01-01`;
+        const today = now.toISOString().slice(0, 10);
+        document.getElementById('filter_start').value = yearStart;
+        document.getElementById('filter_end').value = today;
+
+        const auth = await requireAuthAndRole('crm');
+        if (!auth) return;
+        CURRENT_AUTH = auth;
+        document.body.style.display = 'block';
+
+        await loadAllData();
+        renderAll();
+      };
+
+      async function loadAllData() {
+        const tid = CURRENT_AUTH.tenant_id;
+        const [leadsRes, offersRes, actsRes, tasksRes] = await Promise.all([
+          dbClient.from('crm_leads').select('id, company_name, stage, lead_status, danger_class, assigned_to, created_at').eq('tenant_id', tid),
+          dbClient.from('crm_offers').select('id, offer_number, lead_id, subtotal, status, created_at, crm_leads(company_name)').eq('tenant_id', tid).order('created_at', { ascending: false }),
+          dbClient.from('crm_activities').select('id, activity_type, summary, activity_date, created_by, lead_id, crm_leads(company_name)').eq('tenant_id', tid).order('activity_date', { ascending: false }),
+          dbClient.from('crm_tasks').select('id, title, priority, status, due_date, lead_id, crm_leads(company_name)').eq('tenant_id', tid).order('due_date', { ascending: true })
+        ]);
+        ALL_LEADS      = leadsRes.data || [];
+        ALL_OFFERS     = offersRes.data || [];
+        ALL_ACTIVITIES = actsRes.data || [];
+        ALL_TASKS      = tasksRes.data || [];
+
+        // Sorumlu filter seçeneklerini doldur
+        const reps = [...new Set(ALL_LEADS.map(l => l.assigned_to).filter(Boolean))];
+        const sel = document.getElementById('filter_rep');
+        reps.forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; sel.appendChild(o); });
+      }
+
+      function getFilteredData() {
+        const start = document.getElementById('filter_start').value;
+        const end   = document.getElementById('filter_end').value;
+        const rep   = document.getElementById('filter_rep').value;
+
+        const leads = ALL_LEADS.filter(l => {
+          const d = (l.created_at || '').slice(0, 10);
+          if (start && d < start) return false;
+          if (end   && d > end)   return false;
+          if (rep   && l.assigned_to !== rep) return false;
+          return true;
+        });
+
+        const offerIds = new Set(leads.map(l => l.id));
+        const offers = ALL_OFFERS.filter(o => {
+          if (!offerIds.has(o.lead_id)) return false;
+          const d = (o.created_at || '').slice(0, 10);
+          if (start && d < start) return false;
+          if (end   && d > end)   return false;
+          return true;
+        });
+
+        const activities = ALL_ACTIVITIES.filter(a => {
+          if (!offerIds.has(a.lead_id)) return false;
+          const d = (a.activity_date || '').slice(0, 10);
+          if (start && d < start) return false;
+          if (end   && d > end)   return false;
+          return true;
+        });
+
+        const tasks = ALL_TASKS.filter(t => offerIds.has(t.lead_id));
+
+        return { leads, offers, activities, tasks };
+      }
+
+      function applyFilters() {
+        document.getElementById('filter_status').innerText = '🔄 Güncelleniyor...';
+        setTimeout(() => {
+          renderAll();
+          document.getElementById('filter_status').innerText = '✅ Güncellendi';
+          setTimeout(() => { document.getElementById('filter_status').innerText = ''; }, 2000);
+        }, 50);
+      }
+
+      function resetFilters() {
+        const now = new Date();
+        document.getElementById('filter_start').value = `${now.getFullYear()}-01-01`;
+        document.getElementById('filter_end').value = now.toISOString().slice(0, 10);
+        document.getElementById('filter_rep').value = '';
+        applyFilters();
+      }
+
+      function renderAll() {
+        const { leads, offers, activities, tasks } = getFilteredData();
+        renderKpis(leads, offers, activities, tasks);
+        renderFunnel(leads);
+        renderWinLoss(leads);
+        renderActivitySummary(activities);
+        renderDangerDist(leads);
+        renderOffersTable(offers);
+        renderActivitiesTable(activities);
+        renderTasksTable(tasks);
+      }
+
+      /* ── KPI Cards ── */
+      function renderKpis(leads, offers, activities, tasks) {
+        const total = leads.length;
+        // lead_status kolonu üzerinden kazanıldı/kaybedildi hesapla
+        const won   = leads.filter(l => l.lead_status === 'Kazanıldı').length;
+        const lost  = leads.filter(l => l.lead_status === 'Kaybedildi').length;
+        const closed = won + lost;
+        const winRate  = closed > 0 ? Math.round(won / closed * 100) : 0;
+        const lossRate = closed > 0 ? Math.round(lost / closed * 100) : 0;
+
+        const activeOffers = offers.filter(o => ['Hazırlandı','Gönderildi','Revize'].includes(o.status));
+        const totalAmt = activeOffers.reduce((s, o) => s + Number(o.subtotal || 0), 0);
+        const avgOffer = activeOffers.length > 0 ? Math.round(totalAmt / activeOffers.length) : 0;
+
+        const openTasks    = tasks.filter(t => t.status === 'Açık').length;
+        const today = new Date().toISOString().slice(0, 10);
+        const overdueTasks = tasks.filter(t => t.status === 'Açık' && t.due_date && t.due_date < today).length;
+
+        set('kpi_total_leads', total);
+        set('kpi_won', won);
+        set('kpi_win_rate', `Kazanım oranı: %${winRate}`);
+        set('kpi_lost', lost);
+        set('kpi_loss_rate', `Kayıp oranı: %${lossRate}`);
+        set('kpi_offer_vol', totalAmt > 0 ? '₺' + totalAmt.toLocaleString('tr-TR') : '—');
+        set('kpi_total_offers', offers.length);
+        set('kpi_avg_offer', avgOffer > 0 ? '₺' + avgOffer.toLocaleString('tr-TR') : '—');
+        set('kpi_open_tasks', openTasks);
+        set('kpi_overdue_tasks', `Geciken: ${overdueTasks}`);
+        set('kpi_activities', activities.length);
+      }
+
+      /* ── Funnel ── */
+      function normalizeStageForReport(dbStage) {
+        if (!dbStage) return 'Yeni Kayıt';
+        if (dbStage === 'Yeni Kayıt') return 'Yeni Kayıt';
+        if (['İlk Görüşme Yapılacak', 'Görüşme Yapıldı'].includes(dbStage)) return 'Görüşme';
+        if (['Teklif Hazırlanacak', 'Teklif Gönderildi', 'Pazarlıkta'].includes(dbStage)) return 'Teklif';
+        if (['Sözleşme Bekleniyor', 'Kazanıldı', 'Kaybedildi', 'Askıda'].includes(dbStage)) return 'Sözleşme';
+        return dbStage;
+      }
+
+      function renderFunnel(leads) {
+        const container = document.getElementById('funnel_container');
+        const counts = {};
+        leads.forEach(l => {
+          const normalized = normalizeStageForReport(l.stage);
+          counts[normalized] = (counts[normalized] || 0) + 1;
+        });
+        const max = Math.max(...Object.values(counts), 1);
+        const rows = STAGE_ORDER.filter(s => counts[s] > 0);
+        if (!rows.length) {
+          container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;">Veri yok.</p>';
+          return;
+        }
+        container.innerHTML = rows.map(s => {
+          const n = counts[s] || 0;
+          const pct = Math.round(n / max * 100);
+          const color = STAGE_COLORS[s] || '#94a3b8';
+          return `<div class="funnel-row">
+            <span class="funnel-label">${s}</span>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${color};"></div></div>
+            <span class="funnel-count">${n}</span>
+          </div>`;
+        }).join('');
+      }
+
+      /* ── Win/Loss Ring ── */
+      function renderWinLoss(leads) {
+        // lead_status kolonu üzerinden kazan/kaybet/askıda hesapla
+        const won    = leads.filter(l => l.lead_status === 'Kazanıldı').length;
+        const lost   = leads.filter(l => l.lead_status === 'Kaybedildi').length;
+        const askida = leads.filter(l => l.lead_status === 'Askıda').length;
+        const total  = won + lost + askida;
+        if (total === 0) {
+          document.getElementById('winloss_ring_wrap').innerHTML = '<p style="color:var(--text-muted);font-size:13px;">Kapatılmış fırsat yok.</p>';
+          return;
+        }
+        const wonPct  = Math.round(won / total * 100);
+        const lostPct = Math.round(lost / total * 100);
+        const askPct  = 100 - wonPct - lostPct;
+
+        const wonDeg  = wonPct  * 3.6;
+        const lostDeg = lostPct * 3.6;
+        const askDeg  = askPct  * 3.6;
+        const ring = document.getElementById('winloss_ring');
+        ring.style.background = `conic-gradient(#22c55e 0deg ${wonDeg}deg, #ef4444 ${wonDeg}deg ${wonDeg+lostDeg}deg, #94a3b8 ${wonDeg+lostDeg}deg 360deg)`;
+        document.getElementById('winloss_pct').innerText = `%${wonPct}`;
+        document.getElementById('winloss_detail').innerHTML = `
+          <div style="display:flex;flex-direction:column;gap:6px;text-align:left;max-width:180px;margin:0 auto;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span>🏆 Kazanılan</span><strong style="color:#22c55e;">${won}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span>❌ Kaybedilen</span><strong style="color:#ef4444;">${lost}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;"><span>⏸ Askıda</span><strong style="color:#94a3b8;">${askida}</strong></div>
+          </div>`;
+      }
+
+      /* ── Activity Summary ── */
+      function renderActivitySummary(activities) {
+        const container = document.getElementById('activity_summary_container');
+        const counts = {};
+        activities.forEach(a => { counts[a.activity_type] = (counts[a.activity_type] || 0) + 1; });
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        const max = Math.max(...sorted.map(([, v]) => v), 1);
+        if (!sorted.length) {
+          container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px;">Aktivite yok.</p>';
+          return;
+        }
+        container.innerHTML = sorted.map(([type, cnt]) => {
+          const pct = Math.round(cnt / max * 100);
+          const icon = ACT_ICONS[type] || '📌';
+          return `<div class="activity-type-row">
+            <div style="display:flex;align-items:center;gap:8px;flex:1;">
+              <span style="font-size:16px;">${icon}</span>
+              <div style="flex:1;">
+                <div style="font-size:13px;font-weight:600;">${esc(type)}</div>
+                <div class="act-bar-mini" style="width:${pct}%;"></div>
+              </div>
+            </div>
+            <span style="font-size:15px;font-weight:700;color:var(--primary);min-width:32px;text-align:right;">${cnt}</span>
+          </div>`;
+        }).join('');
+      }
+
+      /* ── Danger Distribution ── */
+      function renderDangerDist(leads) {
+        const container = document.getElementById('danger_dist_container');
+        const counts = { 'Az Tehlikeli': 0, 'Tehlikeli': 0, 'Çok Tehlikeli': 0, 'Belirtilmemiş': 0 };
+        leads.forEach(l => {
+          const d = (l.danger_class || '').trim();
+          if (counts[d] !== undefined) counts[d]++;
+          else counts['Belirtilmemiş']++;
+        });
+        const total = leads.length || 1;
+        const entries = [
+          { label: 'Çok Tehlikeli', key: 'Çok Tehlikeli', color: '#ef4444' },
+          { label: 'Tehlikeli',     key: 'Tehlikeli',     color: '#f97316' },
+          { label: 'Az Tehlikeli',  key: 'Az Tehlikeli',  color: '#22c55e' },
+          { label: 'Belirtilmemiş',key: 'Belirtilmemiş', color: '#94a3b8' },
+        ];
+        container.innerHTML = entries.map(e => {
+          const n = counts[e.key] || 0;
+          const pct = Math.round(n / total * 100);
+          return `<div class="funnel-row">
+            <span class="funnel-label" style="font-size:12px;">${e.label}</span>
+            <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${pct}%;background:${e.color};"></div></div>
+            <span class="funnel-count">${n}</span>
+          </div>`;
+        }).join('');
+      }
+
+      /* ── Offers Table ── */
+      function renderOffersTable(offers) {
+        const tbody = document.getElementById('offers_tbody');
+        const list = offers.slice(0, 15);
+        if (!list.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Teklif bulunamadı.</td></tr>'; return; }
+        const statusBadge = { 'Hazırlandı': 'badge-blue', 'Gönderildi': 'badge-orange', 'Kabul Edildi': 'badge-green', 'Reddedildi': 'badge-red', 'Revize': 'badge-gray' };
+        tbody.innerHTML = list.map(o => {
+          const co = (o.crm_leads && o.crm_leads.company_name) ? esc(o.crm_leads.company_name) : '-';
+          const cls = statusBadge[o.status] || 'badge-gray';
+          return `<tr>
+            <td><strong>${esc(o.offer_number || '—')}</strong></td>
+            <td>${co}</td>
+            <td style="font-weight:700;color:var(--primary);">₺${Number(o.subtotal || 0).toLocaleString('tr-TR')}</td>
+            <td><span class="badge-stage ${cls}">${esc(o.status || '—')}</span></td>
+            <td style="color:var(--text-muted);">${(o.created_at || '').slice(0, 10)}</td>
+            <td><a href="crm-offer.html?lead_id=${o.lead_id}&offer_id=${o.id}" style="font-size:12px;color:var(--primary);font-weight:600;">Aç →</a></td>
+          </tr>`;
+        }).join('');
+      }
+
+      /* ── Activities Table ── */
+      function renderActivitiesTable(activities) {
+        const tbody = document.getElementById('activities_tbody');
+        const list = activities.slice(0, 15);
+        if (!list.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Aktivite bulunamadı.</td></tr>'; return; }
+        tbody.innerHTML = list.map(a => {
+          const co = (a.crm_leads && a.crm_leads.company_name) ? esc(a.crm_leads.company_name) : '-';
+          const icon = ACT_ICONS[a.activity_type] || '📌';
+          return `<tr>
+            <td>${icon} <strong>${esc(a.activity_type)}</strong></td>
+            <td><a href="crm-detail.html?id=${a.lead_id}" style="color:var(--primary);font-weight:600;">${co}</a></td>
+            <td style="color:var(--text-muted);font-size:12px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(a.summary || '—')}</td>
+            <td style="color:var(--text-muted);">${a.activity_date || '-'}</td>
+            <td style="color:var(--text-muted);font-size:12px;">${esc(a.created_by || '—')}</td>
+          </tr>`;
+        }).join('');
+      }
+
+      /* ── Tasks Table ── */
+      function renderTasksTable(tasks) {
+        const tbody = document.getElementById('tasks_tbody');
+        const today = new Date().toISOString().slice(0, 10);
+        const tomorrow = addDays(today, 1);
+        const list = tasks.filter(t => t.status === 'Açık').slice(0, 20);
+        if (!list.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="5">📭 Açık görev yok.</td></tr>'; return; }
+        tbody.innerHTML = list.map(t => {
+          const co = (t.crm_leads && t.crm_leads.company_name) ? esc(t.crm_leads.company_name) : '-';
+          const isOverdue = t.due_date && t.due_date < today;
+          const isToday   = t.due_date && t.due_date >= today && t.due_date <= tomorrow;
+          let badge;
+          if (isOverdue) badge = '<span class="badge-stage badge-red">🔴 Gecikti</span>';
+          else if (isToday) badge = '<span class="badge-stage badge-orange">🟠 Bugün</span>';
+          else badge = '<span class="badge-stage badge-blue">🔵 Yakında</span>';
+          const priClass = t.priority === 'Yüksek' ? 'color:#dc2626;font-weight:700;' : '';
+          return `<tr style="cursor:pointer;" onclick="window.location.href='crm-detail.html?id=${t.lead_id}'">
+            <td style="${priClass}">${t.priority === 'Yüksek' ? '⚡ ' : ''}${esc(t.title)}</td>
+            <td>${co}</td>
+            <td><span style="font-size:12px;font-weight:600;color:${t.priority === 'Yüksek' ? '#dc2626' : 'var(--text-muted)'};">${esc(t.priority)}</span></td>
+            <td>${t.due_date || '-'}</td>
+            <td>${badge}</td>
+          </tr>`;
+        }).join('');
+      }
+
+      /* ── Helpers ── */
+      function set(id, val) { const el = document.getElementById(id); if (el) el.innerText = val; }
+      function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+      function addDays(dateStr, n) {
+        const d = new Date(dateStr);
+        d.setDate(d.getDate() + n);
+        return d.toISOString().slice(0, 10);
+      }
+    </script>
+  </body>
+</html>

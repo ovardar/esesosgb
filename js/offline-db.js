@@ -28,8 +28,12 @@
         }
       };
 
-      request.onsuccess = function () { resolve(request.result); };
-      request.onerror = function () { reject(request.error); };
+      request.onsuccess = function () {
+        resolve(request.result);
+      };
+      request.onerror = function () {
+        reject(request.error);
+      };
     });
   }
 
@@ -39,9 +43,15 @@
       const tx = db.transaction(storeName, mode);
       const store = tx.objectStore(storeName);
       const result = callback(store);
-      tx.oncomplete = function () { resolve(result); };
-      tx.onerror = function () { reject(tx.error); };
-      tx.onabort = function () { reject(tx.error); };
+      tx.oncomplete = function () {
+        resolve(result);
+      };
+      tx.onerror = function () {
+        reject(tx.error);
+      };
+      tx.onabort = function () {
+        reject(tx.error);
+      };
     });
   }
 
@@ -58,12 +68,19 @@
 
       getRequest.onsuccess = function () {
         const existing = getRequest.result;
-        if (!existing) { resolve(false); return; }
+        if (!existing) {
+          resolve(false);
+          return;
+        }
         store.put(Object.assign({}, existing, patch));
       };
 
-      tx.oncomplete = function () { resolve(true); };
-      tx.onerror = function () { reject(tx.error); };
+      tx.oncomplete = function () {
+        resolve(true);
+      };
+      tx.onerror = function () {
+        reject(tx.error);
+      };
     });
   }
 
@@ -73,8 +90,12 @@
       const tx = db.transaction(RISK_STORE, 'readonly');
       const store = tx.objectStore(RISK_STORE);
       const request = store.getAll();
-      request.onsuccess = function () { resolve(request.result || []); };
-      request.onerror = function () { reject(request.error); };
+      request.onsuccess = function () {
+        resolve(request.result || []);
+      };
+      request.onerror = function () {
+        reject(request.error);
+      };
     });
   }
 
@@ -98,8 +119,12 @@
       const tx = db.transaction(META_STORE, 'readonly');
       const store = tx.objectStore(META_STORE);
       const request = store.get(key);
-      request.onsuccess = function () { resolve(request.result ? request.result.value : null); };
-      request.onerror = function () { reject(request.error); };
+      request.onsuccess = function () {
+        resolve(request.result ? request.result.value : null);
+      };
+      request.onerror = function () {
+        reject(request.error);
+      };
     });
   }
 
@@ -123,9 +148,15 @@
         });
       };
 
-      tx.oncomplete = function () { resolve(true); };
-      tx.onerror = function () { reject(tx.error); };
-      tx.onabort = function () { reject(tx.error); };
+      tx.oncomplete = function () {
+        resolve(true);
+      };
+      tx.onerror = function () {
+        reject(tx.error);
+      };
+      tx.onabort = function () {
+        reject(tx.error);
+      };
     });
   }
 
@@ -140,7 +171,9 @@
         list.sort((a, b) => String(a.company_name || '').localeCompare(String(b.company_name || ''), 'tr'));
         resolve(list);
       };
-      request.onerror = function () { reject(request.error); };
+      request.onerror = function () {
+        reject(request.error);
+      };
     });
   }
 
@@ -148,9 +181,14 @@
     return getMeta('company_cache_meta');
   }
 
+  async function deleteRisk(localId) {
+    return withStore(RISK_STORE, 'readwrite', (store) => store.delete(localId));
+  }
+
   window.OSGBOfflineDB = {
     saveRisk,
     updateRisk,
+    deleteRisk,
     getAllRisks,
     getPendingRisks,
     countPendingRisks,

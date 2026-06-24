@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSGB SaaS - Dijital Onaylı Defter</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean" style="display: none;">
+    <div class="card">
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
+        </div>
+
+        <div class="nav-container">
+          <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+          <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display: none">🧩 SaaS Yönetimi</a>
+          <a id="menu_staff" href="staff.html" class="nav-btn" style="display: none">🔑 Personel Yönetimi</a>
+          <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+          <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+          <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+          <a id="menu_risk" href="risk.html" class="nav-btn" style="display: none">🦺 Uzman Risk Motoru</a>
+          <a id="menu_medical" href="medical.html" class="nav-btn" style="display: none">🩺 Hekim Sağlık Kartı</a>
+          <a id="menu_accidents" href="accidents.html" class="nav-btn" style="display: none">🚑 İş Kazaları</a>
+          <a id="menu_near_miss" href="near-miss-admin.html" class="nav-btn" style="display: none">⚠️ Ramak Kala</a>
+          <a id="menu_training" href="training.html" class="nav-btn">🎓 Eğitim & Sertifika</a>
+          <a id="menu_ppe" href="ppe.html" class="nav-btn">🧤 KKD Zimmet</a>
+          <a id="menu_periodic" href="periodic.html" class="nav-btn">🛠️ Periyodik Kontrol</a>
+          <a id="menu_defter" href="defter.html" class="nav-btn active-page">📘 Dijital Onaylı Defter</a>
+        </div>
+      </div>
+
+      <div class="crm-page-shell">
+        <div class="page-header-row" style="margin-bottom: 24px;">
+          <div class="page-title-group">
+            <h2 style="font-size: clamp(24px, 2.2vw, 34px); letter-spacing: -0.03em; color: #0f172a; font-weight: 800; margin: 0 0 6px;">📘 Dijital Onaylı Defter</h2>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0;">
+              Noter onaylı defter tabanlı kayıtları dijital ortamda takip edin. Sayfa taramasını ekleyin, madde madde kaydedin ve gerekirse her maddeyi DÖF kaydına dönüştürerek arşivleyin.
+            </p>
+          </div>
+        </div>
+
+        <!-- Defter Sayfası Taraması -->
+        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
+          <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">🖨️ Defter Sayfası Taraması</h3>
+          <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+            Fiziksel defterin sayfa taramasını yükleyin. Her tarama, dijital defter kaydının arşivlenmesi ve takip edilmesi için referans olacaktır.
+          </p>
+          <div class="form-group-premium">
+            <label>Defter Tarama Dosyası</label>
+            <input type="file" id="scan_input" accept="image/*,application/pdf" onchange="handleScanUpload(event)" />
+          </div>
+          <div id="scan_preview_wrapper" style="display:none; margin-top:14px;">
+            <strong>Yüklenen Tarama:</strong>
+            <div class="scan-preview" style="margin-top:10px;"></div>
+            <div id="scan_filename" style="margin-top:8px; color: var(--uc-text-muted); font-weight: 600;"></div>
+          </div>
+        </div>
+
+        <!-- Madde Bazlı Defter Kaydı -->
+        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
+          <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📝 Madde Bazlı Defter Kaydı</h3>
+          <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+            Her satır, fiziksel defter kaydındaki bir maddeye karşılık gelir. Daha sonra bu maddeleri DÖF'e dönüştürerek arşivleyebilirsiniz.
+          </p>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium">
+              <label>Kayıt Tarihi</label>
+              <input type="date" id="entry_date" />
+            </div>
+            <div class="form-group-premium">
+              <label>Madde Başlığı</label>
+              <input type="text" id="entry_subject" placeholder="Örn: Eğitim önerisi / İş güvenliği önlemi" />
+            </div>
+            <div class="form-group-premium">
+              <label>Sayfa No / Referans</label>
+              <input type="text" id="entry_reference" placeholder="Sayfa 12, Satır 3" />
+            </div>
+          </div>
+
+          <div class="form-group-premium" style="margin-bottom: 20px;">
+            <label>Açıklama</label>
+            <textarea id="entry_note" rows="3" placeholder="Detaylı madde metni..."></textarea>
+          </div>
+
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button class="btn btn-secondary" onclick="resetDefterForm()" style="border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--uc-line); background: #fff;">Formu Temizle</button>
+            <button class="btn btn-purple" onclick="addDefterEntry()" style="border-radius: 8px; padding: 10px 16px; background: #7c3aed; color: #fff; border: none; cursor: pointer; font-weight: 700;">💾 Madde Kaydet</button>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: start; margin-bottom: 24px;">
+          <!-- Açık Defter Maddeleri -->
+          <div class="stat-card-premium" style="padding: 24px;">
+            <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">
+              📋 Açık Defter Maddeleri <span id="entry_count" class="badge badge-purple" style="display:inline-block; margin-left: 6px; padding: 2px 8px;">0</span>
+            </h3>
+            <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+              Fiziksel defterde yeni eklenen ve henüz DÖF'e dönüştürülmemiş maddeler burada kalır.
+            </p>
+            <div class="table-container-premium">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr>
+                    <th style="text-align: left; padding: 12px;">Tarih</th>
+                    <th style="text-align: left; padding: 12px;">Madde</th>
+                    <th style="text-align: left; padding: 12px;">Referans</th>
+                    <th style="text-align: left; padding: 12px;">Durum</th>
+                    <th style="text-align: left; padding: 12px;">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody id="defter_entries_body">
+                  <tr>
+                    <td colspan="5" class="empty-state">Henüz kayıt yok.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Arşiv ve DÖF Dönüşümü -->
+          <div class="stat-card-premium" style="padding: 24px;">
+            <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">🗄️ Arşiv ve DÖF Dönüşümü</h3>
+            <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+              Dönüştürülen maddeler DÖF'e aktarılır, arşivlenenler ise takip için saklanır.
+            </p>
+            
+            <div class="form-group-premium" style="margin-bottom: 16px;">
+              <label>Filtre</label>
+              <select id="archive_status_filter" onchange="renderDefterEntries()">
+                <option value="all">Hepsi</option>
+                <option value="pending">Beklemede</option>
+                <option value="converted">DÖF'e Dönüştürüldü</option>
+                <option value="archived">Arşivlendi</option>
+              </select>
+            </div>
+
+            <div class="table-container-premium">
+              <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr>
+                    <th style="text-align: left; padding: 12px;">Tarih</th>
+                    <th style="text-align: left; padding: 12px;">Madde</th>
+                    <th style="text-align: left; padding: 12px;">Durum</th>
+                    <th style="text-align: left; padding: 12px;">Noter Tarama</th>
+                  </tr>
+                </thead>
+                <tbody id="archive_entries_body">
+                  <tr>
+                    <td colspan="4" class="empty-state">Arşivlenen madde yok.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const DIGITAL_DEFTER_KEY = 'digital_defter_items';
+      let digitalDefterItems = [];
+      let currentScanFile = null;
+
+      window.onload = async function () {
+        const auth = await requireAuthAndRole('defter');
+        if (!auth) return;
+        document.body.style.display = 'block';
+        loadDefterEntries();
+        renderDefterEntries();
+      };
+
+      function handleScanUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        currentScanFile = file;
+        document.getElementById('scan_filename').innerText = file.name;
+        document.getElementById('scan_preview_wrapper').style.display = 'block';
+
+        const preview = document.querySelector('.scan-preview');
+        preview.innerHTML = '';
+        if (file.type.startsWith('image/')) {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          img.style.maxWidth = '100%';
+          img.style.borderRadius = '12px';
+          img.style.border = '1px solid rgba(203, 213, 225, 0.9)';
+          preview.appendChild(img);
+        } else {
+          preview.innerHTML = '<div style="color: var(--text-muted);">PDF taraması yüklendi. Metin tanıma ve defter referansı ileride eklenecek.</div>';
+        }
+      }
+
+      function resetDefterForm() {
+        document.getElementById('entry_date').value = '';
+        document.getElementById('entry_subject').value = '';
+        document.getElementById('entry_reference').value = '';
+        document.getElementById('entry_note').value = '';
+      }
+
+      function addDefterEntry() {
+        const date = document.getElementById('entry_date').value;
+        const subject = document.getElementById('entry_subject').value.trim();
+        const reference = document.getElementById('entry_reference').value.trim();
+        const note = document.getElementById('entry_note').value.trim();
+
+        if (!date || !subject) {
+          alert('Lütfen kayıt tarihi ve madde başlığını doldurun.');
+          return;
+        }
+
+        digitalDefterItems.push({
+          id: crypto.randomUUID(),
+          date,
+          subject,
+          reference,
+          note,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          scan_name: currentScanFile ? currentScanFile.name : ''
+        });
+
+        saveDefterEntries();
+        renderDefterEntries();
+        resetDefterForm();
+      }
+
+      function saveDefterEntries() {
+        localStorage.setItem(DIGITAL_DEFTER_KEY, JSON.stringify(digitalDefterItems));
+      }
+
+      function loadDefterEntries() {
+        const stored = localStorage.getItem(DIGITAL_DEFTER_KEY);
+        if (stored) {
+          try {
+            digitalDefterItems = JSON.parse(stored) || [];
+          } catch (error) {
+            digitalDefterItems = [];
+          }
+        }
+      }
+
+      function updateEntryStatus(id, status) {
+        const item = digitalDefterItems.find((entry) => entry.id === id);
+        if (!item) return;
+        item.status = status;
+        saveDefterEntries();
+        renderDefterEntries();
+      }
+
+      function deleteEntry(id) {
+        digitalDefterItems = digitalDefterItems.filter((entry) => entry.id !== id);
+        saveDefterEntries();
+        renderDefterEntries();
+      }
+
+      function formatEntryStatus(status) {
+        switch (status) {
+          case 'pending':
+            return 'Beklemede';
+          case 'converted':
+            return 'DÖF\'e Dönüştürüldü';
+          case 'archived':
+            return 'Arşivlendi';
+          default:
+            return status;
+        }
+      }
+
+      function renderDefterEntries() {
+        const body = document.getElementById('defter_entries_body');
+        const archiveBody = document.getElementById('archive_entries_body');
+        const filterValue = document.getElementById('archive_status_filter').value;
+
+        const visibleEntries = digitalDefterItems.filter((entry) => filterValue === 'all' || entry.status === filterValue);
+        const openEntries = digitalDefterItems.filter((entry) => entry.status === 'pending');
+
+        document.getElementById('entry_count').innerText = openEntries.length;
+
+        body.innerHTML = '';
+        if (openEntries.length === 0) {
+          body.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Henüz kayıt yok.</td></tr>`;
+        } else {
+          openEntries.forEach((entry) => {
+            body.innerHTML += `<tr>
+              <td>${entry.date}</td>
+              <td>${escapeHtml(entry.subject)}</td>
+              <td>${escapeHtml(entry.reference)}</td>
+              <td>${formatEntryStatus(entry.status)}</td>
+              <td style="white-space:nowrap;">
+                <button class="btn btn-blue btn-small" onclick="updateEntryStatus('${entry.id}', 'converted')">DÖF'e Dönüştür</button>
+                <button class="btn btn-secondary btn-small" onclick="updateEntryStatus('${entry.id}', 'archived')">Arşivle</button>
+                <button class="btn btn-red btn-small" onclick="deleteEntry('${entry.id}')">Sil</button>
+              </td>
+            </tr>`;
+          });
+        }
+
+        archiveBody.innerHTML = '';
+        if (visibleEntries.length === 0) {
+          archiveBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--text-muted);">Arşivlenen madde yok.</td></tr>`;
+        } else {
+          visibleEntries.forEach((entry) => {
+            archiveBody.innerHTML += `<tr>
+              <td>${entry.date}</td>
+              <td>${escapeHtml(entry.subject)}</td>
+              <td>${formatEntryStatus(entry.status)}</td>
+              <td>${entry.scan_name ? escapeHtml(entry.scan_name) : 'Yok'}</td>
+            </tr>`;
+          });
+        }
+      }
+
+      function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+    </script>
+  </body>
+</html>

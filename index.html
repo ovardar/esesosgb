@@ -1,1002 +1,367 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OSGB SaaS - Firma Yönetimi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean-company.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
     <style>
-        :root {
-            --bg-main: #f4f6f9;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --accent-green: #10b981;
-            --accent-green-hover: #059669;
-            --border-color: #e2e8f0;
-            --table-header: #f8fafc;
-            --nav-inactive-bg: #e2e8f0;
-            --nav-inactive-text: #475569;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; transition: background 0.3s; }
-        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        
-        /* 🏛️ GLOBAL STANDART ÜST BAR */
-        .global-header { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .logo-area { font-size: 18px; font-weight: 800; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
-        .logo-badge { background: var(--primary); color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-        .controls-group { display: flex; align-items: center; gap: 20px; }
-        .theme-selector-container { display: flex; gap: 6px; align-items: center; background: var(--table-header); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border-color); }
-        .theme-btn { width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .user-info { font-size: 13px; color: var(--text-muted); font-weight: 600; }
-        .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        
-        .nav-container { display: flex; gap: 8px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
-        .nav-btn { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.2s ease; }
-        .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
-        .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-
-        .form-group { margin-bottom: 15px; position: relative; }
-        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-weight: 600; }
-        input, select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; background: var(--bg-card); color: var(--text-main); }
-        input:disabled, select:disabled { background-color: var(--table-header); color: var(--text-muted); cursor: not-allowed; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        
-        button.submit-btn { background: var(--accent-green); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        button.submit-btn:hover { background: var(--accent-green-hover); }
-        #status { margin-top: 15px; text-align: center; font-weight: bold; }
-        
-        .suggestions-list { position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-top: none; border-radius: 0 0 6px 6px; z-index: 10; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin: 0; padding: 0; list-style: none; display: none; }
-        .suggestions-list li { padding: 10px; cursor: pointer; font-size: 13px; border-bottom: 1px solid var(--border-color); }
-        .suggestions-list li:hover { background-color: var(--table-header); }
-
-        .table-container { margin-top: 35px; border-top: 2px solid var(--border-color); padding-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; table-layout: fixed; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; word-wrap: break-word; }
-        th { background-color: var(--table-header); color: var(--text-muted); font-weight: 600; white-space: normal; line-height: 1.2; }
-        tr:hover { background-color: var(--table-header); }
-        
-        th:nth-child(1), td:nth-child(1) { width: 22%; } 
-        th:nth-child(2), td:nth-child(2) { width: 13%; } 
-        th:nth-child(3), td:nth-child(3) { width: 18%; text-align: center; } 
-        th:nth-child(4), td:nth-child(4) { width: 11%; text-align: center; } 
-        th:nth-child(5), td:nth-child(5) { width: 18%; } 
-        th:nth-child(6), td:nth-child(6) { width: 18%; } 
-
-        .badge { padding: 4px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; margin-top: 3px; }
-        .badge-az { background: #dcfce7; color: #15803d; }
-        .badge-tehlike { background: #ffedd5; color: #c2410c; }
-        .badge-cok { background: #fee2e2; color: #b91c1c; }
-        
-        .worker-count-link { color: var(--primary); text-decoration: none; font-weight: bold; border-bottom: 1px dashed var(--primary); padding-bottom: 2px; }
-        .worker-count-link:hover { color: var(--primary-hover); border-bottom: 1px solid var(--primary-hover); }
-        .katip-time { font-family: 'Courier New', Courier, monospace; font-weight: bold; font-size: 12px; color: var(--text-main); line-height: 1.3; }
-            .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
-    
-
-        /* ================================
-           v24 UI POLISH - ortak arayuz duzeltmeleri
-           ================================ */
-        :root {
-            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.10);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
-            --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        .card {
-            width: min(100%, 1240px) !important;
-            max-width: 1240px !important;
-            border-radius: var(--radius-lg) !important;
-            box-shadow: var(--shadow-md) !important;
-        }
-
-        .global-header {
-            background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        .top-row {
-            gap: 14px;
-            align-items: center !important;
-        }
-
-        .logo-area {
-            min-width: 0;
-            font-size: 17px !important;
-            letter-spacing: 0 !important;
-            gap: 10px !important;
-        }
-
-        .logo-area span[id^="lbl_"] {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .tenant-logo-img {
-            width: 36px !important;
-            height: 36px !important;
-            padding: 4px !important;
-            border-radius: 10px !important;
-            box-shadow: var(--shadow-sm);
-            flex: 0 0 auto;
-        }
-
-        .logo-badge {
-            border-radius: 999px !important;
-            padding: 4px 9px !important;
-            font-size: 11px !important;
-            letter-spacing: .02em;
-            flex: 0 0 auto;
-        }
-
-        .controls-group {
-            gap: 10px !important;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .theme-selector-container {
-            border-radius: 999px !important;
-            padding: 6px 10px !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .theme-btn {
-            width: 18px !important;
-            height: 18px !important;
-            transition: transform .15s ease, box-shadow .15s ease;
-        }
-        .theme-btn:hover { transform: translateY(-1px) scale(1.08); box-shadow: 0 3px 8px rgba(15,23,42,.18); }
-
-        .user-info {
-            background: var(--table-header);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 7px 11px;
-            max-width: 280px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .logout-btn,
-        button,
-        .btn,
-        input[type="submit"] {
-            border-radius: 10px !important;
-            font-weight: 750 !important;
-            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-        }
-        button:hover,
-        .logout-btn:hover,
-        .btn:hover,
-        input[type="submit"]:hover {
-            transform: translateY(-1px);
-            filter: brightness(.98);
-            box-shadow: var(--shadow-sm);
-        }
-        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
-
-        .nav-container {
-            justify-content: flex-start !important;
-            gap: 7px !important;
-            padding: 8px !important;
-            border-radius: 14px !important;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .nav-btn {
-            white-space: nowrap;
-            border-radius: 10px !important;
-            padding: 9px 13px !important;
-            font-size: 12.5px !important;
-            box-shadow: none;
-        }
-        .nav-btn.active-page { box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important; }
-
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        h1 { font-size: clamp(24px, 3vw, 34px); }
-        h2 { font-size: clamp(20px, 2.4vw, 28px); }
-        h3 { font-size: clamp(16px, 1.8vw, 20px); }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px !important;
-            color: var(--text-main) !important;
-            font-size: 13px !important;
-            letter-spacing: .04em !important;
-        }
-
-        .panel,
-        .form-card,
-        .table-card,
-        .sub-card,
-        .mini-card,
-        .info-card {
-            border-radius: var(--radius-md) !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .metric-box {
-            border-radius: 14px !important;
-            box-shadow: 0 10px 24px rgba(15,23,42,.10) !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .metric-box:after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,.20), transparent 45%);
-            pointer-events: none;
-        }
-        .metric-title, .metric-sub, .metric-value { position: relative; z-index: 1; }
-
-        input,
-        select,
-        textarea {
-            border: 1px solid var(--border-color) !important;
-            border-radius: 10px !important;
-            background: var(--bg-card);
-            color: var(--text-main);
-            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--primary) !important;
-            box-shadow: var(--focus-ring) !important;
-        }
-        label { font-weight: 700; color: var(--text-main); }
-
-        table {
-            border-collapse: separate !important;
-            border-spacing: 0 !important;
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        th {
-            font-size: 11px !important;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            white-space: nowrap;
-        }
-        td { line-height: 1.45; }
-        tbody tr { transition: background .12s ease; }
-        tbody tr:hover { background: rgba(37, 99, 235, 0.035); }
-        .empty-state {
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            background: var(--table-header);
-        }
-
-        .badge {
-            border-radius: 999px !important;
-            letter-spacing: .02em;
-            padding: 4px 8px !important;
-        }
-
-        .small-link { text-underline-offset: 3px; }
-
-        .operational-banner {
-            box-shadow: var(--shadow-sm);
-            border: 0 !important;
-        }
-
-        @media (max-width: 900px) {
-            body { padding: 12px !important; }
-            .card { padding: 16px !important; border-radius: 16px !important; }
-            .top-row { align-items: stretch !important; }
-            .controls-group { justify-content: flex-start; }
-            .user-info { max-width: 100%; }
-            .nav-container { flex-wrap: nowrap !important; justify-content: flex-start !important; }
-            .nav-btn { flex: 0 0 auto; }
-            table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
-            th, td { padding: 9px 10px !important; }
-        }
-
-        @media (max-width: 520px) {
-            .logo-area { font-size: 15px !important; }
-            .tenant-logo-img { width: 32px !important; height: 32px !important; }
-            .theme-selector-container { width: 100%; justify-content: center; }
-            .logout-btn { width: 100%; }
-        }
-
-    
-
-        /* ================================
-           v25 PRODUCT DESIGN SYSTEM - derin arayuz revizyonu
-           ================================ */
-        :root {
-            --brand-50: #eff6ff;
-            --brand-100: #dbeafe;
-            --brand-500: #2563eb;
-            --brand-600: #1d4ed8;
-            --brand-700: #1e40af;
-            --ink-900: #0f172a;
-            --ink-700: #334155;
-            --ink-500: #64748b;
-            --surface-0: #ffffff;
-            --surface-1: #f8fafc;
-            --surface-2: #eef2f7;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --info: #0284c7;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(37,99,235,.15), transparent 32rem),
-                radial-gradient(circle at top right, rgba(14,165,233,.12), transparent 28rem),
-                linear-gradient(180deg, #f8fafc 0%, #edf2f7 52%, #e9eef6 100%) !important;
-            color: var(--ink-900) !important;
-        }
-
-        .card {
-            padding: 0 !important;
-            overflow: hidden;
-            background: rgba(255,255,255,.92) !important;
-            backdrop-filter: blur(10px);
-        }
-
-        .global-header {
-            padding: 18px 22px 14px !important;
-            margin-bottom: 0 !important;
-            background: linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,64,175,.92)) !important;
-            color: white;
-            border-bottom: 0 !important;
-        }
-        .global-header .logo-area,
-        .global-header .user-info,
-        .global-header .theme-selector-container span { color: white !important; }
-        .global-header .theme-selector-container,
-        .global-header .user-info {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-container {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.16) !important;
-            margin-top: 12px;
-        }
-        .global-header .nav-btn {
-            background: rgba(255,255,255,.10) !important;
-            color: rgba(255,255,255,.86) !important;
-            border: 1px solid rgba(255,255,255,.10);
-        }
-        .global-header .nav-btn:hover {
-            background: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-btn.active-page {
-            background: white !important;
-            color: var(--brand-700) !important;
-            box-shadow: 0 8px 18px rgba(15,23,42,.22) !important;
-        }
-        .global-header .tenant-logo-img {
-            width: 42px !important;
-            height: 42px !important;
-            background: white !important;
-            border-color: rgba(255,255,255,.35) !important;
-        }
-        .global-header .logo-badge {
-            background: rgba(255,255,255,.18) !important;
-            border: 1px solid rgba(255,255,255,.18);
-        }
-        .logout-btn { background: rgba(239,68,68,.92) !important; }
-
-        .card > h1,
-        .card > h2,
-        .card > .page-desc,
-        .card > .section-title,
-        .card > .dashboard-grid,
-        .card > .kpi-grid,
-        .card > .operational-banner,
-        .card > .content-grid,
-        .card > .grid,
-        .card > .panel,
-        .card > form,
-        .card > table,
-        .card > div:not(.global-header) {
-            margin-left: 22px;
-            margin-right: 22px;
-        }
-        .card > h1,
-        .card > h2 {
-            margin-top: 22px !important;
-            margin-bottom: 4px !important;
-            font-size: clamp(22px, 2.6vw, 31px) !important;
-            letter-spacing: -0.035em;
-            color: var(--ink-900);
-        }
-        .page-desc {
-            max-width: 780px;
-            color: var(--ink-500) !important;
-            font-size: 14px !important;
-            margin-bottom: 20px !important;
-        }
-
-        .section-title {
-            margin-top: 24px !important;
-            margin-bottom: 11px !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--ink-700) !important;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(226,232,240,.9);
-            padding: 7px 11px;
-            border-radius: 999px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .panel {
-            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)) !important;
-            border: 1px solid rgba(203,213,225,.85) !important;
-            box-shadow: 0 12px 30px rgba(15,23,42,.07) !important;
-            border-radius: 18px !important;
-        }
-        .panel h3 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            border-bottom: 1px solid rgba(226,232,240,.95) !important;
-            padding-bottom: 12px !important;
-            margin-bottom: 14px !important;
-            color: var(--ink-900);
-            letter-spacing: -0.01em;
-        }
-        .panel h3::after {
-            content: "";
-            flex: 1;
-            height: 3px;
-            max-width: 56px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: .7;
-        }
-
-        .dashboard-grid,
-        .kpi-grid {
-            gap: 16px !important;
-        }
-        .metric-box {
-            position: relative;
-            overflow: hidden;
-            min-height: 104px !important;
-            padding: 18px 19px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 18px 38px rgba(15,23,42,.13) !important;
-        }
-        .metric-box::before {
-            content: "";
-            position: absolute;
-            inset: -40% -30% auto auto;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.17);
-        }
-        .metric-title { font-size: 12.5px !important; text-transform: uppercase; letter-spacing: .045em; }
-        .metric-value { font-size: 34px !important; letter-spacing: -0.045em; }
-        .metric-sub { font-size: 12px !important; }
-        .metric-box.clickable:hover {
-            transform: translateY(-3px);
-            filter: saturate(1.04);
-        }
-
-        .content-grid {
-            margin-bottom: 24px;
-            align-items: start;
-        }
-        .operational-banner {
-            min-height: 86px;
-            padding: 20px 22px !important;
-            border-radius: 20px !important;
-        }
-        .op-text h4 { font-size: 18px !important; letter-spacing: -0.015em; }
-        .op-badge { border-radius: 16px !important; }
-
-        table {
-            background: white;
-            box-shadow: inset 0 0 0 1px rgba(226,232,240,.75);
-        }
-        th {
-            background: #f1f5f9 !important;
-            color: #475569 !important;
-        }
-        td {
-            background-clip: padding-box;
-        }
-        tbody tr:nth-child(even) td { background: rgba(248,250,252,.65); }
-
-        .btn-primary,
-        button.btn-primary {
-            background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-blue,
-        button.btn-blue {
-            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-secondary,
-        button.btn-secondary {
-            background: #f1f5f9 !important;
-            color: #334155 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        .btn-danger,
-        button.btn-danger {
-            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .status.ok {
-            background: #ecfdf5 !important;
-            color: #047857 !important;
-            border: 1px solid #a7f3d0 !important;
-        }
-        .status.err {
-            background: #fef2f2 !important;
-            color: #b91c1c !important;
-            border: 1px solid #fecaca !important;
-        }
-
-        /* SaaS Yonetimi urun paneli revizyonu */
-        .grid {
-            grid-template-columns: 420px minmax(0, 1fr) !important;
-            gap: 22px !important;
-            align-items: start !important;
-            margin-bottom: 24px;
-        }
-        .grid > div:first-child {
-            position: sticky;
-            top: 18px;
-            align-self: start;
-        }
-        .edit-panel {
-            border: 1px solid rgba(37,99,235,.22) !important;
-            background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
-        }
-        .link-box {
-            border-radius: 12px !important;
-            border: 1px solid #bfdbfe !important;
-            background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
-            color: #1e40af !important;
-            font-weight: 750;
-        }
-        .logo-upload-box {
-            border: 1px dashed #93c5fd !important;
-            background: #f8fbff !important;
-            border-radius: 16px !important;
-        }
-        .logo-preview {
-            width: 56px !important;
-            height: 56px !important;
-            border-radius: 14px !important;
-            box-shadow: var(--shadow-sm);
-        }
-        .actions {
-            gap: 9px !important;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .actions + .button-help,
-        .button-help {
-            margin-top: 10px;
-            display: grid;
-            gap: 7px;
-            color: var(--ink-500);
-            font-size: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 11px 12px;
-        }
-        .button-help strong { color: var(--ink-700); }
-
-        @media (max-width: 1040px) {
-            .grid { grid-template-columns: 1fr !important; }
-            .grid > div:first-child { position: static; }
-        }
-        @media (max-width: 900px) {
-            .card > h1,
-            .card > h2,
-            .card > .page-desc,
-            .card > .section-title,
-            .card > .dashboard-grid,
-            .card > .kpi-grid,
-            .card > .operational-banner,
-            .card > .content-grid,
-            .card > .grid,
-            .card > .panel,
-            .card > form,
-            .card > table,
-            .card > div:not(.global-header) {
-                margin-left: 14px !important;
-                margin-right: 14px !important;
-            }
-            .global-header { padding: 15px !important; }
-            .metric-box { min-height: 92px !important; }
-        }
-
-    
-
-        /* v26.2 hotfix: keep v26 visual system, add branding/table/layout fixes */
-        .logo-area { font-weight: 500 !important; letter-spacing: .01em !important; font-size: 18px !important; }
-        .logo-area #lbl_osgb_title { font-weight: 500 !important; }
-        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
-        table, thead, tbody, tr, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; }
-        table { font-size: 13px !important; border-collapse: separate !important; border-spacing: 0 !important; }
-        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
-        tbody td { padding: 9px 11px !important; }
-        .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
-        .page-desc { max-width: none !important; }
-
-    
-        /* v26.2 firma table compact */
-        #companies_tbody tr { height: auto !important; }
-        #companies_tbody td { padding-top: 8px !important; padding-bottom: 8px !important; line-height: 1.28 !important; }
-        #companies_tbody td * { line-height: 1.25 !important; }
-        /* Firma Yönetimi tablo filtreleme ve sıralama */
-.sortable-th {
-    cursor: pointer;
-    user-select: none;
-    position: relative;
-}
-
-.sortable-th:hover {
-    color: var(--primary);
-}
-
-.sort-indicator {
-    font-size: 10px;
-    margin-left: 4px;
-    opacity: 0.75;
-}
-
-.company-filter-row th {
-    background: var(--bg-card) !important;
-    padding: 6px 8px !important;
-}
-
-.company-filter-input {
-    width: 100%;
-    min-width: 80px;
-    padding: 7px 8px !important;
-    font-size: 12px !important;
-    border-radius: 8px !important;
-}
-
-.company-filter-input::placeholder {
-    color: var(--text-muted);
-    opacity: 0.75;
-}
+      th.sortable-th {
+        cursor: pointer;
+      }
+      th:nth-child(1),
+      td:nth-child(1) {
+        width: 22%;
+      }
+      th:nth-child(2),
+      td:nth-child(2) {
+        width: 13%;
+      }
+      th:nth-child(3),
+      td:nth-child(3) {
+        width: 18%;
+        text-align: center;
+      }
+      th:nth-child(4),
+      td:nth-child(4) {
+        width: 11%;
+        text-align: center;
+      }
+      th:nth-child(5),
+      td:nth-child(5) {
+        width: 18%;
+      }
+      th:nth-child(6),
+      td:nth-child(6) {
+        width: 18%;
+      }
+      .suggestions-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-top: none;
+        border-radius: 0 0 6px 6px;
+        z-index: 10;
+        max-height: 200px;
+        overflow-y: auto;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: none;
+      }
+      .suggestions-list li {
+        padding: 10px;
+        cursor: pointer;
+        font-size: 13px;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .suggestions-list li:hover {
+        background-color: var(--table-header);
+      }
+      .katip-time {
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: bold;
+        font-size: 12px;
+        color: var(--text-main);
+        line-height: 1.3;
+      }
+      .company-filter-row input {
+        padding: 4px 8px;
+        font-size: 12px;
+        width: 100%;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+      }
+      .submit-actions {
+        display: flex;
+        justify-content: flex-start;
+        gap: 12px;
+      }
+      .panel-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+      }
+      .panel-toggle-icon {
+        font-size: 12px;
+        transition: transform 0.2s ease;
+      }
+      .panel-toggle[aria-expanded='true'] .panel-toggle-icon {
+        transform: rotate(180deg);
+      }
+      .panel-collapsible.is-collapsed {
+        display: none;
+      }
+      .table-container {
+        overflow-x: auto;
+        margin-top: 16px;
+      }
+      .table-container table {
+        width: 100%;
+        min-width: 780px;
+      }
     </style>
-</head>
-<body>
-
-<div class="card">
-    <div class="global-header">
+  </head>
+  <body class="theme-ultra-clean">
+    <div class="card">
+      <div class="global-header">
         <div class="top-row">
-            <div class="logo-area"><span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span></div>
-            <div class="controls-group">
-                <div class="theme-selector-container">
-                    <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-right: 2px;">🎨 TEMA:</span>
-                    <div class="theme-btn" style="background: #2563eb;" onclick="setTheme('isgm')" title="İSGM Kurumsal"></div>
-                    <div class="theme-btn" style="background: #10b981;" onclick="setTheme('hekim-dark')" title="Hekim Gece Modu"></div>
-                    <div class="theme-btn" style="background: #c2410c;" onclick="setTheme('eskisehir')" title="Eskişehir Tuğlası"></div>
-                    <div class="theme-btn" style="background: #1e293b;" onclick="setTheme('kartal')" title="Kartal Yuvası"></div>
-                    <div class="theme-btn" style="background: #556b2f;" onclick="setTheme('doga')" title="Doğa & Çevre"></div>
-                </div>
-                <div class="user-info">👤 <span id="current_user_email">...</span></div>
-                <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
-            </div>
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
         </div>
 
         <div class="nav-container">
-            <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
-            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
-            <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
-            <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-            <a href="index.html" class="nav-btn active-page">🏢 Firma Yönetimi</a>
-            <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
-            <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
-            <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
+          <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+          <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display: none">🧩 SaaS Yönetimi</a>
+          <a id="menu_staff" href="staff.html" class="nav-btn" style="display: none">🔑 Personel Yönetimi</a>
+          <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+          <a href="index.html" class="nav-btn active-page">🏢 Firma Yönetimi</a>
+          <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+          <a id="menu_risk" href="risk.html" class="nav-btn" style="display: none">🦺 Uzman Risk Motoru</a>
+          <a id="menu_medical" href="medical.html" class="nav-btn" style="display: none">🩺 Hekim Sağlık Kartı</a>
         </div>
-    </div>
+      </div>
 
-    <h2>🏢 Müşteri Firma Tanımlama ve Yönetimi</h2>
-    <p style="color: var(--text-muted); font-size: 14px;">Müşteri portföyünüzü ve yasal İSG-KATİP sürelerini bu ekrandan takip edebilirsiniz.</p>
-    
-    <div class="form-group"><label>Firma Adı</label><input type="text" id="comp_name" placeholder="Örn: Vardar Lojistik A.Ş."></div>
-    <div class="grid-2">
-        <div class="form-group"><label>Vergi Numarası (11 Haneli)</label><input type="text" id="tax_no" placeholder="Örn: 12345678901"></div>
-        <div class="form-group"><label>NACE Kodu / Faaliyet Arayın</label><input type="text" id="nace_search" oninput="searchNace()" placeholder="Kod veya kelime girin..."><ul id="suggestions" class="suggestions-list"></ul></div>
-    </div>
-    <div class="form-group"><label>Sistem Tarafından Belirlenen Tehlike Sınıfı</label><input type="text" id="danger_display" disabled placeholder="NACE seçildiğinde otomatik belirlenir"></div>
-    
-    <button class="submit-btn" onclick="saveToSupabase()">Veritabanına Gönder (Canlı)</button>
-    <div id="status"></div>
+      <div class="company-page-shell">
+      <h2>Müşteri Firma Tanımlama ve Yönetimi</h2>
+      <p class="page-desc">
+        Müşteri portföyünüzü ve yasal İSG-KATİP sürelerini bu ekrandan takip edebilirsiniz.
+      </p>
 
-    <div class="table-container">
+      <!-- 💡 CRM Yönlendirme Paneli (Eski Yeni Firma Giriş Modülü Yerine) -->
+      <div class="panel" style="padding: 20px; border-left: 4px solid #0e7490; background: #f0f9ff; display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+        <div style="font-size: 24px; line-height: 1; margin-top: 2px;">ℹ️</div>
+        <div style="flex: 1;">
+          <h3 style="margin: 0 0 8px 0; color: #0369a1; font-size: 15px; font-weight: 700;">Yeni Müşteri & Firma Kayıt Süreci</h3>
+          <p style="margin: 0 0 16px 0; color: #0c4a6e; font-size: 13px; line-height: 1.5;">
+            Yasal İSG mevzuatı kapsamında, sisteme yeni eklenecek tüm firmalarda İSG-KATİP sözleşmesinin oluşturulması, İSG Uzmanı ve İşyeri Hekimi atamalarının yapılması zorunludur. Veri bütünlüğünü ve mevzuat takibini tam sağlamak adına, yeni firma kayıtlarınızı <strong>CRM modülü üzerinden (Fırsat → Teklif → Sözleşme)</strong> başlatmalısınız.
+          </p>
+          <a href="crm.html?action=new-lead" class="btn btn-blue" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #0e7490; color: #fff; font-size: 13px; border-radius: 8px; font-weight: 700; border: none; box-shadow: 0 2px 4px rgba(14, 116, 144, 0.15); transition: background 0.2s;">
+            ➕ CRM Üzerinden Yeni Fırsat & Firma Ekle
+          </a>
+        </div>
+      </div>
+
+      <div id="status"></div>
+
+      <div class="panel">
         <h3>📋 Kayıtlı Müşteri Firmalar & Yasal Süre Takip Matrisi (Canlı)</h3>
-        <table>
-           <thead>
-    <tr>
-        <th class="sortable-th" onclick="sortCompaniesBy('company_name')">Firma Unvanı <span id="sort_company_name" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortCompaniesBy('tax_number')">Vergi No <span id="sort_tax_number" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortCompaniesBy('nace_danger')" style="text-align: center;">NACE / Sınıf <span id="sort_nace_danger" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortCompaniesBy('worker_count')" style="text-align: center;">Çalışan Sayısı <span id="sort_worker_count" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortCompaniesBy('uzman_minutes')">⚖️ Yasal Uzman Süresi <span id="sort_uzman_minutes" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortCompaniesBy('hekim_minutes')">⚖️ Yasal Hekim Süresi <span id="sort_hekim_minutes" class="sort-indicator"></span></th>
-    </tr>
-    <tr class="company-filter-row">
-        <th><input class="company-filter-input" data-field="company_name" oninput="applyCompanyFilters()" placeholder="Firma filtrele"></th>
-        <th><input class="company-filter-input" data-field="tax_number" oninput="applyCompanyFilters()" placeholder="Vergi no"></th>
-        <th><input class="company-filter-input" data-field="nace_danger" oninput="applyCompanyFilters()" placeholder="NACE / sınıf"></th>
-        <th><input class="company-filter-input" data-field="worker_count" oninput="applyCompanyFilters()" placeholder="Sayı"></th>
-        <th><input class="company-filter-input" data-field="uzman_text" oninput="applyCompanyFilters()" placeholder="Uzman süre"></th>
-        <th><input class="company-filter-input" data-field="hekim_text" oninput="applyCompanyFilters()" placeholder="Hekim süre"></th>
-    </tr>
-</thead>
-            <tbody id="company_table_body"><tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Veriler yükleniyor...</td></tr></tbody>
-        </table>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th class="sortable-th" onclick="sortCompaniesBy('company_name')">
+                  Firma Unvanı <span id="sort_company_name" class="sort-indicator"></span>
+                </th>
+                <th class="sortable-th" onclick="sortCompaniesBy('tax_number')">
+                  Vergi No <span id="sort_tax_number" class="sort-indicator"></span>
+                </th>
+                <th class="sortable-th" onclick="sortCompaniesBy('nace_danger')" style="text-align: center">
+                  NACE / Sınıf <span id="sort_nace_danger" class="sort-indicator"></span>
+                </th>
+                <th class="sortable-th" onclick="sortCompaniesBy('worker_count')" style="text-align: center">
+                  Çalışan Sayısı <span id="sort_worker_count" class="sort-indicator"></span>
+                </th>
+                <th class="sortable-th" onclick="sortCompaniesBy('uzman_minutes')">
+                  ⚖️ Yasal Uzman Süresi <span id="sort_uzman_minutes" class="sort-indicator"></span>
+                </th>
+                <th class="sortable-th" onclick="sortCompaniesBy('hekim_minutes')">
+                  ⚖️ Yasal Hekim Süresi <span id="sort_hekim_minutes" class="sort-indicator"></span>
+                </th>
+              </tr>
+              <tr class="company-filter-row">
+                <th>
+                  <input
+                    class="company-filter-input"
+                    data-field="company_name"
+                    oninput="applyCompanyFilters()"
+                    placeholder="Firma filtrele"
+                  />
+                </th>
+                <th>
+                  <input
+                    class="company-filter-input"
+                    data-field="tax_number"
+                    oninput="applyCompanyFilters()"
+                    placeholder="Vergi no"
+                  />
+                </th>
+                <th>
+                  <input
+                    class="company-filter-input"
+                    data-field="nace_danger"
+                    oninput="applyCompanyFilters()"
+                    placeholder="NACE / sınıf"
+                  />
+                </th>
+                <th>
+                  <input
+                    class="company-filter-input"
+                    data-field="worker_count"
+                    oninput="applyCompanyFilters()"
+                    placeholder="Sayı"
+                  />
+                </th>
+                <th>
+                  <input
+                    class="company-filter-input"
+                    data-field="uzman_text"
+                    oninput="applyCompanyFilters()"
+                    placeholder="Uzman süre"
+                  />
+                </th>
+                <th>
+                  <input
+                    class="company-filter-input"
+                    data-field="hekim_text"
+                    oninput="applyCompanyFilters()"
+                    placeholder="Hekim süre"
+                  />
+                </th>
+              </tr>
+            </thead>
+            <tbody id="company_table_body">
+              <tr>
+                <td colspan="6" style="text-align: center; color: var(--text-muted)">Veriler yükleniyor...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </div>
     </div>
-</div>
 
-<script>
-    const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <script>
+      // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
+      // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
+      // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
+      let selectedNaceCode = '';
+      let selectedDangerClass = '';
+      let currentTenantId = null;
+      let companyTableRows = [];
+      let companySortField = '';
+      let companySortDirection = 'asc';
 
-    // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
-    // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
-    // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
-    function normalizeAccessRole(value) {
-        const v = (value || '').toString().trim().toLowerCase();
-        if (['super_admin', 'super admin', 'saas_admin', 'sistem sahibi'].includes(v)) return 'super_admin';
-        if (['admin', 'yonetici', 'yönetici'].includes(v)) return 'admin';
-        if (['uzman', 'isg_uzmani', 'isg uzmanı', 'iş güvenliği uzmanı'].includes(v)) return 'uzman';
-        if (['hekim', 'isyeri hekimi', 'işyeri hekimi'].includes(v)) return 'hekim';
-        if (['dsp', 'diğer sağlık personeli', 'diger saglik personeli'].includes(v)) return 'dsp';
-        if (['firma_yetkilisi', 'firma yetkilisi', 'musteri', 'müşteri'].includes(v)) return 'firma_yetkilisi';
-        return '';
-    }
-
-    function inferAccessRoleFromEmail(email) {
-        const e = (email || '').toLowerCase();
-        if (e.includes('orhan.vardar@gmail.com')) return 'super_admin';
-        if (e.includes('admin')) return 'admin';
-        if (e.includes('hekim')) return 'hekim';
-        if (e.includes('dsp')) return 'dsp';
-        if (e.includes('firma') || e.includes('musteri') || e.includes('müşteri')) return 'firma_yetkilisi';
-        if (e.includes('uzman')) return 'uzman';
-        return 'uzman';
-    }
-
-    function isStaffAccessActive(record) {
-        if (!record) return true;
-        if (record.can_login === false) return false;
-        if (record.is_active_manual === 'Aktif') return true;
-        if (record.is_active_manual === 'Pasif') return false;
-        const today = new Date(); today.setHours(0,0,0,0);
-        if (record.hire_date) {
-            const hire = new Date(record.hire_date); hire.setHours(0,0,0,0);
-            if (hire > today) return false;
-        }
-        if (record.termination_date) {
-            const term = new Date(record.termination_date); term.setHours(0,0,0,0);
-            if (term <= today) return false;
-        }
-        return true;
-    }
-
-    async function getCurrentAuthContext() {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) return { session: null, email: '', role: '', canLogin: false, staff: null };
-        const email = session.user.email || '';
-        let staff = null;
-        try {
-            const { data } = await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email', email).maybeSingle();
-            staff = data || null;
-        } catch (err) {
-            console.warn('Rol kaydı okunamadı, e-posta bazlı geçici role dönülüyor:', err.message);
-        }
-        const role = normalizeAccessRole(staff && staff.access_role) || normalizeAccessRole(staff && staff.staff_role) || inferAccessRoleFromEmail(email);
-        const canLogin = isStaffAccessActive(staff);
-        return { session, email, role, canLogin, staff, tenant: staff && staff.tenants ? staff.tenants : null, tenant_id: staff ? staff.tenant_id : null };
-    }
-
-    function canAccessPage(role, page) {
-        if (role === 'super_admin' || role === 'admin') return true;
-        if (page === 'risk') return role === 'uzman';
-        if (page === 'medical') return role === 'hekim';
-        if (page === 'staff') return false;
-        if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
-        return true;
-    }
-
-    function roleLabel(role) {
-        return { super_admin: 'Super Admin', admin: 'Admin', uzman: 'İSG Uzmanı', hekim: 'İşyeri Hekimi', dsp: 'DSP', firma_yetkilisi: 'Firma Yetkilisi' }[role] || role || 'Rol yok';
-    }
-
-    function applyRoleBasedNavigation(role) {
-        const riskMenu = document.getElementById('menu_risk');
-        const medicalMenu = document.getElementById('menu_medical');
-        const staffMenu = document.getElementById('menu_staff');
-        const saasMenu = document.getElementById('menu_saas');
-        if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
-        if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
-        if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
-        if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
-        if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
-    }
-
-
-    function setTenantBranding(tenant) {
-        const titleEl = document.getElementById('lbl_osgb_title');
-        if (titleEl) titleEl.innerText = (tenant && tenant.name) ? tenant.name : 'Eses Software';
-        const area = titleEl ? titleEl.closest('.logo-area') : null;
-        if (!area) return;
-        let img = area.querySelector('.tenant-logo-img');
-        const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
-        if (logoUrl) {
-            if (!img) {
-                img = document.createElement('img');
-                img.className = 'tenant-logo-img';
-                img.alt = 'Logo';
-                area.insertBefore(img, titleEl);
-            }
-            img.src = logoUrl;
-        } else if (img) {
-            img.remove();
-        }
-    }
-
-    async function requireAuthAndRole(page) {
-        const auth = await getCurrentAuthContext();
-        if (!auth.session) { window.location.href = 'login.html'; return null; }
-        if (!auth.canLogin) {
-            await dbClient.auth.signOut();
-            alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
-            window.location.href = 'login.html';
-            return null;
-        }
-        const userInfo = document.getElementById('current_user_email');
-        if (userInfo) userInfo.innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-        setTenantBranding(auth.tenant);
-        applyRoleBasedNavigation(auth.role);
-        if (page && !canAccessPage(auth.role, page)) {
-            window.location.href = 'dashboard.html';
-            return null;
-        }
-        return auth;
-    }
-
-
-    let selectedNaceCode = "";
-    let selectedDangerClass = "";
-    let currentTenantId = null;
-    let companyTableRows = [];
-let companySortField = '';
-let companySortDirection = 'asc';
-
-    const themes = {
-        isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--primary-hover': '#1d4ed8', '--accent-green': '#10b981', '--accent-green-hover': '#059669', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--primary-hover': '#7dd3fc', '--accent-green': '#34d399', '--accent-green-hover': '#059669', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
-        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
-        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
-    };
-
-    function setTheme(themeName) {
-        const theme = themes[themeName]; if(!theme) return;
-        Object.keys(theme).forEach(key => { document.documentElement.style.setProperty(key, theme[key]); });
-        localStorage.setItem('selected_theme', themeName);
-    }
-
-    window.onload = async function() {
-        const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
-        setTheme(activeTheme);
-
+      window.onload = async function () {
         const auth = await requireAuthAndRole('company');
         if (!auth) return;
         currentTenantId = auth.tenant_id || null;
-        document.body.style.display = "block";
+        document.body.style.display = 'block';
+        setNewCompanyFormOpen(false);
         fetchCompanies();
-    };
+      };
 
-    function formatMinutesToHours(totalMinutes) {
-        if (totalMinutes === 0) return "0 Dk";
+      function setNewCompanyFormOpen(isOpen) {
+        const panel = document.getElementById('company_form_panel');
+        const toggle = document.getElementById('company_form_toggle');
+        if (!panel || !toggle) return;
+        panel.classList.toggle('is-collapsed', !isOpen);
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      }
+
+      function toggleNewCompanyForm(forceState) {
+        const toggle = document.getElementById('company_form_toggle');
+        if (!toggle) return;
+        const current = toggle.getAttribute('aria-expanded') === 'true';
+        const next = typeof forceState === 'boolean' ? forceState : !current;
+        setNewCompanyFormOpen(next);
+      }
+
+      function formatMinutesToHours(totalMinutes) {
+        if (totalMinutes === 0) return '0 Dk';
         const hours = Math.floor(totalMinutes / 60);
         const minutes = totalMinutes % 60;
         if (hours === 0) return `${minutes} Dk`;
         if (minutes === 0) return `${hours} Saat`;
         return `${hours} S ${minutes} Dk`;
-    }
+      }
 
-    async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
-
-    async function searchNace() {
+      async function searchNace() {
         const query = document.getElementById('nace_search').value;
         const list = document.getElementById('suggestions');
-        if (query.length < 2) { list.style.display = 'none'; return; }
-        const { data } = await dbClient.from('nace_codes').select('*').or(`nace_code.ilike.%${query}%,description.ilike.%${query}%`).limit(5);
+        if (query.length < 2) {
+          list.style.display = 'none';
+          return;
+        }
+        const { data } = await dbClient
+          .from('nace_codes')
+          .select('*')
+          .or(`nace_code.ilike.%${query}%,description.ilike.%${query}%`)
+          .limit(5);
         if (data && data.length > 0) {
-            list.innerHTML = ''; list.style.display = 'block';
-            data.forEach(item => { list.innerHTML += `<li onclick="selectNace('${item.nace_code}', '${item.danger_class}')"><strong>${item.nace_code}</strong> - ${item.description}</li>`; });
-        } else { list.style.display = 'none'; }
-    }
+          list.innerHTML = '';
+          list.style.display = 'block';
+          data.forEach((item) => {
+            list.innerHTML += `<li onclick="selectNace('${item.nace_code}', '${item.danger_class}')"><strong>${item.nace_code}</strong> - ${item.description}</li>`;
+          });
+        } else {
+          list.style.display = 'none';
+        }
+      }
 
-    function selectNace(code, dangerClass) {
-        selectedNaceCode = code; selectedDangerClass = dangerClass;
+      function selectNace(code, dangerClass) {
+        selectedNaceCode = code;
+        selectedDangerClass = dangerClass;
         document.getElementById('nace_search').value = code;
         document.getElementById('danger_display').value = dangerClass;
         document.getElementById('suggestions').style.display = 'none';
-    }
+      }
 
-    async function fetchCompanies() {
-    const tbody = document.getElementById('company_table_body');
+      async function fetchCompanies() {
+        const tbody = document.getElementById('company_table_body');
 
-    try {
-        let query = dbClient
-            .from('customer_companies')
-            .select('*')
-            .order('created_at', { ascending: false });
+        try {
+          let query = dbClient.from('customer_companies').select('*').order('created_at', { ascending: false });
 
-        if (currentTenantId) {
+          if (currentTenantId) {
             query = query.eq('tenant_id', currentTenantId);
-        }
+          }
 
-        const { data: companies, error } = await query;
+          const { data: companies, error } = await query;
 
-        if (error) throw error;
+          if (error) throw error;
 
-        if (!companies || companies.length === 0) {
+          if (!companies || companies.length === 0) {
             companyTableRows = [];
             tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Henüz kayıtlı firma bulunmuyor.</td></tr>`;
             return;
-        }
+          }
 
-        companyTableRows = [];
+          companyTableRows = [];
 
-        for (const company of companies) {
+          for (const company of companies) {
             let workerQuery = dbClient
-                .from('workers')
-                .select('*', { count: 'exact', head: true })
-                .eq('company_id', company.id);
+              .from('workers')
+              .select('*', { count: 'exact', head: true })
+              .eq('company_id', company.id);
 
             if (currentTenantId) {
-                workerQuery = workerQuery.eq('tenant_id', currentTenantId);
+              workerQuery = workerQuery.eq('tenant_id', currentTenantId);
             }
 
             const { count } = await workerQuery;
@@ -1008,115 +373,112 @@ let companySortDirection = 'asc';
             const cls = (company.danger_class || '').toString().trim().toLowerCase();
 
             if (cls === 'tehlikeli') {
-                uzmanKatsayi = 20;
-                hekimKatsayi = 10;
+              uzmanKatsayi = 20;
+              hekimKatsayi = 10;
             } else if (cls === 'çok tehlikeli') {
-                uzmanKatsayi = 40;
-                hekimKatsayi = 15;
+              uzmanKatsayi = 40;
+              hekimKatsayi = 15;
             }
 
             const toplamUzmanDk = workerCount * uzmanKatsayi;
             const toplamHekimDk = workerCount * hekimKatsayi;
 
             companyTableRows.push({
-                id: company.id,
-                company_name: company.company_name || '',
-                tax_number: company.tax_number || '',
-                nace_code: company.nace_code || '',
-                danger_class: company.danger_class || '',
-                nace_danger: `${company.nace_code || ''} ${company.danger_class || ''}`,
-                worker_count: workerCount,
-                uzman_minutes: toplamUzmanDk,
-                hekim_minutes: toplamHekimDk,
-                uzman_text: `${formatMinutesToHours(toplamUzmanDk)} ${uzmanKatsayi} dk/kişi`,
-                hekim_text: `${formatMinutesToHours(toplamHekimDk)} ${hekimKatsayi} dk/kişi`,
-                uzman_katsayi: uzmanKatsayi,
-                hekim_katsayi: hekimKatsayi
+              id: company.id,
+              company_name: company.company_name || '',
+              tax_number: company.tax_number || '',
+              nace_code: company.nace_code || '',
+              danger_class: company.danger_class || '',
+              nace_danger: `${company.nace_code || ''} ${company.danger_class || ''}`,
+              worker_count: workerCount,
+              uzman_minutes: toplamUzmanDk,
+              hekim_minutes: toplamHekimDk,
+              uzman_text: `${formatMinutesToHours(toplamUzmanDk)} ${uzmanKatsayi} dk/kişi`,
+              hekim_text: `${formatMinutesToHours(toplamHekimDk)} ${hekimKatsayi} dk/kişi`,
+              uzman_katsayi: uzmanKatsayi,
+              hekim_katsayi: hekimKatsayi
             });
+          }
+
+          renderCompanyTable();
+        } catch (err) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`;
         }
-
-        renderCompanyTable();
-
-    } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`;
-    }
-}
-function escapeHtml(value) {
-    return (value || '').toString().replace(/[&<>'"]/g, function (char) {
-        return {
+      }
+      function escapeHtml(value) {
+        return (value || '').toString().replace(/[&<>'"]/g, function (char) {
+          return {
             '&': '&amp;',
             '<': '&lt;',
             '>': '&gt;',
             "'": '&#39;',
             '"': '&quot;'
-        }[char];
-    });
-}
+          }[char];
+        });
+      }
 
-function getCompanyFilteredRows() {
-    const filters = {};
+      function getCompanyFilteredRows() {
+        const filters = {};
 
-    document.querySelectorAll('.company-filter-input').forEach(input => {
-        const field = input.dataset.field;
-        const value = (input.value || '').toString().trim().toLowerCase();
+        document.querySelectorAll('.company-filter-input').forEach((input) => {
+          const field = input.dataset.field;
+          const value = (input.value || '').toString().trim().toLowerCase();
 
-        if (field && value) {
+          if (field && value) {
             filters[field] = value;
-        }
-    });
+          }
+        });
 
-    let rows = [...companyTableRows];
+        let rows = [...companyTableRows];
 
-    Object.keys(filters).forEach(field => {
-        const value = filters[field];
+        Object.keys(filters).forEach((field) => {
+          const value = filters[field];
 
-        rows = rows.filter(row => {
-            const cellValue = row[field] !== undefined && row[field] !== null
-                ? row[field].toString().toLowerCase()
-                : '';
+          rows = rows.filter((row) => {
+            const cellValue =
+              row[field] !== undefined && row[field] !== null ? row[field].toString().toLowerCase() : '';
 
             return cellValue.includes(value);
+          });
         });
-    });
 
-    if (companySortField) {
-        rows.sort((a, b) => {
+        if (companySortField) {
+          rows.sort((a, b) => {
             const av = a[companySortField];
             const bv = b[companySortField];
 
             if (typeof av === 'number' && typeof bv === 'number') {
-                return companySortDirection === 'asc' ? av - bv : bv - av;
+              return companySortDirection === 'asc' ? av - bv : bv - av;
             }
 
             return companySortDirection === 'asc'
-                ? (av || '').toString().localeCompare((bv || '').toString(), 'tr')
-                : (bv || '').toString().localeCompare((av || '').toString(), 'tr');
-        });
-    }
+              ? (av || '').toString().localeCompare((bv || '').toString(), 'tr')
+              : (bv || '').toString().localeCompare((av || '').toString(), 'tr');
+          });
+        }
 
-    return rows;
-}
+        return rows;
+      }
 
-function renderCompanyTable() {
-    const tbody = document.getElementById('company_table_body');
-    const rows = getCompanyFilteredRows();
+      function renderCompanyTable() {
+        const tbody = document.getElementById('company_table_body');
+        const rows = getCompanyFilteredRows();
 
-    updateCompanySortIndicators();
+        updateCompanySortIndicators();
 
-    if (!rows || rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Filtreye uygun firma bulunamadı.</td></tr>`;
-        return;
-    }
+        if (!rows || rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Filtreye uygun firma bulunamadı.</td></tr>`;
+          return;
+        }
 
-    tbody.innerHTML = '';
+        tbody.innerHTML = '';
 
-    rows.forEach(company => {
-        const danger = company.danger_class || '';
-        const badgeClass = danger === 'Tehlikeli'
-            ? 'badge-tehlike'
-            : (danger === 'Çok Tehlikeli' ? 'badge-cok' : 'badge-az');
+        rows.forEach((company) => {
+          const danger = company.danger_class || '';
+          const badgeClass =
+            danger === 'Tehlikeli' ? 'badge-tehlike' : danger === 'Çok Tehlikeli' ? 'badge-cok' : 'badge-az';
 
-        tbody.innerHTML += `
+          tbody.innerHTML += `
             <tr>
                 <td>
                     <a href="company-detail.html?id=${company.id}" style="color: var(--primary); text-decoration: none; font-weight: bold;">
@@ -1143,64 +505,87 @@ function renderCompanyTable() {
                 </td>
             </tr>
         `;
-    });
-}
+        });
+      }
 
-function applyCompanyFilters() {
-    renderCompanyTable();
-}
+      function applyCompanyFilters() {
+        renderCompanyTable();
+      }
 
-function sortCompaniesBy(field) {
-    if (companySortField === field) {
-        companySortDirection = companySortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        companySortField = field;
-        companySortDirection = 'asc';
-    }
-
-    renderCompanyTable();
-}
-
-function updateCompanySortIndicators() {
-    const fields = [
-        'company_name',
-        'tax_number',
-        'nace_danger',
-        'worker_count',
-        'uzman_minutes',
-        'hekim_minutes'
-    ];
-
-    fields.forEach(field => {
-        const el = document.getElementById(`sort_${field}`);
-
-        if (!el) return;
-
-        if (field === companySortField) {
-            el.innerText = companySortDirection === 'asc' ? '▲' : '▼';
+      function sortCompaniesBy(field) {
+        if (companySortField === field) {
+          companySortDirection = companySortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            el.innerText = '';
+          companySortField = field;
+          companySortDirection = 'asc';
         }
-    });
-}
-    async function saveToSupabase() {
+
+        renderCompanyTable();
+      }
+
+      function updateCompanySortIndicators() {
+        const fields = ['company_name', 'tax_number', 'nace_danger', 'worker_count', 'uzman_minutes', 'hekim_minutes'];
+
+        fields.forEach((field) => {
+          const el = document.getElementById(`sort_${field}`);
+
+          if (!el) return;
+
+          if (field === companySortField) {
+            el.innerText = companySortDirection === 'asc' ? '▲' : '▼';
+          } else {
+            el.innerText = '';
+          }
+        });
+      }
+      async function saveToSupabase() {
         const name = document.getElementById('comp_name').value;
         const tax = document.getElementById('tax_no').value;
         const statusDiv = document.getElementById('status');
-        if(!name || !tax || !selectedNaceCode) { statusDiv.style.color = "red"; statusDiv.innerText = "Lütfen alanları eksiksiz doldurun!"; return; }
-        statusDiv.style.color = "blue"; statusDiv.innerText = "Buluta gönderiliyor...";
+        if (!name || !tax || !selectedNaceCode) {
+          statusDiv.style.color = 'red';
+          statusDiv.innerText = 'Lütfen alanları eksiksiz doldurun!';
+          return;
+        }
+        statusDiv.style.color = 'blue';
+        statusDiv.innerText = 'Buluta gönderiliyor...';
         try {
-            const payload = { company_name: name, tax_number: tax, nace_code: selectedNaceCode, danger_class: selectedDangerClass };
-            if (currentTenantId) payload.tenant_id = currentTenantId;
-            const { error } = await dbClient.from('customer_companies').insert([payload]);
-            if (error) { statusDiv.style.color = "red"; statusDiv.innerText = "Hata: " + error.message; }
-            else {
-                statusDiv.style.color = "green"; statusDiv.innerText = "🚀 Başarılı! Firma kaydedildi.";
-                document.getElementById('comp_name').value = ''; document.getElementById('tax_no').value = ''; document.getElementById('nace_search').value = ''; document.getElementById('danger_display').value = '';
-                selectedNaceCode = ""; selectedDangerClass = ""; fetchCompanies();
-            }
-        } catch (err) { statusDiv.style.color = "red"; statusDiv.innerText = "Bağlantı Hatası: " + err.message; }
-    }
-</script>
-</body>
+          const payload = {
+            company_name: name,
+            tax_number: tax,
+            nace_code: selectedNaceCode,
+            danger_class: selectedDangerClass
+          };
+          if (currentTenantId) payload.tenant_id = currentTenantId;
+          const { error } = await dbClient.from('customer_companies').insert([payload]);
+          if (error) {
+            statusDiv.style.color = 'red';
+            statusDiv.innerText = 'Hata: ' + error.message;
+          } else {
+            statusDiv.style.color = 'green';
+            statusDiv.innerText = '🚀 Başarılı! Firma kaydedildi.';
+            document.getElementById('comp_name').value = '';
+            document.getElementById('tax_no').value = '';
+            document.getElementById('nace_search').value = '';
+            document.getElementById('danger_display').value = '';
+            selectedNaceCode = '';
+            selectedDangerClass = '';
+            setNewCompanyFormOpen(false);
+            fetchCompanies();
+          }
+        } catch (err) {
+          statusDiv.style.color = 'red';
+          statusDiv.innerText = 'Bağlantı Hatası: ' + err.message;
+        }
+      }
+
+      // Close suggestions on outside click
+      document.addEventListener('click', function(e) {
+        const sug = document.getElementById('suggestions');
+        if (sug && e.target.id !== 'nace_search') {
+          sug.style.display = 'none';
+        }
+      });
+    </script>
+  </body>
 </html>

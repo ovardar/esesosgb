@@ -1,0 +1,376 @@
+/* Direction 1 tuning for workers.html */
+
+body.theme-ultra-clean .card {
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+body.theme-ultra-clean .workers-page-shell {
+  padding: 28px 28px 38px;
+}
+
+body.theme-ultra-clean .workers-page-shell h2 {
+  margin: 0 0 6px;
+  font-size: clamp(24px, 2.3vw, 34px);
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+body.theme-ultra-clean .workers-page-shell .page-desc {
+  margin: 0 0 18px;
+  color: #607086;
+  font-size: 13px;
+}
+
+body.theme-ultra-clean .workers-page-shell .panel,
+body.theme-ultra-clean .workers-page-shell .table-container {
+  max-width: none;
+  margin: 0 0 14px;
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  box-shadow: none;
+  background: #ffffff;
+  padding: 14px;
+}
+
+body.theme-ultra-clean .workers-page-shell .panel-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+body.theme-ultra-clean .workers-page-shell .panel-toggle h3,
+body.theme-ultra-clean .workers-page-shell .table-container h3 {
+  margin: 0;
+  color: #334155;
+  font-size: 14px;
+}
+
+body.theme-ultra-clean .workers-page-shell .panel-toggle-icon {
+  transition: transform 0.2s ease;
+}
+
+body.theme-ultra-clean .workers-page-shell .panel-toggle[aria-expanded='true'] .panel-toggle-icon {
+  transform: rotate(180deg);
+}
+
+body.theme-ultra-clean .workers-page-shell .panel-collapsible.is-collapsed {
+  display: none;
+}
+
+body.theme-ultra-clean .workers-page-shell .form-group label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #607086;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+body.theme-ultra-clean .workers-page-shell .form-group input,
+body.theme-ultra-clean .workers-page-shell .form-group select,
+body.theme-ultra-clean .workers-page-shell .worker-filter-input {
+  border: 1px solid #d1dbe7;
+  border-radius: 10px;
+  background: #fff;
+}
+
+body.theme-ultra-clean .workers-page-shell .form-group input:focus,
+body.theme-ultra-clean .workers-page-shell .form-group select:focus,
+body.theme-ultra-clean .workers-page-shell .worker-filter-input:focus {
+  border-color: #0e7490;
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.12);
+  outline: none;
+}
+
+body.theme-ultra-clean .workers-page-shell .submit-btn,
+body.theme-ultra-clean .workers-page-shell .worker-action-btn,
+body.theme-ultra-clean .workers-page-shell .worker-ppe-btn,
+body.theme-ultra-clean .workers-page-shell .edu-close-btn,
+body.theme-ultra-clean .workers-page-shell .ppe-close-btn {
+  border-radius: 999px;
+}
+
+body.theme-ultra-clean .workers-page-shell .submit-btn,
+body.theme-ultra-clean .workers-page-shell .worker-action-btn,
+body.theme-ultra-clean .workers-page-shell .worker-ppe-btn {
+  background: #1f6b73;
+  color: #f8fbfc;
+  border: none;
+  font-weight: 700;
+}
+
+body.theme-ultra-clean .workers-page-shell table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+body.theme-ultra-clean .workers-page-shell th {
+  background: #f7fafc;
+  border-bottom: 1px solid #dbe4ee;
+  color: #4f5f74;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+body.theme-ultra-clean .workers-page-shell td {
+  border-bottom: 1px solid #e8edf4;
+  font-size: 13px;
+}
+
+body.theme-ultra-clean .workers-page-shell tbody tr:hover td {
+  background: #f8fbff;
+}
+
+body.theme-ultra-clean .workers-page-shell .worker-training-card,
+body.theme-ultra-clean .workers-page-shell .worker-ppe-card {
+  border: 1px solid #dbe4ee;
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.16);
+}
+
+body.theme-ultra-clean .worker-training-modal,
+body.theme-ultra-clean .worker-ppe-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+}
+
+body.theme-ultra-clean .worker-training-card,
+body.theme-ultra-clean .worker-ppe-card {
+  width: min(980px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+}
+
+body.theme-ultra-clean .workers-page-shell .worker-training-head,
+body.theme-ultra-clean .workers-page-shell .worker-ppe-head {
+  background: #f8fbfc;
+}
+
+body.theme-ultra-clean .workers-page-shell .edu-close-btn,
+body.theme-ultra-clean .workers-page-shell .ppe-close-btn {
+  background: #edf3f8;
+  color: #334155;
+  border: 1px solid #dbe4ee;
+  padding: 8px 12px;
+  font-weight: 700;
+}
+
+/* 📝 Çalışan Düzenleme Modalı Premium Tasarım */
+body.theme-ultra-clean .worker-edit-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+body.theme-ultra-clean .worker-edit-card {
+  width: min(460px, 100%) !important;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  overflow: hidden;
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(15px); }
+  to { transform: translateY(0); }
+}
+
+body.theme-ultra-clean .workers-page-shell .worker-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+body.theme-ultra-clean .workers-page-shell .worker-edit-head h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.020em;
+}
+
+body.theme-ultra-clean .workers-page-shell .worker-edit-head p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* Kapat Butonu */
+body.theme-ultra-clean .workers-page-shell .edit-close-btn {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: none !important;
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 20px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  padding: 0 !important;
+}
+
+body.theme-ultra-clean .workers-page-shell .edit-close-btn:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+body.theme-ultra-clean .worker-edit-body {
+  padding: 20px 24px 28px;
+}
+
+/* Form Yerleşimi */
+body.theme-ultra-clean .worker-edit-body .form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+body.theme-ultra-clean .worker-edit-body .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.theme-ultra-clean .worker-edit-body .form-group label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+body.theme-ultra-clean .worker-edit-body .form-group input,
+body.theme-ultra-clean .worker-edit-body .form-group select {
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #1e293b;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+body.theme-ultra-clean .worker-edit-body .form-group input:focus,
+body.theme-ultra-clean .worker-edit-body .form-group select:focus {
+  border-color: #0e7490;
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.12);
+  outline: none;
+}
+
+/* Modal Buton Grubu */
+body.theme-ultra-clean .worker-edit-body .modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+body.theme-ultra-clean .worker-edit-body .btn-save {
+  background: linear-gradient(135deg, #1f6b73 0%, #154c52 100%);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(31, 107, 115, 0.2);
+}
+
+body.theme-ultra-clean .worker-edit-body .btn-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -2px rgba(31, 107, 115, 0.3);
+}
+
+body.theme-ultra-clean .worker-edit-body .btn-save:active {
+  transform: translateY(0);
+}
+
+body.theme-ultra-clean .worker-edit-body .btn-cancel {
+  background: #f8fafc;
+  color: #64748b;
+  border: 1.5px solid #e2e8f0;
+  font-weight: 700;
+  padding: 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+body.theme-ultra-clean .worker-edit-body .btn-cancel:hover {
+  background: #f1f5f9;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+body.theme-ultra-clean .workers-page-shell .worker-edit-btn {
+  background: #0284c7;
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+}
+
+body.theme-ultra-clean .workers-page-shell .worker-edit-btn:hover {
+  background: #0369a1;
+}
+
+
+
+@media (max-width: 900px) {
+  body.theme-ultra-clean .workers-page-shell {
+    padding: 18px 14px 24px;
+  }
+}

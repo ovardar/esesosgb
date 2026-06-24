@@ -1,4 +1,4 @@
-const CACHE_NAME = 'osgb-saas-cache-step4b-workers-tenant';
+const CACHE_NAME = 'osgb-saas-cache-v8-real-auth';
 const APP_SHELL = [
   './',
   './risk.html',
@@ -6,26 +6,29 @@ const APP_SHELL = [
   './saas-admin.html',
   './actions.html',
   './company-detail.html',
+  './crm.html',
+  './crm-detail.html',
+  './crm-offer.html',
+  './crm-reports.html',
   './login.html',
   './offline.html',
-  './offline-db.js',
-  './sync-risks.js',
+  './js/offline-db.js',
+  './js/sync-risks.js',
+  './js/supabase-config.js',
+  './js/navigation.js',
+  './css/style.css',
   './manifest.json',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(
-      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-    ))
+    caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
   );
   self.clients.claim();
 });
@@ -51,10 +54,12 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match(event.request).then((cached) => {
-          if (cached) return cached;
-          if (event.request.mode === 'navigate') return caches.match('./offline.html');
-        }))
+        .catch(() =>
+          caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+            if (event.request.mode === 'navigate') return caches.match('./offline.html');
+          })
+        )
     );
     return;
   }

@@ -1,0 +1,4 @@
+Always route all AI completions, chat requests, and agent executions to the local Ollama endpoint.
+Endpoint: http://localhost:11434/v1
+Model: qwen2.5-coder:7b
+Do not use cloud-based Gemini or Claude models if this local endpoint is active.

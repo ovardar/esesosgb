@@ -1,0 +1,1308 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSGB SaaS – CRM Fırsat Yönetimi</title>
+    <meta name="description" content="OSGB SaaS CRM – Potansiyel müşteri takibi ve aşama yönetimi" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean-crm.css" />
+  </head>
+  <body class="theme-ultra-clean">
+    <div class="card">
+      <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
+        </div>
+        <div class="nav-container"></div>
+      </div>
+
+      <div class="crm-page-shell">
+        <!-- Page Title & Actions -->
+        <div class="page-header-row">
+          <div class="page-title-group">
+            <h2>Potansiyel Müşteri Yönetimi</h2>
+            <p>Satış fırsatlarını, görüşmeleri ve teklif süreçlerini anlık takip edin.</p>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="view-toggle-container">
+              <button class="view-toggle-btn active" id="toggle_kanban" onclick="switchView('kanban')">
+                Kanban
+              </button>
+              <button class="view-toggle-btn" id="toggle_list" onclick="switchView('list')">
+                Liste
+              </button>
+            </div>
+            <button class="btn btn-secondary" onclick="exportLeadsToCSV()" style="padding: 10px 14px; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; border-radius: 8px;">📤 Dışa Aktar</button>
+            <button class="btn btn-blue" onclick="openImportModal()" style="padding: 10px 14px; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; border-radius: 8px; border: 1px solid #bfe4e6 !important;">📥 İçeri Aktar</button>
+            <button class="btn-add-lead-btn" onclick="openAddModal()">+ Yeni Fırsat Ekle</button>
+          </div>
+        </div>
+
+        <!-- 💡 Bilgi Bandı (Guide Banner) -->
+        <div class="crm-info-banner">
+          <div class="info-icon">ℹ️</div>
+          <div class="info-text">
+            <strong>Satış Aşaması vs Müşteri Durumu Ayrımı:</strong> 
+            <span><strong>Aşama</strong> (Kanban sütunları) satış tünelindeki adımları ifade eder (*Yeni Kayıt -> Görüşme -> Teklif -> Sözleşme*). 
+            <strong>Durum</strong> (sağlık/aktiflik) ise etkileşim sıklığına göre sistem tarafından otomatik hesaplanan veya manuel belirlediğiniz aktiflik durumudur (*Fırsat, İşlemde, Kazanıldı, Kaybedildi, Askıda*). 
+            Son 15 gündür güncellenmemiş olan kartlar sistem tarafından otomatik olarak <em>Askıda</em> durumuna çekilir.</span>
+          </div>
+        </div>
+
+        <!-- 🔔 Hatırlatma Bildirimleri Paneli -->
+        <div id="reminders_panel" style="display:none;margin-bottom:16px;"></div>
+
+        <!-- Stats Overview Widgets (Çift Hiyerarşili Grid) -->
+        <div class="crm-double-stats-grid">
+          <!-- ❤️ Müşteri Durum Özetleri - ÖNCE gösterilir -->
+          <div class="stats-section-premium">
+            <h4 class="section-title">❤️ Müşteri Durum Özetleri (Aktiflik & Sağlık)</h4>
+            <div class="stats-cards-wrapper">
+              <div class="stat-card-premium">
+                <div class="color-bar" style="background:#3b82f6"></div>
+                <span class="number" id="stat_status_firsat">0</span>
+                <span class="label">Fırsat</span>
+              </div>
+              <div class="stat-card-premium">
+                <div class="color-bar" style="background:#f59e0b"></div>
+                <span class="number" id="stat_status_islemde">0</span>
+                <span class="label">İşlemde</span>
+              </div>
+              <div class="stat-card-premium">
+                <div class="color-bar" style="background:#10b981"></div>
+                <span class="number" id="stat_status_kazanildi">0</span>
+                <span class="label">Kazanıldı</span>
+              </div>
+              <div class="stat-card-premium">
+                <div class="color-bar" style="background:#64748b"></div>
+                <span class="number" id="stat_status_askida">0</span>
+                <span class="label">Askıda</span>
+              </div>
+              <div class="stat-card-premium">
+                <div class="color-bar" style="background:#ef4444"></div>
+                <span class="number" id="stat_status_kaybedildi">0</span>
+                <span class="label">Kaybedildi</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 📊 Satış Tüneli Aşamaları - ikinci sırada -->
+          <div class="stats-section-premium">
+            <h4 class="section-title">📊 Satış Tüneli Aşamaları (Süreç)</h4>
+            <div class="stats-cards-wrapper">
+              <div class="stat-card-premium">
+                <div class="color-bar" style="background:#64748b"></div>
+                <span class="number" id="stat_total">0</span>
+                <span class="label">Toplam</span>
+              </div>
+              <div class="stat-card-premium">
+                <div class="color-bar stage-bar-new"></div>
+                <span class="number" id="stat_new">0</span>
+                <span class="label">Yeni Kayıt</span>
+              </div>
+              <div class="stat-card-premium">
+                <div class="color-bar stage-bar-gorusme"></div>
+                <span class="number" id="stat_gorusme">0</span>
+                <span class="label">Görüşmede</span>
+              </div>
+              <div class="stat-card-premium">
+                <div class="color-bar stage-bar-teklif"></div>
+                <span class="number" id="stat_teklif">0</span>
+                <span class="label">Teklifte</span>
+              </div>
+              <div class="stat-card-premium">
+                <div class="color-bar stage-bar-contract"></div>
+                <span class="number" id="stat_sozlesme">0</span>
+                <span class="label">Sözleşmede</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search, Filter Toolbar -->
+        <div class="crm-toolbar-premium">
+          <div class="search-wrap">
+            <input type="text" id="search_input" style="width:100%" placeholder="Firma adı, şehir, sektör veya NACE ile arayın..." oninput="applyFilters()" />
+          </div>
+          <select id="filter_stage" class="filter-select" onchange="applyFilters()">
+            <option value="">Aşama (Tümü)</option>
+            <option>Yeni Kayıt</option>
+            <option>Görüşme</option>
+            <option>Teklif</option>
+            <option>Sözleşme</option>
+          </select>
+          <select id="filter_status" class="filter-select" onchange="applyFilters()">
+            <option value="">Durum (Tümü)</option>
+            <option>Fırsat</option>
+            <option>İşlemde</option>
+            <option>Kazanıldı</option>
+            <option>Kaybedildi</option>
+            <option>Askıda</option>
+          </select>
+          <select id="filter_danger" class="filter-select" onchange="applyFilters()">
+            <option value="">Tehlike Sınıfı (Tümü)</option>
+            <option>Az Tehlikeli</option>
+            <option>Tehlikeli</option>
+            <option>Çok Tehlikeli</option>
+          </select>
+          <select id="filter_assigned" class="filter-select" onchange="applyFilters()">
+            <option value="">Sorumlu Temsilci (Tümü)</option>
+          </select>
+        </div>
+
+        <!-- ─────────────────────────────────────────────
+             VIEW 1: KANBAN BOARD
+        ───────────────────────────────────────────── -->
+        <div class="view-container active" id="view_kanban">
+          <div class="kanban-board-scroll">
+            <div class="kanban-board" id="kanban_board_container">
+              <!-- Columns dynamically rendered in JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────────────────────────────────────
+             VIEW 2: LIST VIEW
+        ───────────────────────────────────────────── -->
+        <div class="view-container" id="view_list">
+          <div class="table-container-premium">
+            <table>
+              <thead>
+                <tr>
+                  <th>Firma Adı</th>
+                  <th>Lokasyon</th>
+                  <th>Sektör / NACE</th>
+                  <th>Çalışan</th>
+                  <th>Tehlike Sınıfı</th>
+                  <th>Aşama</th>
+                  <th>Durum</th>
+                  <th>Kaynak</th>
+                  <th>Sorumlu</th>
+                  <th>Son Güncelleme</th>
+                  <th style="width:160px">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="leads_table_body">
+                <tr>
+                  <td colspan="11" style="text-align:center;color:var(--text-muted);padding:30px">
+                    Fırsatlar yükleniyor...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🖊️ YENİ FIRSAT EKLEME MODALI -->
+    <div class="modal-backdrop-premium" id="add_lead_modal">
+      <div class="modal-card-premium">
+        <div class="modal-header-premium">
+          <h3>+ Yeni Fırsat Ekle</h3>
+          <button class="modal-close-btn" onclick="closeAddModal()">&times;</button>
+        </div>
+        <div class="modal-body-premium">
+          <div class="modal-grid-premium">
+            <div class="form-group-premium full-width">
+              <label>Firma Adı *</label>
+              <input type="text" id="new_company_name" placeholder="Ticari ünvan veya kısa ad" required />
+            </div>
+            <div class="form-group-premium">
+              <label>Şehir</label>
+              <input type="text" id="new_city" placeholder="Örn: Eskişehir" />
+            </div>
+            <div class="form-group-premium">
+              <label>İlçe</label>
+              <input type="text" id="new_district" placeholder="Örn: Odunpazarı" />
+            </div>
+            <div class="form-group-premium">
+              <label>Sektör</label>
+              <input type="text" id="new_sector" placeholder="İnşaat, Metal, Tekstil..." />
+            </div>
+            <div class="form-group-premium suggestions-list-container">
+              <label>NACE Kodu / Faaliyet Arayın</label>
+              <input type="text" id="new_nace" placeholder="Kod veya faaliyet girin..." oninput="searchNaceForAdd()" autocomplete="off" />
+              <ul id="add_nace_suggestions" class="suggestions-list"></ul>
+            </div>
+            <div class="form-group-premium">
+              <label>Tehlike Sınıfı</label>
+              <select id="new_danger_class">
+                <option value="">Seçiniz...</option>
+                <option>Az Tehlikeli</option>
+                <option>Tehlikeli</option>
+                <option>Çok Tehlikeli</option>
+              </select>
+            </div>
+            <div class="form-group-premium">
+              <label>Çalışan Sayısı</label>
+              <input type="number" id="new_employee_count" min="0" placeholder="Örn: 45" />
+            </div>
+            <div class="form-group-premium">
+              <label>Başlangıç Aşaması</label>
+              <select id="new_stage">
+                <option>Yeni Kayıt</option>
+                <option>Görüşme</option>
+                <option>Teklif</option>
+                <option>Sözleşme</option>
+              </select>
+            </div>
+            <div class="form-group-premium">
+              <label>Ana Durum</label>
+              <select id="new_status">
+                <option>Fırsat</option>
+                <option>İşlemde</option>
+                <option>Kazanıldı</option>
+                <option>Kaybedildi</option>
+                <option>Askıda</option>
+              </select>
+            </div>
+            <div class="form-group-premium">
+              <label>Fırsat Kaynağı</label>
+              <select id="new_source">
+                <option>Telefon</option>
+                <option>Referans</option>
+                <option>Web Sitesi</option>
+                <option>Mevcut Müşteri Tavsiyesi</option>
+                <option>Google</option>
+                <option>Sosyal Medya</option>
+                <option>Saha Ziyareti</option>
+                <option>E-posta</option>
+                <option>Fuar / Etkinlik</option>
+                <option>Soğuk Arama</option>
+                <option>Diğer</option>
+              </select>
+            </div>
+            <div class="form-group-premium full-width">
+              <label>Sorumlu Satış Temsilcisi / Personel</label>
+              <select id="new_assigned_to">
+                <option value="">Temsilci Seçiniz (Atanmamış)</option>
+              </select>
+            </div>
+            <div class="form-group-premium full-width">
+              <label>İlk Görüşme Notu</label>
+              <textarea id="new_notes" rows="3" placeholder="Görüşme detayları, ilgilendiği hizmetler..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer-premium">
+          <button class="btn-secondary-premium" onclick="closeAddModal()">İptal</button>
+          <button class="btn-add-lead-btn" onclick="saveLead()">Kaydet & Detaya Git</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 📥 CRM VERİ İÇERİ AKTARMA MODALI -->
+    <div class="modal-backdrop-premium" id="import_lead_modal">
+      <div class="modal-card-premium" style="max-width: 500px;">
+        <div class="modal-header-premium">
+          <h3>📥 Excel / CSV ile Fırsat Aktar</h3>
+          <button class="modal-close-btn" onclick="closeImportModal()">&times;</button>
+        </div>
+        <div class="modal-body-premium">
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+            Hazırladığınız potansiyel müşteri listesini sisteme toplu olarak yükleyebilirsiniz. Yüklenecek dosya formatı <strong>CSV</strong> olmalıdır.
+          </p>
+          
+          <div style="background: var(--uc-surface-muted); border: 1px solid var(--uc-line); padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 12px;">
+            <strong style="display: block; margin-bottom: 6px; color: var(--uc-text);">Gerekli CSV Sütun Sıralaması (Noktalı Virgül ";" Ayracı):</strong>
+            <code style="word-break: break-all; display: block; background: var(--uc-surface); border: 1px solid var(--uc-line); padding: 6px; border-radius: 4px; color: var(--uc-primary); font-family: monospace;">
+              Firma Adı; Şehir; İlçe; Sektör; Nace Kodu; Tehlike Sınıfı; Çalışan Sayısı; Aşama; Durum; Kaynak; Notlar
+            </code>
+            <a href="javascript:void(0)" onclick="downloadSampleCSV()" style="color: var(--uc-primary); font-weight: 700; text-decoration: none; display: inline-block; margin-top: 8px;">📥 Örnek Şablon CSV İndir</a>
+          </div>
+
+          <div class="form-group-premium full-width">
+            <label>CSV Dosyası Seçin</label>
+            <input type="file" id="import_csv_file" accept=".csv" style="padding: 8px 0; border: none; background: transparent;" />
+          </div>
+          
+          <div id="import_progress_status" style="font-size: 12px; color: var(--uc-text-muted); margin-top: 10px; display: none;">
+            Lütfen bekleyin, veriler işleniyor...
+          </div>
+        </div>
+        <div class="modal-footer-premium">
+          <button class="btn-secondary-premium" onclick="closeImportModal()">İptal</button>
+          <button class="btn-add-lead-btn" onclick="processCSVImport()">Verileri Yükle</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications container -->
+    <div class="toast-container" id="toast_container"></div>
+
+    <script>
+      let CURRENT_AUTH = null;
+      let allLeads = [];
+      let staffList = [];
+      let activeView = 'kanban';
+
+      const STAGES = [
+        'Yeni Kayıt',
+        'Görüşme',
+        'Teklif',
+        'Sözleşme'
+      ];
+
+      const LEAD_STATUSES = [
+        'Fırsat',
+        'İşlemde',
+        'Kazanıldı',
+        'Kaybedildi',
+        'Askıda'
+      ];
+
+      const STAGE_DOT_COLORS = {
+        'Yeni Kayıt': '#3b82f6',
+        'Görüşme': '#6366f1',
+        'Teklif': '#f59e0b',
+        'Sözleşme': '#14b8a6'
+      };
+
+      const STAGE_Pill_CLASSES = {
+        'Yeni Kayıt': 'sp-yeni',
+        'Görüşme': 'sp-gorusme',
+        'Teklif': 'sp-teklif',
+        'Sözleşme': 'sp-sozlesme'
+      };
+
+      const STATUS_PILL_CLASSES = {
+        'Fırsat': 'st-firsat',
+        'İşlemde': 'st-progress',
+        'Kazanıldı': 'st-kazanildi',
+        'Kaybedildi': 'st-kaybedildi',
+        'Askıda': 'st-askida'
+      };
+
+      function normalizeStage(dbStage) {
+        if (dbStage === 'Yeni Kayıt') return 'Yeni Kayıt';
+        if (['İlk Görüşme Yapılacak', 'Görüşme Yapıldı'].includes(dbStage)) return 'Görüşme';
+        if (['Teklif Hazırlanacak', 'Teklif Gönderildi', 'Pazarlıkta'].includes(dbStage)) return 'Teklif';
+        if (['Sözleşme Bekleniyor', 'Kazanıldı', 'Kaybedildi', 'Askıda'].includes(dbStage)) return 'Sözleşme';
+        return 'Yeni Kayıt';
+      }
+
+      function stageToDbValue(stage) {
+        if (stage === 'Yeni Kayıt') return 'Yeni Kayıt';
+        if (stage === 'Görüşme') return 'İlk Görüşme Yapılacak';
+        if (stage === 'Teklif') return 'Teklif Hazırlanacak';
+        if (stage === 'Sözleşme') return 'Sözleşme Bekleniyor';
+        return 'Yeni Kayıt';
+      }
+
+      function inferLeadStatus(lead) {
+        if (lead.lead_status && LEAD_STATUSES.includes(lead.lead_status)) return lead.lead_status;
+        if (lead.is_converted) return 'Kazanıldı';
+        if (lead.stage_raw === 'Kazanıldı') return 'Kazanıldı';
+        if (lead.stage_raw === 'Kaybedildi') return 'Kaybedildi';
+        if (lead.stage_raw === 'Askıda') return 'Askıda';
+        return 'Fırsat';
+      }
+
+      function resolveLeadStatus(lead) {
+        return inferLeadStatus(lead);
+      }
+
+      window.onload = async function() {
+        const auth = await requireAuthAndRole('crm');
+        if (!auth) return;
+        CURRENT_AUTH = auth;
+        document.body.style.display = 'block';
+
+        // Load saved view preference
+        const savedView = localStorage.getItem('crm_selected_view');
+        if (savedView === 'list') {
+          switchView('list');
+        } else {
+          switchView('kanban');
+        }
+
+        await loadStaff();
+        await loadLeads();
+        await loadMyReminders(); // Hatırlatmaları yükle
+
+        // URL parametresinde action=new-lead varsa modalı aç
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'new-lead') {
+          openAddModal();
+        }
+      };
+
+      // Kullanıcının bekleyen hatırlatmalarını çekip göster
+      async function loadMyReminders() {
+        const today = new Date().toISOString().slice(0, 10);
+        try {
+          const { data, error } = await dbClient
+            .from('crm_tasks')
+            .select('id, title, due_date, lead_id, crm_leads(company_name)')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .eq('assigned_to', CURRENT_AUTH.email)
+            .eq('status', 'Açık')
+            .lte('due_date', today)  // Bugün ve geçmiş
+            .order('due_date', { ascending: true })
+            .limit(10);
+
+          if (error || !data || !data.length) return;
+
+          const panel = document.getElementById('reminders_panel');
+
+          // Gecikmiş vs bugünün ayrımı
+          const overdue = data.filter(t => t.due_date < today);
+          const dueToday = data.filter(t => t.due_date === today);
+
+          const isUrgent = overdue.length > 0;
+          const bgColor = isUrgent ? 'linear-gradient(135deg,#fef2f2,#fee2e2)' : 'linear-gradient(135deg,#fffbeb,#fef3c7)';
+          const borderColor = isUrgent ? '#fca5a5' : '#fcd34d';
+          const iconLabel = isUrgent ? '🔴 GECİKMİŞ' : '🟽 BUGÜN';
+          const headingColor = isUrgent ? '#dc2626' : '#b45309';
+
+          const items = data.map(t => {
+            const company = (t.crm_leads && t.crm_leads.company_name) ? t.crm_leads.company_name : 'Bilinmeyen Firma';
+            const isLate = t.due_date < today;
+            const dateLabel = isLate ? `<span style="color:#dc2626;font-weight:700;">⚠️ ${t.due_date}</span>` : `<span style="color:#b45309;">📅 Bugün</span>`;
+            return `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;
+                          background:rgba(255,255,255,0.7);border-radius:8px;margin-bottom:6px;
+                          border:1px solid ${isLate ? '#fca5a5' : '#fcd34d'};">
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:600;color:var(--text-main);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(t.title)}</div>
+                  <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${esc(company)} &bull; ${dateLabel}</div>
+                </div>
+                <a href="crm-detail.html?id=${t.lead_id}" 
+                   style="margin-left:12px;padding:5px 12px;background:var(--primary);color:#fff;
+                          border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">
+                  Fırsata Git →
+                </a>
+              </div>`;
+          }).join('');
+
+          panel.style.display = 'block';
+          panel.innerHTML = `
+            <div style="background:${bgColor};border:1.5px solid ${borderColor};
+                        border-radius:12px;padding:14px 16px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:16px;">🔔</span>
+                  <strong style="color:${headingColor};font-size:14px;">
+                    ${data.length} Hatırlatmanız Var — ${iconLabel}
+                  </strong>
+                </div>
+                <button onclick="document.getElementById('reminders_panel').style.display='none'" 
+                        style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-muted);padding:2px 6px;"
+                        title="Kapat">&times;</button>
+              </div>
+              ${items}
+            </div>`;
+        } catch(e) {
+          console.warn('Hatırlatmalar yüklenemedi:', e);
+        }
+      }
+
+      // Query staff members of active tenant
+      async function loadStaff() {
+        try {
+          const { data, error } = await dbClient
+            .from('osgb_staff')
+            .select('email, name_surname')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .eq('can_login', true);
+
+          if (error) throw error;
+          staffList = data || [];
+          populateStaffDropdowns();
+        } catch (err) {
+          console.error('Personel listesi yüklenemedi:', err);
+          showToast('Personel listesi yüklenirken hata oluştu.', 'error');
+        }
+      }
+
+      function populateStaffDropdowns() {
+        const filterDropdown = document.getElementById('filter_assigned');
+        const modalDropdown = document.getElementById('new_assigned_to');
+
+        const staffOptions = staffList.map(s => 
+          `<option value="${esc(s.email)}">${esc(s.name_surname)} (${esc(s.email)})</option>`
+        ).join('');
+
+        filterDropdown.innerHTML = `<option value="">Sorumlu Temsilci (Tümü)</option>` + staffOptions;
+        modalDropdown.innerHTML = `<option value="">Temsilci Seçiniz (Atanmamış)</option>` + staffOptions;
+      }
+
+      // Fetch all leads
+      async function loadLeads() {
+        try {
+          const { data, error } = await dbClient
+            .from('crm_leads')
+            .select('*')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .eq('is_converted', false)
+            .order('updated_at', { ascending: false });
+
+          if (error) throw error;
+          allLeads = (data || []).map((lead) => {
+            const normalized = normalizeStage(lead.stage);
+            return {
+              ...lead,
+              stage_raw: lead.stage,
+              stage: normalized
+            };
+          });
+
+          // Yeni kurallara göre mevcut kartların durumlarını toplu güncelle
+          await bulkRecalculateStatuses();
+
+          updateStats();
+          renderViews();
+        } catch (err) {
+          console.error('Fırsat listesi yüklenemedi:', err);
+          showToast('Fırsat verileri alınırken hata oluştu.', 'error');
+        }
+      }
+
+      // Tüm leadlerin durumlarını yeni kurallara göre yeniden hesapla ve güncelle
+      async function bulkRecalculateStatuses() {
+        const now = new Date();
+        const fifteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
+
+        // Yalnızca manuel olarak Kaybedildi/Kazanıldı yapılmamış aktif kartları işle
+        const activatableLeads = allLeads.filter(l => !['Kaybedildi'].includes(l.lead_status));
+        if (!activatableLeads.length) return;
+
+        const leadIds = activatableLeads.map(l => l.id);
+
+        // Tüm ilgili alt tablo verilerini tek sorguda çek
+        const [actRes, needsRes, offersRes, contractsRes] = await Promise.all([
+          dbClient.from('crm_activities').select('lead_id').in('lead_id', leadIds),
+          dbClient.from('crm_needs').select('lead_id').in('lead_id', leadIds),
+          dbClient.from('crm_offers').select('lead_id').in('lead_id', leadIds),
+          dbClient.from('crm_contracts').select('lead_id, is_signed').in('lead_id', leadIds)
+        ]);
+
+        const actLeads = new Set((actRes.data || []).map(r => r.lead_id));
+        const needsLeads = new Set((needsRes.data || []).map(r => r.lead_id));
+        const offerLeads = new Set((offersRes.data || []).map(r => r.lead_id));
+        const signedLeads = new Set((contractsRes.data || []).filter(r => r.is_signed).map(r => r.lead_id));
+        const contractLeads = new Set((contractsRes.data || []).map(r => r.lead_id));
+
+        const updates = {}; // { newStatus: [leadIds] }
+
+        for (const l of activatableLeads) {
+          const updatedAt = new Date(l.updated_at);
+          let newStatus = null;
+
+          // Kural 1: Sözleşme imzalandıysa → Kazanıldı
+          if (signedLeads.has(l.id)) {
+            newStatus = 'Kazanıldı';
+          }
+          // Kural 2: Aktivite/İhtiyaç/Teklif/Sözleşme varsa → İşlemde
+          else if (actLeads.has(l.id) || needsLeads.has(l.id) || offerLeads.has(l.id) || contractLeads.has(l.id)) {
+            newStatus = 'İşlemde';
+          }
+          // Kural 3: 15 günden eski → Askıda (şu an Kazanıldı/Kaybedildi değilse)
+          else if (updatedAt < fifteenDaysAgo && !['Kazanıldı', 'Kaybedildi'].includes(l.lead_status)) {
+            newStatus = 'Askıda';
+          }
+          // Kural 4: Yalnızca genel bilgi/iletişim girişi varsa → Fırsat
+          else if (!l.lead_status || l.lead_status === '' || l.lead_status === 'Fırsat') {
+            newStatus = 'Fırsat';
+          }
+
+          // Yalnızca farklı olan durumları güncelle
+          if (newStatus && newStatus !== l.lead_status) {
+            if (!updates[newStatus]) updates[newStatus] = [];
+            updates[newStatus].push(l.id);
+          }
+        }
+
+        // Toplu DB güncellemeleri
+        for (const [status, ids] of Object.entries(updates)) {
+          try {
+            const { error: upErr } = await dbClient
+              .from('crm_leads')
+              .update({ lead_status: status })
+              .in('id', ids)
+              .eq('tenant_id', CURRENT_AUTH.tenant_id);
+            if (!upErr) {
+              // Yerel state'i de güncelle
+              allLeads.forEach(l => {
+                if (ids.includes(l.id)) l.lead_status = status;
+              });
+              console.log(`${ids.length} lead → '${status}' durumuna güncellendi.`);
+            }
+          } catch (err) {
+            console.error(`Toplu durum güncellemesi (${status}) hatası:`, err);
+          }
+        }
+      }
+
+      // Calculate stats based on fetched data
+      function updateStats() {
+        document.getElementById('stat_total').innerText = allLeads.length;
+        document.getElementById('stat_new').innerText = allLeads.filter(l => l.stage === 'Yeni Kayıt').length;
+        document.getElementById('stat_gorusme').innerText = allLeads.filter(l => l.stage === 'Görüşme').length;
+        document.getElementById('stat_teklif').innerText = allLeads.filter(l => l.stage === 'Teklif').length;
+        document.getElementById('stat_sozlesme').innerText = allLeads.filter(l => l.stage === 'Sözleşme').length;
+
+        // Müşteri Durum Özetleri (Aktiflik & Sağlık)
+        document.getElementById('stat_status_firsat').innerText = allLeads.filter(l => resolveLeadStatus(l) === 'Fırsat').length;
+        document.getElementById('stat_status_islemde').innerText = allLeads.filter(l => resolveLeadStatus(l) === 'İşlemde').length;
+        document.getElementById('stat_status_kazanildi').innerText = allLeads.filter(l => resolveLeadStatus(l) === 'Kazanıldı').length;
+        document.getElementById('stat_status_askida').innerText = allLeads.filter(l => resolveLeadStatus(l) === 'Askıda').length;
+        document.getElementById('stat_status_kaybedildi').innerText = allLeads.filter(l => resolveLeadStatus(l) === 'Kaybedildi').length;
+      }
+
+      // Switch views (kanban vs list)
+      window.switchView = function(viewType) {
+        activeView = viewType;
+        localStorage.setItem('crm_selected_view', viewType);
+
+        const btnKanban = document.getElementById('toggle_kanban');
+        const btnList = document.getElementById('toggle_list');
+        const viewKanban = document.getElementById('view_kanban');
+        const viewList = document.getElementById('view_list');
+
+        if (viewType === 'kanban') {
+          btnKanban.classList.add('active');
+          btnList.classList.remove('active');
+          viewKanban.classList.add('active');
+          viewList.classList.remove('active');
+        } else {
+          btnKanban.classList.remove('active');
+          btnList.classList.add('active');
+          viewKanban.classList.remove('active');
+          viewList.classList.add('active');
+        }
+        renderViews();
+      }
+
+      function getFilteredLeads() {
+        const q = document.getElementById('search_input').value.toLowerCase().trim();
+        const stage = document.getElementById('filter_stage').value;
+        const status = document.getElementById('filter_status').value;
+        const danger = document.getElementById('filter_danger').value;
+        const assigned = document.getElementById('filter_assigned').value;
+
+        return allLeads.filter(l => {
+          const matchQ = !q || 
+            (l.company_name || '').toLowerCase().includes(q) || 
+            (l.city || '').toLowerCase().includes(q) || 
+            (l.sector || '').toLowerCase().includes(q) ||
+            (l.nace_code || '').toLowerCase().includes(q);
+          const matchStage = !stage || l.stage === stage;
+          const matchStatus = !status || resolveLeadStatus(l) === status;
+          const matchDanger = !danger || l.danger_class === danger;
+          const matchAssigned = !assigned || l.assigned_to === assigned;
+
+          return matchQ && matchStage && matchStatus && matchDanger && matchAssigned;
+        });
+      }
+
+      function renderViews() {
+        const filtered = getFilteredLeads();
+        if (activeView === 'kanban') {
+          renderKanban(filtered);
+        } else {
+          renderTable(filtered);
+        }
+      }
+
+      // Helper function to resolve Staff Name
+      function getStaffName(email) {
+        if (!email) return 'Atanmamış';
+        const found = staffList.find(s => s.email === email);
+        return found ? found.name_surname : email;
+      }
+
+      // Render Kanban Board view
+      function renderKanban(leads) {
+        const container = document.getElementById('kanban_board_container');
+        container.innerHTML = '';
+
+        STAGES.forEach(stage => {
+          const stageLeads = leads.filter(l => l.stage === stage);
+          const dotColor = STAGE_DOT_COLORS[stage] || '#64748b';
+
+          const column = document.createElement('div');
+          column.className = 'kanban-column';
+          column.setAttribute('data-stage', stage);
+
+          // Column Drag over events to style column drop area
+          column.addEventListener('dragover', e => {
+            e.preventDefault();
+            column.classList.add('drag-over');
+          });
+          column.addEventListener('dragleave', () => {
+            column.classList.remove('drag-over');
+          });
+          column.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            column.classList.remove('drag-over');
+            const leadId = e.dataTransfer.getData('text/plain');
+            if (leadId) {
+              await updateLeadStage(leadId, stage);
+            }
+          });
+
+          // Build Column Header
+          const headerHtml = `
+            <div class="kanban-col-header">
+              <div class="kanban-col-title-wrap">
+                <span class="kanban-col-dot" style="background:${dotColor}"></span>
+                <span class="kanban-col-title">${esc(stage)}</span>
+              </div>
+              <span class="kanban-col-count">${stageLeads.length}</span>
+            </div>
+          `;
+
+          const cardsList = document.createElement('div');
+          cardsList.className = 'kanban-cards-list';
+
+          if (stageLeads.length === 0) {
+            cardsList.innerHTML = `<div class="empty-column-msg">Kart Yok</div>`;
+          } else {
+            stageLeads.forEach(l => {
+              const card = document.createElement('div');
+              card.className = 'kanban-card';
+              card.setAttribute('draggable', 'true');
+              card.setAttribute('data-id', l.id);
+
+              // HTML5 drag listeners
+              card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', l.id);
+                card.classList.add('dragging');
+              });
+              card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+              });
+
+              // Danger class badge styling
+              let dangerBadgeClass = 'badge-source';
+              if (l.danger_class === 'Az Tehlikeli') dangerBadgeClass = 'badge-danger-az';
+              else if (l.danger_class === 'Tehlikeli') dangerBadgeClass = 'badge-danger-orange';
+              else if (l.danger_class === 'Çok Tehlikeli') dangerBadgeClass = 'badge-danger-cok';
+
+              const staffName = getStaffName(l.assigned_to);
+
+              // Quick action buttons — tüm kartlarda "Yönet" göster
+              const quickActionHtml = `<a href="crm-detail.html?id=${l.id}" class="card-actions-btn">Yönet</a>`;
+
+              const statusLabel = resolveLeadStatus(l);
+              const statusClass = STATUS_PILL_CLASSES[statusLabel] || 'st-firsat';
+
+              card.innerHTML = `
+                <h4 class="kanban-card-title">
+                  <a href="crm-detail.html?id=${l.id}">${esc(l.company_name)}</a>
+                </h4>
+                <div class="kanban-card-info">
+                  <span>📍 ${esc(l.city || '-')}${l.district ? ', ' + esc(l.district) : ''}</span>
+                  <span>👥 ${l.employee_count ? l.employee_count + ' Çalışan' : 'Çalışan belirtilmemiş'}</span>
+                </div>
+                <div class="card-badges">
+                  ${l.danger_class ? `<span class="card-badge ${dangerBadgeClass}">${esc(l.danger_class)}</span>` : ''}
+                  ${l.lead_source ? `<span class="card-badge badge-source">${esc(l.lead_source)}</span>` : ''}
+                  <span class="status-pill ${statusClass}">${esc(statusLabel)}</span>
+                </div>
+                <div class="kanban-card-footer">
+                  <div class="assigned-avatar" title="${esc(staffName)}">👤 ${esc(staffName)}</div>
+                  ${quickActionHtml}
+                </div>
+              `;
+              cardsList.appendChild(card);
+            });
+          }
+
+          column.innerHTML = headerHtml;
+          column.appendChild(cardsList);
+          container.appendChild(column);
+        });
+      }
+
+      // Render Table view
+      function renderTable(leads) {
+        const tbody = document.getElementById('leads_table_body');
+        if (leads.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="11" style="text-align:center;color:var(--text-muted);padding:30px">
+                Aranan kriterlere uygun fırsat bulunamadı.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = leads.map(l => {
+          const pillClass = STAGE_Pill_CLASSES[l.stage] || 'sp-askida';
+          const statusLabel = resolveLeadStatus(l);
+          const statusClass = STATUS_PILL_CLASSES[statusLabel] || 'st-firsat';
+          const dangerBadgeClass = l.danger_class === 'Az Tehlikeli' ? 'badge-green' : l.danger_class === 'Tehlikeli' ? 'badge-orange' : 'badge-red';
+          const staffName = getStaffName(l.assigned_to);
+
+          return `
+            <tr>
+              <td>
+                <a href="crm-detail.html?id=${l.id}" style="color:var(--text-main);font-weight:700;text-decoration:none">
+                  ${esc(l.company_name)}
+                </a>
+              </td>
+              <td>${esc(l.city || '-')}${l.district ? ' / ' + esc(l.district) : ''}</td>
+              <td>
+                <div style="font-weight:500">${esc(l.sector || '-')}</div>
+                ${l.nace_code ? `<code style="font-size:11px;color:var(--text-muted)">${esc(l.nace_code)}</code>` : ''}
+              </td>
+              <td><strong>${l.employee_count || '-'}</strong></td>
+              <td>
+                ${l.danger_class ? `<span class="badge ${dangerBadgeClass}">${esc(l.danger_class)}</span>` : '-'}
+              </td>
+              <td>
+                <span class="stage-pill ${pillClass}">${esc(l.stage)}</span>
+              </td>
+              <td>
+                <span class="status-pill ${statusClass}">${esc(statusLabel)}</span>
+              </td>
+              <td>
+                <span class="badge badge-gray">${esc(l.lead_source)}</span>
+              </td>
+              <td style="font-size:12px" title="${esc(l.assigned_to || '')}">
+                <strong>${esc(staffName)}</strong>
+              </td>
+              <td style="font-size:12px;color:var(--text-muted)">
+                ${formatDate(l.updated_at)}
+              </td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <a href="crm-detail.html?id=${l.id}" class="btn btn-teal btn-small" style="text-decoration:none">Detay</a>
+                  <a href="crm-offer.html?lead_id=${l.id}" class="btn btn-blue btn-small" style="text-decoration:none">Teklif</a>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Filter trigger handler
+      window.applyFilters = function() {
+        renderViews();
+      }
+
+      // Update lead stage in Supabase
+      async function updateLeadStage(leadId, newStage) {
+        // Optimistic UI update locally
+        const leadIndex = allLeads.findIndex(l => l.id === leadId);
+        if (leadIndex === -1) return;
+        const oldStage = allLeads[leadIndex].stage;
+        
+        // Block update if unchanged
+        if (oldStage === newStage) return;
+
+        allLeads[leadIndex].stage = newStage;
+        allLeads[leadIndex].updated_at = new Date().toISOString();
+        updateStats();
+        renderViews();
+
+        try {
+          const stageDb = stageToDbValue(newStage);
+          const { error } = await dbClient
+            .from('crm_leads')
+            .update({ stage: stageDb })
+            .eq('id', leadId)
+            .eq('tenant_id', CURRENT_AUTH.tenant_id);
+
+          if (error) throw error;
+          allLeads[leadIndex].stage_raw = stageDb;
+          showToast(`"${allLeads[leadIndex].company_name}" aşaması "${newStage}" olarak güncellendi.`, 'success');
+        } catch (err) {
+          console.error('Aşama güncellenemedi:', err);
+          
+          // Revert on database error
+          allLeads[leadIndex].stage = oldStage;
+          updateStats();
+          renderViews();
+
+          if (err.code === '42501' || err.message.includes('permission')) {
+            showToast('Yetki Hatası: Bu fırsat aşamasını güncelleme yetkiniz bulunmuyor.', 'error');
+          } else {
+            showToast('Veritabanı güncellenirken hata oluştu: ' + err.message, 'error');
+          }
+        }
+      }
+
+      // Modal management
+      window.openAddModal = function() {
+        document.getElementById('add_lead_modal').classList.add('open');
+        document.getElementById('new_company_name').focus();
+      }
+
+      window.closeAddModal = function() {
+        document.getElementById('add_lead_modal').classList.remove('open');
+        clearAddForm();
+      }
+
+      function clearAddForm() {
+        ['new_company_name', 'new_city', 'new_district', 'new_sector', 'new_nace', 'new_employee_count', 'new_notes'].forEach(id => {
+          document.getElementById(id).value = '';
+        });
+        document.getElementById('new_danger_class').value = '';
+        document.getElementById('new_stage').value = 'Yeni Kayıt';
+        document.getElementById('new_status').value = 'Fırsat';
+        document.getElementById('new_source').value = 'Telefon';
+        document.getElementById('new_assigned_to').value = '';
+      }
+
+      // Insert new lead record
+      window.saveLead = async function() {
+        const name = document.getElementById('new_company_name').value.trim();
+        if (!name) {
+          showToast('Lütfen zorunlu alan olan Firma Adı bilgisini doldurun.', 'error');
+          return;
+        }
+
+        const employeeVal = document.getElementById('new_employee_count').value;
+        const selectedStatus = document.getElementById('new_status').value;
+        const row = {
+          tenant_id: CURRENT_AUTH.tenant_id,
+          company_name: name,
+          city: document.getElementById('new_city').value.trim() || null,
+          district: document.getElementById('new_district').value.trim() || null,
+          sector: document.getElementById('new_sector').value.trim() || null,
+          nace_code: document.getElementById('new_nace').value.trim() || null,
+          danger_class: document.getElementById('new_danger_class').value || null,
+          employee_count: employeeVal ? parseInt(employeeVal) : null,
+          stage: stageToDbValue(document.getElementById('new_stage').value),
+          lead_status: selectedStatus,
+          lead_source: document.getElementById('new_source').value,
+          assigned_to: document.getElementById('new_assigned_to').value || null,
+          notes: document.getElementById('new_notes').value.trim() || null,
+          created_by: CURRENT_AUTH.email
+        };
+
+        try {
+          const { data, error } = await dbClient
+            .from('crm_leads')
+            .insert([row])
+            .select()
+            .single();
+
+          if (error) throw error;
+
+          showToast(`"${name}" başarıyla fırsat olarak kaydedildi. Yönlendiriliyor...`, 'success');
+          closeAddModal();
+          
+          setTimeout(() => {
+            window.location.href = `crm-detail.html?id=${data.id}`;
+          }, 1000);
+          
+        } catch (err) {
+          console.error('Lead kaydedilemedi:', err);
+          showToast('Kayıt oluşturulurken hata: ' + err.message, 'error');
+        }
+      }
+
+      // Notification toast helper
+      function showToast(message, type = 'success') {
+        const container = document.getElementById('toast_container');
+        const toast = document.createElement('div');
+        toast.className = `toast-alert ${type}`;
+        
+        const icon = type === 'success' ? '✅' : '⚠️';
+        toast.innerHTML = `<span>${icon}</span> <span>${esc(message)}</span>`;
+        
+        container.appendChild(toast);
+
+        // Remove toast after delay
+        setTimeout(() => {
+          toast.classList.add('fade-out');
+          toast.addEventListener('animationend', () => {
+            toast.remove();
+          });
+        }, 3500);
+      }
+
+      function esc(str) {
+        return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+
+      // NACE Autocomplete logic for New Lead modal
+      window.searchNaceForAdd = async function() {
+        const query = document.getElementById('new_nace').value.trim();
+        const list = document.getElementById('add_nace_suggestions');
+        if (query.length < 2) {
+          list.style.display = 'none';
+          return;
+        }
+        try {
+          const { data, error } = await dbClient
+            .from('nace_codes')
+            .select('*')
+            .or(`nace_code.ilike.%${query}%,description.ilike.%${query}%`)
+            .limit(5);
+
+          if (error) throw error;
+
+          if (data && data.length > 0) {
+            list.innerHTML = '';
+            list.style.display = 'block';
+            data.forEach(item => {
+              const li = document.createElement('li');
+              li.innerHTML = `<strong>${esc(item.nace_code)}</strong> - ${esc(item.description)}`;
+              li.onclick = () => selectNaceForAdd(item.nace_code, item.danger_class);
+              list.appendChild(li);
+            });
+          } else {
+            list.style.display = 'none';
+          }
+        } catch (err) {
+          console.error('Nace search error:', err);
+        }
+      }
+
+      window.selectNaceForAdd = function(code, dangerClass) {
+        document.getElementById('new_nace').value = code;
+        document.getElementById('new_danger_class').value = dangerClass || '';
+        document.getElementById('add_nace_suggestions').style.display = 'none';
+      }
+
+      // Close suggestions on outside click
+      document.addEventListener('click', function(e) {
+        const addSug = document.getElementById('add_nace_suggestions');
+        if (addSug && e.target.id !== 'new_nace') {
+          addSug.style.display = 'none';
+        }
+      });
+
+      function formatDate(iso) {
+        if (!iso) return '-';
+        return new Date(iso).toLocaleDateString('tr-TR', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+
+      // --- IMPORT & EXPORT METOTLARI ---
+
+      window.openImportModal = function() {
+        document.getElementById('import_lead_modal').classList.add('open');
+      }
+
+      window.closeImportModal = function() {
+        document.getElementById('import_lead_modal').classList.remove('open');
+        document.getElementById('import_csv_file').value = '';
+        const status = document.getElementById('import_progress_status');
+        status.style.display = 'none';
+        status.innerText = '';
+      }
+
+      // Örnek CSV Dosyası İndir (UTF-8 BOM ve Noktalı Virgül ";" ayracı ile)
+      window.downloadSampleCSV = function() {
+        const headers = ["Firma Adı", "Şehir", "İlçe", "Sektör", "Nace Kodu", "Tehlike Sınıfı", "Çalışan Sayısı", "Aşama", "Durum", "Kaynak", "Notlar"];
+        const sampleRow = ["Örnek Metal Sanayi A.Ş.", "Eskişehir", "Odunpazarı", "Metal İşleme", "25.50.01", "Çok Tehlikeli", "45", "Yeni Kayıt", "Fırsat", "Telefon", "İlk görüşme yapıldı ilgi yüksek."];
+        
+        const csvContent = "\uFEFF" + [headers.join(";"), sampleRow.join(";")].join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", "crm_lead_sablon.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // CSV Metin Ayrıştırıcı (Tırnak ve Ayrıcı Duyarlı)
+      function parseCSVText(text) {
+        const lines = [];
+        let row = [""];
+        let inQuotes = false;
+        
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          const next = text[i+1];
+          
+          if (char === '"') {
+            if (inQuotes && next === '"') {
+              row[row.length - 1] += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if ((char === ',' || char === ';') && !inQuotes) {
+            row.push("");
+          } else if ((char === '\r' || char === '\n') && !inQuotes) {
+            if (char === '\r' && next === '\n') {
+              i++;
+            }
+            lines.push(row);
+            row = [""];
+          } else {
+            row[row.length - 1] += char;
+          }
+        }
+        if (row.length > 1 || row[0] !== "") {
+          lines.push(row);
+        }
+        return lines;
+      }
+
+      // CSV Dosyasını Yükleme İşlemi
+      window.processCSVImport = async function() {
+        const fileInput = document.getElementById('import_csv_file');
+        const file = fileInput.files && fileInput.files[0];
+        const statusEl = document.getElementById('import_progress_status');
+
+        if (!file) {
+          showToast('Lütfen önce bir CSV dosyası seçin.', 'error');
+          return;
+        }
+
+        statusEl.style.display = 'block';
+        statusEl.innerText = 'Dosya okunuyor...';
+        statusEl.style.color = 'var(--uc-text-muted)';
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+          try {
+            const text = e.target.result;
+            const parsedLines = parseCSVText(text);
+
+            if (parsedLines.length < 2) {
+              showToast('CSV dosyasında veri satırı bulunamadı.', 'error');
+              statusEl.innerText = 'Aktarım iptal edildi.';
+              statusEl.style.color = '#b91c1c';
+              return;
+            }
+
+            const rowsToInsert = [];
+            statusEl.innerText = 'Satırlar ayrıştırılıyor...';
+
+            for (let i = 1; i < parsedLines.length; i++) {
+              const row = parsedLines[i];
+              if (row.length < 1 || !row[0] || !row[0].trim()) continue;
+
+              const companyName = row[0] ? row[0].trim() : '';
+              if (!companyName) continue;
+
+              const city = row[1] ? row[1].trim() : null;
+              const district = row[2] ? row[2].trim() : null;
+              const sector = row[3] ? row[3].trim() : null;
+              const naceCode = row[4] ? row[4].trim() : null;
+              const dangerClass = row[5] ? row[5].trim() : null;
+              const employeeCountRaw = row[6] ? row[6].trim() : '';
+              const employeeCount = employeeCountRaw ? parseInt(employeeCountRaw) : null;
+              
+              const stageRaw = row[7] ? row[7].trim() : 'Yeni Kayıt';
+              const stageDb = stageToDbValue(normalizeStage(stageRaw));
+
+              const statusRaw = row[8] ? row[8].trim() : 'Fırsat';
+              const leadStatus = LEAD_STATUSES.includes(statusRaw) ? statusRaw : 'Fırsat';
+
+              const leadSource = row[9] ? row[9].trim() : 'Telefon';
+              const notes = row[10] ? row[10].trim() : null;
+
+              rowsToInsert.push({
+                tenant_id: CURRENT_AUTH.tenant_id,
+                company_name: companyName,
+                city: city || null,
+                district: district || null,
+                sector: sector || null,
+                nace_code: naceCode || null,
+                danger_class: dangerClass || null,
+                employee_count: isNaN(employeeCount) ? null : employeeCount,
+                stage: stageDb,
+                lead_status: leadStatus,
+                lead_source: leadSource,
+                notes: notes || null,
+                created_by: CURRENT_AUTH.email
+              });
+            }
+
+            if (rowsToInsert.length === 0) {
+              showToast('Geçerli veri satırı bulunamadı.', 'error');
+              statusEl.innerText = 'Aktarım iptal edildi.';
+              return;
+            }
+
+            statusEl.innerText = `${rowsToInsert.length} kayıt veritabanına yükleniyor...`;
+
+            const { data, error } = await dbClient
+              .from('crm_leads')
+              .insert(rowsToInsert)
+              .select();
+
+            if (error) throw error;
+
+            showToast(`${rowsToInsert.length} potansiyel firma başarıyla içeri aktarıldı.`, 'success');
+            closeImportModal();
+            await loadLeads();
+
+          } catch (err) {
+            console.error('Import hatası:', err);
+            showToast('Aktarım sırasında bir hata oluştu: ' + err.message, 'error');
+            statusEl.innerText = 'Hata oluştu.';
+            statusEl.style.color = '#b91c1c';
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      // Verileri Dışa Aktar (CSV)
+      window.exportLeadsToCSV = function() {
+        const leads = getFilteredLeads();
+        if (leads.length === 0) {
+          showToast('Dışa aktarılacak potansiyel firma bulunmuyor.', 'error');
+          return;
+        }
+
+        const headers = ["Firma Adı", "Şehir", "İlçe", "Sektör", "Nace Kodu", "Tehlike Sınıfı", "Çalışan Sayısı", "Aşama", "Durum", "Kaynak", "Notlar", "Oluşturulma Tarihi"];
+        
+        const rows = leads.map(l => {
+          const statusLabel = resolveLeadStatus(l);
+          return [
+            `"${(l.company_name || '').replace(/"/g, '""')}"`,
+            `"${(l.city || '').replace(/"/g, '""')}"`,
+            `"${(l.district || '').replace(/"/g, '""')}"`,
+            `"${(l.sector || '').replace(/"/g, '""')}"`,
+            `"${(l.nace_code || '').replace(/"/g, '""')}"`,
+            `"${(l.danger_class || '').replace(/"/g, '""')}"`,
+            l.employee_count || '',
+            `"${(l.stage || '').replace(/"/g, '""')}"`,
+            `"${statusLabel}"`,
+            `"${(l.lead_source || '').replace(/"/g, '""')}"`,
+            `"${(l.notes || '').replace(/"/g, '""')}"`,
+            l.created_at || ''
+          ];
+        });
+
+        // Excel uyumu için UTF-8 BOM ve noktalı virgül ayracı kullanıldı
+        const csvContent = "\uFEFF" + [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `crm_lead_ihracat_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        showToast(`${leads.length} kayıt başarıyla dışa aktarıldı.`, 'success');
+      }
+    </script>
+  </body>
+</html>

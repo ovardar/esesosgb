@@ -1,1180 +1,2291 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OSGB SaaS - SaaS Yönetimi</title>
+    <!-- Google Fonts - Manrope -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root { --bg-main:#f4f6f9; --bg-card:#ffffff; --text-main:#1e293b; --text-muted:#64748b; --primary:#2563eb; --border-color:#e2e8f0; --table-header:#f8fafc; --nav-inactive-bg:#e2e8f0; --nav-inactive-text:#475569; }
-        body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:var(--bg-main); color:var(--text-main); padding:30px; display:none; }
-        .card { background:var(--bg-card); padding:25px; border-radius:12px; max-width:1260px; margin:0 auto; box-shadow:0 4px 15px rgba(0,0,0,0.05); border:1px solid var(--border-color); }
-        .global-header { border-bottom:1px solid var(--border-color); padding-bottom:15px; margin-bottom:20px; }
-        .top-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; gap:12px; }
-        .logo-area { font-size:18px; font-weight:800; color:var(--text-main); letter-spacing:.5px; display:flex; align-items:center; gap:8px; }
-        .logo-badge { background:var(--primary); color:white; padding:4px 8px; border-radius:6px; font-size:12px; font-weight:bold; }
-        .controls-group { display:flex; align-items:center; gap:16px; }
-        .user-info { font-size:13px; color:var(--text-muted); font-weight:600; }
-        .logout-btn { background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:bold; }
-        .nav-container { display:flex; gap:8px; justify-content:center; background:var(--table-header); padding:6px; border-radius:10px; border:1px solid var(--border-color); flex-wrap:wrap; }
-        .nav-btn { background:var(--nav-inactive-bg); color:var(--nav-inactive-text); padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:13px; transition:all .2s ease; }
-        .nav-btn.active-page { background:var(--primary); color:white!important; box-shadow:0 2px 6px rgba(0,0,0,.1); }
-        h2 { margin:0 0 6px; }
-        .page-desc { color:var(--text-muted); margin:0 0 20px; font-size:13px; }
-        .grid { display:grid; grid-template-columns:.85fr 1.15fr; gap:18px; align-items:start; }
-        .panel { border:1px solid var(--border-color); background:var(--bg-card); border-radius:12px; padding:18px; }
-        .panel h3 { margin:0 0 12px; font-size:16px; border-bottom:2px solid var(--primary); padding-bottom:8px; }
-        label { display:block; font-size:12px; font-weight:800; color:var(--text-muted); margin:12px 0 6px; }
-        input, select { width:100%; box-sizing:border-box; border:1px solid var(--border-color); border-radius:8px; padding:10px; background:white; color:#111827; }
-        .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-        .btn { border:none; border-radius:8px; padding:10px 13px; font-weight:800; cursor:pointer; font-size:13px; }
-        .btn-primary { background:var(--primary); color:white; }
-        .btn-secondary { background:#e2e8f0; color:#334155; }
-        .btn-danger { background:#fee2e2; color:#b91c1c; }
-        .btn-green { background:#dcfce7; color:#15803d; }
-        .btn-blue { background:#dbeafe; color:#1d4ed8; }
-        .btn-small { padding:7px 9px; font-size:11px; margin:2px 0; }
-        .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
-        table { width:100%; border-collapse:collapse; font-size:12px; margin-top:12px; }
-        th, td { border-bottom:1px solid var(--border-color); padding:9px; text-align:left; vertical-align:top; }
-        th { background:var(--table-header); color:var(--text-muted); font-weight:800; }
-        .badge { display:inline-block; border-radius:999px; padding:3px 7px; font-size:10px; font-weight:900; white-space:nowrap; }
-        .badge-green { background:#dcfce7; color:#15803d; }
-        .badge-red { background:#fee2e2; color:#b91c1c; }
-        .badge-blue { background:#dbeafe; color:#1d4ed8; }
-        .badge-gray { background:#e2e8f0; color:#475569; }
-        .badge-orange { background:#ffedd5; color:#c2410c; }
-        .muted { color:var(--text-muted); }
-        .status { margin-top:12px; font-size:12px; font-weight:800; }
-        .status.ok { color:#15803d; } .status.err { color:#b91c1c; }
-        .link-box { background:#f8fafc; border:1px dashed var(--border-color); border-radius:8px; padding:9px; word-break:break-all; font-size:12px; color:#334155; }
-        .edit-panel { margin-top:18px; border:2px solid #dbeafe; background:#f8fbff; }
-        .hidden { display:none; }
-        .logo-upload-box { border:1px dashed var(--border-color); border-radius:10px; padding:12px; background:#f8fafc; }
-        .logo-upload-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-        .logo-preview { width:64px; height:64px; border:1px solid var(--border-color); border-radius:12px; background:white; object-fit:contain; padding:6px; box-sizing:border-box; }
-        .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
-        .help-text { color:var(--text-muted); font-size:11px; margin-top:6px; line-height:1.35; }
-        input[type="file"] { padding:8px; background:white; }
-
-        @media(max-width:900px){ body{padding:12px}.top-row,.controls-group{flex-direction:column;align-items:stretch}.grid,.row{grid-template-columns:1fr}.card{padding:15px} }
-    
-
-        /* ================================
-           v24 UI POLISH - ortak arayuz duzeltmeleri
-           ================================ */
-        :root {
-            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.10);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
-            --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        .card {
-            width: min(100%, 1240px) !important;
-            max-width: 1240px !important;
-            border-radius: var(--radius-lg) !important;
-            box-shadow: var(--shadow-md) !important;
-        }
-
-        .global-header {
-            background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        .top-row {
-            gap: 14px;
-            align-items: center !important;
-        }
-
-        .logo-area {
-            min-width: 0;
-            font-size: 17px !important;
-            letter-spacing: 0 !important;
-            gap: 10px !important;
-        }
-
-        .logo-area span[id^="lbl_"] {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .tenant-logo-img {
-            width: 36px !important;
-            height: 36px !important;
-            padding: 4px !important;
-            border-radius: 10px !important;
-            box-shadow: var(--shadow-sm);
-            flex: 0 0 auto;
-        }
-
-        .logo-badge {
-            border-radius: 999px !important;
-            padding: 4px 9px !important;
-            font-size: 11px !important;
-            letter-spacing: .02em;
-            flex: 0 0 auto;
-        }
-
-        .controls-group {
-            gap: 10px !important;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .theme-selector-container {
-            border-radius: 999px !important;
-            padding: 6px 10px !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .theme-btn {
-            width: 18px !important;
-            height: 18px !important;
-            transition: transform .15s ease, box-shadow .15s ease;
-        }
-        .theme-btn:hover { transform: translateY(-1px) scale(1.08); box-shadow: 0 3px 8px rgba(15,23,42,.18); }
-
-        .user-info {
-            background: var(--table-header);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 7px 11px;
-            max-width: 280px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .logout-btn,
-        button,
-        .btn,
-        input[type="submit"] {
-            border-radius: 10px !important;
-            font-weight: 750 !important;
-            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-        }
-        button:hover,
-        .logout-btn:hover,
-        .btn:hover,
-        input[type="submit"]:hover {
-            transform: translateY(-1px);
-            filter: brightness(.98);
-            box-shadow: var(--shadow-sm);
-        }
-        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
-
-        .nav-container {
-            justify-content: flex-start !important;
-            gap: 7px !important;
-            padding: 8px !important;
-            border-radius: 14px !important;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .nav-btn {
-            white-space: nowrap;
-            border-radius: 10px !important;
-            padding: 9px 13px !important;
-            font-size: 12.5px !important;
-            box-shadow: none;
-        }
-        .nav-btn.active-page { box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important; }
-
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        h1 { font-size: clamp(24px, 3vw, 34px); }
-        h2 { font-size: clamp(20px, 2.4vw, 28px); }
-        h3 { font-size: clamp(16px, 1.8vw, 20px); }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px !important;
-            color: var(--text-main) !important;
-            font-size: 13px !important;
-            letter-spacing: .04em !important;
-        }
-
-        .panel,
-        .form-card,
-        .table-card,
-        .sub-card,
-        .mini-card,
-        .info-card {
-            border-radius: var(--radius-md) !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .metric-box {
-            border-radius: 14px !important;
-            box-shadow: 0 10px 24px rgba(15,23,42,.10) !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .metric-box:after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,.20), transparent 45%);
-            pointer-events: none;
-        }
-        .metric-title, .metric-sub, .metric-value { position: relative; z-index: 1; }
-
-        input,
-        select,
-        textarea {
-            border: 1px solid var(--border-color) !important;
-            border-radius: 10px !important;
-            background: var(--bg-card);
-            color: var(--text-main);
-            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--primary) !important;
-            box-shadow: var(--focus-ring) !important;
-        }
-        label { font-weight: 700; color: var(--text-main); }
-
-        table {
-            border-collapse: separate !important;
-            border-spacing: 0 !important;
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        th {
-            font-size: 11px !important;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            white-space: nowrap;
-        }
-        td { line-height: 1.45; }
-        tbody tr { transition: background .12s ease; }
-        tbody tr:hover { background: rgba(37, 99, 235, 0.035); }
-        .empty-state {
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            background: var(--table-header);
-        }
-
-        .badge {
-            border-radius: 999px !important;
-            letter-spacing: .02em;
-            padding: 4px 8px !important;
-        }
-
-        .small-link { text-underline-offset: 3px; }
-
-        .operational-banner {
-            box-shadow: var(--shadow-sm);
-            border: 0 !important;
-        }
-
-        @media (max-width: 900px) {
-            body { padding: 12px !important; }
-            .card { padding: 16px !important; border-radius: 16px !important; }
-            .top-row { align-items: stretch !important; }
-            .controls-group { justify-content: flex-start; }
-            .user-info { max-width: 100%; }
-            .nav-container { flex-wrap: nowrap !important; justify-content: flex-start !important; }
-            .nav-btn { flex: 0 0 auto; }
-            table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
-            th, td { padding: 9px 10px !important; }
-        }
-
-        @media (max-width: 520px) {
-            .logo-area { font-size: 15px !important; }
-            .tenant-logo-img { width: 32px !important; height: 32px !important; }
-            .theme-selector-container { width: 100%; justify-content: center; }
-            .logout-btn { width: 100%; }
-        }
-
-    
-
-        /* ================================
-           v25 PRODUCT DESIGN SYSTEM - derin arayuz revizyonu
-           ================================ */
-        :root {
-            --brand-50: #eff6ff;
-            --brand-100: #dbeafe;
-            --brand-500: #2563eb;
-            --brand-600: #1d4ed8;
-            --brand-700: #1e40af;
-            --ink-900: #0f172a;
-            --ink-700: #334155;
-            --ink-500: #64748b;
-            --surface-0: #ffffff;
-            --surface-1: #f8fafc;
-            --surface-2: #eef2f7;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --info: #0284c7;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(37,99,235,.15), transparent 32rem),
-                radial-gradient(circle at top right, rgba(14,165,233,.12), transparent 28rem),
-                linear-gradient(180deg, #f8fafc 0%, #edf2f7 52%, #e9eef6 100%) !important;
-            color: var(--ink-900) !important;
-        }
-
-        .card {
-            padding: 0 !important;
-            overflow: hidden;
-            background: rgba(255,255,255,.92) !important;
-            backdrop-filter: blur(10px);
-        }
-
-        .global-header {
-            padding: 18px 22px 14px !important;
-            margin-bottom: 0 !important;
-            background: linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,64,175,.92)) !important;
-            color: white;
-            border-bottom: 0 !important;
-        }
-        .global-header .logo-area,
-        .global-header .user-info,
-        .global-header .theme-selector-container span { color: white !important; }
-        .global-header .theme-selector-container,
-        .global-header .user-info {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-container {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.16) !important;
-            margin-top: 12px;
-        }
-        .global-header .nav-btn {
-            background: rgba(255,255,255,.10) !important;
-            color: rgba(255,255,255,.86) !important;
-            border: 1px solid rgba(255,255,255,.10);
-        }
-        .global-header .nav-btn:hover {
-            background: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-btn.active-page {
-            background: white !important;
-            color: var(--brand-700) !important;
-            box-shadow: 0 8px 18px rgba(15,23,42,.22) !important;
-        }
-        .global-header .tenant-logo-img {
-            width: 42px !important;
-            height: 42px !important;
-            background: white !important;
-            border-color: rgba(255,255,255,.35) !important;
-        }
-        .global-header .logo-badge {
-            background: rgba(255,255,255,.18) !important;
-            border: 1px solid rgba(255,255,255,.18);
-        }
-        .logout-btn { background: rgba(239,68,68,.92) !important; }
-
-        .card > h1,
-        .card > h2,
-        .card > .page-desc,
-        .card > .section-title,
-        .card > .dashboard-grid,
-        .card > .kpi-grid,
-        .card > .operational-banner,
-        .card > .content-grid,
-        .card > .grid,
-        .card > .panel,
-        .card > form,
-        .card > table,
-        .card > div:not(.global-header) {
-            margin-left: 22px;
-            margin-right: 22px;
-        }
-        .card > h1,
-        .card > h2 {
-            margin-top: 22px !important;
-            margin-bottom: 4px !important;
-            font-size: clamp(22px, 2.6vw, 31px) !important;
-            letter-spacing: -0.035em;
-            color: var(--ink-900);
-        }
-        .page-desc {
-            max-width: 780px;
-            color: var(--ink-500) !important;
-            font-size: 14px !important;
-            margin-bottom: 20px !important;
-        }
-
-        .section-title {
-            margin-top: 24px !important;
-            margin-bottom: 11px !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--ink-700) !important;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(226,232,240,.9);
-            padding: 7px 11px;
-            border-radius: 999px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .panel {
-            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)) !important;
-            border: 1px solid rgba(203,213,225,.85) !important;
-            box-shadow: 0 12px 30px rgba(15,23,42,.07) !important;
-            border-radius: 18px !important;
-        }
-        .panel h3 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            border-bottom: 1px solid rgba(226,232,240,.95) !important;
-            padding-bottom: 12px !important;
-            margin-bottom: 14px !important;
-            color: var(--ink-900);
-            letter-spacing: -0.01em;
-        }
-        .panel h3::after {
-            content: "";
-            flex: 1;
-            height: 3px;
-            max-width: 56px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: .7;
-        }
-
-        .dashboard-grid,
-        .kpi-grid {
-            gap: 16px !important;
-        }
-        .metric-box {
-            position: relative;
-            overflow: hidden;
-            min-height: 104px !important;
-            padding: 18px 19px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 18px 38px rgba(15,23,42,.13) !important;
-        }
-        .metric-box::before {
-            content: "";
-            position: absolute;
-            inset: -40% -30% auto auto;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.17);
-        }
-        .metric-title { font-size: 12.5px !important; text-transform: uppercase; letter-spacing: .045em; }
-        .metric-value { font-size: 34px !important; letter-spacing: -0.045em; }
-        .metric-sub { font-size: 12px !important; }
-        .metric-box.clickable:hover {
-            transform: translateY(-3px);
-            filter: saturate(1.04);
-        }
-
-        .content-grid {
-            margin-bottom: 24px;
-            align-items: start;
-        }
-        .operational-banner {
-            min-height: 86px;
-            padding: 20px 22px !important;
-            border-radius: 20px !important;
-        }
-        .op-text h4 { font-size: 18px !important; letter-spacing: -0.015em; }
-        .op-badge { border-radius: 16px !important; }
-
-        table {
-            background: white;
-            box-shadow: inset 0 0 0 1px rgba(226,232,240,.75);
-        }
-        th {
-            background: #f1f5f9 !important;
-            color: #475569 !important;
-        }
-        td {
-            background-clip: padding-box;
-        }
-        tbody tr:nth-child(even) td { background: rgba(248,250,252,.65); }
-
-        .btn-primary,
-        button.btn-primary {
-            background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-blue,
-        button.btn-blue {
-            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-secondary,
-        button.btn-secondary {
-            background: #f1f5f9 !important;
-            color: #334155 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        .btn-danger,
-        button.btn-danger {
-            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .status.ok {
-            background: #ecfdf5 !important;
-            color: #047857 !important;
-            border: 1px solid #a7f3d0 !important;
-        }
-        .status.err {
-            background: #fef2f2 !important;
-            color: #b91c1c !important;
-            border: 1px solid #fecaca !important;
-        }
-
-        /* SaaS Yonetimi urun paneli revizyonu */
-        .grid {
-            grid-template-columns: 420px minmax(0, 1fr) !important;
-            gap: 22px !important;
-            align-items: start !important;
-            margin-bottom: 24px;
-        }
-        .grid > div:first-child {
-            position: sticky;
-            top: 18px;
-            align-self: start;
-        }
-        .edit-panel {
-            border: 1px solid rgba(37,99,235,.22) !important;
-            background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
-        }
-        .link-box {
-            border-radius: 12px !important;
-            border: 1px solid #bfdbfe !important;
-            background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
-            color: #1e40af !important;
-            font-weight: 750;
-        }
-        .logo-upload-box {
-            border: 1px dashed #93c5fd !important;
-            background: #f8fbff !important;
-            border-radius: 16px !important;
-        }
-        .logo-preview {
-            width: 56px !important;
-            height: 56px !important;
-            border-radius: 14px !important;
-            box-shadow: var(--shadow-sm);
-        }
-        .actions {
-            gap: 9px !important;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .actions + .button-help,
-        .button-help {
-            margin-top: 10px;
-            display: grid;
-            gap: 7px;
-            color: var(--ink-500);
-            font-size: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 11px 12px;
-        }
-        .button-help strong { color: var(--ink-700); }
-
-        @media (max-width: 1040px) {
-            .grid { grid-template-columns: 1fr !important; }
-            .grid > div:first-child { position: static; }
-        }
-        @media (max-width: 900px) {
-            .card > h1,
-            .card > h2,
-            .card > .page-desc,
-            .card > .section-title,
-            .card > .dashboard-grid,
-            .card > .kpi-grid,
-            .card > .operational-banner,
-            .card > .content-grid,
-            .card > .grid,
-            .card > .panel,
-            .card > form,
-            .card > table,
-            .card > div:not(.global-header) {
-                margin-left: 14px !important;
-                margin-right: 14px !important;
-            }
-            .global-header { padding: 15px !important; }
-            .metric-box { min-height: 92px !important; }
-        }
-
-    
-
-        /* v26.2 hotfix: keep v26 visual system, add branding/table/layout fixes */
-        .logo-area { font-weight: 500 !important; letter-spacing: .01em !important; font-size: 18px !important; }
-        .logo-area #lbl_osgb_title { font-weight: 500 !important; }
-        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
-        table, thead, tbody, tr, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; }
-        table { font-size: 13px !important; border-collapse: separate !important; border-spacing: 0 !important; }
-        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
-        tbody td { padding: 9px 11px !important; }
-        .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
-        .page-desc { max-width: none !important; }
-
-    
-        /* v26.2 saas single column layout */
-        .grid { display: block !important; margin-bottom: 24px !important; }
-        .grid > div:first-child { position: static !important; display: block !important; }
-        .tenant-create-panel { margin-bottom: 18px !important; }
-        @media(min-width: 920px){
-            .tenant-create-panel { display: grid !important; grid-template-columns: minmax(0,1.1fr) minmax(0,.9fr); gap: 13px 22px; align-items: start; }
-            .tenant-create-panel > h3, .tenant-create-panel > .link-box, .tenant-create-panel > .actions, .tenant-create-panel > .status { grid-column: 1 / -1; }
-        }
-        .action-stack { display:flex; flex-direction:column; gap:6px; min-width: 118px; }
-        .action-stack .btn { width:100%; margin:0 !important; white-space:nowrap; }
-        .super-admin-lock-note { margin: 8px 0 10px; padding: 10px 12px; border-radius: 12px; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; font-size: 13px; font-weight: 700; }
-        .hidden { display:none !important; }
-
-
-        /* step saas-admin-only polish: keep current working base, fix SaaS page form and menu */
-        #menu_saas, #menu_staff, #menu_risk, #menu_medical { display: inline-flex !important; }
-        .saas-create-panel { display: block !important; padding: 20px !important; }
-        .saas-create-panel > h3 { margin-bottom: 18px !important; }
-        .saas-create-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, .8fr); gap: 18px; align-items: stretch; }
-        .saas-form-section { border: 1px solid rgba(203,213,225,.75); border-radius: 16px; padding: 16px; background: rgba(255,255,255,.72); box-shadow: var(--shadow-sm); }
-        .saas-section-kicker { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; padding: 5px 10px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 12px; font-weight: 850; letter-spacing: .02em; }
-        .saas-link-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: end; margin-top: 16px; }
-        .saas-create-actions { justify-content: flex-end; margin-top: 0 !important; white-space: nowrap; }
-        .saas-admin-note { margin-top: 14px; padding: 12px 13px; border: 1px solid #bfdbfe; border-radius: 14px; background: #eff6ff; color: #1e40af; font-size: 13px; line-height: 1.45; }
-        .saas-create-panel .logo-upload-box { min-height: 118px; }
-        .saas-create-panel .logo-upload-row { align-items: center; }
-        .saas-create-panel .link-box { min-height: 43px; display: flex; align-items: center; }
-        @media(max-width: 900px){ .saas-create-grid, .saas-link-row { grid-template-columns: 1fr; } .saas-create-actions { justify-content: stretch; } .saas-create-actions .btn { width: 100%; } }
-
-
-        .admin-lock-disabled { opacity: .62; cursor: not-allowed; }
-        #edit_super_admin_lock_note.hidden { display:none !important; }
-    </style>
-</head>
-<body>
-<div class="card">
-    <div class="global-header">
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean-saas-admin.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>  <body class="theme-ultra-clean">
+    <div class="card">
+      <div class="global-header">
         <div class="top-row">
-            <div class="logo-area"><span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS Yönetimi</span></div>
-            <div class="controls-group">
-                <div class="user-info">👤 <span id="current_user_email">...</span></div>
-                <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
-            </div>
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS Yönetimi</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
         </div>
         <div class="nav-container">
-            <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
-            <a id="menu_saas" href="saas-admin.html" class="nav-btn active-page">🧩 SaaS Yönetimi</a>
-            <a id="menu_staff" href="staff.html" class="nav-btn">🔑 Personel Yönetimi</a>
-            <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-            <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
-            <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
-            <a id="menu_risk" href="risk.html" class="nav-btn">🦺 Uzman Risk Motoru</a>
-            <a id="menu_medical" href="medical.html" class="nav-btn">🩺 Hekim Sağlık Kartı</a>
+          <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+          <a id="menu_saas" href="saas-admin.html" class="nav-btn active-page">🧩 SaaS Yönetimi</a>
+          <a id="menu_staff" href="staff.html" class="nav-btn">🔑 Personel Yönetimi</a>
+          <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+          <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+          <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+          <a id="menu_risk" href="risk.html" class="nav-btn">🦺 Uzman Risk Motoru</a>
+          <a id="menu_medical" href="medical.html" class="nav-btn">🩺 Hekim Sağlık Kartı</a>
         </div>
-    </div>
+      </div>
 
-    <h2>🧩 Müşteri OSGB Yönetimi</h2>
-    <p class="page-desc">Satış yaptığın/kiraladığın OSGB müşterilerini oluştur, düzenle, adminini yönet, davet gönder ve giriş linkini üret.</p>
+      <div class="saas-page-shell">
+        <section class="saas-hero">
+          <div class="saas-hero-copy">
+            <span class="saas-context-badge">Eses Yönetim Alanı</span>
+            <h2>🧩 SaaS Müşteri Yönetimi</h2>
+            <p>
+              Eses Yazılım ile OSGB müşterileri arasındaki satış, tenant açılışı, admin daveti ve abonelik sağlığı
+              takibini tek merkezden yönetin. Bu ekran OSGB operasyonu için değil, platform backoffice iş akışı içindir.
+            </p>
+            <div class="saas-hero-actions">
+              <button class="btn btn-primary" onclick="document.getElementById('tenant_name')?.focus()">Yeni OSGB Adayı</button>
+              <button class="btn btn-secondary" onclick="loadTenants()">Müşteri Listesini Yenile</button>
+            </div>
+          </div>
+          <div class="saas-hero-meta">
+            <div class="saas-meta-card">
+              <strong>Ana Kullanım Amacı</strong>
+              <span>Tenant açılışı, admin yönetimi, davet akışı ve müşteri takibini platform bakışıyla toplar.</span>
+            </div>
+            <div class="saas-meta-card">
+              <strong>Bağlam Ayrımı</strong>
+              <span>Buradaki müşteri, hizmet verilen firma değil; Eses'in SaaS abonesi olan OSGB'dir.</span>
+            </div>
+          </div>
+        </section>
 
-    <div class="grid">
+        <section class="saas-view-switch" aria-label="SaaS çalışma görünümü">
+          <button id="pane_btn_overview" class="saas-view-btn" onclick="setSaasPane('overview')">Platform Özeti</button>
+          <button id="pane_btn_crm" class="saas-view-btn" onclick="setSaasPane('crm')">Satış Pipeline</button>
+          <button id="pane_btn_tenants" class="saas-view-btn" onclick="setSaasPane('tenants')">Müşteri & Kurulum</button>
+          <button id="pane_btn_finance" class="saas-view-btn" onclick="setSaasPane('finance')">Abonelik & Finans</button>
+        </section>nance')">Finans ve Paket</button>
+        </section>
+
+        <section id="pane_overview" class="saas-kpi-grid workspace-pane">
+          <div class="saas-kpi-card">
+            <div class="saas-kpi-label">Toplam Müşteri</div>
+            <div class="saas-kpi-value" id="kpi_total_tenants">0</div>
+            <div class="saas-kpi-foot">Platforma kayıtlı toplam OSGB müşteri sayısı.</div>
+          </div>
+          <div class="saas-kpi-card">
+            <div class="saas-kpi-label">Aktif Müşteri</div>
+            <div class="saas-kpi-value" id="kpi_active_tenants">0</div>
+            <div class="saas-kpi-foot">Giriş yapabilen ve aktif tutulan tenant sayısı.</div>
+          </div>
+          <div class="saas-kpi-card">
+            <div class="saas-kpi-label">Davet Bekleyenler</div>
+            <div class="saas-kpi-value" id="kpi_pending_invites">0</div>
+            <div class="saas-kpi-foot">Admin daveti gönderilmemiş veya tamamlanmamış kayıtlar.</div>
+          </div>
+          <div class="saas-kpi-card">
+            <div class="saas-kpi-label">İşlem Gerekenler</div>
+            <div class="saas-kpi-value" id="kpi_attention_tenants">0</div>
+            <div class="saas-kpi-foot">Pasif tenant, admin kaydı eksik veya kapalı giriş nedeniyle takip gerektirenler.</div>
+          </div>
+        </section>
+
+        <section id="pane_crm" class="panel saas-pipeline-section workspace-pane">
+          <div class="saas-toolbar">
+            <div>
+              <h3 style="margin:0;">🧭 Satış Pipeline</h3>
+              <div class="muted" id="crm_pipeline_summary" style="margin-top:6px;">Yükleniyor...</div>
+            </div>
+            <div class="saas-toolbar-actions">
+              <button class="btn btn-secondary btn-small" onclick="loadEsesCrmPipeline()">Pipeline'ı Yenile</button>
+            </div>
+          </div>
+
+          <div class="saas-kpi-grid" style="margin-bottom:20px;">
+            <div class="saas-kpi-card">
+              <div class="saas-kpi-label">Toplam Müşteri</div>
+              <div class="saas-kpi-value" id="crm_kpi_total_tenants">0</div>
+              <div class="saas-kpi-foot">Platforma kayıtlı toplam OSGB müşteri sayısı.</div>
+            </div>
+            <div class="saas-kpi-card">
+              <div class="saas-kpi-label">Aktif Müşteri</div>
+              <div class="saas-kpi-value" id="crm_kpi_active_tenants">0</div>
+              <div class="saas-kpi-foot">Giriş yapabilen ve aktif tutulan tenant sayısı.</div>
+            </div>
+            <div class="saas-kpi-card">
+              <div class="saas-kpi-label">Davet Bekleyenler</div>
+              <div class="saas-kpi-value" id="crm_kpi_pending_invites">0</div>
+              <div class="saas-kpi-foot">Admin daveti gönderilmemiş veya tamamlanmamış kayıtlar.</div>
+            </div>
+            <div class="saas-kpi-card">
+              <div class="saas-kpi-label">İşlem Gerekenler</div>
+              <div class="saas-kpi-value" id="crm_kpi_attention_tenants">0</div>
+              <div class="saas-kpi-foot">Pasif tenant, admin kaydı eksik veya kapalı giriş nedeniyle takip gerektirenler.</div>
+            </div>
+          </div>
+
+          <div class="saas-pipeline-form">
+            <div class="form-group wide">
+              <label>Firma</label>
+              <input id="eses_crm_company_name" placeholder="Örn. Delta OSGB" />
+            </div>
+            <div class="form-group">
+              <label>Yetkili</label>
+              <input id="eses_crm_contact_name" placeholder="Ad Soyad" />
+            </div>
+            <div class="form-group">
+              <label>Sahip</label>
+              <input id="eses_crm_owner" placeholder="Satış sorumlusu" />
+            </div>
+            <div class="form-group">
+              <label>Tahmini Değer</label>
+              <input id="eses_crm_value" placeholder="₺120.000/yıl" />
+            </div>
+            <div class="form-group">
+              <label>Aşama</label>
+              <select id="eses_crm_stage"></select>
+            </div>
+            <div class="form-group">
+              <label>Sonraki Adım Tarihi</label>
+              <input id="eses_crm_next_step_date" type="date" />
+            </div>
+            <div class="form-group wide">
+              <label>Sonraki Adım</label>
+              <input id="eses_crm_next_step" placeholder="Örn. Demo randevusu" />
+            </div>
+            <div class="form-group">
+              <label>Kaynak</label>
+              <input id="eses_crm_source" placeholder="Referans / Web / Etkinlik" />
+            </div>
+            <div class="form-group full">
+              <label>Not</label>
+              <textarea id="eses_crm_note" rows="2" placeholder="Kısa not"></textarea>
+            </div>
+            <div class="form-group full" style="display:flex;gap:10px;align-items:center;">
+              <input type="hidden" id="eses_crm_edit_id" />
+              <button class="btn btn-primary btn-small" id="eses_crm_submit_btn" onclick="saveEsesCrmOpportunity()">Fırsat Ekle</button>
+              <button class="btn btn-secondary btn-small" id="eses_crm_cancel_btn" onclick="cancelEsesCrmEdit()" style="display:none;">Vazgeç</button>
+              <span class="saas-pipeline-meta" id="eses_crm_mode_hint">Veri modu hazırlanıyor...</span>
+            </div>
+          </div>
+          <div id="crm_pipeline_board" class="saas-pipeline-board">
+            <div class="saas-empty-state">Satış pipeline yükleniyor...</div>
+          </div>
+          <div class="saas-admin-note">Bu pano, Eses satış süreci içindir. OSGB CRM'in detaylı alanları bu ekrana taşınmaz.</div>
+          <div class="saas-side-card" style="margin-top:6px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+              <h4 style="margin:0;">✅ Kazanılanlar: Tenant Kurulum Adımları</h4>
+              <div class="saas-toolbar-actions">
+                <button class="btn btn-secondary btn-small" id="btn_onboarding_active" onclick="setOnboardingView('active')">Açık</button>
+                <button class="btn btn-secondary btn-small" id="btn_onboarding_closed" onclick="setOnboardingView('closed')">Tamamlanan</button>
+              </div>
+            </div>
+            <div class="muted" id="eses_onboarding_counts" style="margin:8px 0 10px;">Açık: 0 • Tamamlanan: 0</div>
+            <div id="eses_onboarding_list" class="saas-checklist">
+              <div class="saas-empty-state">Henüz tetiklenen kurulum adımı kaydı yok.</div>
+            </div>
+          </div>
+        </section>
+
+      <div id="pane_tenants" class="grid workspace-pane">
         <div>
-            <div class="panel tenant-create-panel saas-create-panel">
-                <h3>➕ Yeni Müşteri OSGB ve İlk Admin Kullanıcısı</h3>
-                <div class="saas-create-grid">
-                    <div class="saas-form-section">
-                        <div class="saas-section-kicker">Müşteri bilgileri</div>
-                        <label>OSGB / Müşteri Adı</label>
-                        <input id="tenant_name" placeholder="Örn. XYZ OSGB">
-                        <div class="row">
-                            <div>
-                                <label>Kısa Kod / Slug</label>
-                                <input id="tenant_slug" placeholder="xyz" oninput="previewLoginLink()">
-                            </div>
-                            <div>
-                                <label>Tema Rengi</label>
-                                <input id="tenant_color" type="color" value="#2563eb">
-                            </div>
-                        </div>
-                        <label>Logo Dosyası <span class="muted">(opsiyonel)</span></label>
-                        <div class="logo-upload-box">
-                            <div class="logo-upload-row">
-                                <img id="tenant_logo_preview" class="logo-preview" alt="Logo önizleme" src="">
-                                <input id="tenant_logo_file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="previewSelectedLogo('tenant_logo_file','tenant_logo_preview')">
-                            </div>
-                            <div class="help-text">PNG, JPG, WebP veya SVG seçebilirsin. Büyük görseller otomatik küçültülüp sıkıştırılır; üst menüde küçük logo olarak gösterilir.</div>
-                        </div>
-                        <input id="tenant_logo" type="hidden">
-                    </div>
-
-                    <div class="saas-form-section">
-                        <div class="saas-section-kicker">İlk admin kullanıcısı</div>
-                        <label>Admin Ad Soyad</label>
-                        <input id="admin_name" placeholder="Örn. Ayşe Yılmaz">
-                        <label>Admin E-posta</label>
-                        <input id="admin_email" type="email" placeholder="admin@firma.com">
-                        <div class="saas-admin-note">Bu kullanıcı müşteri tenant’ının ilk yöneticisi olur. Davet e-postası ayrıca “Davet Gönder” ile gönderilir.</div>
-                    </div>
+          <div class="panel tenant-create-panel saas-create-panel">
+            <h3>➕ Yeni Müşteri OSGB ve İlk Admin Kullanıcısı</h3>
+            <div class="form-grid">
+              <div class="saas-form-section full">
+                <div class="saas-section-kicker">Müşteri bilgileri</div>
+              </div>
+              <div class="form-group full">
+                <label>OSGB / Müşteri Adı</label>
+                <input id="tenant_name" placeholder="Örn. XYZ OSGB" />
+              </div>
+              <div class="form-group">
+                <label>Kısa Kod / Slug</label>
+                <input id="tenant_slug" placeholder="xyz" oninput="previewLoginLink()" />
+              </div>
+              <div class="form-group">
+                <label>Tema Rengi</label>
+                <div class="color-picker-row">
+                  <input id="tenant_color" type="color" value="#2563eb" />
+                  <div class="color-picker-details">
+                    <span id="tenant_color_preview" class="color-swatch" style="background:#2563eb"></span>
+                    <span id="tenant_color_value" class="color-value">#2563EB</span>
+                  </div>
                 </div>
-
-                <div class="saas-link-row">
-                    <div>
-                        <label>Üretilecek Giriş Linki</label>
-                        <div class="link-box" id="login_link_preview">Slug girince link oluşur.</div>
-                    </div>
-                    <div class="actions saas-create-actions">
-                        <button class="btn btn-primary" onclick="createTenantWithAdmin()">Müşteriyi ve Admini Oluştur</button>
-                        <button class="btn btn-secondary" onclick="clearForm()">Temizle</button>
-                    </div>
+              </div>
+              <div class="form-group full">
+                <label>Logo Dosyası <span class="muted">(opsiyonel)</span></label>
+                <div class="logo-upload-box">
+                  <div class="logo-upload-row">
+                    <img id="tenant_logo_preview" class="logo-preview" alt="Logo önizleme" />
+                    <input
+                      id="tenant_logo_file"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onchange="previewSelectedLogo('tenant_logo_file', 'tenant_logo_preview')"
+                    />
+                  </div>
+                  <div class="help-text">
+                    PNG, JPG, WebP veya SVG seçebilirsin. Büyük görseller otomatik küçültülüp sıkıştırılır; üst menüde
+                    küçük logo olarak gösterilir.
+                  </div>
                 </div>
-                <div id="form_status" class="status"></div>
+              </div>
+              <input id="tenant_logo" type="hidden" />
+              <div class="saas-form-section full">
+                <div class="saas-section-kicker">İlk admin kullanıcısı</div>
+              </div>
+              <div class="form-group full">
+                <label>Admin Ad Soyad</label>
+                <input id="admin_name" placeholder="Örn. Ayşe Yılmaz" />
+              </div>
+              <div class="form-group full">
+                <label>Admin E-posta</label>
+                <input id="admin_email" type="email" placeholder="admin@firma.com" />
+              </div>
+              <div class="form-group full">
+                <div class="saas-admin-note">
+                  Bu kullanıcı müşteri tenant’ının ilk yöneticisi olur. Davet e-postası ayrıca “Davet Gönder” ile
+                  gönderilir.
+                </div>
+              </div>
             </div>
 
-            <div id="edit_panel" class="panel edit-panel hidden">
-                <h3>✏️ Müşteri / Admin Düzenle</h3>
-                <input type="hidden" id="edit_tenant_id">
-                <input type="hidden" id="edit_admin_id">
+            <div class="saas-link-row">
+              <div>
+                <label>Üretilecek Giriş Linki</label>
+                <div class="link-box" id="login_link_preview">Slug girince link oluşur.</div>
+              </div>
+              <div class="actions saas-create-actions">
+                <button class="btn btn-primary" onclick="createTenantWithAdmin()">Müşteriyi ve Admini Oluştur</button>
+                <button class="btn btn-secondary" onclick="clearForm()">Temizle</button>
+              </div>
+            </div>
+            <div id="form_status" class="status"></div>
+          </div>
+
+          <div id="edit_panel" class="panel edit-panel hidden">
+            <h3>✏️ Müşteri / Admin Düzenle</h3>
+            <input type="hidden" id="edit_tenant_id" />
+            <input type="hidden" id="edit_admin_id" />
+            <div class="form-grid">
+              <div class="form-group full">
                 <label>Müşteri Adı</label>
-                <input id="edit_tenant_name">
-                <div class="row">
-                    <div>
-                        <label>Slug / Giriş Kodu</label>
-                        <input id="edit_tenant_slug" oninput="previewEditLoginLink()">
-                    </div>
-                    <div>
-                        <label>Tema Rengi</label>
-                        <input id="edit_tenant_color" type="color" value="#2563eb">
-                    </div>
+                <input id="edit_tenant_name" />
+              </div>
+              <div class="form-group">
+                <label>Slug / Giriş Kodu</label>
+                <input id="edit_tenant_slug" oninput="previewEditLoginLink()" />
+              </div>
+              <div class="form-group">
+                <label>Tema Rengi</label>
+                <div class="color-picker-row">
+                  <input id="edit_tenant_color" type="color" value="#2563eb" />
+                  <div class="color-picker-details">
+                    <span id="edit_tenant_color_preview" class="color-swatch" style="background:#2563eb"></span>
+                    <span id="edit_tenant_color_value" class="color-value">#2563EB</span>
+                  </div>
                 </div>
+              </div>
+              <div class="form-group full">
                 <label>Logo Dosyası</label>
                 <div class="logo-upload-box">
-                    <div class="logo-upload-row">
-                        <img id="edit_tenant_logo_preview" class="logo-preview" alt="Logo önizleme" src="">
-                        <input id="edit_tenant_logo_file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onchange="previewSelectedLogo('edit_tenant_logo_file','edit_tenant_logo_preview')">
-                    </div>
-                    <div class="help-text">Yeni logo seçmezsen mevcut logo korunur. Logoyu kaldırmak için aşağıdaki butonu kullan.</div>
-                    <button type="button" class="btn btn-secondary btn-small" onclick="clearEditedLogo()">Logoyu Kaldır</button>
+                  <div class="logo-upload-row">
+                    <img id="edit_tenant_logo_preview" class="logo-preview" alt="Logo önizleme" />
+                    <input
+                      id="edit_tenant_logo_file"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                      onchange="previewSelectedLogo('edit_tenant_logo_file', 'edit_tenant_logo_preview')"
+                    />
+                  </div>
+                  <div class="help-text">
+                    Yeni logo seçmezsen mevcut logo korunur. Logoyu kaldırmak için aşağıdaki butonu kullan.
+                  </div>
+                  <button type="button" class="btn btn-secondary btn-small" onclick="clearEditedLogo()">
+                    Logoyu Kaldır
+                  </button>
                 </div>
-                <input id="edit_tenant_logo" type="hidden">
+              </div>
+              <input id="edit_tenant_logo" type="hidden" />
+              <div class="form-group full">
                 <label>Giriş Linki</label>
                 <div class="link-box" id="edit_login_link_preview">-</div>
-                <div class="row">
-                    <div>
-                        <label>Müşteri Durumu</label>
-                        <select id="edit_tenant_active"><option value="true">Aktif</option><option value="false">Pasif</option></select>
-                    </div>
-                    <div>
-                        <label>Admin Giriş İzni</label>
-                        <select id="edit_admin_can_login"><option value="true">Açık</option><option value="false">Kapalı</option></select>
-                    </div>
-                </div>
+              </div>
+              <div class="form-group">
+                <label>Müşteri Durumu</label>
+                <select id="edit_tenant_active">
+                  <option value="true">Aktif</option>
+                  <option value="false">Pasif</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Admin Giriş İzni</label>
+                <select id="edit_admin_can_login">
+                  <option value="true">Açık</option>
+                  <option value="false">Kapalı</option>
+                </select>
+              </div>
+              <div class="form-group">
                 <label>Admin Ad Soyad</label>
-                <input id="edit_admin_name">
+                <input id="edit_admin_name" />
+              </div>
+              <div class="form-group">
                 <label>Admin E-posta</label>
-                <input id="edit_admin_email" type="email">
+                <input id="edit_admin_email" type="email" />
+              </div>
+              <div class="form-group full">
                 <label>Admin Sistem Rolü</label>
                 <select id="edit_admin_role">
-                    <option value="super_admin">Super Admin</option>
-                    <option value="admin">Admin</option>
-                    <option value="uzman">İSG Uzmanı</option>
-                    <option value="hekim">İşyeri Hekimi</option>
-                    <option value="dsp">DSP</option>
-                    <option value="firma_yetkilisi">Firma Yetkilisi</option>
+                  <option value="super_admin">Super Admin</option>
+                  <option value="admin">Admin</option>
+                  <option value="uzman">İSG Uzmanı</option>
+                  <option value="hekim">İşyeri Hekimi</option>
+                  <option value="dsp">DSP</option>
+                  <option value="firma_yetkilisi">Firma Yetkilisi</option>
                 </select>
-                <div id="edit_super_admin_lock_note" class="super-admin-lock-note hidden">Bu kullanıcı Super Admin olduğu için rol, e-posta ve giriş izni bu panelden değiştirilemez. Logo/tema/firma adı güvenle kaydedilir.</div>
-                <div class="actions">
-                    <button class="btn btn-primary" onclick="saveEditedTenant()">Kaydet</button>
-                    <button class="btn btn-blue" onclick="sendInviteForEditingAdmin()">Davet Gönder</button>
-                    <button class="btn btn-secondary" onclick="resetInviteForEditingAdmin()">Davet Durumunu Sıfırla</button>
-                    <button class="btn btn-secondary" onclick="cancelEdit()">Kapat</button>
-                </div>
-                <div class="button-help">
-                    <div><strong>Kaydet:</strong> müşteri ve admin bilgilerini günceller; mail göndermez.</div>
-                    <div><strong>Davet Gönder:</strong> seçili admin e-postasına şifre oluşturma daveti yollar.</div>
-                    <div><strong>Davet Durumunu Sıfırla:</strong> sadece davet takip bilgisini temizler; Auth kullanıcısını silmez.</div>
-                </div>
-                <div id="edit_status" class="status"></div>
+              </div>
             </div>
+            <div id="edit_super_admin_lock_note" class="super-admin-lock-note hidden">
+              Bu kullanıcı Super Admin olduğu için rol, e-posta ve giriş izni bu panelden değiştirilemez.
+              Logo/tema/firma adı güvenle kaydedilir.
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary" onclick="saveEditedTenant()">Kaydet</button>
+              <button class="btn btn-blue" onclick="sendInviteForEditingAdmin()">Davet Gönder</button>
+              <button class="btn btn-secondary" onclick="resetInviteForEditingAdmin()">Davet Durumunu Sıfırla</button>
+              <button class="btn btn-secondary" onclick="cancelEdit()">Kapat</button>
+            </div>
+            <div class="button-help">
+              <div><strong>Kaydet:</strong> müşteri ve admin bilgilerini günceller; mail göndermez.</div>
+              <div><strong>Davet Gönder:</strong> seçili admin e-postasına şifre oluşturma daveti yollar.</div>
+              <div>
+                <strong>Davet Durumunu Sıfırla:</strong> sadece davet takip bilgisini temizler; Auth kullanıcısını
+                silmez.
+              </div>
+            </div>
+            <div id="edit_status" class="status"></div>
+          </div>
         </div>
 
-        <div class="panel">
-            <h3>📋 Kayıtlı Müşteriler</h3>
-            <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;">
-                <span class="muted" id="tenant_count">Yükleniyor...</span>
+        <div class="saas-list-layout">
+          <div class="panel">
+            <div class="saas-toolbar">
+              <div>
+                <h3 style="margin:0;">📋 Aktif Müşteri Listesi</h3>
+                <div class="muted" id="tenant_count" style="margin-top:6px;">Yükleniyor...</div>
+              </div>
+              <div class="saas-toolbar-actions">
+                <button class="btn btn-secondary btn-small" onclick="focusQuickFilter('all')">Tüm Kayıtlar</button>
+                <button class="btn btn-secondary btn-small" onclick="focusQuickFilter('attention')">İşlem Gerekenler</button>
                 <button class="btn btn-secondary btn-small" onclick="loadTenants()">Yenile</button>
+              </div>
             </div>
-            <div style="overflow-x:auto;">
-                <table>
-                    <thead><tr><th>Müşteri</th><th>Giriş Linki</th><th>Adminler</th><th>Durum</th><th>İşlem</th></tr></thead>
-                    <tbody id="tenants_tbody"><tr><td colspan="5" class="muted">Yükleniyor...</td></tr></tbody>
-                </table>
+
+            <div class="saas-filter-grid" style="margin-bottom:16px;">
+              <div class="form-group">
+                <label>Hızlı Arama</label>
+                <input id="tenant_search" placeholder="OSGB adı, slug veya admin e-postası ara" />
+              </div>
+              <div class="form-group">
+                <label>Müşteri Durumu</label>
+                <select id="tenant_status_filter">
+                  <option value="all">Tümü</option>
+                  <option value="active">Aktif</option>
+                  <option value="passive">Pasif</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Davet Durumu</label>
+                <select id="tenant_invite_filter">
+                  <option value="all">Tümü</option>
+                  <option value="sent">Davet gönderildi</option>
+                  <option value="not_sent">Davet bekliyor</option>
+                  <option value="failed">Davet hatası</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Öncelik</label>
+                <select id="tenant_attention_filter">
+                  <option value="all">Genel görünüm</option>
+                  <option value="attention">İşlem gerekenler</option>
+                  <option value="healthy">Sorunsuz kayıtlar</option>
+                </select>
+              </div>
             </div>
+
+            <div style="overflow-x: auto">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Müşteri</th>
+                    <th>Giriş Linki</th>
+                    <th>Admin Özeti</th>
+                    <th>Sağlık Durumu</th>
+                    <th>Durum</th>
+                    <th>İşlem</th>
+                  </tr>
+                </thead>
+                <tbody id="tenants_tbody">
+                  <tr>
+                    <td colspan="6" class="muted">Yükleniyor...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="saas-info-stack">
+            <div class="saas-side-card">
+              <h4>🧭 Bugün Takip Edilecekler</h4>
+              <div id="attention_list" class="saas-checklist">
+                <div class="saas-empty-state">Henüz hesaplanmadı.</div>
+              </div>
+            </div>
+          </div>
         </div>
+        <section id="pane_finance" class="panel workspace-pane">
+          <div class="saas-finance-shell">
+            <div class="saas-toolbar">
+              <div>
+                <h3 style="margin:0;">💳 Abonelik & Finans Yönetimi</h3>
+                <div class="muted" id="finance_count" style="margin-top:6px;">Yükleniyor...</div>
+              </div>
+              <div class="saas-toolbar-actions">
+                <button class="btn btn-secondary btn-small" onclick="resetTenantFinanceFilters()">Filtreleri Sıfırla</button>
+                <button class="btn btn-secondary btn-small" onclick="renderTenantFinanceModule(tenantDashboardRows)">Yenile</button>
+              </div>
+            </div>
+
+            <div class="saas-finance-summary">
+              <div class="saas-finance-metric">
+                <span class="muted">Aylık Tekrarlayan Gelir (MRR)</span>
+                <strong id="finance_mrr">₺0</strong>
+              </div>
+              <div class="saas-finance-metric">
+                <span class="muted">Yıllık Gelir Karşılığı (ARR)</span>
+                <strong id="finance_arr">₺0</strong>
+              </div>
+              <div class="saas-finance-metric">
+                <span class="muted">30 Gün İçinde Faturalanacak</span>
+                <strong id="finance_due_soon">0</strong>
+              </div>
+              <div class="saas-finance-metric">
+                <span class="muted">Geciken Tahsilat/Fatura</span>
+                <strong id="finance_overdue">0</strong>
+              </div>
+            </div>
+
+            <div class="saas-filter-grid">
+              <div class="form-group">
+                <label>Hızlı Arama</label>
+                <input id="finance_search" placeholder="Müşteri veya slug ara" />
+              </div>
+              <div class="form-group">
+                <label>Paket</label>
+                <select id="finance_package_filter">
+                  <option value="all">Tüm Paketler</option>
+                  <option value="starter">Starter</option>
+                  <option value="growth">Growth</option>
+                  <option value="enterprise">Enterprise</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Fatura Durumu</label>
+                <select id="finance_status_filter">
+                  <option value="all">Genel Görünüm</option>
+                  <option value="trial">Trial</option>
+                  <option value="active">Aktif</option>
+                  <option value="suspended">Askıda</option>
+                  <option value="cancelled">İptal</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Döviz</label>
+                <input value="TRY" disabled />
+              </div>
+            </div>
+
+            <div style="overflow-x:auto;">
+              <table class="saas-finance-table">
+                <thead>
+                  <tr>
+                    <th>Müşteri</th>
+                    <th>Paket</th>
+                    <th>Fatura Periyodu</th>
+                    <th>Tutar</th>
+                    <th>Durum</th>
+                    <th>Başlangıç</th>
+                    <th>Sonraki Fatura</th>
+                    <th>Not</th>
+                  </tr>
+                </thead>
+                <tbody id="finance_tbody">
+                  <tr>
+                    <td colspan="8" class="muted">Yükleniyor...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+      </div>
     </div>
-</div>
-<script>
-const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
-const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let currentAuth = null;
+    <script>
+      let currentAuth = null;
+      let tenantDashboardRows = [];
+      let tenantFinanceProfiles = {};
+      let esesCrmRows = [];
+      let esesCrmStorageMode = 'db';
+      let draggedEsesCrmId = null;
+      let esesOnboardingRows = [];
+      let selectedOnboardingId = null;
+      let onboardingView = 'active';
+      let saasPane = 'tenants';
 
-function normalizeAccessRole(value){ const v=(value||'').toString().trim().toLowerCase(); if(['super_admin','super admin','saas_admin','sistem sahibi'].includes(v)) return 'super_admin'; if(['admin','yonetici','yönetici'].includes(v)) return 'admin'; if(['uzman','isg_uzmani','isg uzmanı','iş güvenliği uzmanı'].includes(v)) return 'uzman'; if(['hekim','isyeri hekimi','işyeri hekimi'].includes(v)) return 'hekim'; if(['dsp','diğer sağlık personeli','diger saglik personeli'].includes(v)) return 'dsp'; if(['firma_yetkilisi','firma yetkilisi','musteri','müşteri'].includes(v)) return 'firma_yetkilisi'; return ''; }
-function inferAccessRoleFromEmail(email){ const e=(email||'').toLowerCase(); if(e.includes('orhan.vardar@gmail.com')) return 'super_admin'; if(e.includes('admin')) return 'admin'; return ''; }
-function roleLabel(role){ return {super_admin:'Super Admin',admin:'Admin',uzman:'İSG Uzmanı',hekim:'İşyeri Hekimi',dsp:'DSP',firma_yetkilisi:'Firma Yetkilisi'}[role] || role || 'Rol yok'; }
-function isStaffAccessActive(record){ if(!record) return true; if(record.can_login===false) return false; if(record.is_active_manual==='Aktif') return true; if(record.is_active_manual==='Pasif') return false; return true; }
-async function getCurrentAuthContext(){
-  const {data:{session}}=await dbClient.auth.getSession();
-  if(!session) return {session:null};
-  const email=session.user.email||'';
-  let staff=null;
-  try{
-    const {data,error}=await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email', email).maybeSingle();
-    if(error) throw error;
-    staff=data||null;
-  }catch(err){
-    console.warn('SaaS Yönetimi rol kaydı okunamadı:', err.message);
-  }
-  const role=normalizeAccessRole(staff&&staff.access_role) || normalizeAccessRole(staff&&staff.staff_role) || inferAccessRoleFromEmail(email);
-  return {session,email,role,staff,canLogin:isStaffAccessActive(staff),tenant:staff&&staff.tenants?staff.tenants:null,tenant_id:staff?staff.tenant_id:null};
-}
-async function requireSuperAdmin(){
-  const auth=await getCurrentAuthContext();
-  if(!auth.session){ window.location.href='login.html'; return null; }
-  if(!auth.canLogin){ await dbClient.auth.signOut(); alert('Bu kullanıcı için sistem erişimi pasif.'); window.location.href='login.html'; return null; }
-  if(auth.role!=='super_admin'){ alert('Bu sayfa yalnızca Super Admin içindir.'); window.location.href='dashboard.html'; return null; }
-  document.getElementById('current_user_email').innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-  setTenantBranding(auth.tenant);
-  currentAuth = auth;
-  return auth;
-}
-function slugify(txt){ return (txt||'').toString().trim().toLowerCase().replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s').replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
-function tenantLoginUrl(slug){ return `${window.location.origin}/login.html?tenant=${encodeURIComponent(slug||'')}`; }
-function previewLoginLink(){ const slug=slugify(document.getElementById('tenant_slug').value); document.getElementById('login_link_preview').innerText = slug ? tenantLoginUrl(slug) : 'Slug girince link oluşur.'; }
-function previewEditLoginLink(){ const slug=slugify(document.getElementById('edit_tenant_slug').value); document.getElementById('edit_login_link_preview').innerText = slug ? tenantLoginUrl(slug) : '-'; }
-document.getElementById('tenant_name').addEventListener('input',()=>{ const slugEl=document.getElementById('tenant_slug'); if(!slugEl.dataset.touched){ slugEl.value=slugify(document.getElementById('tenant_name').value); previewLoginLink(); }});
-document.getElementById('tenant_slug').addEventListener('input',()=>{ document.getElementById('tenant_slug').dataset.touched='1'; });
-function setStatus(msg, ok=true){ const el=document.getElementById('form_status'); el.className='status '+(ok?'ok':'err'); el.innerText=msg||''; }
-function setEditStatus(msg, ok=true){ const el=document.getElementById('edit_status'); el.className='status '+(ok?'ok':'err'); el.innerText=msg||''; }
-const LOGO_BUCKET = 'tenant-logos';
+      const ESES_CRM_STORAGE_KEY = 'eses_crm_pipeline_v1';
+      const ESES_ONBOARDING_STORAGE_KEY = 'eses_onboarding_checklist_v1';
+      const TENANT_FINANCE_STORAGE_KEY = 'tenant_finance_profiles_v1';
+      const ESES_CRM_TABLE = 'eses_crm_deals';
+      const TENANT_PACKAGE_OPTIONS = [
+        { value: 'starter', label: 'Starter' },
+        { value: 'growth', label: 'Growth' },
+        { value: 'enterprise', label: 'Enterprise' },
+        { value: 'custom', label: 'Custom' }
+      ];
+      const TENANT_BILLING_STATUS_OPTIONS = [
+        { value: 'trial', label: 'Trial' },
+        { value: 'active', label: 'Aktif' },
+        { value: 'suspended', label: 'Askida' },
+        { value: 'cancelled', label: 'Iptal' }
+      ];
+      const ESES_CRM_COLUMNS = [
+        { key: 'Yeni Talep', color: '#6366f1', subtitle: 'İlk temas ve kayıt' },
+        { key: 'Keşif / Demo', color: '#0ea5e9', subtitle: 'İhtiyaç netleştirme' },
+        { key: 'Teklif', color: '#f97316', subtitle: 'Fiyat ve kapsam' },
+        { key: 'Müzakere', color: '#ec4899', subtitle: 'İtiraz ve karar süreci' },
+        { key: 'Kazanıldı', color: '#22c55e', subtitle: 'İmzaya / devreye' },
+        { key: 'Kaybedildi', color: '#ef4444', subtitle: 'Kapanan fırsat' }
+      ];
 
-function setTenantBranding(tenant){
-  const titleEl = document.getElementById('lbl_osgb_title');
-  if (titleEl) titleEl.innerText = tenant && tenant.name ? tenant.name : 'Eses Software';
-  const area = titleEl ? titleEl.closest('.logo-area') : null;
-  if (!area) return;
-  let img = area.querySelector('.tenant-logo-img');
-  const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
-  if (logoUrl) {
-    if (!img) {
-      img = document.createElement('img');
-      img.className = 'tenant-logo-img';
-      img.alt = 'Logo';
-      area.insertBefore(img, titleEl);
-    }
-    img.src = logoUrl;
-  } else if (img) {
-    img.remove();
-  }
-}
+      const ESES_CRM_SEED = [
+        {
+          id: 'eses-1',
+          company_name: 'Nova Endüstri OSGB',
+          contact_name: 'Büşra Demir',
+          owner: 'Seda Akın',
+          value: '₺180.000/yıl',
+          source: 'Referans',
+          next_step: 'Demo ve kapsam toplantısı',
+          next_step_date: '2026-06-24',
+          stage: 'Keşif / Demo',
+          note: 'Kurumsal paket ve saha sayısı büyüyor.'
+        },
+        {
+          id: 'eses-2',
+          company_name: 'Atlas Çevre Hizmetleri',
+          contact_name: 'Murat Karaca',
+          owner: 'Emre Yıldız',
+          value: '₺96.000/yıl',
+          source: 'Web Sitesi',
+          next_step: 'Teklif revizyonu',
+          next_step_date: '2026-06-21',
+          stage: 'Teklif',
+          note: 'Kullanıcı sayısı ve mobil erişim soruları var.'
+        },
+        {
+          id: 'eses-3',
+          company_name: 'Mavi Liman OSGB',
+          contact_name: 'Elif Koç',
+          owner: 'Seda Akın',
+          value: '₺240.000/yıl',
+          source: 'Saha Ziyareti',
+          next_step: 'Sözleşme metni kontrolü',
+          next_step_date: '2026-06-20',
+          stage: 'Müzakere',
+          note: 'İmza öncesi son güvenlik ve kapsam görüşmesi.'
+        },
+        {
+          id: 'eses-4',
+          company_name: 'Pusula OSGB',
+          contact_name: 'Zeynep Arı',
+          owner: 'Mert Çelik',
+          value: '₺72.000/yıl',
+          source: 'Telefon',
+          next_step: 'İlk onboarding planı',
+          next_step_date: '2026-06-26',
+          stage: 'Kazanıldı',
+          note: 'Tenant açılışı planlandı.'
+        }
+      ];
 
-function resetLogoPreview(imgId){
-  const img=document.getElementById(imgId);
-  if(!img) return;
-  img.removeAttribute('src');
-  img.style.opacity='0.35';
-}
+      async function requireSuperAdmin() {
+        const auth = await getCurrentAuthContext();
+        if (!auth.session) {
+          window.location.href = 'login.html';
+          return null;
+        }
+        if (!auth.canLogin) {
+          await dbClient.auth.signOut();
+          alert('Bu kullanıcı için sistem erişimi pasif.');
+          window.location.href = 'login.html';
+          return null;
+        }
+        if (auth.role !== 'super_admin') {
+          alert('Bu sayfa yalnızca Super Admin içindir.');
+          window.location.href = 'dashboard.html';
+          return null;
+        }
+        document.getElementById('current_user_email').innerText = `${auth.email} • ${roleLabel(auth.role)}`;
+        setTenantBranding(auth.tenant);
+        applyRoleBasedNavigation(auth.role);
+        currentAuth = auth;
+        return auth;
+      }
+      function slugify(txt) {
+        return (txt || '')
+          .toString()
+          .trim()
+          .toLowerCase()
+          .replace(/ğ/g, 'g')
+          .replace(/ü/g, 'u')
+          .replace(/ş/g, 's')
+          .replace(/ı/g, 'i')
+          .replace(/ö/g, 'o')
+          .replace(/ç/g, 'c')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+      function tenantLoginUrl(slug) {
+        return `${window.location.origin}/login.html?tenant=${encodeURIComponent(slug || '')}`;
+      }
+      function previewLoginLink() {
+        const slug = slugify(document.getElementById('tenant_slug').value);
+        document.getElementById('login_link_preview').innerText = slug
+          ? tenantLoginUrl(slug)
+          : 'Slug girince link oluşur.';
+      }
+      function previewEditLoginLink() {
+        const slug = slugify(document.getElementById('edit_tenant_slug').value);
+        document.getElementById('edit_login_link_preview').innerText = slug ? tenantLoginUrl(slug) : '-';
+      }
+      document.getElementById('tenant_name').addEventListener('input', () => {
+        const slugEl = document.getElementById('tenant_slug');
+        if (!slugEl.dataset.touched) {
+          slugEl.value = slugify(document.getElementById('tenant_name').value);
+          previewLoginLink();
+        }
+      });
+      document.getElementById('tenant_slug').addEventListener('input', () => {
+        document.getElementById('tenant_slug').dataset.touched = '1';
+      });
+      document.getElementById('tenant_color')?.addEventListener('input', () =>
+        updateColorPreview('tenant_color', 'tenant_color_preview', 'tenant_color_value')
+      );
+      document.getElementById('edit_tenant_color')?.addEventListener('input', () =>
+        updateColorPreview('edit_tenant_color', 'edit_tenant_color_preview', 'edit_tenant_color_value')
+      );
+      updateColorPreview('tenant_color', 'tenant_color_preview', 'tenant_color_value');
+      updateColorPreview('edit_tenant_color', 'edit_tenant_color_preview', 'edit_tenant_color_value');
 
-function previewSelectedLogo(inputId, imgId){
-  const input=document.getElementById(inputId);
-  const img=document.getElementById(imgId);
-  if(!input || !img || !input.files || !input.files[0]) return;
-  img.src=URL.createObjectURL(input.files[0]);
-  img.style.opacity='1';
-}
+      function setStatus(msg, ok = true) {
+        const el = document.getElementById('form_status');
+        el.className = 'status ' + (ok ? 'ok' : 'err');
+        el.innerText = msg || '';
+      }
+      function setEditStatus(msg, ok = true) {
+        const el = document.getElementById('edit_status');
+        el.className = 'status ' + (ok ? 'ok' : 'err');
+        el.innerText = msg || '';
+      }
+      const LOGO_BUCKET = 'tenant-logos';
 
-async function fileToCompressedLogo(file){
-  if(!file) return null;
-  if(file.size > 5 * 1024 * 1024) throw new Error('Logo dosyası en fazla 5 MB olabilir.');
-  if(file.type === 'image/svg+xml') {
-    if(file.size > 1024 * 1024) throw new Error('SVG logo en fazla 1 MB olabilir.');
-    return { blob:file, ext:'svg', contentType:'image/svg+xml' };
-  }
-  const bitmap = await new Promise((resolve, reject)=>{
-    const img = new Image();
-    img.onload=()=>resolve(img);
-    img.onerror=()=>reject(new Error('Logo dosyası okunamadı.'));
-    img.src=URL.createObjectURL(file);
-  });
-  const maxSize = 512;
-  const ratio = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
-  const w = Math.max(1, Math.round(bitmap.width * ratio));
-  const h = Math.max(1, Math.round(bitmap.height * ratio));
-  const canvas=document.createElement('canvas');
-  canvas.width=w; canvas.height=h;
-  const ctx=canvas.getContext('2d');
-  ctx.clearRect(0,0,w,h);
-  ctx.drawImage(bitmap,0,0,w,h);
-  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.82));
-  if(!blob) throw new Error('Logo sıkıştırılamadı.');
-  return { blob, ext:'webp', contentType:'image/webp' };
-}
+      function resetLogoPreview(imgId) {
+        const img = document.getElementById(imgId);
+        if (!img) return;
+        img.removeAttribute('src');
+        img.style.opacity = '0.35';
+      }
 
-async function uploadLogoForTenant(tenantId, slug, inputId){
-  const input=document.getElementById(inputId);
-  if(!input || !input.files || !input.files[0]) return null;
-  const prepared=await fileToCompressedLogo(input.files[0]);
-  const safeSlug=slugify(slug || tenantId || 'tenant');
-  const path=`${tenantId}/${safeSlug}-logo-${Date.now()}.${prepared.ext}`;
-  const { error:uploadError } = await dbClient.storage.from(LOGO_BUCKET).upload(path, prepared.blob, { contentType:prepared.contentType, upsert:true });
-  if(uploadError) throw uploadError;
-  const { data } = dbClient.storage.from(LOGO_BUCKET).getPublicUrl(path);
-  return data.publicUrl;
-}
+      function previewSelectedLogo(inputId, imgId) {
+        const input = document.getElementById(inputId);
+        const img = document.getElementById(imgId);
+        if (!input || !img || !input.files || !input.files[0]) return;
+        img.src = URL.createObjectURL(input.files[0]);
+        img.style.opacity = '1';
+      }
 
-function clearEditedLogo(){
-  document.getElementById('edit_tenant_logo').value='';
-  document.getElementById('edit_tenant_logo_file').value='';
-  resetLogoPreview('edit_tenant_logo_preview');
-  setEditStatus('Logo kaldırılmak üzere işaretlendi. Kaydet butonuna basınca logo kaldırılır.', true);
-}
+      function updateColorPreview(inputId, swatchId, valueId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        const color = input.value || '#2563eb';
+        const swatch = document.getElementById(swatchId);
+        const value = document.getElementById(valueId);
+        if (swatch) swatch.style.backgroundColor = color;
+        if (value) value.innerText = color.toUpperCase();
+      }
 
-function clearForm(){ ['tenant_name','tenant_slug','tenant_logo','admin_name','admin_email'].forEach(id=>document.getElementById(id).value=''); const f=document.getElementById('tenant_logo_file'); if(f) f.value=''; resetLogoPreview('tenant_logo_preview'); document.getElementById('tenant_color').value='#2563eb'; document.getElementById('tenant_slug').dataset.touched=''; previewLoginLink(); setStatus(''); }
-async function createTenantWithAdmin(){
-  try{
-    if(!currentAuth || currentAuth.role !== 'super_admin') throw new Error('Bu işlem yalnızca Super Admin tarafından yapılabilir.');
-    const name=document.getElementById('tenant_name').value.trim();
-    const slug=slugify(document.getElementById('tenant_slug').value);
-    let logo=document.getElementById('tenant_logo').value.trim() || null;
-    const color=document.getElementById('tenant_color').value || '#2563eb';
-    const adminName=document.getElementById('admin_name').value.trim();
-    const adminEmail=document.getElementById('admin_email').value.trim().toLowerCase();
-    if(!name || !slug) throw new Error('Müşteri adı ve slug zorunlu.');
-    if(!adminName || !adminEmail) throw new Error('İlk admin adı ve e-postası zorunlu.');
+      async function fileToCompressedLogo(file) {
+        if (!file) return null;
+        if (file.size > 5 * 1024 * 1024) throw new Error('Logo dosyası en fazla 5 MB olabilir.');
+        if (file.type === 'image/svg+xml') {
+          if (file.size > 1024 * 1024) throw new Error('SVG logo en fazla 1 MB olabilir.');
+          return { blob: file, ext: 'svg', contentType: 'image/svg+xml' };
+        }
+        const bitmap = await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error('Logo dosyası okunamadı.'));
+          img.src = URL.createObjectURL(file);
+        });
+        const maxSize = 512;
+        const ratio = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+        const w = Math.max(1, Math.round(bitmap.width * ratio));
+        const h = Math.max(1, Math.round(bitmap.height * ratio));
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, w, h);
+        ctx.drawImage(bitmap, 0, 0, w, h);
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/webp', 0.82));
+        if (!blob) throw new Error('Logo sıkıştırılamadı.');
+        return { blob, ext: 'webp', contentType: 'image/webp' };
+      }
 
-    const {data:existingSlug,error:slugErr}=await dbClient.from('tenants').select('id').eq('slug', slug).maybeSingle();
-    if(slugErr) throw slugErr;
-    if(existingSlug) throw new Error('Bu slug/kısa kod zaten kullanılıyor. Lütfen farklı bir slug girin.');
+      async function uploadLogoForTenant(tenantId, slug, inputId) {
+        const input = document.getElementById(inputId);
+        if (!input || !input.files || !input.files[0]) return null;
+        const prepared = await fileToCompressedLogo(input.files[0]);
+        const safeSlug = slugify(slug || tenantId || 'tenant');
+        const path = `${tenantId}/${safeSlug}-logo-${Date.now()}.${prepared.ext}`;
+        const { error: uploadError } = await dbClient.storage
+          .from(LOGO_BUCKET)
+          .upload(path, prepared.blob, { contentType: prepared.contentType, upsert: true });
+        if (uploadError) throw uploadError;
+        const { data } = dbClient.storage.from(LOGO_BUCKET).getPublicUrl(path);
+        return data.publicUrl;
+      }
 
-    const {data:existingStaff,error:staffCheckErr}=await dbClient.from('osgb_staff').select('id, tenant_id').ilike('email', adminEmail).maybeSingle();
-    if(staffCheckErr) throw staffCheckErr;
-    if(existingStaff) throw new Error('Bu admin e-postası zaten bir personel kaydında kullanılıyor.');
+      function clearEditedLogo() {
+        document.getElementById('edit_tenant_logo').value = '';
+        document.getElementById('edit_tenant_logo_file').value = '';
+        resetLogoPreview('edit_tenant_logo_preview');
+        setEditStatus('Logo kaldırılmak üzere işaretlendi. Kaydet butonuna basınca logo kaldırılır.', true);
+      }
 
-    const {data:tenant, error:tErr}=await dbClient.from('tenants').insert({name, slug, logo_url:null, primary_color:color, is_active:true}).select().single();
-    if(tErr) throw tErr;
+      function clearForm() {
+        ['tenant_name', 'tenant_slug', 'tenant_logo', 'admin_name', 'admin_email'].forEach(
+          (id) => (document.getElementById(id).value = '')
+        );
+        const f = document.getElementById('tenant_logo_file');
+        if (f) f.value = '';
+        resetLogoPreview('tenant_logo_preview');
+        document.getElementById('tenant_color').value = '#2563eb';
+        document.getElementById('tenant_slug').dataset.touched = '';
+        previewLoginLink();
+        setStatus('');
+      }
+      async function createTenantWithAdmin() {
+        try {
+          if (!currentAuth || currentAuth.role !== 'super_admin')
+            throw new Error('Bu işlem yalnızca Super Admin tarafından yapılabilir.');
+          const name = document.getElementById('tenant_name').value.trim();
+          const slug = slugify(document.getElementById('tenant_slug').value);
+          let logo = document.getElementById('tenant_logo').value.trim() || null;
+          const color = document.getElementById('tenant_color').value || '#2563eb';
+          const adminName = document.getElementById('admin_name').value.trim();
+          const adminEmail = document.getElementById('admin_email').value.trim().toLowerCase();
+          if (!name || !slug) throw new Error('Müşteri adı ve slug zorunlu.');
+          if (!adminName || !adminEmail) throw new Error('İlk admin adı ve e-postası zorunlu.');
 
-    logo = await uploadLogoForTenant(tenant.id, slug, 'tenant_logo_file');
-    if(logo){ const {error:logoErr}=await dbClient.from('tenants').update({logo_url:logo}).eq('id', tenant.id); if(logoErr) throw logoErr; }
+          const { data: existingSlug, error: slugErr } = await dbClient
+            .from('tenants')
+            .select('id,name,slug,logo_url,primary_color,is_active')
+            .eq('slug', slug)
+            .maybeSingle();
+          if (slugErr) throw slugErr;
 
-    const {error:sErr}=await dbClient.from('osgb_staff').insert({tenant_id:tenant.id, name_surname:adminName, staff_role:'Yönetici', certificate_class:'Yok', email:adminEmail, hire_date:new Date().toISOString().slice(0,10), is_active_manual:'Aktif', access_role:'admin', can_login:true, auth_invite_status:'not_sent'});
-    if(sErr) throw sErr;
+          let tenant = null;
+          let createdNewTenant = false;
+          if (existingSlug) {
+            const { data: existingAdmins, error: exAdminErr } = await dbClient
+              .from('osgb_staff')
+              .select('id')
+              .eq('tenant_id', existingSlug.id)
+              .in('access_role', ['admin', 'super_admin'])
+              .limit(1);
+            if (exAdminErr) throw exAdminErr;
 
-    setStatus(`Müşteri oluşturuldu. Giriş linki: ${tenantLoginUrl(slug)}. Davet için listedeki “Davet Gönder” butonunu kullan.`, true);
-    clearForm(); await loadTenants();
-  }catch(err){ setStatus('Hata: '+(err.message||err), false); }
-}
-async function loadTenants(){
-  const tbody=document.getElementById('tenants_tbody'); tbody.innerHTML='<tr><td colspan="5" class="muted">Yükleniyor...</td></tr>';
-  const {data:tenants,error}=await dbClient.from('tenants').select('*').order('created_at',{ascending:false});
-  if(error){ tbody.innerHTML=`<tr><td colspan="5" style="color:#b91c1c;">${escapeHtml(error.message)}</td></tr>`; return; }
-  document.getElementById('tenant_count').innerText=`${(tenants||[]).length} müşteri/tenant`;
-  if(!tenants || tenants.length===0){ tbody.innerHTML='<tr><td colspan="5" class="muted">Kayıtlı müşteri yok.</td></tr>'; return; }
-  tbody.innerHTML='';
-  for(const t of tenants){
-    const {data:admins}=await dbClient.from('osgb_staff').select('id,name_surname,email,access_role,can_login,is_active_manual,auth_invite_status,auth_invited_at').eq('tenant_id', t.id).in('access_role',['admin','super_admin']).order('access_role',{ascending:true});
-    const primaryAdmin=(admins||[]).find(a=>normalizeAccessRole(a.access_role)==='admin') || (admins||[])[0] || null;
-    const adminsHtml=(admins||[]).map(a=>`<strong>${escapeHtml(a.name_surname||'-')}</strong><br><span class="muted">${escapeHtml(a.email||'-')} • ${escapeHtml(roleLabel(normalizeAccessRole(a.access_role)))}</span><br>${inviteBadge(a.auth_invite_status)} ${a.can_login!==false?'<span class="badge badge-green">Giriş açık</span>':'<span class="badge badge-red">Giriş kapalı</span>'}`).join('<hr style="border:none;border-top:1px solid #e2e8f0;">') || '<span class="muted">Admin yok</span>';
-    const active=t.is_active!==false;
-    const safeUrl=tenantLoginUrl(t.slug);
-    const inviteButton=primaryAdmin ? `<button class="btn btn-blue btn-small" onclick="sendInvite('${primaryAdmin.id}')">Davet Gönder</button>` : '<span class="muted">Admin yok</span>';
-    tbody.innerHTML += `<tr>
-      <td>${t.logo_url?`<img src="${escapeHtml(t.logo_url)}" style="width:34px;height:34px;object-fit:contain;border:1px solid #e2e8f0;border-radius:8px;background:white;padding:3px;margin-right:6px;vertical-align:middle;">`:''}<strong>${escapeHtml(t.name)}</strong><br><span class="muted">slug: ${escapeHtml(t.slug)}</span></td>
-      <td><div class="link-box">${safeUrl}</div><button class="btn btn-secondary btn-small" onclick="copyText('${safeUrl}')">Kopyala</button></td>
-      <td>${adminsHtml}</td>
-      <td>${active?'<span class="badge badge-green">Aktif</span>':'<span class="badge badge-red">Pasif</span>'}</td>
+            // Aynı slug ile tamamlanmış tenant varsa gerçekten çakışma kabul et.
+            if ((existingAdmins || []).length > 0) {
+              throw new Error('Bu slug/kısa kod zaten kullanılıyor. Lütfen farklı bir slug girin.');
+            }
+
+            // Yarım kalan tenant kaydını kullanıp admin ekleme ile akışı tamamla.
+            tenant = existingSlug;
+          }
+
+          const { data: existingStaff, error: staffCheckErr } = await dbClient
+            .from('osgb_staff')
+            .select('id, tenant_id')
+            .ilike('email', adminEmail)
+            .maybeSingle();
+          if (staffCheckErr) throw staffCheckErr;
+          if (existingStaff) throw new Error('Bu admin e-postası zaten bir personel kaydında kullanılıyor.');
+
+          if (!tenant) {
+            const { data: insertedTenant, error: tErr } = await dbClient
+              .from('tenants')
+              .insert({ name, slug, logo_url: null, primary_color: color, is_active: true })
+              .select()
+              .single();
+            if (tErr) throw tErr;
+            tenant = insertedTenant;
+            createdNewTenant = true;
+          } else {
+            const { error: updateTenantErr } = await dbClient
+              .from('tenants')
+              .update({ name, primary_color: color, is_active: true })
+              .eq('id', tenant.id);
+            if (updateTenantErr) throw updateTenantErr;
+          }
+
+          logo = await uploadLogoForTenant(tenant.id, slug, 'tenant_logo_file');
+          if (logo) {
+            const { error: logoErr } = await dbClient.from('tenants').update({ logo_url: logo }).eq('id', tenant.id);
+            if (logoErr) throw logoErr;
+          }
+
+          const { error: sErr } = await dbClient
+            .from('osgb_staff')
+            .insert({
+              tenant_id: tenant.id,
+              name_surname: adminName,
+              staff_role: 'Yönetici',
+              certificate_class: 'Yok',
+              email: adminEmail,
+              hire_date: new Date().toISOString().slice(0, 10),
+              is_active_manual: 'Aktif',
+              access_role: 'admin',
+              can_login: true,
+              auth_invite_status: 'not_sent'
+            });
+          if (sErr) {
+            // Tenant olustuysa ama admin insert RLS nedeniyle patladiysa yarim kaydi geri al.
+            if (createdNewTenant) {
+              await dbClient.from('tenants').delete().eq('id', tenant.id);
+            }
+            const errMsg = (sErr.message || '').toLowerCase();
+            if (errMsg.includes('row-level security')) {
+              throw new Error(
+                'Admin ekleme RLS engeline takıldı. Supabase SQL Editor\'de fix_osgb_staff_rls.sql dosyasını çalıştırıp sonra yeniden dene. Veya Düzenle panelinden admin ekle.'
+              );
+            }
+            if (errMsg.includes('duplicate')) {
+              throw new Error(
+                'Bu e-posta adı zaten sistemde kayıtlı. Farklı bir e-posta gir veya mevcut admin kaydını sil.'
+              );
+            }
+            throw new Error(`Admin kaydı başarısız: ${sErr.message || sErr}`);
+          }
+
+          setStatus(
+            `Müşteri oluşturuldu. Giriş linki: ${tenantLoginUrl(slug)}. Davet için listedeki “Davet Gönder” butonunu kullan.`,
+            true
+          );
+          markOnboardingFromTenantCreate({ tenantId: tenant.id, companyName: name, adminEmail });
+          clearForm();
+          await loadTenants();
+        } catch (err) {
+          setStatus('Hata: ' + (err.message || err), false);
+        }
+      }
+      async function loadTenants() {
+        const tbody = document.getElementById('tenants_tbody');
+        tbody.innerHTML = '<tr><td colspan="6" class="muted">Yükleniyor...</td></tr>';
+        const { data: tenants, error } = await dbClient
+          .from('tenants')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) {
+          tbody.innerHTML = `<tr><td colspan="6" style="color:#b91c1c;">${escapeHtml(error.message)}</td></tr>`;
+          renderTenantFinanceModule([]);
+          return;
+        }
+        if (!tenants || tenants.length === 0) {
+          tenantDashboardRows = [];
+          updateTenantDashboardSummary([]);
+          renderAttentionList([]);
+          renderTenantFinanceModule([]);
+          document.getElementById('tenant_count').innerText = '0 müşteri/tenant';
+          tbody.innerHTML = '<tr><td colspan="6" class="muted">Kayıtlı müşteri yok.</td></tr>';
+          return;
+        }
+        const rows = [];
+        for (const t of tenants) {
+          const { data: admins } = await dbClient
+            .from('osgb_staff')
+            .select('id,name_surname,email,access_role,can_login,is_active_manual,auth_invite_status,auth_invited_at')
+            .eq('tenant_id', t.id)
+            .in('access_role', ['admin', 'super_admin'])
+            .order('access_role', { ascending: true });
+          const primaryAdmin =
+            (admins || []).find((a) => normalizeAccessRole(a.access_role) === 'admin') || (admins || [])[0] || null;
+          const active = t.is_active !== false;
+          const inviteStatus = primaryAdmin?.auth_invite_status || 'not_sent';
+          const adminCanLogin = primaryAdmin ? primaryAdmin.can_login !== false : false;
+          rows.push({
+            id: t.id,
+            name: t.name || '-',
+            slug: t.slug || '-',
+            logoUrl: t.logo_url || '',
+            active,
+            createdAt: t.created_at || null,
+            loginUrl: tenantLoginUrl(t.slug),
+            hasAdmin: !!primaryAdmin,
+            primaryAdminId: primaryAdmin?.id || '',
+            primaryAdminName: primaryAdmin?.name_surname || '',
+            primaryAdminEmail: primaryAdmin?.email || '',
+            inviteStatus,
+            adminCanLogin,
+            needsAttention: !active || !primaryAdmin || inviteStatus === 'not_sent' || !adminCanLogin
+          });
+        }
+        tenantDashboardRows = rows;
+        updateTenantDashboardSummary(rows);
+        renderAttentionList(rows);
+        renderTenantFinanceModule(rows);
+        applyTenantFilters();
+        await reconcileOnboardingChecklist();
+      }
+      function getEsesCrmRows() {
+        try {
+          const stored = localStorage.getItem(ESES_CRM_STORAGE_KEY);
+          const parsed = stored ? JSON.parse(stored) : null;
+          if (Array.isArray(parsed) && parsed.length) return parsed;
+        } catch (err) {
+          // fall back to seed data
+        }
+        localStorage.setItem(ESES_CRM_STORAGE_KEY, JSON.stringify(ESES_CRM_SEED));
+        return ESES_CRM_SEED.slice();
+      }
+      function setEsesCrmModeHint(message) {
+        const el = document.getElementById('eses_crm_mode_hint');
+        if (el) el.innerText = message;
+      }
+      function setSaasPane(pane) {
+        const allowed = ['overview', 'crm', 'tenants', 'finance'];
+        saasPane = allowed.includes(pane) ? pane : 'tenants';
+        ['overview', 'crm', 'tenants', 'finance'].forEach((key) => {
+          const sectionEl = document.getElementById(`pane_${key}`);
+          if (sectionEl) sectionEl.classList.toggle('active', key === saasPane);
+          const btnEl = document.getElementById(`pane_btn_${key}`);
+          if (btnEl) btnEl.classList.toggle('active', key === saasPane);
+        });
+        localStorage.setItem('saas_active_pane', saasPane);
+      }
+      function initSaasPane() {
+        const saved = localStorage.getItem('saas_active_pane') || 'tenants';
+        setSaasPane(saved);
+      }
+      function setEsesCrmStageOptions() {
+        const sel = document.getElementById('eses_crm_stage');
+        if (!sel) return;
+        sel.innerHTML = ESES_CRM_COLUMNS.map((c) => `<option value="${escapeHtml(c.key)}">${escapeHtml(c.key)}</option>`).join('');
+      }
+      function normalizeEsesDbRow(row) {
+        return {
+          id: row.id,
+          company_name: row.company_name || '-',
+          contact_name: row.contact_name || '',
+          owner: row.owner_name || '',
+          value: row.estimated_value || '',
+          source: row.source || '',
+          next_step: row.next_step || '',
+          next_step_date: row.next_step_date || '',
+          stage: row.stage || 'Yeni Talep',
+          note: row.note || ''
+        };
+      }
+      function isEsesCrmTableMissing(error) {
+        const message = (error?.message || '').toLowerCase();
+        return message.includes('does not exist') || (message.includes('relation') && message.includes(ESES_CRM_TABLE));
+      }
+      function persistEsesCrmRowsLocal() {
+        localStorage.setItem(ESES_CRM_STORAGE_KEY, JSON.stringify(esesCrmRows));
+      }
+      function loadTenantFinanceProfiles() {
+        try {
+          const stored = localStorage.getItem(TENANT_FINANCE_STORAGE_KEY);
+          const parsed = stored ? JSON.parse(stored) : {};
+          tenantFinanceProfiles = parsed && typeof parsed === 'object' ? parsed : {};
+        } catch (err) {
+          tenantFinanceProfiles = {};
+        }
+      }
+      function persistTenantFinanceProfiles() {
+        localStorage.setItem(TENANT_FINANCE_STORAGE_KEY, JSON.stringify(tenantFinanceProfiles));
+      }
+      function formatTry(value) {
+        const amount = Number(value) || 0;
+        return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', maximumFractionDigits: 0 }).format(
+          amount
+        );
+      }
+      function addMonthsIso(isoDate, monthsToAdd) {
+        if (!isoDate) return '';
+        const base = new Date(isoDate);
+        if (Number.isNaN(base.getTime())) return '';
+        base.setMonth(base.getMonth() + monthsToAdd);
+        return base.toISOString().slice(0, 10);
+      }
+      function getDefaultTenantFinanceProfile(row) {
+        const startDate = row.createdAt ? row.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10);
+        return {
+          package_code: 'starter',
+          billing_cycle: 'monthly',
+          amount: 0,
+          billing_status: 'trial',
+          contract_start: startDate,
+          next_invoice_date: addMonthsIso(startDate, 1),
+          note: '',
+          updated_at: new Date().toISOString()
+        };
+      }
+      function ensureTenantFinanceProfiles(rows) {
+        let changed = false;
+        (rows || []).forEach((row) => {
+          if (!row?.id) return;
+          if (!tenantFinanceProfiles[row.id]) {
+            tenantFinanceProfiles[row.id] = getDefaultTenantFinanceProfile(row);
+            changed = true;
+          }
+        });
+        if (changed) persistTenantFinanceProfiles();
+      }
+      function monthlyRevenueFromProfile(profile) {
+        if (!profile || profile.billing_status !== 'active') return 0;
+        const amount = Number(profile.amount) || 0;
+        if (profile.billing_cycle === 'yearly') return amount / 12;
+        if (profile.billing_cycle === 'quarterly') return amount / 3;
+        return amount;
+      }
+      function computeTenantFinanceMetrics(rows) {
+        const today = new Date();
+        const thirtyDaysLater = new Date();
+        thirtyDaysLater.setDate(today.getDate() + 30);
+
+        let mrr = 0;
+        let dueSoon = 0;
+        let overdue = 0;
+
+        (rows || []).forEach((row) => {
+          const profile = tenantFinanceProfiles[row.id] || getDefaultTenantFinanceProfile(row);
+          mrr += monthlyRevenueFromProfile(profile);
+          const status = profile.billing_status;
+          if (!['active', 'trial'].includes(status)) return;
+          const nextDate = new Date(profile.next_invoice_date || '');
+          if (Number.isNaN(nextDate.getTime())) return;
+          if (nextDate < today) overdue += 1;
+          if (nextDate >= today && nextDate <= thirtyDaysLater) dueSoon += 1;
+        });
+
+        return {
+          mrr,
+          arr: mrr * 12,
+          dueSoon,
+          overdue
+        };
+      }
+      function renderTenantFinanceRows(rows) {
+        const tbody = document.getElementById('finance_tbody');
+        if (!tbody) return;
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="8" class="muted">Filtreye uygun kayıt yok.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = rows
+          .map((row) => {
+            const profile = tenantFinanceProfiles[row.id] || getDefaultTenantFinanceProfile(row);
+            const packageOptions = TENANT_PACKAGE_OPTIONS.map(
+              (opt) =>
+                `<option value="${opt.value}" ${opt.value === (profile.package_code || 'starter') ? 'selected' : ''}>${opt.label}</option>`
+            ).join('');
+            const statusOptions = TENANT_BILLING_STATUS_OPTIONS.map(
+              (opt) =>
+                `<option value="${opt.value}" ${opt.value === (profile.billing_status || 'trial') ? 'selected' : ''}>${opt.label}</option>`
+            ).join('');
+            const cycle = profile.billing_cycle || 'monthly';
+            return `<tr>
+              <td>
+                <div class="saas-table-meta">
+                  <strong>${escapeHtml(row.name)}</strong>
+                  <small>slug: ${escapeHtml(row.slug)}</small>
+                </div>
+              </td>
+              <td>
+                <select onchange="updateTenantFinanceField('${escapeHtml(row.id)}','package_code',this.value)">
+                  ${packageOptions}
+                </select>
+              </td>
+              <td>
+                <select onchange="updateTenantFinanceField('${escapeHtml(row.id)}','billing_cycle',this.value)">
+                  <option value="monthly" ${cycle === 'monthly' ? 'selected' : ''}>Aylık</option>
+                  <option value="quarterly" ${cycle === 'quarterly' ? 'selected' : ''}>3 Aylık</option>
+                  <option value="yearly" ${cycle === 'yearly' ? 'selected' : ''}>Yıllık</option>
+                </select>
+              </td>
+              <td>
+                <input type="number" min="0" step="100" value="${Number(profile.amount) || 0}" onchange="updateTenantFinanceField('${escapeHtml(row.id)}','amount',this.value)" />
+              </td>
+              <td>
+                <select onchange="updateTenantFinanceField('${escapeHtml(row.id)}','billing_status',this.value)">
+                  ${statusOptions}
+                </select>
+              </td>
+              <td>
+                <input type="date" value="${escapeHtml(profile.contract_start || '')}" onchange="updateTenantFinanceField('${escapeHtml(row.id)}','contract_start',this.value)" />
+              </td>
+              <td>
+                <input type="date" value="${escapeHtml(profile.next_invoice_date || '')}" onchange="updateTenantFinanceField('${escapeHtml(row.id)}','next_invoice_date',this.value)" />
+              </td>
+              <td>
+                <input class="saas-finance-note" value="${escapeHtml(profile.note || '')}" onblur="updateTenantFinanceField('${escapeHtml(row.id)}','note',this.value)" placeholder="Not" />
+              </td>
+            </tr>`;
+          })
+          .join('');
+      }
+      function renderTenantFinanceModule(rows) {
+        const dataRows = Array.isArray(rows) ? rows : [];
+        ensureTenantFinanceProfiles(dataRows);
+
+        const search = (document.getElementById('finance_search')?.value || '').trim().toLowerCase();
+        const packageFilter = document.getElementById('finance_package_filter')?.value || 'all';
+        const statusFilter = document.getElementById('finance_status_filter')?.value || 'all';
+
+        const filtered = dataRows.filter((row) => {
+          const profile = tenantFinanceProfiles[row.id] || getDefaultTenantFinanceProfile(row);
+          const textBlob = [row.name, row.slug].join(' ').toLowerCase();
+          if (search && !textBlob.includes(search)) return false;
+          if (packageFilter !== 'all' && profile.package_code !== packageFilter) return false;
+          if (statusFilter !== 'all' && profile.billing_status !== statusFilter) return false;
+          return true;
+        });
+
+        const metrics = computeTenantFinanceMetrics(dataRows);
+        const countEl = document.getElementById('finance_count');
+        if (countEl) countEl.innerText = `${filtered.length} kayıt görüntüleniyor`;
+        const mrrEl = document.getElementById('finance_mrr');
+        if (mrrEl) mrrEl.innerText = formatTry(metrics.mrr);
+        const arrEl = document.getElementById('finance_arr');
+        if (arrEl) arrEl.innerText = formatTry(metrics.arr);
+        const dueSoonEl = document.getElementById('finance_due_soon');
+        if (dueSoonEl) dueSoonEl.innerText = String(metrics.dueSoon);
+        const overdueEl = document.getElementById('finance_overdue');
+        if (overdueEl) overdueEl.innerText = String(metrics.overdue);
+
+        renderTenantFinanceRows(filtered);
+      }
+      function updateTenantFinanceField(tenantId, field, value) {
+        if (!tenantId) return;
+        const baseRow = tenantDashboardRows.find((row) => row.id === tenantId) || { id: tenantId, createdAt: null };
+        const profile = tenantFinanceProfiles[tenantId] || getDefaultTenantFinanceProfile(baseRow);
+        if (field === 'amount') {
+          profile[field] = Math.max(0, Number(value) || 0);
+        } else {
+          profile[field] = value;
+        }
+        profile.updated_at = new Date().toISOString();
+        tenantFinanceProfiles[tenantId] = profile;
+        persistTenantFinanceProfiles();
+        renderTenantFinanceModule(tenantDashboardRows);
+      }
+      function resetTenantFinanceFilters() {
+        const searchEl = document.getElementById('finance_search');
+        const packageEl = document.getElementById('finance_package_filter');
+        const statusEl = document.getElementById('finance_status_filter');
+        if (searchEl) searchEl.value = '';
+        if (packageEl) packageEl.value = 'all';
+        if (statusEl) statusEl.value = 'all';
+        renderTenantFinanceModule(tenantDashboardRows);
+      }
+      function setEsesCrmFormMode(isEdit) {
+        const submit = document.getElementById('eses_crm_submit_btn');
+        const cancel = document.getElementById('eses_crm_cancel_btn');
+        if (submit) submit.innerText = isEdit ? 'Fırsatı Güncelle' : 'Fırsat Ekle';
+        if (cancel) cancel.style.display = isEdit ? 'inline-flex' : 'none';
+      }
+      function loadOnboardingChecklist() {
+        try {
+          const stored = localStorage.getItem(ESES_ONBOARDING_STORAGE_KEY);
+          const parsed = stored ? JSON.parse(stored) : [];
+          esesOnboardingRows = Array.isArray(parsed) ? parsed : [];
+        } catch (err) {
+          esesOnboardingRows = [];
+        }
+      }
+      function persistOnboardingChecklist() {
+        localStorage.setItem(ESES_ONBOARDING_STORAGE_KEY, JSON.stringify(esesOnboardingRows));
+      }
+      function setOnboardingView(view) {
+        onboardingView = view === 'closed' ? 'closed' : 'active';
+        renderOnboardingChecklist();
+      }
+      function updateOnboardingViewButtons() {
+        const activeBtn = document.getElementById('btn_onboarding_active');
+        const closedBtn = document.getElementById('btn_onboarding_closed');
+        if (activeBtn) {
+          activeBtn.className = onboardingView === 'active' ? 'btn btn-primary btn-small' : 'btn btn-secondary btn-small';
+        }
+        if (closedBtn) {
+          closedBtn.className = onboardingView === 'closed' ? 'btn btn-primary btn-small' : 'btn btn-secondary btn-small';
+        }
+      }
+      function renderOnboardingChecklist() {
+        const el = document.getElementById('eses_onboarding_list');
+        if (!el) return;
+        const activeRows = esesOnboardingRows.filter((x) => !x.closed);
+        const closedRows = esesOnboardingRows.filter((x) => !!x.closed);
+        const countsEl = document.getElementById('eses_onboarding_counts');
+        if (countsEl) {
+          countsEl.innerText = `Açık: ${activeRows.length} • Tamamlanan: ${closedRows.length}`;
+        }
+        updateOnboardingViewButtons();
+
+        const rowsToRender = onboardingView === 'closed' ? closedRows : activeRows;
+        if (!rowsToRender.length) {
+          el.innerHTML =
+            onboardingView === 'closed'
+              ? '<div class="saas-empty-state">Henüz tamamlanan kurulum adımı kaydı yok.</div>'
+              : '<div class="saas-empty-state">Henüz tetiklenen kurulum adımı kaydı yok.</div>';
+          return;
+        }
+        el.innerHTML = rowsToRender
+          .slice()
+          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+          .map((row) => {
+            const createdAt = row.created_at ? new Date(row.created_at).toLocaleDateString('tr-TR') : '-';
+            const steps = [
+              { key: 'tenant_created', label: 'Tenant açıldı' },
+              { key: 'admin_created', label: 'İlk admin kaydı açıldı' },
+              { key: 'invite_sent', label: 'Admin daveti gönderildi' },
+              { key: 'first_login', label: 'İlk login doğrulandı' }
+            ];
+            const doneCount = steps.filter((step) => !!row.steps?.[step.key]).length;
+            const stepHtml = steps
+              .map(
+                (step) => `<label class="saas-onboarding-step"><input type="checkbox" ${row.steps?.[step.key] ? 'checked' : ''} ${row.closed ? 'disabled' : ''} onchange="toggleOnboardingStep('${escapeHtml(row.id)}','${step.key}',this.checked)" /> <span>${step.label}</span></label>`
+              )
+              .join('');
+            const actionButtons = row.closed
+              ? `<button class="btn btn-secondary btn-small" onclick="reopenOnboardingChecklist('${escapeHtml(row.id)}')">Yeniden Aç</button>
+                 <button class="btn btn-danger btn-small" onclick="purgeOnboardingChecklist('${escapeHtml(row.id)}')">Kalıcı Sil</button>`
+              : `<button class="btn btn-secondary btn-small" onclick="prefillTenantFromOnboarding('${escapeHtml(row.id)}')">Tenant Formuna Aktar</button>
+                 <button class="btn btn-secondary btn-small" onclick="completeOnboardingChecklist('${escapeHtml(row.id)}')">Tamamlandı</button>
+                 <button class="btn btn-danger btn-small" onclick="removeOnboardingChecklist('${escapeHtml(row.id)}')">Kapat</button>`;
+            return `<div class="saas-check-item">
+              <strong>${escapeHtml(row.company_name || '-')}</strong>
+              <span>${escapeHtml(row.reason || 'Kazanıldı aşamasına geçti')} • ${escapeHtml(createdAt)} • ${doneCount}/${steps.length} adım</span>
+              <div class="saas-onboarding-steps" style="margin-top:8px;">${stepHtml}</div>
+              <div class="saas-card-actions" style="margin-top:8px;">
+                ${actionButtons}
+              </div>
+            </div>`;
+          })
+          .join('');
+      }
+      function triggerTenantOnboardingChecklist(lead, reason) {
+        if (!lead || !lead.id || lead.stage !== 'Kazanıldı') return;
+        const exists = esesOnboardingRows.some((x) => x.lead_id === lead.id && !x.closed);
+        if (exists) return;
+        esesOnboardingRows.push({
+          id: crypto.randomUUID(),
+          lead_id: lead.id,
+          company_name: lead.company_name || '-',
+          contact_name: lead.contact_name || '',
+          owner: lead.owner || '',
+          reason: reason || 'Kazanıldı aşamasına geçti',
+          created_at: new Date().toISOString(),
+          closed: false,
+          steps: {
+            tenant_created: false,
+            admin_created: false,
+            invite_sent: false,
+            first_login: false
+          }
+        });
+        persistOnboardingChecklist();
+        renderOnboardingChecklist();
+      }
+      function toggleOnboardingStep(id, stepKey, checked) {
+        const row = esesOnboardingRows.find((x) => x.id === id);
+        if (!row) return;
+        const wasClosed = !!row.closed;
+        row.steps = row.steps || {};
+        row.steps[stepKey] = !!checked;
+        const allDone = ['tenant_created', 'admin_created', 'invite_sent', 'first_login'].every((k) => !!row.steps[k]);
+        if (allDone) {
+          row.closed = true;
+          row.closure_type = 'completed';
+        }
+        persistOnboardingChecklist();
+        renderOnboardingChecklist();
+        if (allDone && !wasClosed) {
+          archiveCompletedOnboardingLead(row, 'Checklist adımları tamamlandı').catch(() => {
+            // Sessizce devam et: checklist kapanmış olmalı, CRM temizliği sonraki reconcile'da tekrar denenir.
+          });
+        }
+      }
+      function isOnboardingChecklistCompleted(row) {
+        const steps = row?.steps || {};
+        return ['tenant_created', 'admin_created', 'invite_sent', 'first_login'].every((key) => !!steps[key]);
+      }
+      async function archiveCompletedOnboardingLead(row, reason) {
+        if (!row || !row.closed) return;
+        const shouldArchive = row.closure_type === 'completed' || isOnboardingChecklistCompleted(row);
+        if (!shouldArchive || row.crm_archived) return;
+
+        const companyKey = normalizeOnboardingKey(row.company_name || '');
+        const matchedLead = (esesCrmRows || []).find((deal) => {
+          if (row.lead_id) return deal.id === row.lead_id;
+          return deal.stage === 'Kazanıldı' && companyKey && normalizeOnboardingKey(deal.company_name || '') === companyKey;
+        });
+
+        if (!matchedLead) {
+          row.crm_archived = true;
+          row.crm_archived_at = new Date().toISOString();
+          row.crm_archive_reason = reason || 'Checklist tamamlandı';
+          persistOnboardingChecklist();
+          return;
+        }
+
+        if (esesCrmStorageMode === 'db') {
+          const { error } = await dbClient.from(ESES_CRM_TABLE).delete().eq('id', matchedLead.id);
+          if (error) {
+            esesCrmStorageMode = 'local';
+            setEsesCrmModeHint('Veri modu: Local (tamamlanan kayıt arşivlenirken DB hatası alındı).');
+          }
+        }
+
+        esesCrmRows = esesCrmRows.filter((deal) => deal.id !== matchedLead.id);
+        persistEsesCrmRowsLocal();
+        renderEsesCrmPipeline();
+
+        row.lead_id = row.lead_id || matchedLead.id;
+        row.crm_archived = true;
+        row.crm_archived_at = new Date().toISOString();
+        row.crm_archive_reason = reason || 'Checklist tamamlandı';
+        persistOnboardingChecklist();
+      }
+      function normalizeOnboardingKey(text) {
+        return slugify((text || '').toString());
+      }
+      function findOpenOnboardingByCompanyName(companyName) {
+        const key = normalizeOnboardingKey(companyName);
+        if (!key) return null;
+        return (
+          esesOnboardingRows
+            .slice()
+            .reverse()
+            .find((row) => !row.closed && normalizeOnboardingKey(row.company_name) === key) || null
+        );
+      }
+      function markOnboardingFromTenantCreate({ tenantId, companyName, adminEmail }) {
+        const row =
+          (selectedOnboardingId && esesOnboardingRows.find((x) => x.id === selectedOnboardingId && !x.closed)) ||
+          findOpenOnboardingByCompanyName(companyName);
+        if (!row) return;
+        row.tenant_id = tenantId || row.tenant_id || null;
+        row.admin_email = adminEmail || row.admin_email || '';
+        row.steps = row.steps || {};
+        row.steps.tenant_created = true;
+        row.steps.admin_created = true;
+        persistOnboardingChecklist();
+        renderOnboardingChecklist();
+        selectedOnboardingId = null;
+      }
+      function markOnboardingInviteSent({ tenantId, adminEmail }) {
+        const row =
+          esesOnboardingRows.find((x) => !x.closed && tenantId && x.tenant_id === tenantId) ||
+          esesOnboardingRows.find((x) => !x.closed && adminEmail && (x.admin_email || '').toLowerCase() === adminEmail.toLowerCase());
+        if (!row) return;
+        row.steps = row.steps || {};
+        row.steps.invite_sent = true;
+        persistOnboardingChecklist();
+        renderOnboardingChecklist();
+      }
+      function findTenantRowForOnboarding(companyName, tenantId) {
+        if (tenantId) {
+          const byId = tenantDashboardRows.find((row) => row.id === tenantId);
+          if (byId) return byId;
+        }
+        const key = normalizeOnboardingKey(companyName || '');
+        if (!key) return null;
+        return (
+          tenantDashboardRows.find((row) => normalizeOnboardingKey(row.name) === key) ||
+          tenantDashboardRows.find((row) => normalizeOnboardingKey(row.slug) === key) ||
+          null
+        );
+      }
+      async function reconcileOnboardingChecklist() {
+        let changed = false;
+
+        // Geriye donuk: kazanilan tum firsatlar checklist'te bulunsun.
+        const wonDeals = (esesCrmRows || []).filter((row) => row.stage === 'Kazanıldı');
+        wonDeals.forEach((deal) => {
+          const dealKey = normalizeOnboardingKey(deal.company_name || '');
+          const exists = esesOnboardingRows.some(
+            (item) => (deal.id && item.lead_id === deal.id) || (dealKey && normalizeOnboardingKey(item.company_name) === dealKey)
+          );
+          if (!exists) {
+            esesOnboardingRows.push({
+              id: crypto.randomUUID(),
+              lead_id: deal.id,
+              company_name: deal.company_name || '-',
+              contact_name: deal.contact_name || '',
+              owner: deal.owner || '',
+              reason: 'Kazanıldı aşamasından otomatik eklendi',
+              created_at: new Date().toISOString(),
+              closed: false,
+              steps: {
+                tenant_created: false,
+                admin_created: false,
+                invite_sent: false,
+                first_login: false
+              }
+            });
+            changed = true;
+          }
+        });
+
+        // Mevcut tenant/admin/davet durumunu checklist'e yansit.
+        for (const item of esesOnboardingRows) {
+          if (item.closed) {
+            await archiveCompletedOnboardingLead(item, 'Tamamlanan onboarding kaydı arşivlendi');
+            continue;
+          }
+          item.steps = item.steps || {
+            tenant_created: false,
+            admin_created: false,
+            invite_sent: false,
+            first_login: false
+          };
+          const tenant = findTenantRowForOnboarding(item.company_name, item.tenant_id);
+          if (!tenant) return;
+
+          if (item.tenant_id !== tenant.id) {
+            item.tenant_id = tenant.id;
+            changed = true;
+          }
+          if (!item.steps.tenant_created) {
+            item.steps.tenant_created = true;
+            changed = true;
+          }
+          if (tenant.hasAdmin && !item.steps.admin_created) {
+            item.steps.admin_created = true;
+            changed = true;
+          }
+          if (tenant.inviteStatus === 'sent' && !item.steps.invite_sent) {
+            item.steps.invite_sent = true;
+            changed = true;
+          }
+          if (!item.admin_email && tenant.primaryAdminEmail) {
+            item.admin_email = tenant.primaryAdminEmail;
+            changed = true;
+          }
+        }
+
+        if (changed) {
+          persistOnboardingChecklist();
+        }
+        renderOnboardingChecklist();
+      }
+      function removeOnboardingChecklist(id) {
+        const row = esesOnboardingRows.find((x) => x.id === id);
+        if (!row) return;
+        row.closed = true;
+        row.closure_type = 'dismissed';
+        persistOnboardingChecklist();
+        renderOnboardingChecklist();
+      }
+      function reopenOnboardingChecklist(id) {
+        const row = esesOnboardingRows.find((x) => x.id === id);
+        if (!row) return;
+        row.closed = false;
+        row.closure_type = '';
+        persistOnboardingChecklist();
+        renderOnboardingChecklist();
+      }
+      function purgeOnboardingChecklist(id) {
+        esesOnboardingRows = esesOnboardingRows.filter((x) => x.id !== id);
+        persistOnboardingChecklist();
+        renderOnboardingChecklist();
+      }
+      async function completeOnboardingChecklist(id) {
+        const row = esesOnboardingRows.find((x) => x.id === id);
+        if (!row) return;
+        row.steps = row.steps || {};
+        row.steps.tenant_created = true;
+        row.steps.admin_created = true;
+        row.steps.invite_sent = true;
+        row.steps.first_login = true;
+        row.closed = true;
+        row.closure_type = 'completed';
+        await archiveCompletedOnboardingLead(row, 'Checklist tamamlandı');
+        persistOnboardingChecklist();
+        renderOnboardingChecklist();
+      }
+      function prefillTenantFromOnboarding(id) {
+        const row = esesOnboardingRows.find((x) => x.id === id);
+        if (!row) return;
+        selectedOnboardingId = row.id;
+        const tenantName = document.getElementById('tenant_name');
+        if (tenantName && !tenantName.value.trim()) {
+          tenantName.value = row.company_name || '';
+          const slugEl = document.getElementById('tenant_slug');
+          if (slugEl) slugEl.value = slugify(row.company_name || '');
+          previewLoginLink();
+        }
+        const adminName = document.getElementById('admin_name');
+        if (adminName && !adminName.value.trim()) adminName.value = row.contact_name || '';
+        window.scrollTo({ top: document.body.scrollHeight * 0.35, behavior: 'smooth' });
+      }
+      async function loadEsesCrmPipeline() {
+        const board = document.getElementById('crm_pipeline_board');
+        board.innerHTML = '<div class="saas-empty-state">Satış pipeline yükleniyor...</div>';
+        const { data, error } = await dbClient
+          .from(ESES_CRM_TABLE)
+          .select('id,company_name,contact_name,owner_name,estimated_value,source,next_step,next_step_date,stage,note,updated_at')
+          .order('updated_at', { ascending: false });
+
+        if (!error) {
+          esesCrmStorageMode = 'db';
+          esesCrmRows = (data || []).map(normalizeEsesDbRow);
+          setEsesCrmModeHint('Veri modu: Supabase (ESES CRM tablosu).');
+          await reconcileOnboardingChecklist();
+          renderEsesCrmPipeline();
+          return;
+        }
+
+        esesCrmStorageMode = 'local';
+        esesCrmRows = getEsesCrmRows();
+        if (isEsesCrmTableMissing(error)) {
+          setEsesCrmModeHint('Veri modu: Local (SQL migration çalıştırılınca Supabase moduna geçer).');
+        } else {
+          setEsesCrmModeHint('Veri modu: Local (Supabase hatası nedeniyle geçici fallback).');
+        }
+        await reconcileOnboardingChecklist();
+        renderEsesCrmPipeline();
+      }
+      async function addEsesCrmOpportunity() {
+        return saveEsesCrmOpportunity();
+      }
+      async function saveEsesCrmOpportunity() {
+        const companyName = document.getElementById('eses_crm_company_name')?.value.trim();
+        if (!companyName) {
+          alert('Firma adı zorunlu.');
+          return;
+        }
+        const editId = document.getElementById('eses_crm_edit_id')?.value || '';
+        const payload = {
+          company_name: companyName,
+          contact_name: document.getElementById('eses_crm_contact_name')?.value.trim() || '',
+          owner_name: document.getElementById('eses_crm_owner')?.value.trim() || '',
+          estimated_value: document.getElementById('eses_crm_value')?.value.trim() || '',
+          source: document.getElementById('eses_crm_source')?.value.trim() || '',
+          next_step: document.getElementById('eses_crm_next_step')?.value.trim() || '',
+          next_step_date: document.getElementById('eses_crm_next_step_date')?.value || null,
+          stage: document.getElementById('eses_crm_stage')?.value || 'Yeni Talep',
+          note: document.getElementById('eses_crm_note')?.value.trim() || '',
+          created_by: currentAuth?.email || null
+        };
+        const previousStage = editId ? (esesCrmRows.find((x) => x.id === editId)?.stage || '') : '';
+
+        if (esesCrmStorageMode === 'db') {
+          const query = editId
+            ? dbClient.from(ESES_CRM_TABLE).update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editId)
+            : dbClient.from(ESES_CRM_TABLE).insert(payload);
+          const { data, error } = await query.select('id,company_name,contact_name,owner_name,estimated_value,source,next_step,next_step_date,stage,note').single();
+          if (!error && data) {
+            const normalized = normalizeEsesDbRow(data);
+            if (editId) {
+              const idx = esesCrmRows.findIndex((x) => x.id === editId);
+              if (idx !== -1) esesCrmRows[idx] = normalized;
+            } else {
+              esesCrmRows.unshift(normalized);
+            }
+            if (normalized.stage === 'Kazanıldı' && previousStage !== 'Kazanıldı') {
+              triggerTenantOnboardingChecklist(normalized, 'Kart düzenleme/ekleme ile kazanıldı');
+            }
+            clearEsesCrmForm();
+            renderEsesCrmPipeline();
+            return;
+          }
+          esesCrmStorageMode = 'local';
+          setEsesCrmModeHint('Veri modu: Local (ekleme sırasında DB hatası alındı).');
+        }
+
+        const localRow = {
+          id: editId || crypto.randomUUID(),
+          company_name: payload.company_name,
+          contact_name: payload.contact_name,
+          owner: payload.owner_name,
+          value: payload.estimated_value,
+          source: payload.source,
+          next_step: payload.next_step,
+          next_step_date: payload.next_step_date || '',
+          stage: payload.stage,
+          note: payload.note
+        };
+        if (editId) {
+          const idx = esesCrmRows.findIndex((x) => x.id === editId);
+          if (idx !== -1) esesCrmRows[idx] = localRow;
+        } else {
+          esesCrmRows.unshift(localRow);
+        }
+        if (localRow.stage === 'Kazanıldı' && previousStage !== 'Kazanıldı') {
+          triggerTenantOnboardingChecklist(localRow, 'Kart düzenleme/ekleme ile kazanıldı');
+        }
+        persistEsesCrmRowsLocal();
+        clearEsesCrmForm();
+        renderEsesCrmPipeline();
+      }
+      function clearEsesCrmForm() {
+        ['eses_crm_company_name', 'eses_crm_contact_name', 'eses_crm_owner', 'eses_crm_value', 'eses_crm_source', 'eses_crm_next_step', 'eses_crm_note'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        const dateEl = document.getElementById('eses_crm_next_step_date');
+        if (dateEl) dateEl.value = '';
+        const stageEl = document.getElementById('eses_crm_stage');
+        if (stageEl && stageEl.options.length) stageEl.value = stageEl.options[0].value;
+        const editEl = document.getElementById('eses_crm_edit_id');
+        if (editEl) editEl.value = '';
+        setEsesCrmFormMode(false);
+      }
+      function startEsesCrmEdit(id) {
+        const row = esesCrmRows.find((x) => x.id === id);
+        if (!row) return;
+        document.getElementById('eses_crm_edit_id').value = row.id || '';
+        document.getElementById('eses_crm_company_name').value = row.company_name || '';
+        document.getElementById('eses_crm_contact_name').value = row.contact_name || '';
+        document.getElementById('eses_crm_owner').value = row.owner || '';
+        document.getElementById('eses_crm_value').value = row.value || '';
+        document.getElementById('eses_crm_source').value = row.source || '';
+        document.getElementById('eses_crm_next_step').value = row.next_step || '';
+        document.getElementById('eses_crm_note').value = row.note || '';
+        document.getElementById('eses_crm_stage').value = row.stage || 'Yeni Talep';
+        document.getElementById('eses_crm_next_step_date').value = row.next_step_date || '';
+        setEsesCrmFormMode(true);
+        document.getElementById('eses_crm_company_name')?.focus();
+      }
+      function cancelEsesCrmEdit() {
+        clearEsesCrmForm();
+      }
+      async function deleteEsesCrmOpportunity(id) {
+        const row = esesCrmRows.find((x) => x.id === id);
+        if (!row) return;
+        if (!confirm(`Bu fırsatı silmek istiyor musun?\n${row.company_name || ''}`)) return;
+
+        if (esesCrmStorageMode === 'db') {
+          const { error } = await dbClient.from(ESES_CRM_TABLE).delete().eq('id', id);
+          if (error) {
+            esesCrmStorageMode = 'local';
+            setEsesCrmModeHint('Veri modu: Local (silme sırasında DB hatası alındı).');
+          }
+        }
+        esesCrmRows = esesCrmRows.filter((x) => x.id !== id);
+        persistEsesCrmRowsLocal();
+        renderEsesCrmPipeline();
+      }
+      async function moveEsesOpportunityToStage(id, nextStage) {
+        const idx = esesCrmRows.findIndex((x) => x.id === id);
+        if (idx === -1) return;
+        const prev = esesCrmRows[idx].stage;
+        esesCrmRows[idx].stage = nextStage;
+
+        if (esesCrmStorageMode === 'db') {
+          const { error } = await dbClient.from(ESES_CRM_TABLE).update({ stage: nextStage, updated_at: new Date().toISOString() }).eq('id', id);
+          if (!error) {
+            renderEsesCrmPipeline();
+            return;
+          }
+          esesCrmRows[idx].stage = prev;
+          esesCrmStorageMode = 'local';
+          setEsesCrmModeHint('Veri modu: Local (taşıma sırasında DB hatası alındı).');
+        }
+
+        esesCrmRows[idx].stage = nextStage;
+        if (nextStage === 'Kazanıldı' && prev !== 'Kazanıldı') {
+          triggerTenantOnboardingChecklist(esesCrmRows[idx], 'Sürükle-bırak ile kazanıldı');
+        }
+        persistEsesCrmRowsLocal();
+        renderEsesCrmPipeline();
+      }
+      function onEsesCardDragStart(event, id) {
+        draggedEsesCrmId = id;
+        event.dataTransfer.setData('text/plain', id);
+      }
+      function onEsesColumnDragOver(event, columnEl) {
+        event.preventDefault();
+        columnEl.classList.add('drag-over');
+      }
+      function onEsesColumnDragLeave(columnEl) {
+        columnEl.classList.remove('drag-over');
+      }
+      async function onEsesColumnDrop(event, stage, columnEl) {
+        event.preventDefault();
+        columnEl.classList.remove('drag-over');
+        const id = event.dataTransfer.getData('text/plain') || draggedEsesCrmId;
+        if (!id) return;
+        await moveEsesOpportunityToStage(id, stage);
+      }
+      function esesCrmStageClass(stage) {
+        if (stage === 'Kazanıldı') return 'good';
+        if (stage === 'Kaybedildi') return 'bad';
+        if (stage === 'Müzakere' || stage === 'Teklif') return 'warn';
+        return '';
+      }
+      function renderEsesCrmPipeline() {
+        const board = document.getElementById('crm_pipeline_board');
+        const rows = esesCrmRows || [];
+        const total = rows.length;
+        const hot = rows.filter((row) => row.stage === 'Teklif' || row.stage === 'Müzakere').length;
+        const won = rows.filter((row) => row.stage === 'Kazanıldı').length;
+        const followup = rows.filter((row) => !['Kazanıldı', 'Kaybedildi'].includes(row.stage)).length;
+
+        const summaryEl = document.getElementById('crm_pipeline_summary');
+        if (summaryEl) {
+          summaryEl.innerText = total
+          ? `Toplam ${total} fırsat içinde ${won} kazanılmış, ${hot} teklif / müzakere aşamasında.`
+          : 'Henüz satış fırsatı bulunmuyor.';
+        }
+
+        if (!rows.length) {
+          board.innerHTML = '<div class="saas-empty-state">Satış pipeline içinde henüz fırsat yok.</div>';
+          return;
+        }
+
+        const grouped = ESES_CRM_COLUMNS.reduce((acc, stage) => {
+          acc[stage.key] = rows.filter((row) => row.stage === stage.key);
+          return acc;
+        }, {});
+
+        board.innerHTML = ESES_CRM_COLUMNS.map((stage) => {
+          const items = grouped[stage.key] || [];
+          const cards = items.length
+            ? items
+                .map((lead) => {
+                  const nextStepDate = lead.next_step_date ? new Date(lead.next_step_date).toLocaleDateString('tr-TR') : '-';
+                  return `<div class="saas-pipeline-card">
+                    <div class="saas-pipeline-card-top" draggable="true" ondragstart="onEsesCardDragStart(event, '${escapeHtml(lead.id || '')}')">
+                      <div class="saas-pipeline-card-title">${escapeHtml(lead.company_name || '-')}</div>
+                      <span class="saas-pipeline-chip ${esesCrmStageClass(lead.stage)}">${escapeHtml(lead.stage || stage.key)}</span>
+                    </div>
+                    <div class="saas-pipeline-card-meta">
+                      <span>Yetkili: ${escapeHtml(lead.contact_name || '-')}</span>
+                      <span>Sahip: ${escapeHtml(lead.owner || '-')}</span>
+                      <span>Değer: ${escapeHtml(lead.value || '-')}</span>
+                      <span>Kaynak: ${escapeHtml(lead.source || '-')}</span>
+                      <span>Sonraki adım: ${escapeHtml(lead.next_step || '-')}</span>
+                    </div>
+                    <div class="saas-pipeline-card-footer">
+                      <span>📅 ${escapeHtml(nextStepDate)}</span>
+                      <span>${escapeHtml(lead.note || '')}</span>
+                      <div class="saas-card-actions">
+                        <button class="btn btn-secondary" onclick="startEsesCrmEdit('${escapeHtml(lead.id || '')}')">Düzenle</button>
+                        <button class="btn btn-danger" onclick="deleteEsesCrmOpportunity('${escapeHtml(lead.id || '')}')">Sil</button>
+                      </div>
+                    </div>
+                  </div>`;
+                })
+                .join('')
+            : '<div class="saas-empty-state">Bu aşamada kayıt yok.</div>';
+          return `<div class="saas-pipeline-column">
+            <div class="saas-pipeline-column-head">
+              <div class="saas-pipeline-title">
+                <strong>${escapeHtml(stage.key)}</strong>
+                <span>${escapeHtml(stage.subtitle)}</span>
+              </div>
+              <span class="saas-pipeline-count" style="background:${stage.color};">${items.length}</span>
+            </div>
+            <div class="saas-pipeline-cards" ondragover="onEsesColumnDragOver(event, this)" ondragleave="onEsesColumnDragLeave(this)" ondrop="onEsesColumnDrop(event, '${escapeHtml(stage.key)}', this)">${cards}</div>
+          </div>`;
+        }).join('');
+      }
+      function inviteBadge(status) {
+        const s = (status || 'not_sent').toString();
+        if (s === 'sent') return '<span class="badge badge-green">Davet gönderildi</span>';
+        if (s === 'failed') return '<span class="badge badge-red">Davet hatası</span>';
+        return '<span class="badge badge-gray">Davet yok</span>';
+      }
+      function escapeHtml(v) {
+        return (v || '')
+          .toString()
+          .replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]);
+      }
+      function formatDate(value) {
+        if (!value) return '-';
+        const dt = new Date(value);
+        if (Number.isNaN(dt.getTime())) return '-';
+        return dt.toLocaleDateString('tr-TR');
+      }
+      function tenantHealthSummary(row) {
+        if (!row.active) return { label: 'Pasif tenant', className: 'bad' };
+        if (!row.hasAdmin) return { label: 'Admin eksik', className: 'bad' };
+        if (row.inviteStatus === 'not_sent' || !row.adminCanLogin) return { label: 'Aksiyon gerekli', className: 'warn' };
+        return { label: 'Sağlıklı', className: 'good' };
+      }
+      function updateTenantDashboardSummary(rows) {
+        const total = rows.length;
+        const active = rows.filter((row) => row.active).length;
+        const pendingInvites = rows.filter((row) => row.inviteStatus !== 'sent').length;
+        const attention = rows.filter((row) => row.needsAttention).length;
+ 
+        // Update overview pane KPIs
+        document.getElementById('kpi_total_tenants').innerText = String(total);
+        document.getElementById('kpi_active_tenants').innerText = String(active);
+        document.getElementById('kpi_pending_invites').innerText = String(pendingInvites);
+        document.getElementById('kpi_attention_tenants').innerText = String(attention);
+ 
+        // Update CRM pane KPIs
+        document.getElementById('crm_kpi_total_tenants').innerText = String(total);
+        document.getElementById('crm_kpi_active_tenants').innerText = String(active);
+        document.getElementById('crm_kpi_pending_invites').innerText = String(pendingInvites);
+        document.getElementById('crm_kpi_attention_tenants').innerText = String(attention);
+      }
+      function renderAttentionList(rows) {
+        const el = document.getElementById('attention_list');
+        const attentionRows = rows.filter((row) => row.needsAttention).slice(0, 5);
+        if (!attentionRows.length) {
+          el.innerHTML = '<div class="saas-empty-state">Bugün acil takip gerektiren müşteri görünmüyor.</div>';
+          return;
+        }
+        el.innerHTML = attentionRows
+          .map((row) => {
+            const reason = !row.active
+              ? 'Tenant pasif durumda.'
+              : !row.hasAdmin
+                ? 'Admin kaydı eksik.'
+                : row.inviteStatus === 'not_sent'
+                  ? 'Admin daveti bekliyor.'
+                  : 'Admin girişi kapalı.';
+            const canInvite = !!row.primaryAdminId && row.inviteStatus !== 'sent';
+            const inviteBtn = canInvite
+              ? `<button class="btn btn-blue btn-small" onclick="sendAttentionInvite('${escapeHtml(row.id)}')">Davet Gönder</button>`
+              : '';
+            return `<div class="saas-check-item">
+              <strong>${escapeHtml(row.name)}</strong>
+              <span>${escapeHtml(reason)} ${escapeHtml(row.primaryAdminEmail || row.slug || '')}</span>
+              <div class="saas-card-actions" style="margin-top:8px;">
+                <button class="btn btn-secondary btn-small" onclick="openAttentionTenant('${escapeHtml(row.id)}')">Düzenleye Git</button>
+                ${inviteBtn}
+              </div>
+            </div>`;
+          })
+          .join('');
+      }
+      async function openAttentionTenant(tenantId) {
+        const row = tenantDashboardRows.find((x) => x.id === tenantId);
+        if (!row) {
+          alert('Kayıt bulunamadı. Liste yenilenecek.');
+          await loadTenants();
+          return;
+        }
+        setSaasPane('tenants');
+        document.getElementById('tenant_search').value = row.name || row.slug || '';
+        document.getElementById('tenant_status_filter').value = 'all';
+        document.getElementById('tenant_invite_filter').value = 'all';
+        document.getElementById('tenant_attention_filter').value = 'all';
+        applyTenantFilters();
+        await editTenant(tenantId);
+      }
+      async function sendAttentionInvite(tenantId) {
+        const row = tenantDashboardRows.find((x) => x.id === tenantId);
+        if (!row || !row.primaryAdminId) {
+          alert('Bu kayıtta davet gönderilecek admin bulunamadı.');
+          return;
+        }
+        await sendInvite(row.primaryAdminId);
+      }
+      function renderTenantRows(rows) {
+        const tbody = document.getElementById('tenants_tbody');
+        document.getElementById('tenant_count').innerText = `${rows.length} müşteri/tenant görüntüleniyor`;
+        if (!rows.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="muted">Filtreye uygun müşteri bulunamadı.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = rows
+          .map((row) => {
+            const health = tenantHealthSummary(row);
+            const activeBadge = row.active
+              ? '<span class="badge badge-green">Aktif</span>'
+              : '<span class="badge badge-red">Pasif</span>';
+            const inviteButton = row.primaryAdminId
+              ? `<button class="btn btn-blue btn-small" onclick="sendInvite('${row.primaryAdminId}')">Davet Gönder</button>`
+              : `<button class="btn btn-secondary btn-small" onclick="editTenant('${row.id}')">Admin Ekle</button>`;
+            return `<tr>
+      <td>
+        ${row.logoUrl ? `<img src="${escapeHtml(row.logoUrl)}" style="width:34px;height:34px;object-fit:contain;border:1px solid #e2e8f0;border-radius:8px;background:white;padding:3px;margin-right:6px;vertical-align:middle;">` : ''}
+        <span class="saas-table-meta">
+          <strong>${escapeHtml(row.name)}</strong>
+          <small>slug: ${escapeHtml(row.slug)}</small>
+          <small>Oluşturma: ${formatDate(row.createdAt)}</small>
+        </span>
+      </td>
+      <td>
+        <div class="saas-link-actions">
+          <div class="link-box">${escapeHtml(row.loginUrl)}</div>
+          <button class="btn btn-secondary btn-small" onclick="copyText('${escapeHtml(row.loginUrl)}')">Kopyala</button>
+        </div>
+      </td>
+      <td>
+        ${row.hasAdmin
+          ? `<div class="saas-table-meta"><strong>${escapeHtml(row.primaryAdminName || '-')}</strong><small>${escapeHtml(row.primaryAdminEmail || '-')}</small><small>${inviteBadge(row.inviteStatus)} ${row.adminCanLogin ? '<span class="badge badge-green">Giriş açık</span>' : '<span class="badge badge-red">Giriş kapalı</span>'}</small></div>`
+          : '<span class="muted">Admin kaydı bulunamadı.</span>'}
+      </td>
+      <td>
+        <span class="saas-health-badge ${health.className}">${escapeHtml(health.label)}</span>
+      </td>
+      <td>${activeBadge}</td>
       <td><div class="action-stack">
-        <button class="btn btn-primary btn-small" onclick="editTenant('${t.id}')">Düzenle</button>
+        <button class="btn btn-primary btn-small" onclick="editTenant('${row.id}')">Düzenle</button>
         ${inviteButton}
-        <button class="btn ${active?'btn-danger':'btn-green'} btn-small" onclick="toggleTenant('${t.id}', ${active})">${active?'Pasifleştir':'Aktifleştir'}</button>
+        <button class="btn ${row.active ? 'btn-danger' : 'btn-green'} btn-small" onclick="toggleTenant('${row.id}', ${row.active})">${row.active ? 'Pasifleştir' : 'Aktifleştir'}</button>
       </div></td>
     </tr>`;
-  }
-}
-function inviteBadge(status){ const s=(status||'not_sent').toString(); if(s==='sent') return '<span class="badge badge-green">Davet gönderildi</span>'; if(s==='failed') return '<span class="badge badge-red">Davet hatası</span>'; return '<span class="badge badge-gray">Davet yok</span>'; }
-function escapeHtml(v){ return (v||'').toString().replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
-async function copyText(text){ await navigator.clipboard.writeText(text); alert('Giriş linki kopyalandı.'); }
-async function toggleTenant(id, isActive){
-  if(!currentAuth || currentAuth.role !== 'super_admin'){ alert('Bu işlem yalnızca Super Admin içindir.'); return; }
-  const nextState=!isActive;
-  const msg=nextState ? 'Bu müşteriyi tekrar aktif hale getirmek istiyor musun?' : 'Bu müşteriyi pasifleştirmek istiyor musun? Pasif tenant kullanıcıları girişte engellenmelidir.';
-  if(!confirm(msg)) return;
-  const {error}=await dbClient.from('tenants').update({is_active:nextState}).eq('id', id);
-  if(error){ alert(error.message); return; }
-  await loadTenants();
-}
+          })
+          .join('');
+      }
+      function applyTenantFilters() {
+        const search = (document.getElementById('tenant_search')?.value || '').trim().toLowerCase();
+        const status = document.getElementById('tenant_status_filter')?.value || 'all';
+        const invite = document.getElementById('tenant_invite_filter')?.value || 'all';
+        const attention = document.getElementById('tenant_attention_filter')?.value || 'all';
+        const filtered = tenantDashboardRows.filter((row) => {
+          const textBlob = [row.name, row.slug, row.primaryAdminName, row.primaryAdminEmail].join(' ').toLowerCase();
+          if (search && !textBlob.includes(search)) return false;
+          if (status === 'active' && !row.active) return false;
+          if (status === 'passive' && row.active) return false;
+          if (invite !== 'all' && row.inviteStatus !== invite) return false;
+          if (attention === 'attention' && !row.needsAttention) return false;
+          if (attention === 'healthy' && row.needsAttention) return false;
+          return true;
+        });
+        renderTenantRows(filtered);
+      }
+      function focusQuickFilter(type) {
+        if (type === 'attention') {
+          document.getElementById('tenant_attention_filter').value = 'attention';
+        } else {
+          document.getElementById('tenant_search').value = '';
+          document.getElementById('tenant_status_filter').value = 'all';
+          document.getElementById('tenant_invite_filter').value = 'all';
+          document.getElementById('tenant_attention_filter').value = 'all';
+        }
+        applyTenantFilters();
+      }
+      async function copyText(text) {
+        await navigator.clipboard.writeText(text);
+        alert('Giriş linki kopyalandı.');
+      }
+      async function toggleTenant(id, isActive) {
+        if (!currentAuth || currentAuth.role !== 'super_admin') {
+          alert('Bu işlem yalnızca Super Admin içindir.');
+          return;
+        }
+        const nextState = !isActive;
+        const msg = nextState
+          ? 'Bu müşteriyi tekrar aktif hale getirmek istiyor musun?'
+          : 'Bu müşteriyi pasifleştirmek istiyor musun? Pasif tenant kullanıcıları girişte engellenmelidir.';
+        if (!confirm(msg)) return;
+        const { error } = await dbClient.from('tenants').update({ is_active: nextState }).eq('id', id);
+        if (error) {
+          alert(error.message);
+          return;
+        }
+        await loadTenants();
+      }
 
-function setAdminEditLocked(isLocked){
-  ['edit_admin_name','edit_admin_email','edit_admin_role','edit_admin_can_login'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el) return;
-    el.disabled=!!isLocked;
-    el.classList.toggle('admin-lock-disabled', !!isLocked);
-  });
-  const note=document.getElementById('edit_super_admin_lock_note');
-  if(note) note.classList.toggle('hidden', !isLocked);
-}
-async function editTenant(id){
-  setEditStatus('');
-  const {data:t,error}=await dbClient.from('tenants').select('*').eq('id',id).single();
-  if(error){ alert(error.message); return; }
-  const {data:admins,error:aLoadErr}=await dbClient.from('osgb_staff').select('id,name_surname,email,access_role,can_login,is_active_manual,auth_invite_status').eq('tenant_id', id).in('access_role',['admin','super_admin']).order('access_role',{ascending:true});
-  if(aLoadErr){ alert(aLoadErr.message); return; }
-  const admin=(admins||[]).find(a=>normalizeAccessRole(a.access_role)==='admin') || (admins||[])[0] || null;
-  const originalRole = admin ? (normalizeAccessRole(admin.access_role)||'admin') : '';
-  const isLockedSuperAdmin = originalRole === 'super_admin';
+      function setAdminEditLocked(isLocked) {
+        ['edit_admin_name', 'edit_admin_email', 'edit_admin_role', 'edit_admin_can_login'].forEach((id) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.disabled = !!isLocked;
+          el.classList.toggle('admin-lock-disabled', !!isLocked);
+        });
+        const note = document.getElementById('edit_super_admin_lock_note');
+        if (note) note.classList.toggle('hidden', !isLocked);
+      }
+      async function editTenant(id) {
+        setEditStatus('');
+        const { data: t, error } = await dbClient.from('tenants').select('*').eq('id', id).single();
+        if (error) {
+          alert(error.message);
+          return;
+        }
+        const { data: admins, error: aLoadErr } = await dbClient
+          .from('osgb_staff')
+          .select('id,name_surname,email,access_role,can_login,is_active_manual,auth_invite_status')
+          .eq('tenant_id', id)
+          .in('access_role', ['admin', 'super_admin'])
+          .order('access_role', { ascending: true });
+        if (aLoadErr) {
+          alert(aLoadErr.message);
+          return;
+        }
+        const admin =
+          (admins || []).find((a) => normalizeAccessRole(a.access_role) === 'admin') || (admins || [])[0] || null;
+        const originalRole = admin ? normalizeAccessRole(admin.access_role) || 'admin' : '';
+        const isLockedSuperAdmin = originalRole === 'super_admin';
 
-  document.getElementById('edit_tenant_id').value=t.id;
-  document.getElementById('edit_admin_id').value=admin ? admin.id : '';
-  document.getElementById('edit_tenant_name').value=t.name||'';
-  document.getElementById('edit_tenant_slug').value=t.slug||'';
-  document.getElementById('edit_tenant_logo').value=t.logo_url||'';
-  document.getElementById('edit_tenant_logo_file').value='';
-  if(t.logo_url){ const img=document.getElementById('edit_tenant_logo_preview'); img.src=t.logo_url; img.style.opacity='1'; } else { resetLogoPreview('edit_tenant_logo_preview'); }
-  document.getElementById('edit_tenant_color').value=t.primary_color||'#2563eb';
-  document.getElementById('edit_tenant_active').value=(t.is_active!==false).toString();
+        document.getElementById('edit_tenant_id').value = t.id;
+        document.getElementById('edit_admin_id').value = admin ? admin.id : '';
+        document.getElementById('edit_tenant_name').value = t.name || '';
+        document.getElementById('edit_tenant_slug').value = t.slug || '';
+        document.getElementById('edit_tenant_logo').value = t.logo_url || '';
+        document.getElementById('edit_tenant_logo_file').value = '';
+        if (t.logo_url) {
+          const img = document.getElementById('edit_tenant_logo_preview');
+          img.src = t.logo_url;
+          img.style.opacity = '1';
+        } else {
+          resetLogoPreview('edit_tenant_logo_preview');
+        }
+        document.getElementById('edit_tenant_color').value = t.primary_color || '#2563eb';
+        updateColorPreview('edit_tenant_color', 'edit_tenant_color_preview', 'edit_tenant_color_value');
+        document.getElementById('edit_tenant_active').value = (t.is_active !== false).toString();
 
-  document.getElementById('edit_admin_name').value=admin ? (admin.name_surname||'') : '';
-  document.getElementById('edit_admin_email').value=admin ? (admin.email||'') : '';
-  document.getElementById('edit_admin_role').value=admin ? (originalRole||'admin') : 'admin';
-  document.getElementById('edit_admin_role').dataset.originalRole = originalRole;
-  document.getElementById('edit_admin_can_login').value=(!admin || admin.can_login!==false).toString();
-  setAdminEditLocked(isLockedSuperAdmin);
+        document.getElementById('edit_admin_name').value = admin ? admin.name_surname || '' : '';
+        document.getElementById('edit_admin_email').value = admin ? admin.email || '' : '';
+        document.getElementById('edit_admin_role').value = admin ? originalRole || 'admin' : 'admin';
+        document.getElementById('edit_admin_role').dataset.originalRole = originalRole;
+        document.getElementById('edit_admin_can_login').value = (!admin || admin.can_login !== false).toString();
+        setAdminEditLocked(isLockedSuperAdmin);
 
-  document.getElementById('edit_panel').classList.remove('hidden');
-  previewEditLoginLink();
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-function cancelEdit(){ document.getElementById('edit_panel').classList.add('hidden'); setAdminEditLocked(false); setEditStatus(''); }
-async function saveEditedTenant(){
-  try{
-    if(!currentAuth || currentAuth.role !== 'super_admin') throw new Error('Bu işlem yalnızca Super Admin tarafından yapılabilir.');
-    const tenantId=document.getElementById('edit_tenant_id').value;
-    const adminId=document.getElementById('edit_admin_id').value;
-    const name=document.getElementById('edit_tenant_name').value.trim();
-    const slug=slugify(document.getElementById('edit_tenant_slug').value);
-    let logo=document.getElementById('edit_tenant_logo').value.trim() || null;
-    const color=document.getElementById('edit_tenant_color').value || '#2563eb';
-    const isActive=document.getElementById('edit_tenant_active').value==='true';
-    const adminName=document.getElementById('edit_admin_name').value.trim();
-    const adminEmail=document.getElementById('edit_admin_email').value.trim().toLowerCase();
-    const originalAdminRole = document.getElementById('edit_admin_role').dataset.originalRole || '';
-    const isLockedSuperAdmin = originalAdminRole === 'super_admin';
-    const adminRole=document.getElementById('edit_admin_role').value;
-    const adminCanLogin=document.getElementById('edit_admin_can_login').value==='true';
-    if(!tenantId || !name || !slug) throw new Error('Müşteri adı ve slug zorunlu.');
-    if(!isLockedSuperAdmin && (!adminName || !adminEmail)) throw new Error('Admin adı ve e-postası zorunlu.');
+        document.getElementById('edit_panel').classList.remove('hidden');
+        previewEditLoginLink();
+        const editPanel = document.getElementById('edit_panel');
+        if (editPanel) {
+          editPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        document.getElementById('edit_tenant_name')?.focus();
+      }
+      function cancelEdit() {
+        document.getElementById('edit_panel').classList.add('hidden');
+        setAdminEditLocked(false);
+        setEditStatus('');
+      }
+      async function saveEditedTenant() {
+        try {
+          if (!currentAuth || currentAuth.role !== 'super_admin')
+            throw new Error('Bu işlem yalnızca Super Admin tarafından yapılabilir.');
+          const tenantId = document.getElementById('edit_tenant_id').value;
+          const adminId = document.getElementById('edit_admin_id').value;
+          const name = document.getElementById('edit_tenant_name').value.trim();
+          const slug = slugify(document.getElementById('edit_tenant_slug').value);
+          let logo = document.getElementById('edit_tenant_logo').value.trim() || null;
+          const color = document.getElementById('edit_tenant_color').value || '#2563eb';
+          const isActive = document.getElementById('edit_tenant_active').value === 'true';
+          const adminName = document.getElementById('edit_admin_name').value.trim();
+          const adminEmail = document.getElementById('edit_admin_email').value.trim().toLowerCase();
+          const originalAdminRole = document.getElementById('edit_admin_role').dataset.originalRole || '';
+          const isLockedSuperAdmin = originalAdminRole === 'super_admin';
+          const adminRole = document.getElementById('edit_admin_role').value;
+          const adminCanLogin = document.getElementById('edit_admin_can_login').value === 'true';
+          if (!tenantId || !name || !slug) throw new Error('Müşteri adı ve slug zorunlu.');
+          if (!isLockedSuperAdmin && (!adminName || !adminEmail)) throw new Error('Admin adı ve e-postası zorunlu.');
 
-    const {data:slugOwner,error:slugErr}=await dbClient.from('tenants').select('id').eq('slug', slug).neq('id', tenantId).maybeSingle();
-    if(slugErr) throw slugErr;
-    if(slugOwner) throw new Error('Bu slug/kısa kod başka bir tenant tarafından kullanılıyor.');
+          const { data: slugOwner, error: slugErr } = await dbClient
+            .from('tenants')
+            .select('id')
+            .eq('slug', slug)
+            .neq('id', tenantId)
+            .maybeSingle();
+          if (slugErr) throw slugErr;
+          if (slugOwner) throw new Error('Bu slug/kısa kod başka bir tenant tarafından kullanılıyor.');
 
-    const uploadedLogo = await uploadLogoForTenant(tenantId, slug, 'edit_tenant_logo_file');
-    if(uploadedLogo) logo = uploadedLogo;
-    const {error:tErr}=await dbClient.from('tenants').update({name, slug, logo_url:logo, primary_color:color, is_active:isActive}).eq('id', tenantId);
-    if(tErr) throw tErr;
+          const uploadedLogo = await uploadLogoForTenant(tenantId, slug, 'edit_tenant_logo_file');
+          if (uploadedLogo) logo = uploadedLogo;
+          const { error: tErr } = await dbClient
+            .from('tenants')
+            .update({ name, slug, logo_url: logo, primary_color: color, is_active: isActive })
+            .eq('id', tenantId);
+          if (tErr) throw tErr;
 
-    if(isLockedSuperAdmin){
-      setEditStatus('Müşteri bilgileri güncellendi. Super Admin kullanıcı bilgileri korunarak değiştirilmedi.', true);
-      await loadTenants();
-      return;
-    }
+          if (isLockedSuperAdmin) {
+            setEditStatus(
+              'Müşteri bilgileri güncellendi. Super Admin kullanıcı bilgileri korunarak değiştirilmedi.',
+              true
+            );
+            await loadTenants();
+            return;
+          }
 
-    if(adminId){
-      const {data:emailOwner,error:eErr}=await dbClient.from('osgb_staff').select('id').ilike('email', adminEmail).neq('id', adminId).maybeSingle();
-      if(eErr) throw eErr;
-      if(emailOwner) throw new Error('Bu admin e-postası başka bir personel kaydında kullanılıyor.');
-      const {error:aErr}=await dbClient.from('osgb_staff').update({name_surname:adminName, email:adminEmail, access_role:adminRole, can_login:adminCanLogin, is_active_manual:adminCanLogin?'Aktif':'Pasif'}).eq('id', adminId).eq('tenant_id', tenantId);
-      if(aErr) throw aErr;
-    } else {
-      const {data:emailOwner,error:eErr}=await dbClient.from('osgb_staff').select('id').ilike('email', adminEmail).maybeSingle();
-      if(eErr) throw eErr;
-      if(emailOwner) throw new Error('Bu admin e-postası başka bir personel kaydında kullanılıyor.');
-      const {data:newAdmin,error:iErr}=await dbClient.from('osgb_staff').insert({tenant_id:tenantId, name_surname:adminName, staff_role:'Yönetici', certificate_class:'Yok', email:adminEmail, hire_date:new Date().toISOString().slice(0,10), is_active_manual:adminCanLogin?'Aktif':'Pasif', access_role:adminRole, can_login:adminCanLogin, auth_invite_status:'not_sent'}).select('id').single();
-      if(iErr) throw iErr;
-      document.getElementById('edit_admin_id').value=newAdmin.id;
-      document.getElementById('edit_admin_role').dataset.originalRole = adminRole;
-    }
-    setEditStatus('Kayıt güncellendi.', true);
-    await loadTenants();
-  }catch(err){ setEditStatus('Hata: '+(err.message||err), false); }
-}
-async function resetInviteForEditingAdmin(){
-  const id=document.getElementById('edit_admin_id').value;
-  const originalRole=document.getElementById('edit_admin_role').dataset.originalRole || '';
-  if(originalRole==='super_admin'){ setEditStatus('Super Admin davet durumu bu panelden değiştirilmez.', false); return; }
-  if(!id){ setEditStatus('Önce admin kaydını kaydetmelisin.', false); return; }
-  await resetInvite(id);
-}
-async function sendInviteForEditingAdmin(){
-  const id=document.getElementById('edit_admin_id').value;
-  const originalRole=document.getElementById('edit_admin_role').dataset.originalRole || '';
-  if(originalRole==='super_admin'){ setEditStatus('Super Admin için bu panelden davet gönderilmez.', false); return; }
-  if(!id){ setEditStatus('Önce admin kaydını kaydetmelisin.', false); return; }
-  await sendInvite(id);
-}
-async function resetInvite(staffId){
-  const {error}=await dbClient.from('osgb_staff').update({auth_invite_status:'not_sent', auth_invited_at:null}).eq('id', staffId);
-  if(error){ setEditStatus('Davet durumu sıfırlanamadı: '+error.message, false); return; }
-  setEditStatus('Davet durumu sıfırlandı.', true); await loadTenants();
-}
-async function sendInvite(staffId){
-  if(!confirm('Bu kullanıcıya davet e-postası gönderilsin mi?')) return;
-  try{
-    const {data:{session}}=await dbClient.auth.getSession();
-    if(!session) throw new Error('Oturum bulunamadı. Yeniden giriş yap.');
-    const {data:staff,error:sErr}=await dbClient.from('osgb_staff').select('id,email,tenant_id,tenants(slug)').eq('id', staffId).single();
-    if(sErr) throw sErr;
-    const slug=staff.tenants && staff.tenants.slug ? staff.tenants.slug : '';
-    const resp=await fetch(`${SUPABASE_URL}/functions/v1/invite-staff-user`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`},
-      body:JSON.stringify({staff_id:staffId, site_origin:window.location.origin, redirect_to:tenantLoginUrl(slug)})
-    });
-    const result=await resp.json().catch(()=>({}));
-    if(!resp.ok || result.ok===false) throw new Error(result.error || JSON.stringify(result));
-    await dbClient.from('osgb_staff').update({auth_invite_status:'sent', auth_invited_at:new Date().toISOString()}).eq('id', staffId);
-    setEditStatus('Davet gönderildi: '+(result.email||staff.email), true);
-    await loadTenants();
-  }catch(err){ setEditStatus('Davet gönderilemedi: '+(err.message||err), false); alert('Davet gönderilemedi: '+(err.message||err)); }
-}
-async function handleLogout(){ await dbClient.auth.signOut(); window.location.href='login.html'; }
-window.onload=async()=>{ const auth=await requireSuperAdmin(); if(!auth) return; document.body.style.display='block'; resetLogoPreview('tenant_logo_preview'); resetLogoPreview('edit_tenant_logo_preview'); previewLoginLink(); await loadTenants(); };
-</script>
-</body>
+          if (adminId) {
+            const { data: emailOwner, error: eErr } = await dbClient
+              .from('osgb_staff')
+              .select('id')
+              .ilike('email', adminEmail)
+              .neq('id', adminId)
+              .maybeSingle();
+            if (eErr) throw eErr;
+            if (emailOwner) throw new Error('Bu admin e-postası başka bir personel kaydında kullanılıyor.');
+            const { error: aErr } = await dbClient
+              .from('osgb_staff')
+              .update({
+                name_surname: adminName,
+                email: adminEmail,
+                access_role: adminRole,
+                can_login: adminCanLogin,
+                is_active_manual: adminCanLogin ? 'Aktif' : 'Pasif'
+              })
+              .eq('id', adminId)
+              .eq('tenant_id', tenantId);
+            if (aErr) throw aErr;
+          } else {
+            const { data: emailOwner, error: eErr } = await dbClient
+              .from('osgb_staff')
+              .select('id')
+              .ilike('email', adminEmail)
+              .maybeSingle();
+            if (eErr) throw eErr;
+            if (emailOwner) throw new Error('Bu admin e-postası başka bir personel kaydında kullanılıyor.');
+            const { data: newAdmin, error: iErr } = await dbClient
+              .from('osgb_staff')
+              .insert({
+                tenant_id: tenantId,
+                name_surname: adminName,
+                staff_role: 'Yönetici',
+                certificate_class: 'Yok',
+                email: adminEmail,
+                hire_date: new Date().toISOString().slice(0, 10),
+                is_active_manual: adminCanLogin ? 'Aktif' : 'Pasif',
+                access_role: adminRole,
+                can_login: adminCanLogin,
+                auth_invite_status: 'not_sent'
+              })
+              .select('id')
+              .single();
+            if (iErr) throw iErr;
+            document.getElementById('edit_admin_id').value = newAdmin.id;
+            document.getElementById('edit_admin_role').dataset.originalRole = adminRole;
+          }
+          setEditStatus('Kayıt güncellendi.', true);
+          await loadTenants();
+        } catch (err) {
+          setEditStatus('Hata: ' + (err.message || err), false);
+        }
+      }
+      async function resetInviteForEditingAdmin() {
+        const id = document.getElementById('edit_admin_id').value;
+        const originalRole = document.getElementById('edit_admin_role').dataset.originalRole || '';
+        if (originalRole === 'super_admin') {
+          setEditStatus('Super Admin davet durumu bu panelden değiştirilmez.', false);
+          return;
+        }
+        if (!id) {
+          setEditStatus('Önce admin kaydını kaydetmelisin.', false);
+          return;
+        }
+        await resetInvite(id);
+      }
+      async function sendInviteForEditingAdmin() {
+        const id = document.getElementById('edit_admin_id').value;
+        const originalRole = document.getElementById('edit_admin_role').dataset.originalRole || '';
+        if (originalRole === 'super_admin') {
+          setEditStatus('Super Admin için bu panelden davet gönderilmez.', false);
+          return;
+        }
+        if (!id) {
+          setEditStatus('Önce admin kaydını kaydetmelisin.', false);
+          return;
+        }
+        await sendInvite(id);
+      }
+      async function resetInvite(staffId) {
+        const { error } = await dbClient
+          .from('osgb_staff')
+          .update({ auth_invite_status: 'not_sent', auth_invited_at: null })
+          .eq('id', staffId);
+        if (error) {
+          setEditStatus('Davet durumu sıfırlanamadı: ' + error.message, false);
+          return;
+        }
+        setEditStatus('Davet durumu sıfırlandı.', true);
+        await loadTenants();
+      }
+      async function sendInvite(staffId) {
+        if (!confirm('Bu kullanıcıya davet e-postası gönderilsin mi?')) return;
+        try {
+          const {
+            data: { session }
+          } = await dbClient.auth.getSession();
+          if (!session) throw new Error('Oturum bulunamadı. Yeniden giriş yap.');
+          const { data: staff, error: sErr } = await dbClient
+            .from('osgb_staff')
+            .select('id,email,tenant_id,tenants(slug)')
+            .eq('id', staffId)
+            .single();
+          if (sErr) throw sErr;
+          const slug = staff.tenants && staff.tenants.slug ? staff.tenants.slug : '';
+          const resp = await fetch(`${SUPABASE_URL}/functions/v1/invite-staff-user`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({
+              staff_id: staffId,
+              site_origin: window.location.origin,
+              redirect_to: tenantLoginUrl(slug)
+            })
+          });
+          const result = await resp.json().catch(() => ({}));
+          if (!resp.ok || result.ok === false) throw new Error(result.error || JSON.stringify(result));
+          await dbClient
+            .from('osgb_staff')
+            .update({ auth_invite_status: 'sent', auth_invited_at: new Date().toISOString() })
+            .eq('id', staffId);
+          markOnboardingInviteSent({ tenantId: staff.tenant_id, adminEmail: staff.email || '' });
+          setEditStatus('Davet gönderildi: ' + (result.email || staff.email), true);
+          await loadTenants();
+        } catch (err) {
+          setEditStatus('Davet gönderilemedi: ' + (err.message || err), false);
+          alert('Davet gönderilemedi: ' + (err.message || err));
+        }
+      }
+      window.onload = async () => {
+        const auth = await requireSuperAdmin();
+        if (!auth) return;
+        document.body.style.display = 'block';
+        resetLogoPreview('tenant_logo_preview');
+        resetLogoPreview('edit_tenant_logo_preview');
+        previewLoginLink();
+        initSaasPane();
+        setEsesCrmStageOptions();
+        loadTenantFinanceProfiles();
+        loadOnboardingChecklist();
+        renderOnboardingChecklist();
+        ['tenant_search', 'tenant_status_filter', 'tenant_invite_filter', 'tenant_attention_filter'].forEach((id) => {
+          document.getElementById(id)?.addEventListener('input', applyTenantFilters);
+          document.getElementById(id)?.addEventListener('change', applyTenantFilters);
+        });
+        ['finance_search', 'finance_package_filter', 'finance_status_filter'].forEach((id) => {
+          document.getElementById(id)?.addEventListener('input', () => renderTenantFinanceModule(tenantDashboardRows));
+          document.getElementById(id)?.addEventListener('change', () => renderTenantFinanceModule(tenantDashboardRows));
+        });
+        await loadTenants();
+        await loadEsesCrmPipeline();
+      };
+    </script>
+  </body>
 </html>

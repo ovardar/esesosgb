@@ -1,249 +1,728 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OSGB SaaS - Ramak Kala Bildirimleri</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root{--bg-main:#f4f6f9;--bg-card:#fff;--text-main:#1e293b;--text-muted:#64748b;--primary:#0f766e;--border-color:#e2e8f0;--table-header:#f8fafc;--danger:#dc2626;--success:#059669;--warning:#f97316;--info:#0284c7}
-    *{box-sizing:border-box}body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at top left,rgba(15,118,110,.13),transparent 30rem),linear-gradient(180deg,#f8fafc,#edf2f7);color:var(--text-main);padding:30px;display:none;margin:0}.card{background:rgba(255,255,255,.94);padding:0;border-radius:18px;max-width:1240px;margin:0 auto;box-shadow:0 8px 24px rgba(15,23,42,.08);border:1px solid var(--border-color);overflow:hidden}.global-header{padding:18px 22px 14px;margin-bottom:0;background:linear-gradient(135deg,#0f766e 0%,#059669 58%,#047857 100%);color:white;border-bottom:0}.top-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:15px}.logo-area{font-size:18px;font-weight:500;display:flex;align-items:center;gap:10px;min-width:0}.logo-area span[id^="lbl_"]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tenant-logo-img{width:34px;height:34px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid rgba(255,255,255,.35);padding:3px;box-sizing:border-box;flex:0 0 auto}.controls-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.user-info{font-size:13px;color:white;font-weight:600;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.logout-btn{background:rgba(239,68,68,.92);color:white;border:none;padding:7px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:800}.nav-container{display:flex;gap:7px;justify-content:flex-start;background:rgba(255,255,255,.10);padding:8px;border-radius:14px;border:1px solid rgba(255,255,255,.16);flex-wrap:wrap;overflow-x:auto}.nav-btn{background:rgba(255,255,255,.10);color:rgba(255,255,255,.86);padding:9px 13px;border-radius:10px;text-decoration:none;font-weight:800;font-size:12.5px;border:1px solid rgba(255,255,255,.10);white-space:nowrap}.nav-btn.active-page{background:white;color:#047857!important;box-shadow:0 8px 18px rgba(15,23,42,.22)}h2{margin:22px 22px 4px;font-size:clamp(22px,2.6vw,31px);letter-spacing:-.035em}.page-desc{margin:0 22px 20px;color:var(--text-muted);font-size:14px;max-width:960px}.section-title{margin:24px 22px 11px;display:inline-flex;align-items:center;gap:7px;color:#334155;background:rgba(255,255,255,.72);border:1px solid rgba(226,232,240,.9);padding:7px 11px;border-radius:999px;box-shadow:0 1px 2px rgba(15,23,42,.05);font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:15px;margin:0 22px 18px}.metric-box{padding:16px 18px;border-radius:18px;color:white;min-height:94px;box-shadow:0 18px 38px rgba(15,23,42,.13)}.metric-title{font-size:12px;font-weight:800;opacity:.95}.metric-value{font-size:32px;font-weight:900;margin-top:5px}.metric-green{background:linear-gradient(135deg,#10b981,#047857)}.metric-orange{background:linear-gradient(135deg,#f97316,#c2410c)}.metric-blue{background:linear-gradient(135deg,#0284c7,#0369a1)}.metric-red{background:linear-gradient(135deg,#dc2626,#991b1b)}.panel{background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.94));border:1px solid rgba(203,213,225,.85);border-radius:18px;padding:18px;box-shadow:0 12px 30px rgba(15,23,42,.07);margin:0 22px 24px}.panel h3{margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid rgba(226,232,240,.95);font-size:17px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}.toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:12px}.toolbar .field{min-width:180px;flex:1}label{display:block;margin-bottom:5px;color:#0f172a;font-weight:750;font-size:13px}input,select,textarea{width:100%;padding:10px;border:1px solid var(--border-color);border-radius:10px;background:#fff;color:var(--text-main);font-family:inherit}.btn{border:none;border-radius:10px;padding:9px 11px;font-weight:850;cursor:pointer;font-size:12px}.btn-blue{background:linear-gradient(135deg,#0284c7,#0369a1);color:white}.btn-green{background:linear-gradient(135deg,#16a34a,#047857);color:white}.btn-secondary{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}.btn-small{padding:7px 9px;font-size:11px}table{width:100%;border-collapse:separate;border-spacing:0;background:white;box-shadow:inset 0 0 0 1px rgba(226,232,240,.75);border-radius:12px;overflow:hidden;margin-top:14px;font-size:12px}th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--border-color);vertical-align:top;line-height:1.35}th{background:#f1f5f9;color:#475569;font-weight:850;text-transform:uppercase;letter-spacing:.035em;font-size:11px}tbody tr:nth-child(even) td{background:rgba(248,250,252,.65)}.badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;white-space:nowrap;letter-spacing:.02em}.badge-red{background:#fee2e2;color:#b91c1c}.badge-orange{background:#ffedd5;color:#c2410c}.badge-green{background:#dcfce7;color:#15803d}.badge-blue{background:#dbeafe;color:#1d4ed8}.badge-gray{background:#e2e8f0;color:#475569}.empty-state{text-align:center;color:var(--text-muted);padding:18px}.file-link{color:var(--primary);font-weight:850;text-decoration:none}.file-link:hover{text-decoration:underline}.new-row td{background:#f0fdf4!important}.action-stack{display:flex;flex-direction:column;gap:5px}@media(max-width:980px){body{padding:12px}.top-row,.controls-group{align-items:stretch}.top-row{flex-direction:column}.kpi-grid{grid-template-columns:1fr 1fr;margin-left:14px;margin-right:14px}.panel{margin-left:14px;margin-right:14px}table{display:block;overflow-x:auto;white-space:nowrap}}@media(max-width:560px){.kpi-grid{grid-template-columns:1fr}}
-
-    .link-generator-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px}
-    .public-link-box{border:1px dashed #93c5fd;background:#eff6ff;color:#1e40af;border-radius:12px;padding:10px;word-break:break-all;font-weight:800;font-size:12px}
-    .qr-box{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px}
-    .qr-box img{width:148px;height:148px;border:1px solid #cbd5e1;border-radius:12px;background:white;padding:7px}
-    .qr-help{color:var(--text-muted);font-size:12px;line-height:1.45;max-width:620px}
-    @media(max-width:980px){.link-generator-grid{grid-template-columns:1fr}}
-
-    .office-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.office-form-grid .full{grid-column:1/-1}.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}.modal-card{width:min(920px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 24px 70px rgba(15,23,42,.28)}.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #e2e8f0;background:#f8fafc}.modal-head h3{margin:0;font-size:18px}.modal-body{padding:18px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail-box{border:1px solid #e2e8f0;background:#f8fafc;border-radius:12px;padding:10px}.detail-box span{display:block;font-size:11px;color:var(--text-muted);font-weight:850;text-transform:uppercase;letter-spacing:.04em}.detail-box strong{display:block;margin-top:4px;color:#0f172a}.modal-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}.btn-red{background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff}.btn:disabled{opacity:.55;cursor:not-allowed}.office-status{margin-top:10px;font-size:12px;font-weight:850}.office-status.ok{color:#15803d}.office-status.err{color:#b91c1c}@media(max-width:760px){.office-form-grid,.detail-grid{grid-template-columns:1fr}.office-form-grid .full{grid-column:auto}.modal-card{max-height:94vh}}
-  </style>
-</head>
-<body>
-<div class="card">
-  <div class="global-header">
-    <div class="top-row">
-      <div class="logo-area"><span id="lbl_osgb_title">Eses Software</span></div>
-      <div class="controls-group"><div class="user-info">👤 <span id="current_user_email">...</span></div><button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button></div>
-    </div>
-    <div class="nav-container">
-      <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
-      <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
-      <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
-      <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-      <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
-      <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
-      <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
-      <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
-      <a id="menu_accidents" href="accidents.html" class="nav-btn" style="display:none;">🚑 İş Kazaları</a>
-      <a id="menu_near_miss" href="near-miss-admin.html" class="nav-btn active-page">⚠️ Ramak Kala</a>
-    </div>
-  </div>
-
-  <h2>⚠️ Ramak Kala Bildirimleri</h2>
-  <p class="page-desc">QR/public form üzerinden gelen anonim veya isimli ramak kala bildirimlerini izleyin, durumlandırın ve gerekirse DÖF’e dönüştürün.</p>
-
-  <div class="kpi-grid">
-    <div class="metric-box metric-green"><div class="metric-title">Toplam Bildirim</div><div class="metric-value" id="stat_total">0</div></div>
-    <div class="metric-box metric-orange"><div class="metric-title">Yeni</div><div class="metric-value" id="stat_new">0</div></div>
-    <div class="metric-box metric-blue"><div class="metric-title">İnceleniyor</div><div class="metric-value" id="stat_review">0</div></div>
-    <div class="metric-box metric-red"><div class="metric-title">DÖF'e Dönüşen</div><div class="metric-value" id="stat_dof">0</div></div>
-  </div>
-
-  <div class="section-title">🧑‍💼 Ofis İçinden Ramak Kala Bildirimi</div>
-  <div class="panel">
-    <h3>Ofis Kullanıcısı Bildirim Girişi</h3>
-    <p style="color:var(--text-muted);font-size:12px;margin-top:-4px;">Sisteme giriş yapan ofis/İSG kullanıcısı, sahadan gelen sözlü bildirimleri veya kendi gözlemini buradan kaydedebilir.</p>
-    <div class="office-form-grid">
-      <div><label>Firma</label><select id="office_company_select"><option value="">Firmalar yükleniyor...</option></select></div>
-      <div><label>Olay Tarihi</label><input type="date" id="office_incident_date"></div>
-      <div><label>Tehlike Türü</label><select id="office_hazard_type"><option value="Düşme / Kayma Riski">Düşme / Kayma Riski</option><option value="Elektrik Tehlikesi">Elektrik Tehlikesi</option><option value="Makine / Ekipman Tehlikesi">Makine / Ekipman Tehlikesi</option><option value="Kimyasal / Toz / Gaz">Kimyasal / Toz / Gaz</option><option value="Yangın / Patlama Riski">Yangın / Patlama Riski</option><option value="Ergonomi / Elle Taşıma">Ergonomi / Elle Taşıma</option><option value="KKD Eksikliği">KKD Eksikliği</option><option value="Diğer">Diğer</option></select></div>
-      <div><label>Olay Yeri</label><input id="office_incident_location" placeholder="Örn. Depo girişi, üretim hattı"></div>
-      <div class="full"><label>Açıklama</label><textarea id="office_description" rows="3" placeholder="Ramak kala/tehlikeli durum açıklaması"></textarea></div>
-      <div class="full"><label>Önerilen Aksiyon</label><textarea id="office_suggested_action" rows="2" placeholder="Varsa önerilen düzeltici/önleyici faaliyet"></textarea></div>
-      <div><label>Fotoğraf / Dosya</label><input type="file" id="office_file" accept="image/png,image/jpeg,image/webp,application/pdf"></div>
-      <div style="display:flex;align-items:end;"><button class="btn btn-green" style="width:100%;" onclick="saveOfficeNearMiss()">Ofis Bildirimini Kaydet</button></div>
-    </div>
-    <div id="office_status" class="office-status"></div>
-  </div>
-
-  <div class="section-title">🔗 Saha Bildirim Linki / QR Üretici</div>
-  <div class="panel">
-    <h3>Firma Bazlı Ramak Kala Bildirim Linki</h3>
-    <p style="color:var(--text-muted);font-size:12px;margin-top:-4px;">Saha çalışanları sisteme giriş yapmadan bu link veya QR üzerinden bildirim gönderebilir. QR yoksa public formda OSGB kısa kodu ile firma seçerek de bildirim yapılabilir.</p>
-    <div class="link-generator-grid">
-      <div>
-        <label>OSGB Kısa Kodu</label>
-        <input id="public_tenant_slug" disabled placeholder="Tenant kısa kodu yükleniyor...">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSGB SaaS - Ramak Kala Bildirimleri</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean" style="display: none;">
+    <div class="card">
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
+        </div>
+        <div class="nav-container">
+          <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+          <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display: none">🧩 SaaS Yönetimi</a>
+          <a id="menu_staff" href="staff.html" class="nav-btn" style="display: none">🔑 Personel Yönetimi</a>
+          <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+          <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+          <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+          <a id="menu_risk" href="risk.html" class="nav-btn" style="display: none">🦺 Uzman Risk Motoru</a>
+          <a id="menu_medical" href="medical.html" class="nav-btn" style="display: none">🩺 Hekim Sağlık Kartı</a>
+          <a id="menu_accidents" href="accidents.html" class="nav-btn" style="display: none">🚑 İş Kazaları</a>
+          <a id="menu_near_miss" href="near-miss-admin.html" class="nav-btn active-page">⚠️ Ramak Kala</a>
+        </div>
       </div>
-      <div>
-        <label>Firma</label>
-        <select id="public_company_select" onchange="renderPublicNearMissLink()"><option value="">Firmalar yükleniyor...</option></select>
+
+      <div class="crm-page-shell">
+        <div class="page-header-row" style="margin-bottom: 24px;">
+          <div class="page-title-group">
+            <h2 style="font-size: clamp(24px, 2.2vw, 34px); letter-spacing: -0.03em; color: #0f172a; font-weight: 800; margin: 0 0 6px;">⚠️ Ramak Kala Bildirimleri</h2>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0;">
+              QR/public form üzerinden gelen anonim veya isimli ramak kala bildirimlerini izleyin, durumlandırın ve gerekirse DÖF’e dönüştürün.
+            </p>
+          </div>
+        </div>
+
+        <!-- İstatistik KPI Kartları -->
+        <div class="crm-double-stats-grid" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+          <div class="stats-section-premium">
+            <div class="stats-cards-wrapper" style="display: flex; gap: 16px; flex-wrap: wrap;">
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#10b981"></div>
+                <span class="number" id="stat_total">0</span>
+                <span class="label">Toplam Bildirim</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#f59e0b"></div>
+                <span class="number" id="stat_new">0</span>
+                <span class="label">Yeni</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#3b82f6"></div>
+                <span class="number" id="stat_review">0</span>
+                <span class="label">İnceleniyor</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#ef4444"></div>
+                <span class="number" id="stat_dof">0</span>
+                <span class="label">DÖF'e Dönüşen</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: start; margin-bottom: 24px;">
+          <!-- Sol Sütun: Ofis Bildirim Girişi -->
+          <div class="stat-card-premium" style="padding: 24px;">
+            <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">🧑‍💼 Ofis İçinden Ramak Kala Bildirimi</h3>
+            <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+              Sisteme giriş yapan İSG kullanıcısı, sahadan gelen sözlü bildirimleri veya kendi gözlemini buradan kaydedebilir.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+              <div class="form-group-premium">
+                <label>Firma</label>
+                <select id="office_company_select">
+                  <option value="">Firmalar yükleniyor...</option>
+                </select>
+              </div>
+              <div class="form-group-premium">
+                <label>Olay Tarihi</label>
+                <input type="date" id="office_incident_date" />
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+              <div class="form-group-premium">
+                <label>Tehlike Türü</label>
+                <select id="office_hazard_type">
+                  <option value="Düşme / Kayma Riski">Düşme / Kayma Riski</option>
+                  <option value="Elektrik Tehlikesi">Elektrik Tehlikesi</option>
+                  <option value="Makine / Ekipman Tehlikesi">Makine / Ekipman Tehlikesi</option>
+                  <option value="Kimyasal / Toz / Gaz">Kimyasal / Toz / Gaz</option>
+                  <option value="Yangın / Patlama Riski">Yangın / Patlama Riski</option>
+                  <option value="Ergonomi / Elle Taşıma">Ergonomi / Elle Taşıma</option>
+                  <option value="KKD Eksikliği">KKD Eksikliği</option>
+                  <option value="Diğer">Diğer</option>
+                </select>
+              </div>
+              <div class="form-group-premium">
+                <label>Olay Yeri</label>
+                <input id="office_incident_location" placeholder="Örn. Depo girişi, üretim hattı" />
+              </div>
+            </div>
+
+            <div class="form-group-premium" style="margin-bottom: 14px;">
+              <label>Açıklama</label>
+              <textarea id="office_description" rows="3" placeholder="Ramak kala/tehlikeli durum açıklaması"></textarea>
+            </div>
+            
+            <div class="form-group-premium" style="margin-bottom: 14px;">
+              <label>Önerilen Aksiyon</label>
+              <textarea id="office_suggested_action" rows="2" placeholder="Varsa önerilen düzeltici/önleyici faaliyet"></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+              <div class="form-group-premium">
+                <label>Fotoğraf / Dosya</label>
+                <input type="file" id="office_file" accept="image/png,image/jpeg,image/webp,application/pdf" style="padding: 6px 14px;" />
+              </div>
+              <div style="display: flex; align-items: end;">
+                <button class="btn-add-lead-btn" style="width: 100%; border: none; font-size:13px; padding: 12px; cursor:pointer;" onclick="saveOfficeNearMiss()">💾 Ofis Bildirimini Kaydet</button>
+              </div>
+            </div>
+            <div id="office_status" style="margin-top: 10px; font-size: 13px; font-weight: 600; text-align: center;"></div>
+          </div>
+
+          <!-- Sağ Sütun: Saha Bildirim Linki / QR -->
+          <div class="stat-card-premium" style="padding: 24px;">
+            <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">🔗 Saha Bildirim Linki / QR Üretici</h3>
+            <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+              Saha çalışanları sisteme giriş yapmadan bu QR veya link üzerinden anonim bildirim gönderebilir.
+            </p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 14px; margin-bottom: 14px;">
+              <div class="form-group-premium">
+                <label>OSGB Kısa Kodu</label>
+                <input id="public_tenant_slug" disabled placeholder="Yükleniyor..." style="background:#f1f5f9; color:var(--uc-text-muted);" />
+              </div>
+              <div class="form-group-premium">
+                <label>Firma</label>
+                <select id="public_company_select" onchange="renderPublicNearMissLink()">
+                  <option value="">Firmalar yükleniyor...</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn-add-lead-btn" onclick="renderPublicNearMissLink()" style="width: 100%; border:none; padding: 10px 16px; cursor:pointer; background:var(--uc-primary); font-size:13px; margin-bottom: 14px;">⚡ Link & QR Kod Üret</button>
+            
+            <div id="public_near_miss_link" style="background:#f8fafc; border:1px dashed var(--uc-line); border-radius:10px; padding:12px; font-size:12px; font-family:monospace; word-break:break-all; color:var(--uc-text-muted); margin-bottom:14px; min-height: 40px;">Firma seçince link oluşur.</div>
+            
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;">
+              <button onclick="copyPublicNearMissLink()" style="flex:1; background:#f1f5f9; border:1px solid var(--uc-line); border-radius:8px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; color:#475569;">📋 Kopyala</button>
+              <button onclick="openPublicNearMissLink()" style="flex:1; background:#e0f2fe; border:none; border-radius:8px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; color:#0369a1;">🌐 Aç</button>
+              <button onclick="downloadQrCode()" style="flex:1; background:#dcfce7; border:none; border-radius:8px; padding:8px 12px; font-size:12px; font-weight:700; cursor:pointer; color:#15803d;">📥 QR İndir</button>
+            </div>
+
+            <div id="qr_box" style="display: none; border-top: 1px solid var(--uc-line); padding-top: 20px; flex-direction: column; align-items: center; gap: 12px;">
+              <img id="qr_img" alt="Ramak Kala QR Kod" style="width: 150px; height: 150px; border:1px solid var(--uc-line); border-radius:8px; padding:4px;" />
+              <div style="font-size: 11px; color: var(--uc-text-muted); text-align: center; line-height: 1.4;">
+                Bu QR kodu panolara veya sahaya yapıştırabilirsiniz. Çalışanlar okutarak doğrudan formu açabilir.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alt Bölüm: Bildirim Havuzu -->
+        <div class="stat-card-premium" style="padding: 24px;">
+          <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📋 Bildirim Havuzu</h3>
+          <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0 0 20px;">Gelen saha ve ofis ramak kala bildirimlerini buradan yönetin.</p>
+          
+          <div class="crm-toolbar-premium" style="margin-bottom: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <div class="form-group-premium" style="min-width: 180px;">
+              <label style="margin-bottom: 4px;">Durum Filtresi</label>
+              <select id="status_filter" onchange="renderReports()" style="padding: 8px 12px; font-size:12.5px;">
+                <option value="">Tümü</option>
+                <option value="Yeni">Yeni</option>
+                <option value="İnceleniyor">İnceleniyor</option>
+                <option value="Kapatıldı">Kapatıldı</option>
+                <option value="DÖF'e Dönüştürüldü">DÖF'e Dönüştürüldü</option>
+              </select>
+            </div>
+            <div class="form-group-premium" style="flex:1; min-width: 250px;">
+              <label style="margin-bottom: 4px;">Arama</label>
+              <input id="text_filter" oninput="renderReports()" placeholder="Firma adı, olay yeri veya açıklama ile arayın..." style="padding: 8px 12px; font-size:12.5px;" />
+            </div>
+            <div style="display: flex; align-items: end; padding-top: 18px;">
+              <button class="btn-add-lead-btn" onclick="fetchReports()" style="border: none; padding: 10px 18px; border-radius: 999px; font-weight: 700; color:#fff; cursor:pointer; background:var(--uc-primary); font-size: 12.5px;">🔄 Yenile</button>
+            </div>
+          </div>
+
+          <div class="table-container-premium" style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr>
+                  <th style="padding: 12px 16px;">Firma / Bildiren</th>
+                  <th style="padding: 12px 16px;">Olay Bilgileri</th>
+                  <th style="padding: 12px 16px;">Açıklama / Aksiyon</th>
+                  <th style="padding: 12px 16px;">Durum</th>
+                  <th style="padding: 12px 16px;">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="reports_tbody">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">Bildirimler yükleniyor...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <button class="btn btn-blue" onclick="renderPublicNearMissLink()">Link / QR Oluştur</button>
     </div>
-    <div class="public-link-box" id="public_near_miss_link">Firma seçince link oluşur.</div>
-    <div class="action-stack" style="flex-direction:row;gap:8px;flex-wrap:wrap;margin-top:10px;">
-      <button class="btn btn-secondary btn-small" onclick="copyPublicNearMissLink()">Linki Kopyala</button>
-      <button class="btn btn-green btn-small" onclick="openPublicNearMissLink()">Formu Aç</button>
-      <button class="btn btn-secondary btn-small" onclick="downloadQrCode()">QR Kod İndir</button>
-    </div>
-    <div class="qr-box" id="qr_box" style="display:none;">
-      <img id="qr_img" alt="Ramak Kala QR Kod">
-      <div class="qr-help">Bu QR kodu firma panolarına, üretim alanlarına, yemekhane girişine veya şantiye noktalarına yapıştırabilirsiniz. QR okutulduğunda çalışan firma seçmeden doğrudan ilgili ramak kala formunu açar.</div>
-    </div>
-  </div>
 
-  <div class="section-title">📋 Bildirim Havuzu</div>
-  <div class="panel">
-    <h3>Gelen Ramak Kala Kayıtları</h3>
-    <div class="toolbar">
-      <div class="field"><label>Durum Filtresi</label><select id="status_filter" onchange="renderReports()"><option value="">Tümü</option><option value="Yeni">Yeni</option><option value="İnceleniyor">İnceleniyor</option><option value="Kapatıldı">Kapatıldı</option><option value="DÖF'e Dönüştürüldü">DÖF'e Dönüştürüldü</option></select></div>
-      <div class="field"><label>Arama</label><input id="text_filter" oninput="renderReports()" placeholder="Firma, yer, açıklama, tür"></div>
-      <div><button class="btn btn-secondary" onclick="fetchReports()">Yenile</button></div>
-    </div>
-    <table>
-      <thead><tr><th>Firma / Bildiren</th><th>Olay</th><th>Açıklama</th><th>Durum</th><th>İşlem</th></tr></thead>
-      <tbody id="reports_tbody"><tr><td colspan="5" class="empty-state">Bildirimler yükleniyor...</td></tr></tbody>
-    </table>
-  </div>
-</div>
-
-<div class="modal-backdrop" id="detail_modal">
-  <div class="modal-card">
-    <div class="modal-head"><h3>Ramak Kala Bildirim Detayı</h3><button class="btn btn-secondary btn-small" onclick="closeDetailModal()">Kapat</button></div>
-    <div class="modal-body">
-      <div id="detail_modal_content" class="detail-grid"></div>
-      <div class="modal-actions">
-        <select id="detail_status_select" style="max-width:220px;"><option value="Yeni">Yeni</option><option value="İnceleniyor">İnceleniyor</option><option value="Kapatıldı">Kapatıldı</option><option value="DÖF'e Dönüştürüldü">DÖF'e Dönüştürüldü</option></select>
-        <button class="btn btn-secondary" onclick="saveDetailStatus()">Durumu Kaydet</button>
-        <button class="btn btn-blue" onclick="openDofModalFromDetail()">DÖF'e Dönüştür</button>
+    <!-- MODAL: Detay -->
+    <div class="modal-backdrop-premium" id="detail_modal" style="position:fixed; inset:0; background:rgba(15,23,42,0.45); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:3000;">
+      <div class="modal-card-premium" style="background:var(--uc-surface); border: 1px solid var(--uc-line); border-radius:14px; width:min(680px, 90%); padding:24px; box-shadow: 0 20px 40px rgba(15,23,42,0.16);">
+        <div class="modal-header-premium" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--uc-line); padding-bottom:12px; margin-bottom:16px; background:none;">
+          <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--uc-text);">Ramak Kala Bildirim Detayı</h3>
+          <button onclick="closeDetailModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--uc-text-muted);">&times;</button>
+        </div>
+        <div class="modal-body-premium" style="padding:0;">
+          <div id="detail_modal_content" class="detail-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--uc-line); padding-top:16px; margin-top:16px; flex-wrap:wrap; gap:12px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+              <select id="detail_status_select" style="padding:8px 12px; border:1px solid var(--uc-line); border-radius:8px; font-size:13px; color:var(--uc-text);">
+                <option value="Yeni">Yeni</option>
+                <option value="İnceleniyor">İnceleniyor</option>
+                <option value="Kapatıldı">Kapatıldı</option>
+                <option value="DÖF'e Dönüştürüldü">DÖF'e Dönüştürüldü</option>
+              </select>
+              <button onclick="saveDetailStatus()" style="background:var(--uc-primary); color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer;">Durumu Kaydet</button>
+            </div>
+            <button onclick="openDofModalFromDetail()" style="background:#e0f2fe; color:#0369a1; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer;">DÖF'e Dönüştür</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<div class="modal-backdrop" id="dof_modal">
-  <div class="modal-card">
-    <div class="modal-head"><h3>Ramak Kala Bildiriminden DÖF Oluştur</h3><button class="btn btn-secondary btn-small" onclick="closeDofModal()">Kapat</button></div>
-    <div class="modal-body">
-      <input type="hidden" id="dof_report_id">
-      <div class="detail-grid">
-        <div><label>DÖF Başlığı</label><input id="dof_hazard_title"></div>
-        <div><label>Sorumlu Kişi</label><input id="dof_responsible_person" placeholder="Örn. İSG Uzmanı / Birim amiri"></div>
-        <div><label>Hedef Tarih</label><input type="date" id="dof_target_date"></div>
-        <div><label>Risk Seviyesi</label><select id="dof_risk_level"><option value="low">Düşük</option><option value="medium" selected>Orta</option><option value="high">Yüksek</option><option value="critical">Kritik</option></select></div>
-        <div style="grid-column:1/-1;"><label>Aksiyon Planı</label><textarea id="dof_action_plan" rows="4"></textarea></div>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeDofModal()">Vazgeç</button>
-        <button class="btn btn-blue" id="dof_save_btn" onclick="saveDofFromModal()">DÖF Oluştur</button>
+    <!-- MODAL: DÖF Oluştur -->
+    <div class="modal-backdrop-premium" id="dof_modal" style="position:fixed; inset:0; background:rgba(15,23,42,0.45); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:3100;">
+      <div class="modal-card-premium" style="background:var(--uc-surface); border: 1px solid var(--uc-line); border-radius:14px; width:min(680px, 90%); padding:24px; box-shadow: 0 20px 40px rgba(15,23,42,0.16);">
+        <div class="modal-header-premium" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--uc-line); padding-bottom:12px; margin-bottom:16px; background:none;">
+          <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--uc-text);">Ramak Kala Bildiriminden DÖF Oluştur</h3>
+          <button onclick="closeDofModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--uc-text-muted);">&times;</button>
+        </div>
+        <div class="modal-body-premium" style="padding:0;">
+          <input type="hidden" id="dof_report_id" />
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+            <div class="form-group-premium" style="grid-column: 1/-1;">
+              <label>DÖF Başlığı</label>
+              <input id="dof_hazard_title" style="padding:8px 12px; font-size:13px;" />
+            </div>
+            <div class="form-group-premium">
+              <label>Sorumlu Kişi</label>
+              <input id="dof_responsible_person" placeholder="Örn. İSG Uzmanı / Birim amiri" style="padding:8px 12px; font-size:13px;" />
+            </div>
+            <div class="form-group-premium">
+              <label>Hedef Tarih</label>
+              <input type="date" id="dof_target_date" style="padding:8px 12px; font-size:13px;" />
+            </div>
+            <div class="form-group-premium" style="grid-column: 1/-1;">
+              <label>Risk Seviyesi</label>
+              <select id="dof_risk_level" style="padding:8px 12px; font-size:13px;">
+                <option value="low">Düşük</option>
+                <option value="medium" selected>Orta</option>
+                <option value="high">Yüksek</option>
+                <option value="critical">Kritik</option>
+              </select>
+            </div>
+            <div class="form-group-premium" style="grid-column: 1/-1;">
+              <label>Aksiyon Planı</label>
+              <textarea id="dof_action_plan" rows="3" style="padding:8px 12px; font-size:13px;"></textarea>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--uc-line); padding-top:16px;">
+            <button onclick="closeDofModal()" style="background:none; border:1px solid var(--uc-line); border-radius:8px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer; color:var(--uc-text-muted);">Vazgeç</button>
+            <button id="dof_save_btn" onclick="saveDofFromModal()" style="background:var(--uc-primary); color:#fff; border:none; border-radius:8px; padding:8px 20px; font-size:13px; font-weight:700; cursor:pointer;">DÖF Oluştur</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<script>
-const SUPABASE_URL="https://dnvuizausfcjzkcsynql.supabase.co";
-const SUPABASE_KEY="sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-const dbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const FILE_BUCKET='near-miss-files';
-let CURRENT_AUTH=null; let REPORT_ROWS=[]; let SELECTED_REPORT_ID=null;
-function normalizeAccessRole(value){const v=(value||'').toString().trim().toLowerCase();if(['super_admin','super admin','saas_admin','sistem sahibi'].includes(v))return'super_admin';if(['admin','yonetici','yönetici'].includes(v))return'admin';if(['uzman','isg_uzmani','isg uzmanı','iş güvenliği uzmanı'].includes(v))return'uzman';if(['hekim','isyeri hekimi','işyeri hekimi'].includes(v))return'hekim';if(['dsp','diğer sağlık personeli','diger saglik personeli'].includes(v))return'dsp';if(['firma_yetkilisi','firma yetkilisi','musteri','müşteri'].includes(v))return'firma_yetkilisi';return'';}
-function inferAccessRoleFromEmail(email){const e=(email||'').toLowerCase();if(e.includes('orhan.vardar@gmail.com'))return'super_admin';if(e.includes('admin'))return'admin';if(e.includes('hekim'))return'hekim';if(e.includes('dsp'))return'dsp';if(e.includes('firma')||e.includes('musteri')||e.includes('müşteri'))return'firma_yetkilisi';if(e.includes('uzman'))return'uzman';return'uzman';}
-function isStaffAccessActive(record){if(!record)return true;if(record.can_login===false)return false;if(record.is_active_manual==='Aktif')return true;if(record.is_active_manual==='Pasif')return false;return true;}
-async function getCurrentAuthContext(){const{data:{session}}=await dbClient.auth.getSession();if(!session)return{session:null,email:'',role:'',canLogin:false,staff:null};const email=session.user.email||'';let staff=null;try{const{data}=await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email',email).maybeSingle();staff=data||null;}catch(err){console.warn(err.message)}const role=normalizeAccessRole(staff&&staff.access_role)||normalizeAccessRole(staff&&staff.staff_role)||inferAccessRoleFromEmail(email);return{session,email,role,canLogin:isStaffAccessActive(staff),staff,tenant:staff&&staff.tenants?staff.tenants:null,tenant_id:staff?staff.tenant_id:null};}
-function canAccessPage(role,page){if(role==='super_admin'||role==='admin')return true;if(page==='risk'||page==='accidents'||page==='near_miss')return role==='uzman';if(page==='medical')return role==='hekim';if(page==='staff')return false;if(page==='company'||page==='workers'||page==='schedule')return['uzman','hekim','dsp'].includes(role);return true;}
-function roleLabel(role){return{super_admin:'Super Admin',admin:'Admin',uzman:'İSG Uzmanı',hekim:'İşyeri Hekimi',dsp:'DSP',firma_yetkilisi:'Firma Yetkilisi'}[role]||role||'Rol yok';}
-function applyRoleBasedNavigation(role){const ids=['risk','medical','staff','saas','accidents','near_miss'];ids.forEach(x=>{const el=document.getElementById('menu_'+x);if(!el)return;if(x==='saas')el.style.display=role==='super_admin'?'inline-block':'none';else if(x==='staff')el.style.display=canAccessPage(role,'staff')?'inline-block':'none';else el.style.display=canAccessPage(role,x)?'inline-block':'none';});}
-function setTenantBranding(tenant){const titleEl=document.getElementById('lbl_osgb_title');if(titleEl)titleEl.innerText=(tenant&&tenant.name)?tenant.name:'Eses Software';const area=titleEl?titleEl.closest('.logo-area'):null;if(!area)return;let img=area.querySelector('.tenant-logo-img');const logoUrl=tenant&&tenant.logo_url?tenant.logo_url:'';if(logoUrl){if(!img){img=document.createElement('img');img.className='tenant-logo-img';img.alt='Logo';area.insertBefore(img,titleEl);}img.src=logoUrl;}else if(img){img.remove();}}
-async function requireAuthAndRole(page){const auth=await getCurrentAuthContext();if(!auth.session){window.location.href='login.html';return null;}if(!auth.canLogin){await dbClient.auth.signOut();alert('Bu kullanıcı için sistem erişimi pasif.');window.location.href='login.html';return null;}const userInfo=document.getElementById('current_user_email');if(userInfo)userInfo.innerText=`${auth.email} • ${roleLabel(auth.role)}`;setTenantBranding(auth.tenant);applyRoleBasedNavigation(auth.role);if(page&&!canAccessPage(auth.role,page)){window.location.href='dashboard.html';return null;}return auth;}
-function escapeHtml(v){return(v||'').toString().replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
-function shortText(t,l){if(!t)return'-';return t.length>l?t.substring(0,l)+'...':t;}
-function statusBadge(s){if(s==='DÖF\'e Dönüştürüldü')return'<span class="badge badge-red">DÖF</span>';if(s==='Kapatıldı')return'<span class="badge badge-green">Kapatıldı</span>';if(s==='İnceleniyor')return'<span class="badge badge-blue">İnceleniyor</span>';return'<span class="badge badge-orange">Yeni</span>';}
-function todayString(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+    <script>
+      const FILE_BUCKET = 'near-miss-files';
+      let CURRENT_AUTH = null;
+      let REPORT_ROWS = [];
+      let SELECTED_REPORT_ID = null;
+      function escapeHtml(v) {
+        return (v || '')
+          .toString()
+          .replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]);
+      }
+      function shortText(t, l) {
+        if (!t) return '-';
+        return t.length > l ? t.substring(0, l) + '...' : t;
+      }
+      function statusBadge(s) {
+        if (s === "DÖF'e Dönüştürüldü") return '<span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">DÖF</span>';
+        if (s === 'Kapatıldı') return '<span class="badge" style="background:#dcfce7; color:#15803d; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">Kapatıldı</span>';
+        if (s === 'İnceleniyor') return '<span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">İnceleniyor</span>';
+        return '<span class="badge" style="background:#fef3c7; color:#d97706; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">Yeni</span>';
+      }
+      function todayString() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
 
-function addDaysString(days){const d=new Date();d.setDate(d.getDate()+days);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function safeStorageName(value){return(value||'dosya').toString().trim().replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ._-]/g,'_').substring(0,90)||'dosya';}
-function setOfficeStatus(msg,ok){const el=document.getElementById('office_status');if(!el)return;el.className='office-status '+(ok?'ok':'err');el.innerText=msg||'';}
-async function uploadNearMissFile(file,companyId){if(!file)return{url:null,path:null};if(!CURRENT_AUTH||!CURRENT_AUTH.tenant_id)throw new Error('Tenant bilgisi bulunamadı.');if(file.size>10*1024*1024)throw new Error('Dosya en fazla 10 MB olabilir.');const path=`${CURRENT_AUTH.tenant_id}/${companyId||'genel'}/${Date.now()}_${safeStorageName(file.name)}`;const{error}=await dbClient.storage.from(FILE_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});if(error)throw new Error('Dosya yüklenemedi. near-miss-files bucket ve Storage izinlerini kontrol edin. Detay: '+error.message);const{data}=dbClient.storage.from(FILE_BUCKET).getPublicUrl(path);return{url:data&&data.publicUrl?data.publicUrl:null,path};}
-async function saveOfficeNearMiss(){try{setOfficeStatus('',true);const companyId=document.getElementById('office_company_select').value;const incidentDate=document.getElementById('office_incident_date').value;const hazardType=document.getElementById('office_hazard_type').value;const location=document.getElementById('office_incident_location').value.trim();const description=document.getElementById('office_description').value.trim();const suggestedAction=document.getElementById('office_suggested_action').value.trim()||null;const file=document.getElementById('office_file').files[0]||null;if(!companyId||!incidentDate||!hazardType||!location||!description)throw new Error('Firma, olay tarihi, tehlike türü, olay yeri ve açıklama zorunlu.');const fileInfo=await uploadNearMissFile(file,companyId);const{error}=await dbClient.from('near_miss_reports').insert([{tenant_id:CURRENT_AUTH.tenant_id,company_id:companyId,incident_date:incidentDate,incident_location:location,hazard_type:hazardType,description:description,suggested_action:suggestedAction,reporter_type:'İsimli',reporter_name:CURRENT_AUTH.email||'Ofis Kullanıcısı',reporter_phone:null,file_url:fileInfo.url,file_path:fileInfo.path,status:'Yeni'}]);if(error)throw error;['office_incident_location','office_description','office_suggested_action'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('office_file').value='';setOfficeStatus('Ofis bildirimi kaydedildi.',true);await fetchReports();}catch(err){setOfficeStatus('Hata: '+(err.message||err),false);}}
+      function addDaysString(days) {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      function safeStorageName(value) {
+        return (
+          (value || 'dosya')
+            .toString()
+            .trim()
+            .replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ._-]/g, '_')
+            .substring(0, 90) || 'dosya'
+        );
+      }
+      function setOfficeStatus(msg, ok) {
+        const el = document.getElementById('office_status');
+        if (!el) return;
+        el.className = 'office-status ' + (ok ? 'ok' : 'err');
+        el.innerText = msg || '';
+      }
+      async function uploadNearMissFile(file, companyId) {
+        if (!file) return { url: null, path: null };
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) throw new Error('Tenant bilgisi bulunamadı.');
+        if (file.size > 10 * 1024 * 1024) throw new Error('Dosya en fazla 10 MB olabilir.');
+        const path = `${CURRENT_AUTH.tenant_id}/${companyId || 'genel'}/${Date.now()}_${safeStorageName(file.name)}`;
+        const { error } = await dbClient.storage
+          .from(FILE_BUCKET)
+          .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+        if (error)
+          throw new Error(
+            'Dosya yüklenemedi. near-miss-files bucket ve Storage izinlerini kontrol edin. Detay: ' + error.message
+          );
+        const { data } = dbClient.storage.from(FILE_BUCKET).getPublicUrl(path);
+        return { url: data && data.publicUrl ? data.publicUrl : null, path };
+      }
+      async function saveOfficeNearMiss() {
+        try {
+          setOfficeStatus('', true);
+          const companyId = document.getElementById('office_company_select').value;
+          const incidentDate = document.getElementById('office_incident_date').value;
+          const hazardType = document.getElementById('office_hazard_type').value;
+          const location = document.getElementById('office_incident_location').value.trim();
+          const description = document.getElementById('office_description').value.trim();
+          const suggestedAction = document.getElementById('office_suggested_action').value.trim() || null;
+          const file = document.getElementById('office_file').files[0] || null;
+          if (!companyId || !incidentDate || !hazardType || !location || !description)
+            throw new Error('Firma, olay tarihi, tehlike türü, olay yeri ve açıklama zorunlu.');
+          const fileInfo = await uploadNearMissFile(file, companyId);
+          const { error } = await dbClient
+            .from('near_miss_reports')
+            .insert([
+              {
+                tenant_id: CURRENT_AUTH.tenant_id,
+                company_id: companyId,
+                incident_date: incidentDate,
+                incident_location: location,
+                hazard_type: hazardType,
+                description: description,
+                suggested_action: suggestedAction,
+                reporter_type: 'İsimli',
+                reporter_name: CURRENT_AUTH.email || 'Ofis Kullanıcısı',
+                reporter_phone: null,
+                file_url: fileInfo.url,
+                file_path: fileInfo.path,
+                status: 'Yeni'
+              }
+            ]);
+          if (error) throw error;
+          ['office_incident_location', 'office_description', 'office_suggested_action'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+          });
+          document.getElementById('office_file').value = '';
+          setOfficeStatus('Ofis bildirimi kaydedildi.', true);
+          await fetchReports();
+        } catch (err) {
+          setOfficeStatus('Hata: ' + (err.message || err), false);
+        }
+      }
 
-function publicNearMissBaseUrl(){ return `${window.location.origin}/near-miss.html`; }
-function currentTenantSlug(){ return CURRENT_AUTH && CURRENT_AUTH.tenant && CURRENT_AUTH.tenant.slug ? CURRENT_AUTH.tenant.slug : ''; }
-function buildPublicNearMissLink(){
-  const slug=(document.getElementById('public_tenant_slug').value || currentTenantSlug() || '').trim();
-  const companyId=document.getElementById('public_company_select').value || '';
-  if(!slug) return '';
-  const url=new URL(publicNearMissBaseUrl());
-  url.searchParams.set('tenant', slug);
-  if(companyId) url.searchParams.set('company', companyId);
-  return url.toString();
-}
-function renderPublicNearMissLink(){
-  const link=buildPublicNearMissLink();
-  const box=document.getElementById('public_near_miss_link');
-  const qrBox=document.getElementById('qr_box');
-  const qrImg=document.getElementById('qr_img');
-  if(!link){ box.innerText='Tenant bilgisi bulunamadı.'; qrBox.style.display='none'; return; }
-  box.innerText=link;
-  qrImg.src=`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(link)}`;
-  qrBox.style.display='flex';
-}
-async function copyPublicNearMissLink(){
-  const link=buildPublicNearMissLink();
-  if(!link){ alert('Önce firma seçerek link oluşturun.'); return; }
-  await navigator.clipboard.writeText(link);
-  alert('Ramak Kala bildirim linki kopyalandı.');
-}
-function openPublicNearMissLink(){
-  const link=buildPublicNearMissLink();
-  if(!link){ alert('Önce firma seçerek link oluşturun.'); return; }
-  window.open(link, '_blank');
-}
-async function downloadQrCode(){
-  const img=document.getElementById('qr_img');
-  const link=buildPublicNearMissLink();
-  if(!img || !link){ alert('Önce firma seçerek QR oluşturun.'); return; }
-  const a=document.createElement('a');
-  a.href=img.src;
-  a.download='ramak-kala-qr.png';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-}
-async function loadCompaniesForPublicLinks(){
-  const select=document.getElementById('public_company_select');
-  const officeSelect=document.getElementById('office_company_select');
-  const officeDate=document.getElementById('office_incident_date');
-  if(officeDate&&!officeDate.value) officeDate.value=todayString();
-  if(!select || !CURRENT_AUTH || !CURRENT_AUTH.tenant_id) return;
-  const slugEl=document.getElementById('public_tenant_slug');
-  if(slugEl) slugEl.value=currentTenantSlug();
-  const {data,error}=await dbClient.from('customer_companies').select('id, company_name').eq('tenant_id',CURRENT_AUTH.tenant_id).order('company_name');
-  if(error){ select.innerHTML='<option value="">Firma listesi alınamadı</option>'; if(officeSelect)officeSelect.innerHTML='<option value="">Firma listesi alınamadı</option>'; return; }
-  select.innerHTML='<option value="">Tenant genel linki</option>';
-  if(officeSelect) officeSelect.innerHTML='<option value="">-- Firma Seçin --</option>';
-  (data||[]).forEach(c=>{ const opt=`<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`; select.innerHTML += opt; if(officeSelect) officeSelect.innerHTML += opt; });
-  renderPublicNearMissLink();
-}
+      function publicNearMissBaseUrl() {
+        return `${window.location.origin}/near-miss.html`;
+      }
+      function currentTenantSlug() {
+        return CURRENT_AUTH && CURRENT_AUTH.tenant && CURRENT_AUTH.tenant.slug ? CURRENT_AUTH.tenant.slug : '';
+      }
+      function buildPublicNearMissLink() {
+        const slug = (document.getElementById('public_tenant_slug').value || currentTenantSlug() || '').trim();
+        const companyId = document.getElementById('public_company_select').value || '';
+        if (!slug) return '';
+        const url = new URL(publicNearMissBaseUrl());
+        url.searchParams.set('tenant', slug);
+        if (companyId) url.searchParams.set('company', companyId);
+        return url.toString();
+      }
+      function renderPublicNearMissLink() {
+        const link = buildPublicNearMissLink();
+        const box = document.getElementById('public_near_miss_link');
+        const qrBox = document.getElementById('qr_box');
+        const qrImg = document.getElementById('qr_img');
+        if (!link) {
+          box.innerText = 'Tenant bilgisi bulunamadı.';
+          qrBox.style.display = 'none';
+          return;
+        }
+        box.innerText = link;
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(link)}`;
+        qrBox.style.display = 'flex';
+      }
+      async function copyPublicNearMissLink() {
+        const link = buildPublicNearMissLink();
+        if (!link) {
+          alert('Önce firma seçerek link oluşturun.');
+          return;
+        }
+        await navigator.clipboard.writeText(link);
+        alert('Ramak Kala bildirim linki kopyalandı.');
+      }
+      function openPublicNearMissLink() {
+        const link = buildPublicNearMissLink();
+        if (!link) {
+          alert('Önce firma seçerek link oluşturun.');
+          return;
+        }
+        window.open(link, '_blank');
+      }
+      async function downloadQrCode() {
+        const img = document.getElementById('qr_img');
+        const link = buildPublicNearMissLink();
+        if (!img || !link) {
+          alert('Önce firma seçerek QR oluşturun.');
+          return;
+        }
+        const a = document.createElement('a');
+        a.href = img.src;
+        a.download = 'ramak-kala-qr.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+      async function loadCompaniesForPublicLinks() {
+        const select = document.getElementById('public_company_select');
+        const officeSelect = document.getElementById('office_company_select');
+        const officeDate = document.getElementById('office_incident_date');
+        if (officeDate && !officeDate.value) officeDate.value = todayString();
+        if (!select || !CURRENT_AUTH || !CURRENT_AUTH.tenant_id) return;
+        const slugEl = document.getElementById('public_tenant_slug');
+        if (slugEl) slugEl.value = currentTenantSlug();
+        const { data, error } = await dbClient
+          .from('customer_companies')
+          .select('id, company_name')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .order('company_name');
+        if (error) {
+          select.innerHTML = '<option value="">Firma listesi alınamadı</option>';
+          if (officeSelect) officeSelect.innerHTML = '<option value="">Firma listesi alınamadı</option>';
+          return;
+        }
+        select.innerHTML = '<option value="">Tenant genel linki</option>';
+        if (officeSelect) officeSelect.innerHTML = '<option value="">-- Firma Seçin --</option>';
+        (data || []).forEach((c) => {
+          const opt = `<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`;
+          select.innerHTML += opt;
+          if (officeSelect) officeSelect.innerHTML += opt;
+        });
+        renderPublicNearMissLink();
+      }
 
-window.onload=async function(){const auth=await requireAuthAndRole('near_miss');if(!auth)return;CURRENT_AUTH=auth;if(!CURRENT_AUTH.tenant_id){alert('Tenant bilgisi bulunamadı.');return;}document.body.style.display='block';await loadCompaniesForPublicLinks();await fetchReports();};
-async function fetchReports(){const tbody=document.getElementById('reports_tbody');tbody.innerHTML='<tr><td colspan="5" class="empty-state">Bildirimler yükleniyor...</td></tr>';const{data,error}=await dbClient.from('near_miss_reports').select('*, customer_companies(company_name, tenant_id)').eq('tenant_id',CURRENT_AUTH.tenant_id).order('created_at',{ascending:false}).limit(100);if(error){tbody.innerHTML=`<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">Ramak kala kayıtları yüklenemedi: ${escapeHtml(error.message)}</td></tr>`;return;}REPORT_ROWS=data||[];updateStats();renderReports();}
-function updateStats(){document.getElementById('stat_total').innerText=REPORT_ROWS.length;document.getElementById('stat_new').innerText=REPORT_ROWS.filter(r=>(r.status||'Yeni')==='Yeni').length;document.getElementById('stat_review').innerText=REPORT_ROWS.filter(r=>r.status==='İnceleniyor').length;document.getElementById('stat_dof').innerText=REPORT_ROWS.filter(r=>r.converted_to_dof===true||r.status==="DÖF'e Dönüştürüldü").length;}
-function renderReports(){const tbody=document.getElementById('reports_tbody');const sf=document.getElementById('status_filter').value;const tf=(document.getElementById('text_filter').value||'').toLowerCase().trim();let rows=[...REPORT_ROWS];if(sf)rows=rows.filter(r=>(r.status||'Yeni')===sf);if(tf)rows=rows.filter(r=>[r.customer_companies&&r.customer_companies.company_name,r.incident_location,r.description,r.hazard_type,r.reporter_name].join(' ').toLowerCase().includes(tf));if(rows.length===0){tbody.innerHTML='<tr><td colspan="5" class="empty-state">Filtreye uygun bildirim yok.</td></tr>';return;}tbody.innerHTML='';rows.forEach(r=>{const comp=r.customer_companies?r.customer_companies.company_name:'Genel / Firma seçilmemiş';const fileHtml=r.file_url?`<br><a class="file-link" href="${escapeHtml(r.file_url)}" target="_blank">Dosya</a>`:'';const reporter=r.reporter_type==='İsimli'?`${r.reporter_name||'-'} ${r.reporter_phone?'• '+r.reporter_phone:''}`:'Anonim';tbody.innerHTML+=`<tr class="${(r.status||'Yeni')==='Yeni'?'new-row':''}"><td><strong>${escapeHtml(comp)}</strong><br><small>${escapeHtml(reporter)}</small>${fileHtml}</td><td><strong>${escapeHtml(r.hazard_type||'-')}</strong><br><small>${escapeHtml(r.incident_date||'-')}</small><br>${escapeHtml(r.incident_location||'-')}</td><td>${escapeHtml(shortText(r.description||'-',135))}<br><small>Öneri: ${escapeHtml(shortText(r.suggested_action||'-',90))}</small></td><td>${statusBadge(r.status||'Yeni')}</td><td><div class="action-stack"><button class="btn btn-secondary btn-small" onclick="openReportDetail('${escapeHtml(r.id)}')">Detay</button><button class="btn btn-blue btn-small" onclick="openDofModal('${escapeHtml(r.id)}')">DÖF'e Dönüştür</button></div></td></tr>`;});}
-async function setReportStatus(id,status){const{error}=await dbClient.from('near_miss_reports').update({status}).eq('id',id).eq('tenant_id',CURRENT_AUTH.tenant_id);if(error){alert('Durum güncellenemedi: '+error.message);return;}await fetchReports();}
-function getReport(id){return REPORT_ROWS.find(x=>String(x.id)===String(id));}
-function openReportDetail(id){const r=getReport(id);if(!r){alert('Bildirim bulunamadı.');return;}SELECTED_REPORT_ID=id;const comp=r.customer_companies?r.customer_companies.company_name:'Genel / Firma seçilmemiş';const reporter=r.reporter_type==='İsimli'?`${r.reporter_name||'-'} ${r.reporter_phone?'• '+r.reporter_phone:''}`:'Anonim';const fileHtml=r.file_url?`<a class="file-link" href="${escapeHtml(r.file_url)}" target="_blank">Dosyayı Aç</a>`:'Dosya yok';document.getElementById('detail_modal_content').innerHTML=`<div class="detail-box"><span>Firma</span><strong>${escapeHtml(comp)}</strong></div><div class="detail-box"><span>Bildiren</span><strong>${escapeHtml(reporter)}</strong></div><div class="detail-box"><span>Olay Tarihi</span><strong>${escapeHtml(r.incident_date||'-')}</strong></div><div class="detail-box"><span>Tehlike Türü</span><strong>${escapeHtml(r.hazard_type||'-')}</strong></div><div class="detail-box"><span>Olay Yeri</span><strong>${escapeHtml(r.incident_location||'-')}</strong></div><div class="detail-box"><span>Dosya</span><strong>${fileHtml}</strong></div><div class="detail-box" style="grid-column:1/-1;"><span>Açıklama</span><strong>${escapeHtml(r.description||'-')}</strong></div><div class="detail-box" style="grid-column:1/-1;"><span>Önerilen Aksiyon</span><strong>${escapeHtml(r.suggested_action||'-')}</strong></div>`;document.getElementById('detail_status_select').value=r.status||'Yeni';document.getElementById('detail_modal').style.display='flex';}
-function closeDetailModal(){document.getElementById('detail_modal').style.display='none';}
-async function saveDetailStatus(){if(!SELECTED_REPORT_ID)return;await setReportStatus(SELECTED_REPORT_ID,document.getElementById('detail_status_select').value);closeDetailModal();}
-function openDofModalFromDetail(){if(!SELECTED_REPORT_ID)return;closeDetailModal();openDofModal(SELECTED_REPORT_ID);}
-function riskValuesFromLevel(level){if(level==='critical')return{probability_o:5,frequency_f:1,severity_s:5,risk_score:25};if(level==='high')return{probability_o:3,frequency_f:2,severity_s:3,risk_score:18};if(level==='low')return{probability_o:1,frequency_f:1,severity_s:6,risk_score:6};return{probability_o:2,frequency_f:2,severity_s:3,risk_score:12};}
-function openDofModal(id){const r=getReport(id);if(!r){alert('Bildirim bulunamadı.');return;}if(!r.company_id){alert('DÖF oluşturmak için bildirimin firma bilgisi olmalı. Tenant genel linkinden gelen bildirimlerde önce firma bilgisiyle yeni kayıt alınmalı veya firma bazlı QR/link kullanılmalı.');return;}document.getElementById('dof_report_id').value=id;document.getElementById('dof_hazard_title').value=`Ramak kala: ${r.hazard_type||''} - ${r.incident_location||''}`.trim();document.getElementById('dof_responsible_person').value='İSG Uzmanı';document.getElementById('dof_target_date').value=addDaysString(7);document.getElementById('dof_risk_level').value='medium';document.getElementById('dof_action_plan').value=r.suggested_action||r.description||'Ramak kala bildirimi için düzeltici/önleyici faaliyet planlanmalıdır.';document.getElementById('dof_modal').style.display='flex';}
-function closeDofModal(){document.getElementById('dof_modal').style.display='none';}
-async function convertNearMissToDof(id){openDofModal(id);}
-async function saveDofFromModal(){const id=document.getElementById('dof_report_id').value;const r=getReport(id);if(!r){alert('Bildirim bulunamadı.');return;}const title=document.getElementById('dof_hazard_title').value.trim();const action=document.getElementById('dof_action_plan').value.trim();const responsible=document.getElementById('dof_responsible_person').value.trim()||'İSG Uzmanı';const targetDate=document.getElementById('dof_target_date').value||todayString();const risk=riskValuesFromLevel(document.getElementById('dof_risk_level').value);if(!title||!action){alert('DÖF başlığı ve aksiyon planı zorunlu.');return;}const btn=document.getElementById('dof_save_btn');btn.disabled=true;const{error}=await dbClient.from('risk_assessments').insert([{tenant_id:CURRENT_AUTH.tenant_id,company_id:r.company_id,hazard_title:title,action_plan:action,responsible_person:responsible,probability_o:risk.probability_o,frequency_f:risk.frequency_f,severity_s:risk.severity_s,risk_score:risk.risk_score,target_date:targetDate,status:'Açık',image_url:r.file_url||null,image_path:r.file_path||null}]);btn.disabled=false;if(error){alert('DÖF oluşturulamadı: '+error.message);return;}await dbClient.from('near_miss_reports').update({converted_to_dof:true,status:"DÖF'e Dönüştürüldü"}).eq('id',id).eq('tenant_id',CURRENT_AUTH.tenant_id);closeDofModal();alert('DÖF oluşturuldu. Aksiyon Havuzu üzerinden takip edebilirsiniz.');await fetchReports();}
-async function handleLogout(){await dbClient.auth.signOut();window.location.href='login.html';}
-</script>
-</body>
+      window.onload = async function () {
+        const auth = await requireAuthAndRole('near_miss');
+        if (!auth) return;
+        CURRENT_AUTH = auth;
+        if (!CURRENT_AUTH.tenant_id) {
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
+        document.body.style.display = 'block';
+        await loadCompaniesForPublicLinks();
+        await fetchReports();
+      };
+      async function fetchReports() {
+        const tbody = document.getElementById('reports_tbody');
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Bildirimler yükleniyor...</td></tr>';
+        const { data, error } = await dbClient
+          .from('near_miss_reports')
+          .select('*, customer_companies(company_name, tenant_id)')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (error) {
+          tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">Ramak kala kayıtları yüklenemedi: ${escapeHtml(error.message)}</td></tr>`;
+          return;
+        }
+        REPORT_ROWS = data || [];
+        updateStats();
+        renderReports();
+      }
+      function updateStats() {
+        document.getElementById('stat_total').innerText = REPORT_ROWS.length;
+        document.getElementById('stat_new').innerText = REPORT_ROWS.filter(
+          (r) => (r.status || 'Yeni') === 'Yeni'
+        ).length;
+        document.getElementById('stat_review').innerText = REPORT_ROWS.filter((r) => r.status === 'İnceleniyor').length;
+        document.getElementById('stat_dof').innerText = REPORT_ROWS.filter(
+          (r) => r.converted_to_dof === true || r.status === "DÖF'e Dönüştürüldü"
+        ).length;
+      }
+      function renderReports() {
+        const tbody = document.getElementById('reports_tbody');
+        const sf = document.getElementById('status_filter').value;
+        const tf = (document.getElementById('text_filter').value || '').toLowerCase().trim();
+        let rows = [...REPORT_ROWS];
+        if (sf) rows = rows.filter((r) => (r.status || 'Yeni') === sf);
+        if (tf)
+          rows = rows.filter((r) =>
+            [
+              r.customer_companies && r.customer_companies.company_name,
+              r.incident_location,
+              r.description,
+              r.hazard_type,
+              r.reporter_name
+            ]
+              .join(' ')
+              .toLowerCase()
+              .includes(tf)
+          );
+        if (rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state" style="text-align: center; color: #94a3b8; padding: 24px;">Filtreye uygun bildirim yok.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        rows.forEach((r) => {
+          const comp = r.customer_companies ? r.customer_companies.company_name : 'Genel / Firma seçilmemiş';
+          const fileHtml = r.file_url
+            ? `<br><a href="${escapeHtml(r.file_url)}" target="_blank" style="color: var(--uc-primary); font-weight: 700; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;">📂 Dosya Gör</a>`
+            : '';
+          const reporter =
+            r.reporter_type === 'İsimli'
+              ? `${r.reporter_name || '-'} ${r.reporter_phone ? '• ' + r.reporter_phone : ''}`
+              : '👤 Anonim Bildirim';
+          tbody.innerHTML += `
+            <tr class="${(r.status || 'Yeni') === 'Yeni' ? 'new-row' : ''}" style="border-bottom: 1px solid var(--uc-line);">
+              <td style="padding: 12px 16px; font-size: 13px;">
+                <strong>${escapeHtml(comp)}</strong><br>
+                <small style="color: var(--uc-text-muted);">${escapeHtml(reporter)}</small>
+                ${fileHtml}
+              </td>
+              <td style="padding: 12px 16px; font-size: 13px;">
+                <strong>${escapeHtml(r.hazard_type || '-')}</strong><br>
+                <small style="color: var(--uc-text-muted);">${escapeHtml(r.incident_date || '-')}</small><br>
+                <span style="font-size: 12px; color: var(--uc-text-muted);">📍 ${escapeHtml(r.incident_location || '-')}</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 13px;">
+                ${escapeHtml(shortText(r.description || '-', 135))}<br>
+                <small style="color: var(--uc-text-muted);">Öneri: ${escapeHtml(shortText(r.suggested_action || '-', 90))}</small>
+              </td>
+              <td style="padding: 12px 16px; font-size: 13px;">
+                ${statusBadge(r.status || 'Yeni')}
+              </td>
+              <td style="padding: 12px 16px; font-size: 13px;">
+                <div style="display: flex; gap: 6px;">
+                  <button onclick="openReportDetail('${escapeHtml(r.id)}')" style="background:#f1f5f9; border:1px solid var(--uc-line); border-radius:6px; padding:6px 12px; font-size:11px; cursor:pointer; font-weight:700; color:#475569; transition: opacity 0.15s ease;">Detay</button>
+                  <button onclick="openDofModal('${escapeHtml(r.id)}')" style="background:#e0f2fe; color:#0369a1; border:none; border-radius:6px; padding:6px 12px; font-size:11px; cursor:pointer; font-weight:700; transition: opacity 0.15s ease;">DÖF'e Dönüştür</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+      }
+      async function setReportStatus(id, status) {
+        const { error } = await dbClient
+          .from('near_miss_reports')
+          .update({ status })
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id);
+        if (error) {
+          alert('Durum güncellenemedi: ' + error.message);
+          return;
+        }
+        await fetchReports();
+      }
+      function getReport(id) {
+        return REPORT_ROWS.find((x) => String(x.id) === String(id));
+      }
+      function openReportDetail(id) {
+        const r = getReport(id);
+        if (!r) {
+          alert('Bildirim bulunamadı.');
+          return;
+        }
+        SELECTED_REPORT_ID = id;
+        const comp = r.customer_companies ? r.customer_companies.company_name : 'Genel / Firma seçilmemiş';
+        const reporter =
+          r.reporter_type === 'İsimli'
+            ? `${r.reporter_name || '-'} ${r.reporter_phone ? '• ' + r.reporter_phone : ''}`
+            : 'Anonim';
+        const fileHtml = r.file_url
+          ? `<a class="file-link" href="${escapeHtml(r.file_url)}" target="_blank">Dosyayı Aç</a>`
+          : 'Dosya yok';
+        document.getElementById('detail_modal_content').innerHTML =
+          `<div class="detail-box"><span>Firma</span><strong>${escapeHtml(comp)}</strong></div><div class="detail-box"><span>Bildiren</span><strong>${escapeHtml(reporter)}</strong></div><div class="detail-box"><span>Olay Tarihi</span><strong>${escapeHtml(r.incident_date || '-')}</strong></div><div class="detail-box"><span>Tehlike Türü</span><strong>${escapeHtml(r.hazard_type || '-')}</strong></div><div class="detail-box"><span>Olay Yeri</span><strong>${escapeHtml(r.incident_location || '-')}</strong></div><div class="detail-box"><span>Dosya</span><strong>${fileHtml}</strong></div><div class="detail-box" style="grid-column:1/-1;"><span>Açıklama</span><strong>${escapeHtml(r.description || '-')}</strong></div><div class="detail-box" style="grid-column:1/-1;"><span>Önerilen Aksiyon</span><strong>${escapeHtml(r.suggested_action || '-')}</strong></div>`;
+        document.getElementById('detail_status_select').value = r.status || 'Yeni';
+        document.getElementById('detail_modal').style.display = 'flex';
+      }
+      function closeDetailModal() {
+        document.getElementById('detail_modal').style.display = 'none';
+      }
+      async function saveDetailStatus() {
+        if (!SELECTED_REPORT_ID) return;
+        await setReportStatus(SELECTED_REPORT_ID, document.getElementById('detail_status_select').value);
+        closeDetailModal();
+      }
+      function openDofModalFromDetail() {
+        if (!SELECTED_REPORT_ID) return;
+        closeDetailModal();
+        openDofModal(SELECTED_REPORT_ID);
+      }
+      function riskValuesFromLevel(level) {
+        if (level === 'critical') return { probability_o: 5, frequency_f: 1, severity_s: 5, risk_score: 25 };
+        if (level === 'high') return { probability_o: 3, frequency_f: 2, severity_s: 3, risk_score: 18 };
+        if (level === 'low') return { probability_o: 1, frequency_f: 1, severity_s: 6, risk_score: 6 };
+        return { probability_o: 2, frequency_f: 2, severity_s: 3, risk_score: 12 };
+      }
+      function openDofModal(id) {
+        const r = getReport(id);
+        if (!r) {
+          alert('Bildirim bulunamadı.');
+          return;
+        }
+        if (!r.company_id) {
+          alert(
+            'DÖF oluşturmak için bildirimin firma bilgisi olmalı. Tenant genel linkinden gelen bildirimlerde önce firma bilgisiyle yeni kayıt alınmalı veya firma bazlı QR/link kullanılmalı.'
+          );
+          return;
+        }
+        document.getElementById('dof_report_id').value = id;
+        document.getElementById('dof_hazard_title').value =
+          `Ramak kala: ${r.hazard_type || ''} - ${r.incident_location || ''}`.trim();
+        document.getElementById('dof_responsible_person').value = 'İSG Uzmanı';
+        document.getElementById('dof_target_date').value = addDaysString(7);
+        document.getElementById('dof_risk_level').value = 'medium';
+        document.getElementById('dof_action_plan').value =
+          r.suggested_action ||
+          r.description ||
+          'Ramak kala bildirimi için düzeltici/önleyici faaliyet planlanmalıdır.';
+        document.getElementById('dof_modal').style.display = 'flex';
+      }
+      function closeDofModal() {
+        document.getElementById('dof_modal').style.display = 'none';
+      }
+      async function convertNearMissToDof(id) {
+        openDofModal(id);
+      }
+      async function saveDofFromModal() {
+        const id = document.getElementById('dof_report_id').value;
+        const r = getReport(id);
+        if (!r) {
+          alert('Bildirim bulunamadı.');
+          return;
+        }
+        const title = document.getElementById('dof_hazard_title').value.trim();
+        const action = document.getElementById('dof_action_plan').value.trim();
+        const responsible = document.getElementById('dof_responsible_person').value.trim() || 'İSG Uzmanı';
+        const targetDate = document.getElementById('dof_target_date').value || todayString();
+        const risk = riskValuesFromLevel(document.getElementById('dof_risk_level').value);
+        if (!title || !action) {
+          alert('DÖF başlığı ve aksiyon planı zorunlu.');
+          return;
+        }
+        const btn = document.getElementById('dof_save_btn');
+        btn.disabled = true;
+        const { error } = await dbClient
+          .from('risk_assessments')
+          .insert([
+            {
+              tenant_id: CURRENT_AUTH.tenant_id,
+              company_id: r.company_id,
+              hazard_title: title,
+              action_plan: action,
+              responsible_person: responsible,
+              probability_o: risk.probability_o,
+              frequency_f: risk.frequency_f,
+              severity_s: risk.severity_s,
+              risk_score: risk.risk_score,
+              target_date: targetDate,
+              status: 'Açık',
+              image_url: r.file_url || null,
+              image_path: r.file_path || null
+            }
+          ]);
+        btn.disabled = false;
+        if (error) {
+          alert('DÖF oluşturulamadı: ' + error.message);
+          return;
+        }
+        await dbClient
+          .from('near_miss_reports')
+          .update({ converted_to_dof: true, status: "DÖF'e Dönüştürüldü" })
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id);
+        closeDofModal();
+        alert('DÖF oluşturuldu. Aksiyon Havuzu üzerinden takip edebilirsiniz.');
+        await fetchReports();
+      }
+    </script>
+  </body>
 </html>

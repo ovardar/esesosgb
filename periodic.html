@@ -1,116 +1,869 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OSGB SaaS - Periyodik Kontrol & Ekipman Takip</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root{--bg-main:#f4f6f9;--bg-card:#fff;--text-main:#1e293b;--text-muted:#64748b;--primary:#0f766e;--border-color:#e2e8f0;--danger:#dc2626;--success:#059669;--warning:#f97316;--info:#0284c7}
-    *{box-sizing:border-box}body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at top left,rgba(15,118,110,.13),transparent 30rem),linear-gradient(180deg,#f8fafc,#edf2f7);color:var(--text-main);padding:30px;display:none;margin:0}.card{background:rgba(255,255,255,.94);padding:0;border-radius:18px;max-width:1240px;margin:0 auto;box-shadow:0 8px 24px rgba(15,23,42,.08);border:1px solid var(--border-color);overflow:hidden}.global-header{padding:18px 22px 14px;background:linear-gradient(135deg,#064e3b 0%,#0f766e 58%,#047857 100%);color:white}.top-row{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:15px}.logo-area{font-size:18px;font-weight:500;display:flex;align-items:center;gap:10px;min-width:0}.logo-area span[id^="lbl_"]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tenant-logo-img{width:34px;height:34px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid rgba(255,255,255,.35);padding:3px;box-sizing:border-box;flex:0 0 auto}.controls-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}.user-info{font-size:13px;color:white;font-weight:600;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:7px 11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.logout-btn{background:rgba(239,68,68,.92);color:white;border:none;padding:7px 12px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:800}.nav-container{display:flex;gap:7px;justify-content:flex-start;background:rgba(255,255,255,.10);padding:8px;border-radius:14px;border:1px solid rgba(255,255,255,.16);flex-wrap:wrap;overflow-x:auto}.nav-btn{background:rgba(255,255,255,.10);color:rgba(255,255,255,.86);padding:9px 13px;border-radius:10px;text-decoration:none;font-weight:800;font-size:12.5px;border:1px solid rgba(255,255,255,.10);white-space:nowrap}.nav-btn.active-page{background:white;color:#065f46!important;box-shadow:0 8px 18px rgba(15,23,42,.22)}h2{margin:22px 22px 4px;font-size:clamp(22px,2.6vw,31px);letter-spacing:-.035em}.page-desc{margin:0 22px 20px;color:var(--text-muted);font-size:14px;max-width:980px}.section-title{margin:24px 22px 11px;display:inline-flex;align-items:center;gap:7px;color:#334155;background:rgba(255,255,255,.72);border:1px solid rgba(226,232,240,.9);padding:7px 11px;border-radius:999px;box-shadow:0 1px 2px rgba(15,23,42,.05);font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.kpi-grid{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:15px;margin:0 22px 18px}.metric-box{padding:16px 18px;border-radius:18px;color:white;min-height:94px;box-shadow:0 18px 38px rgba(15,23,42,.13)}.metric-title{font-size:12px;font-weight:800;opacity:.95;text-transform:uppercase;letter-spacing:.04em}.metric-value{font-size:32px;font-weight:900;margin-top:5px}.metric-purple{background:linear-gradient(135deg,#8b5cf6,#6d28d9)}.metric-orange{background:linear-gradient(135deg,#f97316,#c2410c)}.metric-blue{background:linear-gradient(135deg,#0284c7,#0369a1)}.metric-green{background:linear-gradient(135deg,#10b981,#047857)}.metric-red{background:linear-gradient(135deg,#dc2626,#991b1b)}.panel{background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(248,250,252,.94));border:1px solid rgba(203,213,225,.85);border-radius:18px;padding:18px;box-shadow:0 12px 30px rgba(15,23,42,.07);margin:0 22px 24px}.panel h3{margin:0 0 14px;padding-bottom:12px;border-bottom:1px solid rgba(226,232,240,.95);font-size:17px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.form-grid .full{grid-column:1/-1}.inline-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}.toolbar{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:12px}.toolbar .field{min-width:180px;flex:1}label{display:block;margin-bottom:5px;color:#0f172a;font-weight:750;font-size:13px}input,select,textarea{width:100%;padding:10px;border:1px solid var(--border-color);border-radius:10px;background:#fff;color:var(--text-main);font-family:inherit}textarea{resize:vertical}input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,118,110,.14)}.btn{border:none;border-radius:10px;padding:9px 11px;font-weight:850;cursor:pointer;font-size:12px}.btn-teal{background:linear-gradient(135deg,#0f766e,#047857);color:white}.btn-blue{background:linear-gradient(135deg,#0284c7,#0369a1);color:white}.btn-green{background:linear-gradient(135deg,#16a34a,#047857);color:white}.btn-red{background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff}.btn-orange{background:linear-gradient(135deg,#f97316,#c2410c);color:#fff}.btn-secondary{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}.btn-small{padding:7px 9px;font-size:11px}.status{margin-top:10px;font-size:12px;font-weight:850}.status.ok{color:#15803d}.status.err{color:#b91c1c}.hint-box{border:1px dashed #99f6e4;background:#f0fdfa;color:#115e59;border-radius:12px;padding:10px;font-size:12px;line-height:1.45}table{width:100%;border-collapse:separate;border-spacing:0;background:white;box-shadow:inset 0 0 0 1px rgba(226,232,240,.75);border-radius:12px;overflow:hidden;margin-top:14px;font-size:12px}th,td{padding:9px 11px;text-align:left;border-bottom:1px solid var(--border-color);vertical-align:top;line-height:1.35}th{background:#f1f5f9;color:#475569;font-weight:850;text-transform:uppercase;letter-spacing:.035em;font-size:11px}tbody tr:nth-child(even) td{background:rgba(248,250,252,.65)}.badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900;white-space:nowrap;letter-spacing:.02em}.badge-red{background:#fee2e2;color:#b91c1c}.badge-orange{background:#ffedd5;color:#c2410c}.badge-green{background:#dcfce7;color:#15803d}.badge-blue{background:#dbeafe;color:#1d4ed8}.badge-purple{background:#ede9fe;color:#6d28d9}.badge-gray{background:#e2e8f0;color:#475569}.empty-state{text-align:center;color:var(--text-muted);padding:18px}.action-stack{display:flex;flex-direction:column;gap:5px}.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}.modal-card{width:min(980px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 24px 70px rgba(15,23,42,.28)}.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid #e2e8f0;background:#f8fafc}.modal-head h3{margin:0;font-size:18px}.modal-body{padding:18px}.detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}.detail-box{border:1px solid #e2e8f0;background:#f8fafc;border-radius:12px;padding:10px}.detail-box span{display:block;font-size:11px;color:var(--text-muted);font-weight:850;text-transform:uppercase;letter-spacing:.04em}.detail-box strong{display:block;margin-top:4px;color:#0f172a}.modal-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}.print-only{display:none}@media(max-width:980px){body{padding:12px}.top-row,.controls-group{align-items:stretch}.top-row{flex-direction:column}.kpi-grid{grid-template-columns:1fr 1fr;margin-left:14px;margin-right:14px}.panel{margin-left:14px;margin-right:14px}.form-grid{grid-template-columns:1fr}.form-grid .full{grid-column:auto}.inline-row{grid-template-columns:1fr}table{display:block;overflow-x:auto;white-space:nowrap}.detail-grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.kpi-grid,.detail-grid{grid-template-columns:1fr}}@media print{body{display:block!important;background:white;padding:0}.global-header,.section-title,.panel:not(.print-area),.kpi-grid,.page-desc,h2{display:none!important}.card{box-shadow:none;border:0}.print-only{display:block}.modal-backdrop{position:static;display:block!important;background:white;padding:0}.modal-card{box-shadow:none;border:0;max-height:none}.modal-head,.modal-actions{display:none}.modal-body{padding:0}}
-  </style>
-</head>
-<body>
-<div class="card">
-  <div class="global-header">
-    <div class="top-row"><div class="logo-area"><span id="lbl_osgb_title">Eses Software</span></div><div class="controls-group"><div class="user-info">👤 <span id="current_user_email">...</span></div><button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button></div></div>
-    <div class="nav-container">
-      <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a><a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a><a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a><a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a><a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a><a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a><a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a><a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a><a id="menu_accidents" href="accidents.html" class="nav-btn" style="display:none;">🚑 İş Kazaları</a><a id="menu_near_miss" href="near-miss-admin.html" class="nav-btn" style="display:none;">⚠️ Ramak Kala</a><a id="menu_training" href="training.html" class="nav-btn">🎓 Eğitim & Sertifika</a><a id="menu_ppe" href="ppe.html" class="nav-btn">🧤 KKD Zimmet</a><a id="menu_periodic" href="periodic.html" class="nav-btn active-page">🛠️ Periyodik Kontrol</a>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSGB SaaS - Periyodik Kontrol & Ekipman Takip</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean" style="display: none;">
+    <div class="card">
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
+        </div>
+        <div class="nav-container">
+          <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+          <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display: none">🧩 SaaS Yönetimi</a>
+          <a id="menu_staff" href="staff.html" class="nav-btn" style="display: none">🔑 Personel Yönetimi</a>
+          <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+          <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+          <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+          <a id="menu_risk" href="risk.html" class="nav-btn" style="display: none">🦺 Uzman Risk Motoru</a>
+          <a id="menu_medical" href="medical.html" class="nav-btn" style="display: none">🩺 Hekim Sağlık Kartı</a>
+          <a id="menu_accidents" href="accidents.html" class="nav-btn" style="display: none">🚑 İş Kazaları</a>
+          <a id="menu_near_miss" href="near-miss-admin.html" class="nav-btn" style="display: none">⚠️ Ramak Kala</a>
+          <a id="menu_training" href="training.html" class="nav-btn">🎓 Eğitim & Sertifika</a>
+          <a id="menu_ppe" href="ppe.html" class="nav-btn">🧤 KKD Zimmet</a>
+          <a id="menu_periodic" href="periodic.html" class="nav-btn active-page">🛠️ Periyodik Kontrol</a>
+        </div>
+      </div>
+
+      <div class="crm-page-shell">
+        <div class="page-header-row" style="margin-bottom: 24px;">
+          <div class="page-title-group">
+            <h2 style="font-size: clamp(24px, 2.2vw, 34px); letter-spacing: -0.03em; color: #0f172a; font-weight: 800; margin: 0 0 6px;">🛠️ Periyodik Kontrol & Ekipman Takip</h2>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0;">
+              Firma bazlı ekipman ve yasal periyodik kontrolleri takip edin. Kontrol türünü pratik ekleyin, tekrar kontrol tarihlerini izleyin, uygunsuzluk ve rapor durumlarını kayıt altına alın.
+            </p>
+          </div>
+        </div>
+
+        <!-- İstatistik KPI Kartları -->
+        <div class="crm-double-stats-grid" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+          <div class="stats-section-premium">
+            <div class="stats-cards-wrapper" style="display: flex; gap: 16px; flex-wrap: wrap;">
+              <div class="stat-card-premium" style="flex: 1; min-width: 150px;">
+                <div class="color-bar" style="background:#7c3aed"></div>
+                <span class="number" id="stat_total">0</span>
+                <span class="label">Toplam Kayıt</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 150px;">
+                <div class="color-bar" style="background:#10b981"></div>
+                <span class="number" id="stat_valid">0</span>
+                <span class="label">Geçerli</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 150px;">
+                <div class="color-bar" style="background:#f59e0b"></div>
+                <span class="number" id="stat_upcoming">0</span>
+                <span class="label">Kontrol Yaklaşıyor</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 150px;">
+                <div class="color-bar" style="background:#dc2626"></div>
+                <span class="number" id="stat_expired">0</span>
+                <span class="label">Süresi Doldu</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 150px;">
+                <div class="color-bar" style="background:#2563eb"></div>
+                <span class="number" id="stat_issue">0</span>
+                <span class="label">Rapor / Uygunsuzluk</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Yeni Kontrol Kaydı Formu -->
+        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
+          <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📝 Yeni Kontrol Kaydı</h3>
+          <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">Firma Ekipman / Kontrol Kaydı Oluştur</p>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium">
+              <label>Firma</label>
+              <select id="company_select">
+                <option value="">Firmalar yükleniyor...</option>
+              </select>
+            </div>
+            <div class="form-group-premium">
+              <label>Kontrol Türü</label>
+              <div style="display: flex; gap: 8px;">
+                <select id="control_type_select" onchange="autoNextDate()" style="flex: 1;">
+                  <option value="">Kontrol türleri yükleniyor...</option>
+                </select>
+                <button class="btn btn-secondary" onclick="openTypeModal()" style="padding: 8px 14px; border-radius: 8px; border: 1px solid var(--uc-line); background: #fff; cursor: pointer; font-weight: 700;">+ Tür Ekle</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium">
+              <label>Ekipman / Kontrol Adı</label>
+              <input id="equipment_name" placeholder="Örn. Forklift-1, Yangın tüpleri, Topraklama ölçümü" />
+            </div>
+            <div class="form-group-premium">
+              <label>Lokasyon</label>
+              <input id="equipment_location" placeholder="Örn. Üretim alanı, Depo, Ofis" />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium">
+              <label>Seri / Etiket / Rapor No</label>
+              <input id="serial_no" placeholder="Örn. SN-123, RPR-2026-01" />
+            </div>
+            <div class="form-group-premium">
+              <label>Sorumlu / Firma</label>
+              <input id="responsible_person" placeholder="Örn. Bakım sorumlusu / Yetkili firma" />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium">
+              <label>Son Kontrol Tarihi</label>
+              <input type="date" id="last_control_date" onchange="autoNextDate()" />
+            </div>
+            <div class="form-group-premium">
+              <label>Sonraki Kontrol Tarihi</label>
+              <input type="date" id="next_control_date" />
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium">
+              <label>Kontrol Sonucu</label>
+              <select id="control_result">
+                <option value="Uygun">Uygun</option>
+                <option value="Uygunsuzluk Var">Uygunsuzluk Var</option>
+                <option value="Şartlı Uygun">Şartlı Uygun</option>
+                <option value="Kontrol Edilemedi">Kontrol Edilemedi</option>
+              </select>
+            </div>
+            <div class="form-group-premium">
+              <label>Rapor Durumu</label>
+              <select id="report_status">
+                <option value="Rapor Bekleniyor">Rapor Bekleniyor</option>
+                <option value="Rapor Alındı">Rapor Alındı</option>
+                <option value="Rapor Gerekli Değil">Rapor Gerekli Değil</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group-premium" style="margin-bottom: 14px;">
+            <label>Not</label>
+            <textarea id="notes" rows="2" placeholder="Kontrol sonucu, eksik belge, uygunsuzluk veya takip notu"></textarea>
+          </div>
+
+          <div style="background: #fdf4ff; border: 1px solid #f3e8ff; border-radius: 12px; padding: 12px; font-size: 12px; line-height: 1.5; color: #581c87; margin-bottom: 16px;">
+            <strong>ℹ️ İpucu:</strong> Kontrol türü listede yoksa “+ Tür Ekle” ile anında ekleyebilirsiniz. Tür bazlı varsayılan tekrar periyodu otomatik sonraki kontrol tarihini üretir.
+          </div>
+
+          <button class="btn-add-lead-btn" style="width: 100%; border: none; font-size:13px; padding: 12px; cursor:pointer;" onclick="saveControl()">
+            💾 Kontrol Kaydını Kaydet
+          </button>
+          <div id="periodic_status" style="margin-top: 10px; font-size: 13px; font-weight: 600; text-align: center;"></div>
+        </div>
+        <!-- Kontrol Listesi -->
+        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📋 Kontrol Listesi</h3>
+              <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0;">Aktif ve geçmiş kontrol kayıtlarını arayın ve durumlarını takip edin.</p>
+            </div>
+            <button class="btn btn-secondary" onclick="fetchAllData()" style="padding: 8px 14px; font-weight: 700; border-radius: 8px; border: 1px solid var(--uc-line); background: #fff; cursor: pointer;">🔄 Yenile</button>
+          </div>
+
+          <!-- Filtre Toolbar -->
+          <div class="crm-toolbar-premium" style="margin-bottom: 16px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; background: #f8fafc; padding: 14px; border-radius: 12px;">
+            <div class="form-group-premium">
+              <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--uc-text-muted); display: block; margin-bottom: 4px;">Firma Filtresi</label>
+              <select id="filter_company" onchange="renderControls()" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--uc-line); background: #fff;">
+                <option value="">Tümü</option>
+              </select>
+            </div>
+            <div class="form-group-premium">
+              <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--uc-text-muted); display: block; margin-bottom: 4px;">Durum Filtresi</label>
+              <select id="filter_status" onchange="renderControls()" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--uc-line); background: #fff;">
+                <option value="">Tümü</option>
+                <option value="Geçerli">Geçerli</option>
+                <option value="Kontrol Yaklaşıyor">Kontrol Yaklaşıyor</option>
+                <option value="Süresi Doldu">Süresi Doldu</option>
+                <option value="Uygunsuzluk Var">Uygunsuzluk Var</option>
+                <option value="Rapor Bekleniyor">Rapor Bekleniyor</option>
+                <option value="Kapandı">Kapandı</option>
+              </select>
+            </div>
+            <div class="form-group-premium">
+              <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--uc-text-muted); display: block; margin-bottom: 4px;">Kelime Arama</label>
+              <input id="text_filter" oninput="renderControls()" placeholder="Firma, ekipman veya kontrol türü..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--uc-line); background: #fff;" />
+            </div>
+          </div>
+
+          <div class="table-container-premium">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr>
+                  <th style="text-align: left; padding: 12px;">Firma / Ekipman</th>
+                  <th style="text-align: left; padding: 12px;">Kontrol</th>
+                  <th style="text-align: left; padding: 12px;">Tarih</th>
+                  <th style="text-align: left; padding: 12px;">Durum</th>
+                  <th style="text-align: left; padding: 12px; width: 220px;">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="periodic_tbody">
+                <tr>
+                  <td colspan="5" class="empty-state">Kontrol kayıtları yükleniyor...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-  <h2>🛠️ Periyodik Kontrol & Ekipman Takip</h2>
-  <p class="page-desc">Firma bazlı ekipman ve yasal periyodik kontrolleri takip edin. Kontrol türünü pratik ekleyin, tekrar kontrol tarihlerini izleyin, uygunsuzluk ve rapor durumlarını kayıt altına alın.</p>
-  <div class="kpi-grid">
-    <div class="metric-box metric-purple"><div class="metric-title">Toplam Kayıt</div><div class="metric-value" id="stat_total">0</div></div>
-    <div class="metric-box metric-green"><div class="metric-title">Geçerli</div><div class="metric-value" id="stat_valid">0</div></div>
-    <div class="metric-box metric-orange"><div class="metric-title">Kontrol Yaklaşıyor</div><div class="metric-value" id="stat_upcoming">0</div></div>
-    <div class="metric-box metric-red"><div class="metric-title">Süresi Doldu</div><div class="metric-value" id="stat_expired">0</div></div>
-    <div class="metric-box metric-blue"><div class="metric-title">Rapor/Uygunsuzluk</div><div class="metric-value" id="stat_issue">0</div></div>
-  </div>
-  <div class="section-title">📝 Yeni Kontrol Kaydı</div>
-  <div class="panel">
-    <h3>Firma Ekipman / Kontrol Kaydı Oluştur</h3>
-    <div class="form-grid">
-      <div><label>Firma</label><select id="company_select"><option value="">Firmalar yükleniyor...</option></select></div>
-      <div class="full"><label>Kontrol Türü</label><div class="inline-row"><select id="control_type_select" onchange="autoNextDate()"><option value="">Kontrol türleri yükleniyor...</option></select><button class="btn btn-secondary" onclick="openTypeModal()">+ Tür Ekle</button></div></div>
-      <div><label>Ekipman / Kontrol Adı</label><input id="equipment_name" placeholder="Örn. Forklift-1, Yangın tüpleri, Topraklama ölçümü"></div>
-      <div><label>Lokasyon</label><input id="equipment_location" placeholder="Örn. Üretim alanı, Depo, Ofis"></div>
-      <div><label>Seri / Etiket / Rapor No</label><input id="serial_no" placeholder="Örn. SN-123, RPR-2026-01"></div>
-      <div><label>Sorumlu / Firma</label><input id="responsible_person" placeholder="Örn. Bakım sorumlusu / Yetkili firma"></div>
-      <div><label>Son Kontrol Tarihi</label><input type="date" id="last_control_date" onchange="autoNextDate()"></div>
-      <div><label>Sonraki Kontrol Tarihi</label><input type="date" id="next_control_date"></div>
-      <div><label>Kontrol Sonucu</label><select id="control_result"><option value="Uygun">Uygun</option><option value="Uygunsuzluk Var">Uygunsuzluk Var</option><option value="Şartlı Uygun">Şartlı Uygun</option><option value="Kontrol Edilemedi">Kontrol Edilemedi</option></select></div>
-      <div><label>Rapor Durumu</label><select id="report_status"><option value="Rapor Bekleniyor">Rapor Bekleniyor</option><option value="Rapor Alındı">Rapor Alındı</option><option value="Rapor Gerekli Değil">Rapor Gerekli Değil</option></select></div>
-      <div class="full"><label>Not</label><textarea id="notes" rows="2" placeholder="Kontrol sonucu, eksik belge, uygunsuzluk veya takip notu"></textarea></div>
-      <div class="hint-box full">Kontrol türü listede yoksa “+ Tür Ekle” ile anında ekleyebilirsiniz. Tür bazlı varsayılan tekrar periyodu otomatik sonraki kontrol tarihini üretir.</div>
-      <div class="full"><button class="btn btn-teal" style="width:100%;" onclick="saveControl()">Kontrol Kaydını Kaydet</button><div id="periodic_status" class="status"></div></div>
+
+    <!-- ➕ KONTROL TÜRÜ EKLE MODAL -->
+    <div class="modal-backdrop-premium" id="type_modal">
+      <div class="modal-card-premium" style="max-width: 600px;">
+        <div class="modal-header-premium">
+          <h3>➕ Kontrol Türü Ekle</h3>
+          <button class="modal-close-btn" onclick="closeTypeModal()">&times;</button>
+        </div>
+        <div class="modal-body-premium">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium">
+              <label>Yeni Kontrol Türü</label>
+              <input id="new_type_name" placeholder="Örn. Kaldırma ekipmanı kontrolü" />
+            </div>
+            <div class="form-group-premium">
+              <label>Varsayılan Periyot (Ay)</label>
+              <input type="number" id="new_type_months" min="1" value="12" placeholder="Ay" />
+            </div>
+          </div>
+          <button class="btn btn-purple" style="width: 100%; background: #7c3aed; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-bottom: 16px;" onclick="addControlType()">💾 Türü Kaydet ve Seç</button>
+          <div id="type_status" style="margin-top: 10px; font-size: 13px; font-weight: 600; text-align: center;"></div>
+          
+          <h4 style="margin: 20px 0 8px; font-size: 14px; font-weight: 800; color: var(--uc-text);">Tanımlı Kontrol Türleri</h4>
+          <div class="table-container-premium" style="max-height: 200px; overflow-y: auto;">
+            <table style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Tür</th>
+                  <th>Periyot</th>
+                  <th>Durum</th>
+                </tr>
+              </thead>
+              <tbody id="types_tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="section-title">📋 Kontrol Listesi</div>
-  <div class="panel">
-    <h3>Aktif ve Geçmiş Kontrol Kayıtları</h3>
-    <div class="toolbar"><div class="field"><label>Firma</label><select id="filter_company" onchange="renderControls()"><option value="">Tümü</option></select></div><div class="field"><label>Durum</label><select id="filter_status" onchange="renderControls()"><option value="">Tümü</option><option value="Geçerli">Geçerli</option><option value="Kontrol Yaklaşıyor">Kontrol Yaklaşıyor</option><option value="Süresi Doldu">Süresi Doldu</option><option value="Uygunsuzluk Var">Uygunsuzluk Var</option><option value="Rapor Bekleniyor">Rapor Bekleniyor</option><option value="Kapandı">Kapandı</option></select></div><div class="field"><label>Arama</label><input id="text_filter" oninput="renderControls()" placeholder="Firma, ekipman, kontrol türü"></div><div><button class="btn btn-secondary" onclick="fetchAllData()">Yenile</button></div></div>
-    <table><thead><tr><th>Firma / Ekipman</th><th>Kontrol</th><th>Tarih</th><th>Durum</th><th>İşlem</th></tr></thead><tbody id="periodic_tbody"><tr><td colspan="5" class="empty-state">Kontrol kayıtları yükleniyor...</td></tr></tbody></table>
-  </div>
-</div>
 
-<div class="modal-backdrop" id="type_modal"><div class="modal-card" style="width:min(620px,100%);"><div class="modal-head"><h3>Kontrol Türü Ekle</h3><button class="btn btn-secondary btn-small" onclick="closeTypeModal()">Kapat</button></div><div class="modal-body"><div class="form-grid"><div><label>Yeni Kontrol Türü</label><input id="new_type_name" placeholder="Örn. Kaldırma ekipmanı kontrolü"></div><div><label>Varsayılan Periyot</label><input type="number" id="new_type_months" min="1" value="12" placeholder="Ay"></div><div class="full"><button class="btn btn-teal" style="width:100%;" onclick="addControlType()">Türü Kaydet ve Seç</button><div id="type_status" class="status"></div></div></div><h3 style="margin-top:20px;">Tanımlı Kontrol Türleri</h3><table><thead><tr><th>Tür</th><th>Periyot</th><th>Durum</th></tr></thead><tbody id="types_tbody"></tbody></table></div></div></div>
+    <!-- 🔍 PERİYODİK KONTROL DETAY MODAL -->
+    <div class="modal-backdrop-premium" id="detail_modal">
+      <div class="modal-card-premium" style="max-width: 800px;">
+        <div class="modal-header-premium">
+          <h3>🔍 Periyodik Kontrol Detayı</h3>
+          <button class="modal-close-btn" onclick="closeDetailModal()">&times;</button>
+        </div>
+        <div class="modal-body-premium print-area">
+          <div class="print-only"><h2>Periyodik Kontrol Formu</h2></div>
+          <div id="detail_summary" class="detail-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 14px; border-radius: 10px;"></div>
+          
+          <h4 style="margin: 18px 0 8px; font-size: 14px; font-weight: 800; color: var(--uc-text);">İşlem Geçmişi</h4>
+          <div class="table-container-premium" style="margin-bottom: 20px; max-height: 180px; overflow-y: auto; border: 1px solid var(--uc-line); border-radius: 8px;">
+            <table style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Tarih</th>
+                  <th>İşlem</th>
+                  <th>Not</th>
+                  <th>Kullanıcı</th>
+                </tr>
+              </thead>
+              <tbody id="events_tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer-premium">
+          <button class="btn btn-secondary" onclick="window.print()" style="border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--uc-line); background: #fff;">🖨️ Yazdır</button>
+          <button class="btn btn-green" onclick="openOperationModal('Kontrol Yenilendi')" style="border-radius: 8px; padding: 10px 16px; background: #10b981; color: #fff; border: none; cursor: pointer; font-weight: 700;">🔄 Kontrol Yenile</button>
+          <button class="btn btn-orange" onclick="openOperationModal('Rapor Alındı')" style="border-radius: 8px; padding: 10px 16px; background: #f59e0b; color: #fff; border: none; cursor: pointer; font-weight: 700;">📄 Rapor Alındı</button>
+          <button class="btn btn-red" onclick="openOperationModal('Uygunsuzluk Var')" style="border-radius: 8px; padding: 10px 16px; background: #dc2626; color: #fff; border: none; cursor: pointer; font-weight: 700;">⚠️ Uygunsuzluk</button>
+          <button class="btn btn-blue" onclick="openOperationModal('Kapandı')" style="border-radius: 8px; padding: 10px 16px; background: #2563eb; color: #fff; border: none; cursor: pointer; font-weight: 700;">🔒 Kapat</button>
+        </div>
+      </div>
+    </div>
 
-<div class="modal-backdrop" id="detail_modal"><div class="modal-card"><div class="modal-head"><h3>Periyodik Kontrol Detayı</h3><button class="btn btn-secondary btn-small" onclick="closeDetailModal()">Kapat</button></div><div class="modal-body print-area"><div class="print-only"><h2>Periyodik Kontrol Formu</h2></div><div id="detail_summary" class="detail-grid"></div><h3 style="margin-top:14px;">İşlem Geçmişi</h3><table><thead><tr><th>Tarih</th><th>İşlem</th><th>Not</th><th>Kullanıcı</th></tr></thead><tbody id="events_tbody"></tbody></table><div class="modal-actions"><button class="btn btn-secondary" onclick="window.print()">Yazdır</button><button class="btn btn-green" onclick="openOperationModal('Kontrol Yenilendi')">Kontrol Yenile</button><button class="btn btn-orange" onclick="openOperationModal('Rapor Alındı')">Rapor Alındı</button><button class="btn btn-red" onclick="openOperationModal('Uygunsuzluk Var')">Uygunsuzluk</button><button class="btn btn-blue" onclick="openOperationModal('Kapandı')">Kapat</button></div></div></div></div>
+    <!-- ⚙️ KONTROL İŞLEM MODAL -->
+    <div class="modal-backdrop-premium" id="operation_modal">
+      <div class="modal-card-premium" style="max-width: 760px;">
+        <div class="modal-header-premium">
+          <h3 id="operation_title">Kontrol İşlemi</h3>
+          <button class="modal-close-btn" onclick="closeOperationModal()">&times;</button>
+        </div>
+        <div class="modal-body-premium">
+          <input type="hidden" id="operation_control_id" /><input type="hidden" id="operation_type" />
+          <div id="operation_summary" class="detail-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 14px; border-radius: 10px;"></div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium">
+              <label>İşlem Tarihi</label>
+              <input type="date" id="operation_date" />
+            </div>
+            <div class="form-group-premium">
+              <label>İşlem Türü</label>
+              <input id="operation_label" disabled style="background: #f1f5f9; color: #64748b;" />
+            </div>
+          </div>
 
-<div class="modal-backdrop" id="operation_modal"><div class="modal-card" style="width:min(760px,100%);"><div class="modal-head"><h3 id="operation_title">Kontrol İşlemi</h3><button class="btn btn-secondary btn-small" onclick="closeOperationModal()">Kapat</button></div><div class="modal-body"><input type="hidden" id="operation_control_id"><input type="hidden" id="operation_type"><div id="operation_summary" class="detail-grid"></div><div class="form-grid"><div><label>İşlem Tarihi</label><input type="date" id="operation_date"></div><div><label>İşlem Türü</label><input id="operation_label" disabled></div><div id="renew_block_1"><label>Yeni Son Kontrol Tarihi</label><input type="date" id="operation_last_date" onchange="autoOperationNextDate()"></div><div id="renew_block_2"><label>Yeni Sonraki Kontrol Tarihi</label><input type="date" id="operation_next_date"></div><div><label>Kontrol Sonucu</label><select id="operation_result"><option value="Uygun">Uygun</option><option value="Uygunsuzluk Var">Uygunsuzluk Var</option><option value="Şartlı Uygun">Şartlı Uygun</option><option value="Kontrol Edilemedi">Kontrol Edilemedi</option></select></div><div><label>Rapor Durumu</label><select id="operation_report_status"><option value="Rapor Bekleniyor">Rapor Bekleniyor</option><option value="Rapor Alındı">Rapor Alındı</option><option value="Rapor Gerekli Değil">Rapor Gerekli Değil</option></select></div><div class="full"><label>İşlem Notu</label><textarea id="operation_note" rows="3" placeholder="Kontrol yenilendi, rapor alındı, uygunsuzluk giderildi..."></textarea></div></div><div class="modal-actions"><button class="btn btn-secondary" onclick="closeOperationModal()">Vazgeç</button><button class="btn btn-teal" onclick="saveOperationModal()">İşlemi Kaydet</button></div></div></div></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium" id="renew_block_1">
+              <label>Yeni Son Kontrol Tarihi</label>
+              <input type="date" id="operation_last_date" onchange="autoOperationNextDate()" />
+            </div>
+            <div class="form-group-premium" id="renew_block_2">
+              <label>Yeni Sonraki Kontrol Tarihi</label>
+              <input type="date" id="operation_next_date" />
+            </div>
+          </div>
 
-<script>
-const SUPABASE_URL="https://dnvuizausfcjzkcsynql.supabase.co";
-const SUPABASE_KEY="sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-const dbClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-let CURRENT_AUTH=null, COMPANY_ROWS=[], CONTROL_TYPES=[], CONTROLS=[], EVENTS=[], SELECTED_CONTROL_ID=null;
-const DEFAULT_TYPES=[['Yangın Tüpü Kontrolü',12],['Elektrik Tesisatı Kontrolü',12],['Topraklama Ölçümü',12],['Paratoner Kontrolü',12],['Kaldırma Ekipmanı Kontrolü',12],['Basınçlı Kap Kontrolü',12],['Kompresör Kontrolü',12],['Forklift Kontrolü',12],['Vinç Kontrolü',12],['Havalandırma Kontrolü',12],['Ortam Ölçümü',12],['Makine Koruyucu Kontrolü',12],['Diğer',12]];
-function normalizeAccessRole(value){const v=(value||'').toString().trim().toLowerCase();if(['super_admin','super admin','saas_admin','sistem sahibi'].includes(v))return'super_admin';if(['admin','yonetici','yönetici'].includes(v))return'admin';if(['uzman','isg_uzmani','isg uzmanı','iş güvenliği uzmanı'].includes(v))return'uzman';if(['hekim','isyeri hekimi','işyeri hekimi'].includes(v))return'hekim';if(['dsp','diğer sağlık personeli','diger saglik personeli'].includes(v))return'dsp';if(['firma_yetkilisi','firma yetkilisi','musteri','müşteri'].includes(v))return'firma_yetkilisi';return'';}
-function inferAccessRoleFromEmail(email){const e=(email||'').toLowerCase();if(e.includes('orhan.vardar@gmail.com'))return'super_admin';if(e.includes('admin'))return'admin';if(e.includes('hekim'))return'hekim';if(e.includes('dsp'))return'dsp';if(e.includes('firma')||e.includes('musteri')||e.includes('müşteri'))return'firma_yetkilisi';if(e.includes('uzman'))return'uzman';return'uzman';}
-function isStaffAccessActive(record){if(!record)return true;if(record.can_login===false)return false;if(record.is_active_manual==='Aktif')return true;if(record.is_active_manual==='Pasif')return false;return true;}
-async function getCurrentAuthContext(){const{data:{session}}=await dbClient.auth.getSession();if(!session)return{session:null,email:'',role:'',canLogin:false,staff:null};const email=session.user.email||'';let staff=null;try{const{data}=await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email',email).maybeSingle();staff=data||null;}catch(err){console.warn(err.message)}const role=normalizeAccessRole(staff&&staff.access_role)||normalizeAccessRole(staff&&staff.staff_role)||inferAccessRoleFromEmail(email);return{session,email,role,canLogin:isStaffAccessActive(staff),staff,tenant:staff&&staff.tenants?staff.tenants:null,tenant_id:staff?staff.tenant_id:null};}
-function canAccessPage(role,page){if(role==='super_admin'||role==='admin')return true;if(['risk','accidents','near_miss','training','ppe','periodic'].includes(page))return role==='uzman';if(page==='medical')return role==='hekim';if(page==='staff')return false;if(['company','workers','schedule'].includes(page))return['uzman','hekim','dsp'].includes(role);return true;}
-function roleLabel(role){return{super_admin:'Super Admin',admin:'Admin',uzman:'İSG Uzmanı',hekim:'İşyeri Hekimi',dsp:'DSP',firma_yetkilisi:'Firma Yetkilisi'}[role]||role||'Rol yok';}
-function applyRoleBasedNavigation(role){['risk','medical','staff','saas','accidents','near_miss','training','ppe','periodic'].forEach(x=>{const el=document.getElementById('menu_'+x);if(!el)return;if(x==='saas')el.style.display=role==='super_admin'?'inline-block':'none';else if(x==='staff')el.style.display=canAccessPage(role,'staff')?'inline-block':'none';else el.style.display=canAccessPage(role,x)?'inline-block':'none';});}
-function setTenantBranding(tenant){const titleEl=document.getElementById('lbl_osgb_title');if(titleEl)titleEl.innerText=(tenant&&tenant.name)?tenant.name:'Eses Software';const area=titleEl?titleEl.closest('.logo-area'):null;if(!area)return;let img=area.querySelector('.tenant-logo-img');const logoUrl=tenant&&tenant.logo_url?tenant.logo_url:'';if(logoUrl){if(!img){img=document.createElement('img');img.className='tenant-logo-img';img.alt='Logo';area.insertBefore(img,titleEl);}img.src=logoUrl;}else if(img){img.remove();}}
-async function requireAuthAndRole(page){const auth=await getCurrentAuthContext();if(!auth.session){window.location.href='login.html';return null;}if(!auth.canLogin){await dbClient.auth.signOut();alert('Bu kullanıcı için sistem erişimi pasif.');window.location.href='login.html';return null;}const userInfo=document.getElementById('current_user_email');if(userInfo)userInfo.innerText=`${auth.email} • ${roleLabel(auth.role)}`;setTenantBranding(auth.tenant);applyRoleBasedNavigation(auth.role);if(page&&!canAccessPage(auth.role,page)){window.location.href='dashboard.html';return null;}return auth;}
-function escapeHtml(v){return(v||'').toString().replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
-function todayString(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function addMonthsString(dateString,months){const d=dateString?new Date(dateString+'T00:00:00'):new Date();d.setMonth(d.getMonth()+Number(months||0));return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function plusDaysString(days){const d=new Date();d.setDate(d.getDate()+days);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function companyById(id){return COMPANY_ROWS.find(c=>String(c.id)===String(id));}
-function typeById(id){return CONTROL_TYPES.find(t=>String(t.id)===String(id));}
-function controlById(id){return CONTROLS.find(a=>String(a.id)===String(id));}
-function setStatus(id,msg,ok){const el=document.getElementById(id);if(!el)return;el.className='status '+(ok?'ok':'err');el.innerText=msg||'';}
-function effectiveStatus(row){if(!row)return'-';if(row.status&&row.status==='Kapandı')return'Kapandı';if(row.control_result==='Uygunsuzluk Var'||row.status==='Uygunsuzluk Var')return'Uygunsuzluk Var';if(row.report_status==='Rapor Bekleniyor'||row.status==='Rapor Bekleniyor')return'Rapor Bekleniyor';const today=todayString();const soon=plusDaysString(30);if(row.next_control_date&&row.next_control_date<today)return'Süresi Doldu';if(row.next_control_date&&row.next_control_date<=soon)return'Kontrol Yaklaşıyor';return row.status||'Geçerli';}
-function statusBadge(status){const st=status||'Geçerli';if(st==='Geçerli')return'<span class="badge badge-green">Geçerli</span>';if(st==='Kontrol Yaklaşıyor')return'<span class="badge badge-orange">Kontrol Yaklaşıyor</span>';if(st==='Süresi Doldu'||st==='Uygunsuzluk Var')return'<span class="badge badge-red">'+escapeHtml(st)+'</span>';if(st==='Rapor Bekleniyor')return'<span class="badge badge-blue">Rapor Bekleniyor</span>';if(st==='Kapandı')return'<span class="badge badge-gray">Kapandı</span>';return'<span class="badge badge-gray">'+escapeHtml(st)+'</span>';}
-window.onload=async function(){const auth=await requireAuthAndRole('periodic');if(!auth)return;CURRENT_AUTH=auth;if(!CURRENT_AUTH.tenant_id){alert('Tenant bilgisi bulunamadı.');return;}document.body.style.display='block';document.getElementById('last_control_date').value=todayString();await fetchCompanies();await fetchAllData();};
-async function fetchCompanies(){const{data,error}=await dbClient.from('customer_companies').select('id, company_name').eq('tenant_id',CURRENT_AUTH.tenant_id).order('company_name');COMPANY_ROWS=data||[];const companySel=document.getElementById('company_select'), filterSel=document.getElementById('filter_company');if(error){companySel.innerHTML='<option value="">Firma listesi alınamadı</option>';return;}companySel.innerHTML='<option value="">-- Firma Seçin --</option>';filterSel.innerHTML='<option value="">Tümü</option>';COMPANY_ROWS.forEach(c=>{const opt=`<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`;companySel.innerHTML+=opt;filterSel.innerHTML+=opt;});}
-async function fetchControlTypes(){const{data,error}=await dbClient.from('periodic_control_types').select('*').eq('tenant_id',CURRENT_AUTH.tenant_id).eq('is_active',true).order('name');if(error){console.warn(error.message);CONTROL_TYPES=[];}else CONTROL_TYPES=data||[];if(CONTROL_TYPES.length===0){await seedDefaultTypes();const again=await dbClient.from('periodic_control_types').select('*').eq('tenant_id',CURRENT_AUTH.tenant_id).eq('is_active',true).order('name');CONTROL_TYPES=again.data||[];}renderTypeSelect();renderTypesTable();}
-async function seedDefaultTypes(){const rows=DEFAULT_TYPES.map(([name,months])=>({tenant_id:CURRENT_AUTH.tenant_id,name,default_period_months:months,created_by_email:CURRENT_AUTH.email||null}));await dbClient.from('periodic_control_types').upsert(rows,{onConflict:'tenant_id,name'});}
-function renderTypeSelect(){const sel=document.getElementById('control_type_select');sel.innerHTML='<option value="">-- Kontrol Türü Seçin --</option>';CONTROL_TYPES.forEach(t=>sel.innerHTML+=`<option value="${escapeHtml(t.id)}" data-months="${escapeHtml(t.default_period_months||12)}">${escapeHtml(t.name)} (${escapeHtml(t.default_period_months||12)} ay)</option>`);}
-function renderTypesTable(){const tbody=document.getElementById('types_tbody');if(!tbody)return;if(CONTROL_TYPES.length===0){tbody.innerHTML='<tr><td colspan="3" class="empty-state">Kontrol türü yok.</td></tr>';return;}tbody.innerHTML='';CONTROL_TYPES.forEach(t=>tbody.innerHTML+=`<tr><td><strong>${escapeHtml(t.name)}</strong></td><td>${escapeHtml(t.default_period_months||12)} ay</td><td>${t.is_active===false?'<span class="badge badge-gray">Pasif</span>':'<span class="badge badge-green">Aktif</span>'}</td></tr>`);}
-function autoNextDate(){const type=typeById(document.getElementById('control_type_select').value);const last=document.getElementById('last_control_date').value||todayString();if(type)document.getElementById('next_control_date').value=addMonthsString(last,Number(type.default_period_months||12));}
-async function fetchAllData(){const tbody=document.getElementById('periodic_tbody');tbody.innerHTML='<tr><td colspan="5" class="empty-state">Kontrol kayıtları yükleniyor...</td></tr>';await fetchControlTypes();const [aRes,eRes]=await Promise.all([dbClient.from('periodic_controls').select('*, customer_companies(company_name, tenant_id)').eq('tenant_id',CURRENT_AUTH.tenant_id).order('created_at',{ascending:false}),dbClient.from('periodic_control_events').select('*').eq('tenant_id',CURRENT_AUTH.tenant_id).order('created_at',{ascending:false})]);if(aRes.error){tbody.innerHTML=`<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">Kontrol verileri yüklenemedi. periodic_sprint5_tables.sql dosyasını çalıştırın. Detay: ${escapeHtml(aRes.error.message)}</td></tr>`;return;}if(eRes.error){tbody.innerHTML=`<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">İşlem geçmişi yüklenemedi: ${escapeHtml(eRes.error.message)}</td></tr>`;return;}CONTROLS=aRes.data||[];EVENTS=eRes.data||[];updateStats();renderControls();}
-function updateStats(){document.getElementById('stat_total').innerText=CONTROLS.length;document.getElementById('stat_valid').innerText=CONTROLS.filter(a=>effectiveStatus(a)==='Geçerli').length;document.getElementById('stat_upcoming').innerText=CONTROLS.filter(a=>effectiveStatus(a)==='Kontrol Yaklaşıyor').length;document.getElementById('stat_expired').innerText=CONTROLS.filter(a=>effectiveStatus(a)==='Süresi Doldu').length;document.getElementById('stat_issue').innerText=CONTROLS.filter(a=>['Uygunsuzluk Var','Rapor Bekleniyor'].includes(effectiveStatus(a))).length;}
-async function saveControl(){try{setStatus('periodic_status','',true);const companyId=document.getElementById('company_select').value, typeId=document.getElementById('control_type_select').value;const type=typeById(typeId);const equipment=document.getElementById('equipment_name').value.trim();const location=document.getElementById('equipment_location').value.trim()||null;const serial=document.getElementById('serial_no').value.trim()||null;const responsible=document.getElementById('responsible_person').value.trim()||null;const last=document.getElementById('last_control_date').value, next=document.getElementById('next_control_date').value||null;const result=document.getElementById('control_result').value;const report=document.getElementById('report_status').value;const notes=document.getElementById('notes').value.trim()||null;if(!companyId||!typeId||!equipment||!last)throw new Error('Firma, kontrol türü, ekipman/kontrol adı ve son kontrol tarihi zorunlu.');const status=result==='Uygunsuzluk Var'?'Uygunsuzluk Var':(report==='Rapor Bekleniyor'?'Rapor Bekleniyor':'Geçerli');const row={tenant_id:CURRENT_AUTH.tenant_id,company_id:companyId,control_type_id:typeId,control_type_name:type?type.name:'Kontrol',equipment_name:equipment,equipment_location:location,serial_no:serial,last_control_date:last,next_control_date:next,control_result:result,report_status:report,status,responsible_person:responsible,notes,created_by_email:CURRENT_AUTH.email||null};const{data,error}=await dbClient.from('periodic_controls').insert([row]).select().single();if(error)throw error;await addEvent(data.id,'Kontrol Kaydı Oluşturuldu',last,notes||`${type?type.name:'Kontrol'} kaydı oluşturuldu.`);setStatus('periodic_status','Periyodik kontrol kaydı oluşturuldu.',true);document.getElementById('equipment_name').value='';document.getElementById('equipment_location').value='';document.getElementById('serial_no').value='';document.getElementById('responsible_person').value='';document.getElementById('notes').value='';await fetchAllData();}catch(err){setStatus('periodic_status','Hata: '+(err.message||err),false);}}
-async function addEvent(controlId,type,date,note){await dbClient.from('periodic_control_events').insert([{tenant_id:CURRENT_AUTH.tenant_id,control_id:controlId,event_type:type,event_date:date||todayString(),note:note||null,created_by_email:CURRENT_AUTH.email||null}]);}
-function renderControls(){const tbody=document.getElementById('periodic_tbody');const cf=document.getElementById('filter_company').value, sf=document.getElementById('filter_status').value, tf=(document.getElementById('text_filter').value||'').trim().toLowerCase();let rows=[...CONTROLS];if(cf)rows=rows.filter(r=>String(r.company_id)===String(cf));if(sf)rows=rows.filter(r=>effectiveStatus(r)===sf);if(tf)rows=rows.filter(r=>[r.equipment_name,r.control_type_name,r.serial_no,r.equipment_location,r.customer_companies&&r.customer_companies.company_name].join(' ').toLowerCase().includes(tf));if(rows.length===0){tbody.innerHTML='<tr><td colspan="5" class="empty-state">Filtreye uygun kontrol kaydı yok.</td></tr>';return;}tbody.innerHTML='';rows.forEach(r=>{const comp=r.customer_companies?r.customer_companies.company_name:'Bilinmeyen Firma';const st=effectiveStatus(r);tbody.innerHTML+=`<tr><td><strong>${escapeHtml(comp)}</strong><br><small>${escapeHtml(r.equipment_name||'-')}${r.equipment_location?' • '+escapeHtml(r.equipment_location):''}</small></td><td><strong>${escapeHtml(r.control_type_name||'-')}</strong><br><small>${r.serial_no?'Etiket/Rapor: '+escapeHtml(r.serial_no):''}</small></td><td>Son: ${escapeHtml(r.last_control_date||'-')}<br><small>Sonraki: ${escapeHtml(r.next_control_date||'-')}</small></td><td>${statusBadge(st)}<br><small>${escapeHtml(r.control_result||'-')} • ${escapeHtml(r.report_status||'-')}</small></td><td><div class="action-stack"><button class="btn btn-secondary btn-small" onclick="openDetailModal('${escapeHtml(r.id)}')">Detay / Yazdır</button>${st!=='Kapandı'?`<button class="btn btn-green btn-small" onclick="quickRenew('${escapeHtml(r.id)}')">Kontrol Yenile</button><button class="btn btn-orange btn-small" onclick="quickReport('${escapeHtml(r.id)}')">Rapor Alındı</button>`:''}</div></td></tr>`;});}
-function openTypeModal(){document.getElementById('type_modal').style.display='flex';document.getElementById('new_type_name').focus();renderTypesTable();}
-function closeTypeModal(){document.getElementById('type_modal').style.display='none';}
-async function addControlType(){try{setStatus('type_status','',true);const name=document.getElementById('new_type_name').value.trim();const months=Number(document.getElementById('new_type_months').value||12);if(!name)throw new Error('Kontrol türü adı zorunlu.');if(months<1)throw new Error('Periyot en az 1 ay olmalı.');const{data,error}=await dbClient.from('periodic_control_types').upsert([{tenant_id:CURRENT_AUTH.tenant_id,name,default_period_months:months,is_active:true,created_by_email:CURRENT_AUTH.email||null}],{onConflict:'tenant_id,name'}).select().single();if(error)throw error;setStatus('type_status','Kontrol türü eklendi ve seçildi.',true);document.getElementById('new_type_name').value='';await fetchControlTypes();document.getElementById('control_type_select').value=data.id;autoNextDate();}catch(err){setStatus('type_status','Hata: '+(err.message||err),false);}}
-function eventsFor(id){return EVENTS.filter(e=>String(e.control_id)===String(id)).sort((a,b)=>(b.event_date||'').localeCompare(a.event_date||''));}
-function summaryBoxes(row){const comp=row.customer_companies?row.customer_companies.company_name:'Bilinmeyen Firma';return`<div class="detail-box"><span>Firma</span><strong>${escapeHtml(comp)}</strong></div><div class="detail-box"><span>Ekipman</span><strong>${escapeHtml(row.equipment_name||'-')}</strong></div><div class="detail-box"><span>Kontrol</span><strong>${escapeHtml(row.control_type_name||'-')}</strong></div><div class="detail-box"><span>Durum</span><strong>${escapeHtml(effectiveStatus(row))}</strong></div><div class="detail-box"><span>Son Kontrol</span><strong>${escapeHtml(row.last_control_date||'-')}</strong></div><div class="detail-box"><span>Sonraki Kontrol</span><strong>${escapeHtml(row.next_control_date||'-')}</strong></div><div class="detail-box"><span>Sonuç</span><strong>${escapeHtml(row.control_result||'-')}</strong></div><div class="detail-box"><span>Rapor</span><strong>${escapeHtml(row.report_status||'-')}</strong></div>`;}
-function openDetailModal(id){const r=controlById(id);if(!r){alert('Kayıt bulunamadı.');return;}SELECTED_CONTROL_ID=id;document.getElementById('detail_summary').innerHTML=summaryBoxes(r);const tbody=document.getElementById('events_tbody');const list=eventsFor(id);if(list.length===0)tbody.innerHTML='<tr><td colspan="4" class="empty-state">İşlem geçmişi yok.</td></tr>';else{tbody.innerHTML='';list.forEach(e=>tbody.innerHTML+=`<tr><td>${escapeHtml(e.event_date||'-')}</td><td><strong>${escapeHtml(e.event_type||'-')}</strong></td><td>${escapeHtml(e.note||'-')}</td><td>${escapeHtml(e.created_by_email||'-')}</td></tr>`);}document.getElementById('detail_modal').style.display='flex';}
-function closeDetailModal(){document.getElementById('detail_modal').style.display='none';}
-function operationDefaultNote(type){if(type==='Kontrol Yenilendi')return'Periyodik kontrol yenilendi.';if(type==='Rapor Alındı')return'Kontrol raporu teslim alındı.';if(type==='Uygunsuzluk Var')return'Kontrolde uygunsuzluk tespit edildi.';if(type==='Kapandı')return'Takip kapatıldı.';return'';}
-function openOperationModal(type,id){if(id)SELECTED_CONTROL_ID=id;const r=controlById(SELECTED_CONTROL_ID);if(!r){alert('Kayıt bulunamadı.');return;}document.getElementById('operation_control_id').value=r.id;document.getElementById('operation_type').value=type;document.getElementById('operation_label').value=type;document.getElementById('operation_title').innerText='Kontrol İşlemi: '+type;document.getElementById('operation_date').value=todayString();document.getElementById('operation_note').value=operationDefaultNote(type);document.getElementById('operation_summary').innerHTML=summaryBoxes(r);document.getElementById('operation_last_date').value=todayString();document.getElementById('operation_result').value=type==='Uygunsuzluk Var'?'Uygunsuzluk Var':'Uygun';document.getElementById('operation_report_status').value=type==='Rapor Alındı'?'Rapor Alındı':(r.report_status||'Rapor Bekleniyor');autoOperationNextDate();const showRenew=type==='Kontrol Yenilendi';document.getElementById('renew_block_1').style.display=showRenew?'block':'none';document.getElementById('renew_block_2').style.display=showRenew?'block':'none';document.getElementById('operation_modal').style.display='flex';}
-function closeOperationModal(){document.getElementById('operation_modal').style.display='none';}
-function autoOperationNextDate(){const r=controlById(SELECTED_CONTROL_ID);let type=r?(typeById(r.control_type_id)||CONTROL_TYPES.find(t=>t.name===r.control_type_name)):null;const last=document.getElementById('operation_last_date').value||todayString();document.getElementById('operation_next_date').value=addMonthsString(last,Number(type&&type.default_period_months?type.default_period_months:12));}
-async function saveOperationModal(){const id=document.getElementById('operation_control_id').value;const r=controlById(id);if(!r){alert('Kayıt bulunamadı.');return;}const opType=document.getElementById('operation_type').value;const eventDate=document.getElementById('operation_date').value||todayString();const note=(document.getElementById('operation_note').value||'').trim()||operationDefaultNote(opType);try{let update={updated_at:new Date().toISOString()};if(opType==='Kontrol Yenilendi'){update.last_control_date=document.getElementById('operation_last_date').value||eventDate;update.next_control_date=document.getElementById('operation_next_date').value||null;update.control_result=document.getElementById('operation_result').value;update.report_status=document.getElementById('operation_report_status').value;update.status=update.control_result==='Uygunsuzluk Var'?'Uygunsuzluk Var':(update.report_status==='Rapor Bekleniyor'?'Rapor Bekleniyor':'Geçerli');}else if(opType==='Rapor Alındı'){update.report_status='Rapor Alındı';update.status=r.control_result==='Uygunsuzluk Var'?'Uygunsuzluk Var':'Geçerli';}else if(opType==='Uygunsuzluk Var'){update.control_result='Uygunsuzluk Var';update.status='Uygunsuzluk Var';}else if(opType==='Kapandı'){update.status='Kapandı';}
-const{error}=await dbClient.from('periodic_controls').update(update).eq('tenant_id',CURRENT_AUTH.tenant_id).eq('id',r.id);if(error)throw error;await addEvent(r.id,opType,eventDate,note);closeOperationModal();closeDetailModal();await fetchAllData();alert(opType+' işlemi kaydedildi.');}catch(err){alert('İşlem kaydedilemedi: '+(err.message||err));}}
-async function quickRenew(id){openOperationModal('Kontrol Yenilendi',id);}async function quickReport(id){openOperationModal('Rapor Alındı',id);}async function handleLogout(){await dbClient.auth.signOut();window.location.href='login.html';}
-</script>
-</body>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium">
+              <label>Kontrol Sonucu</label>
+              <select id="operation_result">
+                <option value="Uygun">Uygun</option>
+                <option value="Uygunsuzluk Var">Uygunsuzluk Var</option>
+                <option value="Şartlı Uygun">Şartlı Uygun</option>
+                <option value="Kontrol Edilemedi">Kontrol Edilemedi</option>
+              </select>
+            </div>
+            <div class="form-group-premium">
+              <label>Rapor Durumu</label>
+              <select id="operation_report_status">
+                <option value="Rapor Bekleniyor">Rapor Bekleniyor</option>
+                <option value="Rapor Alındı">Rapor Alındı</option>
+                <option value="Rapor Gerekli Değil">Rapor Gerekli Değil</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group-premium" style="margin-bottom: 14px;">
+            <label>İşlem Notu</label>
+            <textarea id="operation_note" rows="3" placeholder="Kontrol yenilendi, rapor alındı, uygunsuzluk giderildi..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer-premium">
+          <button class="btn btn-secondary" onclick="closeOperationModal()" style="border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--uc-line); background: #fff;">Vazgeç</button>
+          <button class="btn btn-purple" onclick="saveOperationModal()" style="border-radius: 8px; padding: 10px 16px; background: #7c3aed; color: #fff; border: none; cursor: pointer; font-weight: 700;">💾 İşlemi Kaydet</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let CURRENT_AUTH = null,
+        COMPANY_ROWS = [],
+        CONTROL_TYPES = [],
+        CONTROLS = [],
+        EVENTS = [],
+        SELECTED_CONTROL_ID = null;
+      const DEFAULT_TYPES = [
+        ['Yangın Tüpü Kontrolü', 12],
+        ['Elektrik Tesisatı Kontrolü', 12],
+        ['Topraklama Ölçümü', 12],
+        ['Paratoner Kontrolü', 12],
+        ['Kaldırma Ekipmanı Kontrolü', 12],
+        ['Basınçlı Kap Kontrolü', 12],
+        ['Kompresör Kontrolü', 12],
+        ['Forklift Kontrolü', 12],
+        ['Vinç Kontrolü', 12],
+        ['Havalandırma Kontrolü', 12],
+        ['Ortam Ölçümü', 12],
+        ['Makine Koruyucu Kontrolü', 12],
+        ['Diğer', 12]
+      ];
+      function escapeHtml(v) {
+        return (v || '')
+          .toString()
+          .replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]);
+      }
+      function todayString() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      function addMonthsString(dateString, months) {
+        const d = dateString ? new Date(dateString + 'T00:00:00') : new Date();
+        d.setMonth(d.getMonth() + Number(months || 0));
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      function plusDaysString(days) {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      function companyById(id) {
+        return COMPANY_ROWS.find((c) => String(c.id) === String(id));
+      }
+      function typeById(id) {
+        return CONTROL_TYPES.find((t) => String(t.id) === String(id));
+      }
+      function controlById(id) {
+        return CONTROLS.find((a) => String(a.id) === String(id));
+      }
+      function setStatus(id, msg, ok) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.className = 'status ' + (ok ? 'ok' : 'err');
+        el.innerText = msg || '';
+      }
+      function effectiveStatus(row) {
+        if (!row) return '-';
+        if (row.status && row.status === 'Kapandı') return 'Kapandı';
+        if (row.control_result === 'Uygunsuzluk Var' || row.status === 'Uygunsuzluk Var') return 'Uygunsuzluk Var';
+        if (row.report_status === 'Rapor Bekleniyor' || row.status === 'Rapor Bekleniyor') return 'Rapor Bekleniyor';
+        const today = todayString();
+        const soon = plusDaysString(30);
+        if (row.next_control_date && row.next_control_date < today) return 'Süresi Doldu';
+        if (row.next_control_date && row.next_control_date <= soon) return 'Kontrol Yaklaşıyor';
+        return row.status || 'Geçerli';
+      }
+      function statusBadge(status) {
+        const st = status || 'Geçerli';
+        if (st === 'Geçerli') return '<span class="badge badge-green">Geçerli</span>';
+        if (st === 'Kontrol Yaklaşıyor') return '<span class="badge badge-orange">Kontrol Yaklaşıyor</span>';
+        if (st === 'Süresi Doldu' || st === 'Uygunsuzluk Var')
+          return '<span class="badge badge-red">' + escapeHtml(st) + '</span>';
+        if (st === 'Rapor Bekleniyor') return '<span class="badge badge-blue">Rapor Bekleniyor</span>';
+        if (st === 'Kapandı') return '<span class="badge badge-gray">Kapandı</span>';
+        return '<span class="badge badge-gray">' + escapeHtml(st) + '</span>';
+      }
+      window.onload = async function () {
+        const auth = await requireAuthAndRole('periodic');
+        if (!auth) return;
+        CURRENT_AUTH = auth;
+        if (!CURRENT_AUTH.tenant_id) {
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
+        document.body.style.display = 'block';
+        document.getElementById('last_control_date').value = todayString();
+        await fetchCompanies();
+        await fetchAllData();
+      };
+      async function fetchCompanies() {
+        const { data, error } = await dbClient
+          .from('customer_companies')
+          .select('id, company_name')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .order('company_name');
+        COMPANY_ROWS = data || [];
+        const companySel = document.getElementById('company_select'),
+          filterSel = document.getElementById('filter_company');
+        if (error) {
+          companySel.innerHTML = '<option value="">Firma listesi alınamadı</option>';
+          return;
+        }
+        companySel.innerHTML = '<option value="">-- Firma Seçin --</option>';
+        filterSel.innerHTML = '<option value="">Tümü</option>';
+        COMPANY_ROWS.forEach((c) => {
+          const opt = `<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`;
+          companySel.innerHTML += opt;
+          filterSel.innerHTML += opt;
+        });
+      }
+      async function fetchControlTypes() {
+        const { data, error } = await dbClient
+          .from('periodic_control_types')
+          .select('*')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('is_active', true)
+          .order('name');
+        if (error) {
+          console.warn(error.message);
+          CONTROL_TYPES = [];
+        } else CONTROL_TYPES = data || [];
+        if (CONTROL_TYPES.length === 0) {
+          await seedDefaultTypes();
+          const again = await dbClient
+            .from('periodic_control_types')
+            .select('*')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .eq('is_active', true)
+            .order('name');
+          CONTROL_TYPES = again.data || [];
+        }
+        renderTypeSelect();
+        renderTypesTable();
+      }
+      async function seedDefaultTypes() {
+        const rows = DEFAULT_TYPES.map(([name, months]) => ({
+          tenant_id: CURRENT_AUTH.tenant_id,
+          name,
+          default_period_months: months,
+          created_by_email: CURRENT_AUTH.email || null
+        }));
+        await dbClient.from('periodic_control_types').upsert(rows, { onConflict: 'tenant_id,name' });
+      }
+      function renderTypeSelect() {
+        const sel = document.getElementById('control_type_select');
+        sel.innerHTML = '<option value="">-- Kontrol Türü Seçin --</option>';
+        CONTROL_TYPES.forEach(
+          (t) =>
+            (sel.innerHTML += `<option value="${escapeHtml(t.id)}" data-months="${escapeHtml(t.default_period_months || 12)}">${escapeHtml(t.name)} (${escapeHtml(t.default_period_months || 12)} ay)</option>`)
+        );
+      }
+      function renderTypesTable() {
+        const tbody = document.getElementById('types_tbody');
+        if (!tbody) return;
+        if (CONTROL_TYPES.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="empty-state">Kontrol türü yok.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        CONTROL_TYPES.forEach(
+          (t) =>
+            (tbody.innerHTML += `<tr><td><strong>${escapeHtml(t.name)}</strong></td><td>${escapeHtml(t.default_period_months || 12)} ay</td><td>${t.is_active === false ? '<span class="badge badge-gray">Pasif</span>' : '<span class="badge badge-green">Aktif</span>'}</td></tr>`)
+        );
+      }
+      function autoNextDate() {
+        const type = typeById(document.getElementById('control_type_select').value);
+        const last = document.getElementById('last_control_date').value || todayString();
+        if (type)
+          document.getElementById('next_control_date').value = addMonthsString(
+            last,
+            Number(type.default_period_months || 12)
+          );
+      }
+      async function fetchAllData() {
+        const tbody = document.getElementById('periodic_tbody');
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Kontrol kayıtları yükleniyor...</td></tr>';
+        await fetchControlTypes();
+        const [aRes, eRes] = await Promise.all([
+          dbClient
+            .from('periodic_controls')
+            .select('*, customer_companies(company_name, tenant_id)')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .order('created_at', { ascending: false }),
+          dbClient
+            .from('periodic_control_events')
+            .select('*')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .order('created_at', { ascending: false })
+        ]);
+        if (aRes.error) {
+          tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">Kontrol verileri yüklenemedi. periodic_sprint5_tables.sql dosyasını çalıştırın. Detay: ${escapeHtml(aRes.error.message)}</td></tr>`;
+          return;
+        }
+        if (eRes.error) {
+          tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">İşlem geçmişi yüklenemedi: ${escapeHtml(eRes.error.message)}</td></tr>`;
+          return;
+        }
+        CONTROLS = aRes.data || [];
+        EVENTS = eRes.data || [];
+        updateStats();
+        renderControls();
+      }
+      function updateStats() {
+        document.getElementById('stat_total').innerText = CONTROLS.length;
+        document.getElementById('stat_valid').innerText = CONTROLS.filter(
+          (a) => effectiveStatus(a) === 'Geçerli'
+        ).length;
+        document.getElementById('stat_upcoming').innerText = CONTROLS.filter(
+          (a) => effectiveStatus(a) === 'Kontrol Yaklaşıyor'
+        ).length;
+        document.getElementById('stat_expired').innerText = CONTROLS.filter(
+          (a) => effectiveStatus(a) === 'Süresi Doldu'
+        ).length;
+        document.getElementById('stat_issue').innerText = CONTROLS.filter((a) =>
+          ['Uygunsuzluk Var', 'Rapor Bekleniyor'].includes(effectiveStatus(a))
+        ).length;
+      }
+      async function saveControl() {
+        try {
+          setStatus('periodic_status', '', true);
+          const companyId = document.getElementById('company_select').value,
+            typeId = document.getElementById('control_type_select').value;
+          const type = typeById(typeId);
+          const equipment = document.getElementById('equipment_name').value.trim();
+          const location = document.getElementById('equipment_location').value.trim() || null;
+          const serial = document.getElementById('serial_no').value.trim() || null;
+          const responsible = document.getElementById('responsible_person').value.trim() || null;
+          const last = document.getElementById('last_control_date').value,
+            next = document.getElementById('next_control_date').value || null;
+          const result = document.getElementById('control_result').value;
+          const report = document.getElementById('report_status').value;
+          const notes = document.getElementById('notes').value.trim() || null;
+          if (!companyId || !typeId || !equipment || !last)
+            throw new Error('Firma, kontrol türü, ekipman/kontrol adı ve son kontrol tarihi zorunlu.');
+          const status =
+            result === 'Uygunsuzluk Var'
+              ? 'Uygunsuzluk Var'
+              : report === 'Rapor Bekleniyor'
+                ? 'Rapor Bekleniyor'
+                : 'Geçerli';
+          const row = {
+            tenant_id: CURRENT_AUTH.tenant_id,
+            company_id: companyId,
+            control_type_id: typeId,
+            control_type_name: type ? type.name : 'Kontrol',
+            equipment_name: equipment,
+            equipment_location: location,
+            serial_no: serial,
+            last_control_date: last,
+            next_control_date: next,
+            control_result: result,
+            report_status: report,
+            status,
+            responsible_person: responsible,
+            notes,
+            created_by_email: CURRENT_AUTH.email || null
+          };
+          const { data, error } = await dbClient.from('periodic_controls').insert([row]).select().single();
+          if (error) throw error;
+          await addEvent(
+            data.id,
+            'Kontrol Kaydı Oluşturuldu',
+            last,
+            notes || `${type ? type.name : 'Kontrol'} kaydı oluşturuldu.`
+          );
+          setStatus('periodic_status', 'Periyodik kontrol kaydı oluşturuldu.', true);
+          document.getElementById('equipment_name').value = '';
+          document.getElementById('equipment_location').value = '';
+          document.getElementById('serial_no').value = '';
+          document.getElementById('responsible_person').value = '';
+          document.getElementById('notes').value = '';
+          await fetchAllData();
+        } catch (err) {
+          setStatus('periodic_status', 'Hata: ' + (err.message || err), false);
+        }
+      }
+      async function addEvent(controlId, type, date, note) {
+        await dbClient
+          .from('periodic_control_events')
+          .insert([
+            {
+              tenant_id: CURRENT_AUTH.tenant_id,
+              control_id: controlId,
+              event_type: type,
+              event_date: date || todayString(),
+              note: note || null,
+              created_by_email: CURRENT_AUTH.email || null
+            }
+          ]);
+      }
+      function renderControls() {
+        const tbody = document.getElementById('periodic_tbody');
+        const cf = document.getElementById('filter_company').value,
+          sf = document.getElementById('filter_status').value,
+          tf = (document.getElementById('text_filter').value || '').trim().toLowerCase();
+        let rows = [...CONTROLS];
+        if (cf) rows = rows.filter((r) => String(r.company_id) === String(cf));
+        if (sf) rows = rows.filter((r) => effectiveStatus(r) === sf);
+        if (tf)
+          rows = rows.filter((r) =>
+            [
+              r.equipment_name,
+              r.control_type_name,
+              r.serial_no,
+              r.equipment_location,
+              r.customer_companies && r.customer_companies.company_name
+            ]
+              .join(' ')
+              .toLowerCase()
+              .includes(tf)
+          );
+        if (rows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Filtreye uygun kontrol kaydı yok.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        rows.forEach((r) => {
+          const comp = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
+          const st = effectiveStatus(r);
+          tbody.innerHTML += `<tr><td><strong>${escapeHtml(comp)}</strong><br><small>${escapeHtml(r.equipment_name || '-')}${r.equipment_location ? ' • ' + escapeHtml(r.equipment_location) : ''}</small></td><td><strong>${escapeHtml(r.control_type_name || '-')}</strong><br><small>${r.serial_no ? 'Etiket/Rapor: ' + escapeHtml(r.serial_no) : ''}</small></td><td>Son: ${escapeHtml(r.last_control_date || '-')}<br><small>Sonraki: ${escapeHtml(r.next_control_date || '-')}</small></td><td>${statusBadge(st)}<br><small>${escapeHtml(r.control_result || '-')} • ${escapeHtml(r.report_status || '-')}</small></td><td><div class="action-stack"><button class="btn btn-secondary btn-small" onclick="openDetailModal('${escapeHtml(r.id)}')">Detay / Yazdır</button>${st !== 'Kapandı' ? `<button class="btn btn-green btn-small" onclick="quickRenew('${escapeHtml(r.id)}')">Kontrol Yenile</button><button class="btn btn-orange btn-small" onclick="quickReport('${escapeHtml(r.id)}')">Rapor Alındı</button>` : ''}</div></td></tr>`;
+        });
+      }
+      function openTypeModal() {
+        document.getElementById('type_modal').style.display = 'flex';
+        document.getElementById('new_type_name').focus();
+        renderTypesTable();
+      }
+      function closeTypeModal() {
+        document.getElementById('type_modal').style.display = 'none';
+      }
+      async function addControlType() {
+        try {
+          setStatus('type_status', '', true);
+          const name = document.getElementById('new_type_name').value.trim();
+          const months = Number(document.getElementById('new_type_months').value || 12);
+          if (!name) throw new Error('Kontrol türü adı zorunlu.');
+          if (months < 1) throw new Error('Periyot en az 1 ay olmalı.');
+          const { data, error } = await dbClient
+            .from('periodic_control_types')
+            .upsert(
+              [
+                {
+                  tenant_id: CURRENT_AUTH.tenant_id,
+                  name,
+                  default_period_months: months,
+                  is_active: true,
+                  created_by_email: CURRENT_AUTH.email || null
+                }
+              ],
+              { onConflict: 'tenant_id,name' }
+            )
+            .select()
+            .single();
+          if (error) throw error;
+          setStatus('type_status', 'Kontrol türü eklendi ve seçildi.', true);
+          document.getElementById('new_type_name').value = '';
+          await fetchControlTypes();
+          document.getElementById('control_type_select').value = data.id;
+          autoNextDate();
+        } catch (err) {
+          setStatus('type_status', 'Hata: ' + (err.message || err), false);
+        }
+      }
+      function eventsFor(id) {
+        return EVENTS.filter((e) => String(e.control_id) === String(id)).sort((a, b) =>
+          (b.event_date || '').localeCompare(a.event_date || '')
+        );
+      }
+      function summaryBoxes(row) {
+        const comp = row.customer_companies ? row.customer_companies.company_name : 'Bilinmeyen Firma';
+        return `<div class="detail-box"><span>Firma</span><strong>${escapeHtml(comp)}</strong></div><div class="detail-box"><span>Ekipman</span><strong>${escapeHtml(row.equipment_name || '-')}</strong></div><div class="detail-box"><span>Kontrol</span><strong>${escapeHtml(row.control_type_name || '-')}</strong></div><div class="detail-box"><span>Durum</span><strong>${escapeHtml(effectiveStatus(row))}</strong></div><div class="detail-box"><span>Son Kontrol</span><strong>${escapeHtml(row.last_control_date || '-')}</strong></div><div class="detail-box"><span>Sonraki Kontrol</span><strong>${escapeHtml(row.next_control_date || '-')}</strong></div><div class="detail-box"><span>Sonuç</span><strong>${escapeHtml(row.control_result || '-')}</strong></div><div class="detail-box"><span>Rapor</span><strong>${escapeHtml(row.report_status || '-')}</strong></div>`;
+      }
+      function openDetailModal(id) {
+        const r = controlById(id);
+        if (!r) {
+          alert('Kayıt bulunamadı.');
+          return;
+        }
+        SELECTED_CONTROL_ID = id;
+        document.getElementById('detail_summary').innerHTML = summaryBoxes(r);
+        const tbody = document.getElementById('events_tbody');
+        const list = eventsFor(id);
+        if (list.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="empty-state">İşlem geçmişi yok.</td></tr>';
+        else {
+          tbody.innerHTML = '';
+          list.forEach(
+            (e) =>
+              (tbody.innerHTML += `<tr><td>${escapeHtml(e.event_date || '-')}</td><td><strong>${escapeHtml(e.event_type || '-')}</strong></td><td>${escapeHtml(e.note || '-')}</td><td>${escapeHtml(e.created_by_email || '-')}</td></tr>`)
+          );
+        }
+        document.getElementById('detail_modal').style.display = 'flex';
+      }
+      function closeDetailModal() {
+        document.getElementById('detail_modal').style.display = 'none';
+      }
+      function operationDefaultNote(type) {
+        if (type === 'Kontrol Yenilendi') return 'Periyodik kontrol yenilendi.';
+        if (type === 'Rapor Alındı') return 'Kontrol raporu teslim alındı.';
+        if (type === 'Uygunsuzluk Var') return 'Kontrolde uygunsuzluk tespit edildi.';
+        if (type === 'Kapandı') return 'Takip kapatıldı.';
+        return '';
+      }
+      function openOperationModal(type, id) {
+        if (id) SELECTED_CONTROL_ID = id;
+        const r = controlById(SELECTED_CONTROL_ID);
+        if (!r) {
+          alert('Kayıt bulunamadı.');
+          return;
+        }
+        document.getElementById('operation_control_id').value = r.id;
+        document.getElementById('operation_type').value = type;
+        document.getElementById('operation_label').value = type;
+        document.getElementById('operation_title').innerText = 'Kontrol İşlemi: ' + type;
+        document.getElementById('operation_date').value = todayString();
+        document.getElementById('operation_note').value = operationDefaultNote(type);
+        document.getElementById('operation_summary').innerHTML = summaryBoxes(r);
+        document.getElementById('operation_last_date').value = todayString();
+        document.getElementById('operation_result').value = type === 'Uygunsuzluk Var' ? 'Uygunsuzluk Var' : 'Uygun';
+        document.getElementById('operation_report_status').value =
+          type === 'Rapor Alındı' ? 'Rapor Alındı' : r.report_status || 'Rapor Bekleniyor';
+        autoOperationNextDate();
+        const showRenew = type === 'Kontrol Yenilendi';
+        document.getElementById('renew_block_1').style.display = showRenew ? 'block' : 'none';
+        document.getElementById('renew_block_2').style.display = showRenew ? 'block' : 'none';
+        document.getElementById('operation_modal').style.display = 'flex';
+      }
+      function closeOperationModal() {
+        document.getElementById('operation_modal').style.display = 'none';
+      }
+      function autoOperationNextDate() {
+        const r = controlById(SELECTED_CONTROL_ID);
+        let type = r ? typeById(r.control_type_id) || CONTROL_TYPES.find((t) => t.name === r.control_type_name) : null;
+        const last = document.getElementById('operation_last_date').value || todayString();
+        document.getElementById('operation_next_date').value = addMonthsString(
+          last,
+          Number(type && type.default_period_months ? type.default_period_months : 12)
+        );
+      }
+      async function saveOperationModal() {
+        const id = document.getElementById('operation_control_id').value;
+        const r = controlById(id);
+        if (!r) {
+          alert('Kayıt bulunamadı.');
+          return;
+        }
+        const opType = document.getElementById('operation_type').value;
+        const eventDate = document.getElementById('operation_date').value || todayString();
+        const note = (document.getElementById('operation_note').value || '').trim() || operationDefaultNote(opType);
+        try {
+          let update = { updated_at: new Date().toISOString() };
+          if (opType === 'Kontrol Yenilendi') {
+            update.last_control_date = document.getElementById('operation_last_date').value || eventDate;
+            update.next_control_date = document.getElementById('operation_next_date').value || null;
+            update.control_result = document.getElementById('operation_result').value;
+            update.report_status = document.getElementById('operation_report_status').value;
+            update.status =
+              update.control_result === 'Uygunsuzluk Var'
+                ? 'Uygunsuzluk Var'
+                : update.report_status === 'Rapor Bekleniyor'
+                  ? 'Rapor Bekleniyor'
+                  : 'Geçerli';
+          } else if (opType === 'Rapor Alındı') {
+            update.report_status = 'Rapor Alındı';
+            update.status = r.control_result === 'Uygunsuzluk Var' ? 'Uygunsuzluk Var' : 'Geçerli';
+          } else if (opType === 'Uygunsuzluk Var') {
+            update.control_result = 'Uygunsuzluk Var';
+            update.status = 'Uygunsuzluk Var';
+          } else if (opType === 'Kapandı') {
+            update.status = 'Kapandı';
+          }
+          const { error } = await dbClient
+            .from('periodic_controls')
+            .update(update)
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .eq('id', r.id);
+          if (error) throw error;
+          await addEvent(r.id, opType, eventDate, note);
+          closeOperationModal();
+          closeDetailModal();
+          await fetchAllData();
+          alert(opType + ' işlemi kaydedildi.');
+        } catch (err) {
+          alert('İşlem kaydedilemedi: ' + (err.message || err));
+        }
+      }
+      async function quickRenew(id) {
+        openOperationModal('Kontrol Yenilendi', id);
+      }
+      async function quickReport(id) {
+        openOperationModal('Rapor Alındı', id);
+      }
+    </script>
+  </body>
 </html>

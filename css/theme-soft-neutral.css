@@ -1,0 +1,211 @@
+/* Soft-Neutral Modern pilot theme for list-heavy pages */
+
+:root {
+  --sn-bg: #f6f4f1;
+  --sn-surface: #fcfbf9;
+  --sn-surface-strong: #ffffff;
+  --sn-line: #e4ddd4;
+  --sn-text: #1f2933;
+  --sn-muted: #6b7280;
+  --sn-primary: #255f5d;
+  --sn-primary-soft: #e5f0ef;
+  --sn-danger: #b42318;
+}
+
+body.theme-soft-neutral {
+  margin: 0;
+  padding: 0;
+  background:
+    radial-gradient(circle at 15% -10%, rgba(37, 95, 93, 0.1), transparent 32%),
+    radial-gradient(circle at 85% 0%, rgba(209, 122, 64, 0.09), transparent 28%),
+    var(--sn-bg);
+  color: var(--sn-text);
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, sans-serif;
+}
+
+body.theme-soft-neutral .card {
+  max-width: none;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+body.theme-soft-neutral .global-header {
+  padding: 14px 26px;
+  background: rgba(252, 251, 249, 0.96);
+  border-bottom: 1px solid var(--sn-line);
+  color: var(--sn-text);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+body.theme-soft-neutral .logo-area {
+  color: #111827;
+  font-weight: 700;
+}
+
+body.theme-soft-neutral .logo-badge {
+  background: #efe8dd;
+  color: #7a4e2d;
+}
+
+body.theme-soft-neutral .user-info {
+  background: #f4efe8;
+  color: #4b5563;
+  border: 1px solid var(--sn-line);
+}
+
+body.theme-soft-neutral .logout-btn {
+  background: #1f2937;
+  border-radius: 9px;
+}
+
+body.theme-soft-neutral .nav-container {
+  margin-top: 6px;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+body.theme-soft-neutral .nav-btn {
+  background: #f8f4ee;
+  color: #4b5563;
+  border: 1px solid var(--sn-line);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+body.theme-soft-neutral .nav-btn.active-page {
+  background: var(--sn-primary-soft);
+  color: var(--sn-primary) !important;
+  box-shadow: none;
+  border-color: #c9dddd;
+}
+
+body.theme-soft-neutral .workers-page-shell {
+  padding: 24px 26px 36px;
+}
+
+body.theme-soft-neutral h2 {
+  margin: 0 0 6px;
+  font-size: clamp(24px, 2.1vw, 32px);
+  letter-spacing: -0.03em;
+  color: #111827;
+}
+
+body.theme-soft-neutral .page-desc {
+  margin: 0 0 18px;
+  color: var(--sn-muted);
+}
+
+body.theme-soft-neutral .panel,
+body.theme-soft-neutral .table-container {
+  background: var(--sn-surface);
+  border: 1px solid var(--sn-line);
+  border-radius: 14px;
+  box-shadow: none;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+body.theme-soft-neutral .panel h3,
+body.theme-soft-neutral .table-container h3 {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #374151;
+}
+
+body.theme-soft-neutral .form-group label {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+body.theme-soft-neutral input,
+body.theme-soft-neutral select,
+body.theme-soft-neutral textarea {
+  border-radius: 10px;
+  border: 1px solid #d9d4cb;
+  background: var(--sn-surface-strong);
+  color: #1f2937;
+}
+
+body.theme-soft-neutral input:focus,
+body.theme-soft-neutral select:focus,
+body.theme-soft-neutral textarea:focus {
+  border-color: #6fa7a4;
+  box-shadow: 0 0 0 3px rgba(37, 95, 93, 0.12);
+  outline: none;
+}
+
+body.theme-soft-neutral .submit-btn,
+body.theme-soft-neutral .btn,
+body.theme-soft-neutral .btn-blue,
+body.theme-soft-neutral .btn.btn-primary {
+  border-radius: 10px;
+  background: linear-gradient(135deg, #255f5d, #3b7d79);
+  border: none;
+}
+
+body.theme-soft-neutral table {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--sn-line);
+}
+
+body.theme-soft-neutral th {
+  background: #f4efe8;
+  color: #5b6472;
+  font-size: 12px;
+  letter-spacing: 0.01em;
+  border-bottom: 1px solid var(--sn-line);
+}
+
+body.theme-soft-neutral td {
+  border-bottom: 1px solid #ece6de;
+}
+
+body.theme-soft-neutral tbody tr:hover td {
+  background: #f8f4ee;
+}
+
+body.theme-soft-neutral .worker-filter-input {
+  background: #fff;
+}
+
+body.theme-soft-neutral .worker-training-card,
+body.theme-soft-neutral .worker-ppe-card,
+body.theme-soft-neutral .modal-card {
+  border-radius: 14px;
+  border: 1px solid var(--sn-line);
+  box-shadow: 0 16px 34px rgba(31, 41, 51, 0.12);
+}
+
+body.theme-soft-neutral .worker-training-head,
+body.theme-soft-neutral .worker-ppe-head,
+body.theme-soft-neutral .modal-head,
+body.theme-soft-neutral .modal-actions {
+  background: #f6f1ea;
+}
+
+body.theme-soft-neutral .btn-secondary,
+body.theme-soft-neutral .ppe-close-btn,
+body.theme-soft-neutral .edu-close-btn {
+  background: #ece4da;
+  color: #374151;
+  border: 1px solid #d4c8ba;
+}
+
+@media (max-width: 920px) {
+  body.theme-soft-neutral .workers-page-shell {
+    padding: 16px 12px 24px;
+  }
+
+  body.theme-soft-neutral .global-header {
+    padding: 10px 12px;
+  }
+}

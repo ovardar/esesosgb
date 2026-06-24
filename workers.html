@@ -1,1095 +1,418 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OSGB SaaS - Kadro Yönetimi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --bg-main: #f4f6f9;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --border-color: #e2e8f0;
-            --table-header: #f8fafc;
-            --nav-inactive-bg: #e2e8f0;
-            --nav-inactive-text: #475569;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; transition: background 0.3s; }
-        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        
-        /* 🏛️ GLOBAL STANDART ÜST BAR */
-        .global-header { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .logo-area { font-size: 18px; font-weight: 800; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
-        .logo-badge { background: var(--primary); color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-        .controls-group { display: flex; align-items: center; gap: 20px; }
-        .user-info { font-size: 13px; color: var(--text-muted); font-weight: 600; }
-        .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        
-        .nav-container { display: flex; gap: 8px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
-        .nav-btn { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.2s ease; }
-        .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
-        .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-weight: 600; }
-        input, select { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; background: var(--bg-card); color: var(--text-main); }
-        .grid-4 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; }
-        
-        button.submit-btn { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; }
-        button.submit-btn:hover { background: var(--primary-hover); }
-        #status { margin-top: 15px; text-align: center; font-weight: bold; }
-
-        .table-container { margin-top: 35px; border-top: 2px solid var(--border-color); padding-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background-color: var(--table-header); color: var(--text-muted); font-weight: 600; }
-        tr:hover { background-color: var(--table-header); }
-            .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
-    
-
-        /* ================================
-           v24 UI POLISH - ortak arayuz duzeltmeleri
-           ================================ */
-        :root {
-            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.10);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
-            --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        .card {
-            width: min(100%, 1240px) !important;
-            max-width: 1240px !important;
-            border-radius: var(--radius-lg) !important;
-            box-shadow: var(--shadow-md) !important;
-        }
-
-        .global-header {
-            background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        .top-row {
-            gap: 14px;
-            align-items: center !important;
-        }
-
-        .logo-area {
-            min-width: 0;
-            font-size: 17px !important;
-            letter-spacing: 0 !important;
-            gap: 10px !important;
-        }
-
-        .logo-area span[id^="lbl_"] {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .tenant-logo-img {
-            width: 36px !important;
-            height: 36px !important;
-            padding: 4px !important;
-            border-radius: 10px !important;
-            box-shadow: var(--shadow-sm);
-            flex: 0 0 auto;
-        }
-
-        .logo-badge {
-            border-radius: 999px !important;
-            padding: 4px 9px !important;
-            font-size: 11px !important;
-            letter-spacing: .02em;
-            flex: 0 0 auto;
-        }
-
-        .controls-group {
-            gap: 10px !important;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .theme-selector-container {
-            border-radius: 999px !important;
-            padding: 6px 10px !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .theme-btn {
-            width: 18px !important;
-            height: 18px !important;
-            transition: transform .15s ease, box-shadow .15s ease;
-        }
-        .theme-btn:hover { transform: translateY(-1px) scale(1.08); box-shadow: 0 3px 8px rgba(15,23,42,.18); }
-
-        .user-info {
-            background: var(--table-header);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 7px 11px;
-            max-width: 280px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .logout-btn,
-        button,
-        .btn,
-        input[type="submit"] {
-            border-radius: 10px !important;
-            font-weight: 750 !important;
-            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-        }
-        button:hover,
-        .logout-btn:hover,
-        .btn:hover,
-        input[type="submit"]:hover {
-            transform: translateY(-1px);
-            filter: brightness(.98);
-            box-shadow: var(--shadow-sm);
-        }
-        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
-
-        .nav-container {
-            justify-content: flex-start !important;
-            gap: 7px !important;
-            padding: 8px !important;
-            border-radius: 14px !important;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .nav-btn {
-            white-space: nowrap;
-            border-radius: 10px !important;
-            padding: 9px 13px !important;
-            font-size: 12.5px !important;
-            box-shadow: none;
-        }
-        .nav-btn.active-page { box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important; }
-
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        h1 { font-size: clamp(24px, 3vw, 34px); }
-        h2 { font-size: clamp(20px, 2.4vw, 28px); }
-        h3 { font-size: clamp(16px, 1.8vw, 20px); }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px !important;
-            color: var(--text-main) !important;
-            font-size: 13px !important;
-            letter-spacing: .04em !important;
-        }
-
-        .panel,
-        .form-card,
-        .table-card,
-        .sub-card,
-        .mini-card,
-        .info-card {
-            border-radius: var(--radius-md) !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .metric-box {
-            border-radius: 14px !important;
-            box-shadow: 0 10px 24px rgba(15,23,42,.10) !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .metric-box:after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,.20), transparent 45%);
-            pointer-events: none;
-        }
-        .metric-title, .metric-sub, .metric-value { position: relative; z-index: 1; }
-
-        input,
-        select,
-        textarea {
-            border: 1px solid var(--border-color) !important;
-            border-radius: 10px !important;
-            background: var(--bg-card);
-            color: var(--text-main);
-            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--primary) !important;
-            box-shadow: var(--focus-ring) !important;
-        }
-        label { font-weight: 700; color: var(--text-main); }
-
-        table {
-            border-collapse: separate !important;
-            border-spacing: 0 !important;
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        th {
-            font-size: 11px !important;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            white-space: nowrap;
-        }
-        td { line-height: 1.45; }
-        tbody tr { transition: background .12s ease; }
-        tbody tr:hover { background: rgba(37, 99, 235, 0.035); }
-        .empty-state {
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            background: var(--table-header);
-        }
-
-        .badge {
-            border-radius: 999px !important;
-            letter-spacing: .02em;
-            padding: 4px 8px !important;
-        }
-
-        .small-link { text-underline-offset: 3px; }
-
-        .operational-banner {
-            box-shadow: var(--shadow-sm);
-            border: 0 !important;
-        }
-
-        @media (max-width: 900px) {
-            body { padding: 12px !important; }
-            .card { padding: 16px !important; border-radius: 16px !important; }
-            .top-row { align-items: stretch !important; }
-            .controls-group { justify-content: flex-start; }
-            .user-info { max-width: 100%; }
-            .nav-container { flex-wrap: nowrap !important; justify-content: flex-start !important; }
-            .nav-btn { flex: 0 0 auto; }
-            table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
-            th, td { padding: 9px 10px !important; }
-        }
-
-        @media (max-width: 520px) {
-            .logo-area { font-size: 15px !important; }
-            .tenant-logo-img { width: 32px !important; height: 32px !important; }
-            .theme-selector-container { width: 100%; justify-content: center; }
-            .logout-btn { width: 100%; }
-        }
-
-    
-
-        /* ================================
-           v25 PRODUCT DESIGN SYSTEM - derin arayuz revizyonu
-           ================================ */
-        :root {
-            --brand-50: #eff6ff;
-            --brand-100: #dbeafe;
-            --brand-500: #2563eb;
-            --brand-600: #1d4ed8;
-            --brand-700: #1e40af;
-            --ink-900: #0f172a;
-            --ink-700: #334155;
-            --ink-500: #64748b;
-            --surface-0: #ffffff;
-            --surface-1: #f8fafc;
-            --surface-2: #eef2f7;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --info: #0284c7;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(37,99,235,.15), transparent 32rem),
-                radial-gradient(circle at top right, rgba(14,165,233,.12), transparent 28rem),
-                linear-gradient(180deg, #f8fafc 0%, #edf2f7 52%, #e9eef6 100%) !important;
-            color: var(--ink-900) !important;
-        }
-
-        .card {
-            padding: 0 !important;
-            overflow: hidden;
-            background: rgba(255,255,255,.92) !important;
-            backdrop-filter: blur(10px);
-        }
-
-        .global-header {
-            padding: 18px 22px 14px !important;
-            margin-bottom: 0 !important;
-            background: linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,64,175,.92)) !important;
-            color: white;
-            border-bottom: 0 !important;
-        }
-        .global-header .logo-area,
-        .global-header .user-info,
-        .global-header .theme-selector-container span { color: white !important; }
-        .global-header .theme-selector-container,
-        .global-header .user-info {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-container {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.16) !important;
-            margin-top: 12px;
-        }
-        .global-header .nav-btn {
-            background: rgba(255,255,255,.10) !important;
-            color: rgba(255,255,255,.86) !important;
-            border: 1px solid rgba(255,255,255,.10);
-        }
-        .global-header .nav-btn:hover {
-            background: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-btn.active-page {
-            background: white !important;
-            color: var(--brand-700) !important;
-            box-shadow: 0 8px 18px rgba(15,23,42,.22) !important;
-        }
-        .global-header .tenant-logo-img {
-            width: 42px !important;
-            height: 42px !important;
-            background: white !important;
-            border-color: rgba(255,255,255,.35) !important;
-        }
-        .global-header .logo-badge {
-            background: rgba(255,255,255,.18) !important;
-            border: 1px solid rgba(255,255,255,.18);
-        }
-        .logout-btn { background: rgba(239,68,68,.92) !important; }
-
-        .card > h1,
-        .card > h2,
-        .card > .page-desc,
-        .card > .section-title,
-        .card > .dashboard-grid,
-        .card > .kpi-grid,
-        .card > .operational-banner,
-        .card > .content-grid,
-        .card > .grid,
-        .card > .panel,
-        .card > form,
-        .card > table,
-        .card > div:not(.global-header) {
-            margin-left: 22px;
-            margin-right: 22px;
-        }
-        .card > h1,
-        .card > h2 {
-            margin-top: 22px !important;
-            margin-bottom: 4px !important;
-            font-size: clamp(22px, 2.6vw, 31px) !important;
-            letter-spacing: -0.035em;
-            color: var(--ink-900);
-        }
-        .page-desc {
-            max-width: 780px;
-            color: var(--ink-500) !important;
-            font-size: 14px !important;
-            margin-bottom: 20px !important;
-        }
-
-        .section-title {
-            margin-top: 24px !important;
-            margin-bottom: 11px !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--ink-700) !important;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(226,232,240,.9);
-            padding: 7px 11px;
-            border-radius: 999px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .panel {
-            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)) !important;
-            border: 1px solid rgba(203,213,225,.85) !important;
-            box-shadow: 0 12px 30px rgba(15,23,42,.07) !important;
-            border-radius: 18px !important;
-        }
-        .panel h3 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            border-bottom: 1px solid rgba(226,232,240,.95) !important;
-            padding-bottom: 12px !important;
-            margin-bottom: 14px !important;
-            color: var(--ink-900);
-            letter-spacing: -0.01em;
-        }
-        .panel h3::after {
-            content: "";
-            flex: 1;
-            height: 3px;
-            max-width: 56px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: .7;
-        }
-
-        .dashboard-grid,
-        .kpi-grid {
-            gap: 16px !important;
-        }
-        .metric-box {
-            position: relative;
-            overflow: hidden;
-            min-height: 104px !important;
-            padding: 18px 19px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 18px 38px rgba(15,23,42,.13) !important;
-        }
-        .metric-box::before {
-            content: "";
-            position: absolute;
-            inset: -40% -30% auto auto;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.17);
-        }
-        .metric-title { font-size: 12.5px !important; text-transform: uppercase; letter-spacing: .045em; }
-        .metric-value { font-size: 34px !important; letter-spacing: -0.045em; }
-        .metric-sub { font-size: 12px !important; }
-        .metric-box.clickable:hover {
-            transform: translateY(-3px);
-            filter: saturate(1.04);
-        }
-
-        .content-grid {
-            margin-bottom: 24px;
-            align-items: start;
-        }
-        .operational-banner {
-            min-height: 86px;
-            padding: 20px 22px !important;
-            border-radius: 20px !important;
-        }
-        .op-text h4 { font-size: 18px !important; letter-spacing: -0.015em; }
-        .op-badge { border-radius: 16px !important; }
-
-        table {
-            background: white;
-            box-shadow: inset 0 0 0 1px rgba(226,232,240,.75);
-        }
-        th {
-            background: #f1f5f9 !important;
-            color: #475569 !important;
-        }
-        td {
-            background-clip: padding-box;
-        }
-        tbody tr:nth-child(even) td { background: rgba(248,250,252,.65); }
-
-        .btn-primary,
-        button.btn-primary {
-            background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-blue,
-        button.btn-blue {
-            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-secondary,
-        button.btn-secondary {
-            background: #f1f5f9 !important;
-            color: #334155 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        .btn-danger,
-        button.btn-danger {
-            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .status.ok {
-            background: #ecfdf5 !important;
-            color: #047857 !important;
-            border: 1px solid #a7f3d0 !important;
-        }
-        .status.err {
-            background: #fef2f2 !important;
-            color: #b91c1c !important;
-            border: 1px solid #fecaca !important;
-        }
-
-        /* SaaS Yonetimi urun paneli revizyonu */
-        .grid {
-            grid-template-columns: 420px minmax(0, 1fr) !important;
-            gap: 22px !important;
-            align-items: start !important;
-            margin-bottom: 24px;
-        }
-        .grid > div:first-child {
-            position: sticky;
-            top: 18px;
-            align-self: start;
-        }
-        .edit-panel {
-            border: 1px solid rgba(37,99,235,.22) !important;
-            background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
-        }
-        .link-box {
-            border-radius: 12px !important;
-            border: 1px solid #bfdbfe !important;
-            background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
-            color: #1e40af !important;
-            font-weight: 750;
-        }
-        .logo-upload-box {
-            border: 1px dashed #93c5fd !important;
-            background: #f8fbff !important;
-            border-radius: 16px !important;
-        }
-        .logo-preview {
-            width: 56px !important;
-            height: 56px !important;
-            border-radius: 14px !important;
-            box-shadow: var(--shadow-sm);
-        }
-        .actions {
-            gap: 9px !important;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .actions + .button-help,
-        .button-help {
-            margin-top: 10px;
-            display: grid;
-            gap: 7px;
-            color: var(--ink-500);
-            font-size: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 11px 12px;
-        }
-        .button-help strong { color: var(--ink-700); }
-
-        @media (max-width: 1040px) {
-            .grid { grid-template-columns: 1fr !important; }
-            .grid > div:first-child { position: static; }
-        }
-        @media (max-width: 900px) {
-            .card > h1,
-            .card > h2,
-            .card > .page-desc,
-            .card > .section-title,
-            .card > .dashboard-grid,
-            .card > .kpi-grid,
-            .card > .operational-banner,
-            .card > .content-grid,
-            .card > .grid,
-            .card > .panel,
-            .card > form,
-            .card > table,
-            .card > div:not(.global-header) {
-                margin-left: 14px !important;
-                margin-right: 14px !important;
-            }
-            .global-header { padding: 15px !important; }
-            .metric-box { min-height: 92px !important; }
-        }
-
-    
-
-        /* v26.2 hotfix: keep v26 visual system, add branding/table/layout fixes */
-        .logo-area { font-weight: 500 !important; letter-spacing: .01em !important; font-size: 18px !important; }
-        .logo-area #lbl_osgb_title { font-weight: 500 !important; }
-        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
-        table, thead, tbody, tr, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; }
-        table { font-size: 13px !important; border-collapse: separate !important; border-spacing: 0 !important; }
-        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
-        tbody td { padding: 9px 11px !important; }
-        .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
-        .page-desc { max-width: none !important; }
-/* Kadro Yönetimi tablo filtreleme ve sıralama */
-.sortable-th {
-    cursor: pointer;
-    user-select: none;
-    position: relative;
-}
-
-.sortable-th:hover {
-    color: var(--primary);
-}
-
-.sort-indicator {
-    font-size: 10px;
-    margin-left: 4px;
-    opacity: 0.75;
-}
-
-.worker-filter-row th {
-    background: var(--bg-card) !important;
-    padding: 6px 8px !important;
-}
-
-.worker-filter-input {
-    width: 100%;
-    min-width: 80px;
-    padding: 7px 8px !important;
-    font-size: 12px !important;
-    border-radius: 8px !important;
-}
-
-.worker-filter-input::placeholder {
-    color: var(--text-muted);
-    opacity: 0.75;
-}
-
-
-/* Eğitim dosyası modalı */
-.worker-action-btn{background:linear-gradient(135deg,#7c3aed,#5b21b6);color:white;border:0;border-radius:9px;padding:7px 10px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
-.worker-training-modal{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}
-.worker-training-card{width:min(1040px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 24px 70px rgba(15,23,42,.28)}
-.worker-training-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px;border-bottom:1px solid #e2e8f0;background:#f8fafc}
-.worker-training-head h3{margin:0;font-size:19px;letter-spacing:-.02em}.worker-training-head p{margin:5px 0 0;color:#64748b;font-size:12px}.worker-training-body{padding:18px}
-.edu-summary-grid{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px;margin-bottom:16px}.edu-summary-box{border:1px solid #e2e8f0;background:#f8fafc;border-radius:14px;padding:12px}.edu-summary-box span{display:block;font-size:11px;color:#64748b;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.edu-summary-box strong{display:block;font-size:24px;color:#0f172a;line-height:1.1;margin-top:5px}.edu-section{margin-top:18px}.edu-section h4{margin:0 0 8px;font-size:14px;color:#334155}.edu-table{width:100%;border-collapse:separate;border-spacing:0;background:white;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 0 1px #e2e8f0;font-size:12px}.edu-table th,.edu-table td{padding:9px 10px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}.edu-table th{background:#f1f5f9;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.035em}.edu-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}.edu-print-btn{background:#0f172a;color:white;border:0;border-radius:10px;padding:9px 12px;font-weight:900;cursor:pointer}.edu-close-btn{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:9px 12px;font-weight:900;cursor:pointer}.edu-badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900}.edu-badge.green{background:#dcfce7;color:#15803d}.edu-badge.orange{background:#ffedd5;color:#c2410c}.edu-badge.red{background:#fee2e2;color:#b91c1c}.edu-badge.blue{background:#dbeafe;color:#1d4ed8}.edu-badge.gray{background:#e2e8f0;color:#475569}.edu-code{font-family:Consolas,monospace;font-size:11px;word-break:break-all}
-@media(max-width:900px){.edu-summary-grid{grid-template-columns:1fr 1fr}.worker-training-card{max-height:94vh}.edu-table{display:block;overflow-x:auto;white-space:nowrap}}
-@media print{body>*:not(.worker-training-modal){display:none!important}.worker-training-modal{position:static!important;display:block!important;background:white!important;padding:0!important}.worker-training-card{box-shadow:none!important;border:0!important;max-height:none!important;width:100%!important}.worker-training-head,.worker-training-body{padding:10px!important}.edu-actions,.edu-close-btn,.edu-print-btn{display:none!important}.edu-summary-grid{grid-template-columns:repeat(5,1fr)!important}.edu-table{font-size:11px!important}}
-
-
-/* KKD çalışan dosyası modalı */
-.worker-ppe-btn{background:linear-gradient(135deg,#0f766e,#047857);color:white;border:0;border-radius:9px;padding:7px 10px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
-.worker-ppe-modal{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}
-.worker-ppe-card{width:min(1040px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 24px 70px rgba(15,23,42,.28)}
-.worker-ppe-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px;border-bottom:1px solid #e2e8f0;background:#f8fafc}
-.worker-ppe-head h3{margin:0;font-size:19px;letter-spacing:-.02em}.worker-ppe-head p{margin:5px 0 0;color:#64748b;font-size:12px}.worker-ppe-body{padding:18px}
-.ppe-summary-grid{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:10px;margin-bottom:16px}.ppe-summary-box{border:1px solid #e2e8f0;background:#f8fafc;border-radius:14px;padding:12px}.ppe-summary-box span{display:block;font-size:11px;color:#64748b;font-weight:900;text-transform:uppercase;letter-spacing:.04em}.ppe-summary-box strong{display:block;font-size:24px;color:#0f172a;line-height:1.1;margin-top:5px}.ppe-section{margin-top:18px}.ppe-section h4{margin:0 0 8px;font-size:14px;color:#334155}.ppe-table{width:100%;border-collapse:separate;border-spacing:0;background:white;border-radius:12px;overflow:hidden;box-shadow:inset 0 0 0 1px #e2e8f0;font-size:12px}.ppe-table th,.ppe-table td{padding:9px 10px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}.ppe-table th{background:#f1f5f9;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:.035em}.ppe-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}.ppe-print-btn{background:#0f172a;color:white;border:0;border-radius:10px;padding:9px 12px;font-weight:900;cursor:pointer}.ppe-close-btn{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:10px;padding:9px 12px;font-weight:900;cursor:pointer}.ppe-badge{display:inline-block;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:900}.ppe-badge.green{background:#dcfce7;color:#15803d}.ppe-badge.orange{background:#ffedd5;color:#c2410c}.ppe-badge.red{background:#fee2e2;color:#b91c1c}.ppe-badge.blue{background:#dbeafe;color:#1d4ed8}.ppe-badge.gray{background:#e2e8f0;color:#475569}
-@media(max-width:900px){.ppe-summary-grid{grid-template-columns:1fr 1fr}.worker-ppe-card{max-height:94vh}.ppe-table{display:block;overflow-x:auto;white-space:nowrap}}
-@media print{body>*:not(.worker-ppe-modal):not(.worker-training-modal){display:none!important}.worker-ppe-modal{position:static!important;display:block!important;background:white!important;padding:0!important}.worker-ppe-card{box-shadow:none!important;border:0!important;max-height:none!important;width:100%!important}.worker-ppe-head,.worker-ppe-body{padding:10px!important}.ppe-actions,.ppe-close-btn,.ppe-print-btn{display:none!important}.ppe-summary-grid{grid-template-columns:repeat(5,1fr)!important}.ppe-table{font-size:11px!important}}
-
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <div class="global-header">
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean-workers.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean">
+    <div class="card">
+      <div class="global-header">
         <div class="top-row">
-            <div class="logo-area"><span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span></div>
-            <div class="controls-group">
-                <div class="user-info">👤 <span id="current_user_email">...</span></div>
-                <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
-            </div>
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
         </div>
 
         <div class="nav-container">
-            <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
-            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
-            <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
-            <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-            <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
-            <a href="workers.html" class="nav-btn active-page">👥 Kadro Yönetimi</a>
-            <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
-            <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
-            <a id="menu_training" href="training.html" class="nav-btn" style="display:none;">🎓 Eğitim & Sertifika</a><a id="menu_ppe" href="ppe.html" class="nav-btn" style="display:none;">🧤 KKD Zimmet</a>
+          <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+          <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display: none">🧩 SaaS Yönetimi</a>
+          <a id="menu_staff" href="staff.html" class="nav-btn" style="display: none">🔑 Personel Yönetimi</a>
+          <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+          <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+          <a href="workers.html" class="nav-btn active-page">👥 Kadro Yönetimi</a>
+          <a id="menu_risk" href="risk.html" class="nav-btn" style="display: none">🦺 Uzman Risk Motoru</a>
+          <a id="menu_medical" href="medical.html" class="nav-btn" style="display: none">🩺 Hekim Sağlık Kartı</a>
+          <a id="menu_training" href="training.html" class="nav-btn" style="display: none">🎓 Eğitim & Sertifika</a
+          ><a id="menu_ppe" href="ppe.html" class="nav-btn" style="display: none">🧤 KKD Zimmet</a>
         </div>
-    </div>
+      </div>
 
-    <h2>👥 Çalışan Personel Kadro Yönetimi</h2>
-    <p style="color: var(--text-muted); font-size: 14px;">Firmalara ait çalışan listelerini buradan ekleyebilir ve güncelleyebilirsiniz.</p>
-    
-    <div class="form-group">
-        <label>İşlem Yapılacak Müşteri Firma</label>
-        <select id="company_select" onchange="fetchWorkers()">
+      <div class="workers-page-shell">
+      <h2>Çalışan Personel Kadro Yönetimi</h2>
+      <p class="page-desc">
+        Firmalara ait çalışan listelerini buradan ekleyebilir ve güncelleyebilirsiniz.
+      </p>
+
+      <div class="panel">
+        <div class="form-group">
+          <label>İşlem Yapılacak Müşteri Firma</label>
+          <select id="company_select" onchange="fetchWorkers()">
             <option value="">Firmalar yükleniyor...</option>
-        </select>
-    </div>
+          </select>
+        </div>
+      </div>
 
-    <div class="grid-4">
-        <div class="form-group"><label>Personel Adı Soyadı</label><input type="text" id="worker_name" placeholder="Örn: Ali Can"></div>
-        <div class="form-group"><label>Yaş</label><input type="number" id="worker_age" placeholder="25"></div>
-        <div class="form-group"><label>Cinsiyet</label><select id="worker_gender"><option value="Erkek">Erkek</option><option value="Kadın">Kadın</option></select></div>
-        <div class="form-group"><label>Görev / Unvan</label><input type="text" id="worker_job" placeholder="Örn: Kaynakçı"></div>
-    </div>
+      <div class="panel">
+        <button class="panel-toggle" id="worker_form_toggle" type="button" onclick="toggleNewWorkerForm()" aria-expanded="false">
+          <h3>➕ Yeni Çalışan Kaydı</h3>
+          <span class="panel-toggle-icon">▾</span>
+        </button>
+        <div id="worker_form_panel" class="panel-collapsible is-collapsed">
+          <div class="grid-4" style="margin-top: 14px;">
+            <div class="form-group">
+              <label>Personel Adı Soyadı</label><input type="text" id="worker_name" placeholder="Örn: Ali Can" />
+            </div>
+            <div class="form-group"><label>Yaş</label><input type="number" id="worker_age" placeholder="25" /></div>
+            <div class="form-group">
+              <label>Cinsiyet</label>
+              <select id="worker_gender">
+                <option value="Erkek">Erkek</option>
+                <option value="Kadın">Kadın</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Görev / Unvan</label><input type="text" id="worker_job" placeholder="Örn: Kaynakçı" />
+            </div>
+          </div>
+          <button class="submit-btn" onclick="saveWorker()" style="margin-top: 14px;">Yeni Çalışanı Kadroya Ekle</button>
+          <div id="status"></div>
+        </div>
+      </div>
 
-    <button class="submit-btn" onclick="saveWorker()">Yeni Çalışanı Kadroya Ekle</button>
-    <div id="status"></div>
-
-    <div class="table-container">
+      <div class="table-container">
         <h3>📋 Firmaya Kayıtlı Aktif Çalışan Listesi (Canlı)</h3>
         <table>
-            <thead>
-    <tr>
-        <th class="sortable-th" onclick="sortWorkersBy('full_name')">Adı Soyadı <span id="sort_full_name" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortWorkersBy('age')">Yaş <span id="sort_age" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortWorkersBy('gender')">Cinsiyet <span id="sort_gender" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortWorkersBy('job_title')">Görevi / Unvanı <span id="sort_job_title" class="sort-indicator"></span></th>
-        <th>Eğitimler</th>
-        <th>KKD</th>
-    </tr>
-    <tr class="worker-filter-row">
-        <th><input class="worker-filter-input" data-field="full_name" oninput="applyWorkerFilters()" placeholder="Ad soyad filtrele"></th>
-        <th><input class="worker-filter-input" data-field="age" oninput="applyWorkerFilters()" placeholder="Yaş"></th>
-        <th><input class="worker-filter-input" data-field="gender" oninput="applyWorkerFilters()" placeholder="Cinsiyet"></th>
-        <th><input class="worker-filter-input" data-field="job_title" oninput="applyWorkerFilters()" placeholder="Görev / unvan"></th>
-        <th></th>
-        <th></th>
-    </tr>
-</thead>
-            <tbody id="worker_table_body"><tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr></tbody>
+          <thead>
+            <tr>
+              <th class="sortable-th" onclick="sortWorkersBy('full_name')">
+                Adı Soyadı <span id="sort_full_name" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortWorkersBy('age')">
+                Yaş <span id="sort_age" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortWorkersBy('gender')">
+                Cinsiyet <span id="sort_gender" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortWorkersBy('job_title')">
+                Görevi / Unvanı <span id="sort_job_title" class="sort-indicator"></span>
+              </th>
+              <th>Eğitimler</th>
+              <th>KKD</th>
+              <th>İşlemler</th>
+            </tr>
+            <tr class="worker-filter-row">
+              <th>
+                <input
+                  class="worker-filter-input"
+                  data-field="full_name"
+                  oninput="applyWorkerFilters()"
+                  placeholder="Ad soyad filtrele"
+                />
+              </th>
+              <th>
+                <input class="worker-filter-input" data-field="age" oninput="applyWorkerFilters()" placeholder="Yaş" />
+              </th>
+              <th>
+                <input
+                  class="worker-filter-input"
+                  data-field="gender"
+                  oninput="applyWorkerFilters()"
+                  placeholder="Cinsiyet"
+                />
+              </th>
+              <th>
+                <input
+                  class="worker-filter-input"
+                  data-field="job_title"
+                  oninput="applyWorkerFilters()"
+                  placeholder="Görev / unvan"
+                />
+              </th>
+              <th></th>
+              <th></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="worker_table_body">
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted)">
+                Lütfen yukarıdan bir firma seçin...
+              </td>
+            </tr>
+          </tbody>
         </table>
-    </div>
-</div>
-
-
-<div class="worker-training-modal" id="worker_training_modal">
-  <div class="worker-training-card">
-    <div class="worker-training-head">
-      <div>
-        <h3 id="worker_training_title">Çalışan Eğitim Dosyası</h3>
-        <p id="worker_training_subtitle">Eğitim ve sertifika bilgileri yükleniyor...</p>
       </div>
-      <button class="edu-close-btn" onclick="closeWorkerTrainingModal()">Kapat</button>
-    </div>
-    <div class="worker-training-body" id="worker_training_body">
-      <div class="empty-state">Eğitim bilgileri yükleniyor...</div>
-    </div>
-  </div>
-</div>
-
-
-<div class="worker-ppe-modal" id="worker_ppe_modal">
-  <div class="worker-ppe-card">
-    <div class="worker-ppe-head">
-      <div>
-        <h3 id="worker_ppe_title">Çalışan KKD Dosyası</h3>
-        <p id="worker_ppe_subtitle">KKD zimmet bilgileri yükleniyor...</p>
       </div>
-      <button class="ppe-close-btn" onclick="closeWorkerPpeModal()">Kapat</button>
     </div>
-    <div class="worker-ppe-body" id="worker_ppe_body">
-      <div class="empty-state">KKD bilgileri yükleniyor...</div>
+
+    <div class="worker-training-modal" id="worker_training_modal">
+      <div class="worker-training-card">
+        <div class="worker-training-head">
+          <div>
+            <h3 id="worker_training_title">Çalışan Eğitim Dosyası</h3>
+            <p id="worker_training_subtitle">Eğitim ve sertifika bilgileri yükleniyor...</p>
+          </div>
+          <button class="edu-close-btn" onclick="closeWorkerTrainingModal()">Kapat</button>
+        </div>
+        <div class="worker-training-body" id="worker_training_body">
+          <div class="empty-state">Eğitim bilgileri yükleniyor...</div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<script>
-    const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let CURRENT_AUTH = null;
-    let COMPANY_ROWS = [];
-    let workerTableRows = [];
-let workerSortField = '';
-let workerSortDirection = 'asc';
+    <div class="worker-ppe-modal" id="worker_ppe_modal">
+      <div class="worker-ppe-card">
+        <div class="worker-ppe-head">
+          <div>
+            <h3 id="worker_ppe_title">Çalışan KKD Dosyası</h3>
+            <p id="worker_ppe_subtitle">KKD zimmet bilgileri yükleniyor...</p>
+          </div>
+          <button class="ppe-close-btn" onclick="closeWorkerPpeModal()">Kapat</button>
+        </div>
+        <div class="worker-ppe-body" id="worker_ppe_body">
+          <div class="empty-state">KKD bilgileri yükleniyor...</div>
+        </div>
+      </div>
+    </div>
 
-    // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
-    // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
-    // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
-    function normalizeAccessRole(value) {
-        const v = (value || '').toString().trim().toLowerCase();
-        if (['super_admin', 'super admin', 'saas_admin', 'sistem sahibi'].includes(v)) return 'super_admin';
-        if (['admin', 'yonetici', 'yönetici'].includes(v)) return 'admin';
-        if (['uzman', 'isg_uzmani', 'isg uzmanı', 'iş güvenliği uzmanı'].includes(v)) return 'uzman';
-        if (['hekim', 'isyeri hekimi', 'işyeri hekimi'].includes(v)) return 'hekim';
-        if (['dsp', 'diğer sağlık personeli', 'diger saglik personeli'].includes(v)) return 'dsp';
-        if (['firma_yetkilisi', 'firma yetkilisi', 'musteri', 'müşteri'].includes(v)) return 'firma_yetkilisi';
-        return '';
-    }
+    <div class="worker-edit-modal" id="worker_edit_modal">
+      <div class="worker-edit-card">
+        <div class="worker-edit-head">
+          <div>
+            <h3>📝 Çalışan Bilgilerini Düzenle</h3>
+            <p id="worker_edit_subtitle">Çalışan detaylarını güncelleyin</p>
+          </div>
+          <button class="edit-close-btn" onclick="closeWorkerEditModal()">×</button>
+        </div>
+        <div class="worker-edit-body">
+          <input type="hidden" id="edit_worker_id" />
+          <div class="form-container">
+            <div class="form-group">
+              <label>Personel Adı Soyadı</label>
+              <input type="text" id="edit_worker_name" placeholder="Örn: Ali Can" />
+            </div>
+            <div class="form-group">
+              <label>Yaş</label>
+              <input type="number" id="edit_worker_age" placeholder="25" />
+            </div>
+            <div class="form-group">
+              <label>Cinsiyet</label>
+              <select id="edit_worker_gender">
+                <option value="Erkek">Erkek</option>
+                <option value="Kadın">Kadın</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Görev / Unvan</label>
+              <input type="text" id="edit_worker_job" placeholder="Örn: Kaynakçı" />
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-cancel" onclick="closeWorkerEditModal()">İptal Et</button>
+            <button class="btn-save" onclick="updateWorker()">Değişiklikleri Kaydet</button>
+          </div>
+          <div id="edit_status" style="margin-top: 14px; font-size: 13px; text-align: center;"></div>
+        </div>
+      </div>
+    </div>
 
-    function inferAccessRoleFromEmail(email) {
-        const e = (email || '').toLowerCase();
-        if (e.includes('orhan.vardar@gmail.com')) return 'super_admin';
-        if (e.includes('admin')) return 'admin';
-        if (e.includes('hekim')) return 'hekim';
-        if (e.includes('dsp')) return 'dsp';
-        if (e.includes('firma') || e.includes('musteri') || e.includes('müşteri')) return 'firma_yetkilisi';
-        if (e.includes('uzman')) return 'uzman';
-        return 'uzman';
-    }
+    <script>
+      let CURRENT_AUTH = null;
+      let COMPANY_ROWS = [];
+      let workerTableRows = [];
+      let workerSortField = '';
+      let workerSortDirection = 'asc';
 
-    function isStaffAccessActive(record) {
-        if (!record) return true;
-        if (record.can_login === false) return false;
-        if (record.is_active_manual === 'Aktif') return true;
-        if (record.is_active_manual === 'Pasif') return false;
-        const today = new Date(); today.setHours(0,0,0,0);
-        if (record.hire_date) {
-            const hire = new Date(record.hire_date); hire.setHours(0,0,0,0);
-            if (hire > today) return false;
-        }
-        if (record.termination_date) {
-            const term = new Date(record.termination_date); term.setHours(0,0,0,0);
-            if (term <= today) return false;
-        }
-        return true;
-    }
-
-    async function getCurrentAuthContext() {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) return { session: null, email: '', role: '', canLogin: false, staff: null };
-        const email = session.user.email || '';
-        let staff = null;
-        try {
-            const { data } = await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email', email).maybeSingle();
-            staff = data || null;
-        } catch (err) {
-            console.warn('Rol kaydı okunamadı, e-posta bazlı geçici role dönülüyor:', err.message);
-        }
-        const role = normalizeAccessRole(staff && staff.access_role) || normalizeAccessRole(staff && staff.staff_role) || inferAccessRoleFromEmail(email);
-        const canLogin = isStaffAccessActive(staff);
-        return { session, email, role, canLogin, staff, tenant: staff && staff.tenants ? staff.tenants : null, tenant_id: staff ? staff.tenant_id : null };
-    }
-
-    function canAccessPage(role, page) {
-        if (role === 'super_admin' || role === 'admin') return true;
-        if (page === 'risk' || page === 'accidents' || page === 'near_miss' || page === 'training' || page === 'ppe') return role === 'uzman';
-        if (page === 'medical') return role === 'hekim';
-        if (page === 'staff') return false;
-        if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
-        return true;
-    }
-
-    function roleLabel(role) {
-        return { super_admin: 'Super Admin', admin: 'Admin', uzman: 'İSG Uzmanı', hekim: 'İşyeri Hekimi', dsp: 'DSP', firma_yetkilisi: 'Firma Yetkilisi' }[role] || role || 'Rol yok';
-    }
-
-    function applyRoleBasedNavigation(role) {
-        const riskMenu = document.getElementById('menu_risk');
-        const medicalMenu = document.getElementById('menu_medical');
-        const staffMenu = document.getElementById('menu_staff');
-        const saasMenu = document.getElementById('menu_saas');
-        const trainingMenu = document.getElementById('menu_training');
-        const ppeMenu = document.getElementById('menu_ppe');
-        if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
-        if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
-        if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
-        if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
-        if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
-        if (trainingMenu && canAccessPage(role, 'training')) trainingMenu.style.display = 'inline-block';
-        if (ppeMenu && canAccessPage(role, 'ppe')) ppeMenu.style.display = 'inline-block';
-    }
-
-
-    function setTenantBranding(tenant) {
-        const titleEl = document.getElementById('lbl_osgb_title');
-        if (titleEl) titleEl.innerText = (tenant && tenant.name) ? tenant.name : 'Eses Software';
-        const area = titleEl ? titleEl.closest('.logo-area') : null;
-        if (!area) return;
-        let img = area.querySelector('.tenant-logo-img');
-        const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
-        if (logoUrl) {
-            if (!img) {
-                img = document.createElement('img');
-                img.className = 'tenant-logo-img';
-                img.alt = 'Logo';
-                area.insertBefore(img, titleEl);
-            }
-            img.src = logoUrl;
-        } else if (img) {
-            img.remove();
-        }
-    }
-
-    async function requireAuthAndRole(page) {
-        const auth = await getCurrentAuthContext();
-        if (!auth.session) { window.location.href = 'login.html'; return null; }
-        if (!auth.canLogin) {
-            await dbClient.auth.signOut();
-            alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
-            window.location.href = 'login.html';
-            return null;
-        }
-        const userInfo = document.getElementById('current_user_email');
-        if (userInfo) userInfo.innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-        setTenantBranding(auth.tenant);
-        applyRoleBasedNavigation(auth.role);
-        if (page && !canAccessPage(auth.role, page)) {
-            window.location.href = 'dashboard.html';
-            return null;
-        }
-        return auth;
-    }
-
-
-    const themes = {
-        isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--primary-hover': '#1d4ed8', '--accent-green': '#10b981', '--accent-green-hover': '#059669', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--primary-hover': '#7dd3fc', '--accent-green': '#34d399', '--accent-green-hover': '#059669', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
-        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
-        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
-    };
-
-    window.onload = async function() {
-        const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
-        if (themes[activeTheme]) { Object.keys(themes[activeTheme]).forEach(key => { document.documentElement.style.setProperty(key, themes[activeTheme][key]); }); }
-
+      // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
+      // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
+      // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
+      window.onload = async function () {
         const auth = await requireAuthAndRole('workers');
         if (!auth) return;
         CURRENT_AUTH = auth;
-        document.body.style.display = "block";
+        document.body.style.display = 'block';
+        setNewWorkerFormOpen(false);
 
         await fetchCompaniesToSelect();
         const urlParams = new URLSearchParams(window.location.search);
         const companyIdFromUrl = urlParams.get('id');
-        if (companyIdFromUrl) { document.getElementById('company_select').value = companyIdFromUrl; fetchWorkers(); }
-    };
+        if (companyIdFromUrl) {
+          document.getElementById('company_select').value = companyIdFromUrl;
+          fetchWorkers();
+        }
+      };
 
-    async function fetchCompaniesToSelect() {
+      function setNewWorkerFormOpen(isOpen) {
+        const panel = document.getElementById('worker_form_panel');
+        const toggle = document.getElementById('worker_form_toggle');
+        if (!panel || !toggle) return;
+        panel.classList.toggle('is-collapsed', !isOpen);
+        toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      }
+
+      function toggleNewWorkerForm(forceState) {
+        const toggle = document.getElementById('worker_form_toggle');
+        if (!toggle) return;
+        const current = toggle.getAttribute('aria-expanded') === 'true';
+        const next = typeof forceState === 'boolean' ? forceState : !current;
+        setNewWorkerFormOpen(next);
+      }
+
+      async function fetchCompaniesToSelect() {
         const select = document.getElementById('company_select');
         try {
-            let query = dbClient.from('customer_companies').select('id, company_name, danger_class').order('company_name');
-            if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) query = query.eq('tenant_id', CURRENT_AUTH.tenant_id);
-            const { data } = await query;
-            COMPANY_ROWS = data || [];
-            if (data && data.length > 0) {
-                select.innerHTML = '<option value="">-- Lütfen Liste İçin Firma Seçin --</option>';
-                data.forEach(c => { select.innerHTML += `<option value="${c.id}">${c.company_name}</option>`; });
-            }
-        } catch (err) { console.error(err.message); }
-    }
+          if (!window.dbClient) {
+            select.innerHTML = '<option value="">Hata: Supabase client tanımlı değil!</option>';
+            return;
+          }
+          let query = dbClient
+            .from('customer_companies')
+            .select('id, company_name, danger_class')
+            .order('company_name');
+          if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) {
+            query = query.eq('tenant_id', CURRENT_AUTH.tenant_id);
+          }
+          const { data, error } = await query;
+          if (error) {
+            console.error('Firma yükleme hatası:', error);
+            select.innerHTML = `<option value="">Hata: ${escapeHtml(error.message)}</option>`;
+            return;
+          }
+          COMPANY_ROWS = data || [];
+          if (COMPANY_ROWS.length > 0) {
+            select.innerHTML = '<option value="">-- Lütfen Liste İçin Firma Seçin --</option>';
+            COMPANY_ROWS.forEach((c) => {
+              select.innerHTML += `<option value="${c.id}">${escapeHtml(c.company_name)}</option>`;
+            });
+          } else {
+            select.innerHTML = '<option value="">Hiç firma bulunamadı (Tenant ID: ' + (CURRENT_AUTH?.tenant_id || 'Yok') + ')</option>';
+          }
+        } catch (err) {
+          console.error('fetchCompaniesToSelect hatası:', err);
+          select.innerHTML = `<option value="">Hata: ${escapeHtml(err.message)}</option>`;
+        }
+      }
 
-   async function fetchWorkers() {
-    const compId = document.getElementById('company_select').value;
-    const tbody = document.getElementById('worker_table_body');
 
-    if (!compId) {
-        workerTableRows = [];
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr>`;
-        return;
-    }
+      async function fetchWorkers() {
+        const compId = document.getElementById('company_select').value;
+        const tbody = document.getElementById('worker_table_body');
 
-    try {
-        let query = dbClient
+        if (!compId) {
+          workerTableRows = [];
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Lütfen yukarıdan bir firma seçin...</td></tr>`;
+          return;
+        }
+
+        try {
+          let query = dbClient
             .from('workers')
             .select('*')
             .eq('company_id', compId)
             .order('created_at', { ascending: false });
 
-        if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) {
+          if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) {
             query = query.eq('tenant_id', CURRENT_AUTH.tenant_id);
-        }
+          }
 
-        const { data, error } = await query;
+          const { data, error } = await query;
 
-        if (error) throw error;
+          if (error) throw error;
 
-        if (!data || data.length === 0) {
+          if (!data || data.length === 0) {
             workerTableRows = [];
-            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Kayıtlı personel bulunmuyor.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Kayıtlı personel bulunmuyor.</td></tr>`;
             return;
-        }
+          }
 
-        workerTableRows = data.map(w => ({
+          workerTableRows = data.map((w) => ({
             id: w.id,
             full_name: w.full_name || '',
             age: w.age !== null && w.age !== undefined ? Number(w.age) : '',
             gender: w.gender || '',
             job_title: w.job_title || ''
-        }));
+          }));
 
-        renderWorkerTable();
-
-    } catch (err) {
-        console.error(err.message);
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`;
-    }
-}
-function escapeHtml(value) {
-    return (value || '').toString().replace(/[&<>'"]/g, function (char) {
-        return {
+          renderWorkerTable();
+        } catch (err) {
+          console.error(err.message);
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:red;">Hata: ${err.message}</td></tr>`;
+        }
+      }
+      function escapeHtml(value) {
+        return (value || '').toString().replace(/[&<>'"]/g, function (char) {
+          return {
             '&': '&amp;',
             '<': '&lt;',
             '>': '&gt;',
             "'": '&#39;',
             '"': '&quot;'
-        }[char];
-    });
-}
+          }[char];
+        });
+      }
 
-function getWorkerFilteredRows() {
-    const filters = {};
+      function getWorkerFilteredRows() {
+        const filters = {};
 
-    document.querySelectorAll('.worker-filter-input').forEach(input => {
-        const field = input.dataset.field;
-        const value = (input.value || '').toString().trim().toLowerCase();
+        document.querySelectorAll('.worker-filter-input').forEach((input) => {
+          const field = input.dataset.field;
+          const value = (input.value || '').toString().trim().toLowerCase();
 
-        if (field && value) {
+          if (field && value) {
             filters[field] = value;
-        }
-    });
+          }
+        });
 
-    let rows = [...workerTableRows];
+        let rows = [...workerTableRows];
 
-    Object.keys(filters).forEach(field => {
-        const value = filters[field];
+        Object.keys(filters).forEach((field) => {
+          const value = filters[field];
 
-        rows = rows.filter(row => {
-            const cellValue = row[field] !== undefined && row[field] !== null
-                ? row[field].toString().toLowerCase()
-                : '';
+          rows = rows.filter((row) => {
+            const cellValue =
+              row[field] !== undefined && row[field] !== null ? row[field].toString().toLowerCase() : '';
 
             return cellValue.includes(value);
+          });
         });
-    });
 
-    if (workerSortField) {
-        rows.sort((a, b) => {
+        if (workerSortField) {
+          rows.sort((a, b) => {
             const av = a[workerSortField];
             const bv = b[workerSortField];
 
             if (typeof av === 'number' && typeof bv === 'number') {
-                return workerSortDirection === 'asc' ? av - bv : bv - av;
+              return workerSortDirection === 'asc' ? av - bv : bv - av;
             }
 
             return workerSortDirection === 'asc'
-                ? (av || '').toString().localeCompare((bv || '').toString(), 'tr')
-                : (bv || '').toString().localeCompare((av || '').toString(), 'tr');
-        });
-    }
+              ? (av || '').toString().localeCompare((bv || '').toString(), 'tr')
+              : (bv || '').toString().localeCompare((av || '').toString(), 'tr');
+          });
+        }
 
-    return rows;
-}
+        return rows;
+      }
 
-function renderWorkerTable() {
-    const tbody = document.getElementById('worker_table_body');
-    const rows = getWorkerFilteredRows();
+      function renderWorkerTable() {
+        const tbody = document.getElementById('worker_table_body');
+        const rows = getWorkerFilteredRows();
 
-    updateWorkerSortIndicators();
+        updateWorkerSortIndicators();
 
-    if (!rows || rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Filtreye uygun çalışan bulunamadı.</td></tr>`;
-        return;
-    }
+        if (!rows || rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted);">Filtreye uygun çalışan bulunamadı.</td></tr>`;
+          return;
+        }
 
-    tbody.innerHTML = '';
+        tbody.innerHTML = '';
 
-    rows.forEach(w => {
-        tbody.innerHTML += `
+        rows.forEach((w) => {
+          tbody.innerHTML += `
             <tr>
                 <td><strong>${escapeHtml(w.full_name)}</strong></td>
                 <td>${escapeHtml(w.age)}</td>
@@ -1097,183 +420,233 @@ function renderWorkerTable() {
                 <td>${escapeHtml(w.job_title || '-')}</td>
                 <td><button class="worker-action-btn" onclick="openWorkerTrainingModal('${escapeHtml(w.id)}')">Eğitimler</button></td>
                 <td><button class="worker-ppe-btn" onclick="openWorkerPpeModal('${escapeHtml(w.id)}')">KKD</button></td>
+                <td><button class="worker-edit-btn" onclick="openWorkerEditModal('${escapeHtml(w.id)}')">📝 Düzenle</button></td>
             </tr>
         `;
-    });
-}
+        });
+      }
 
-function applyWorkerFilters() {
-    renderWorkerTable();
-}
+      function applyWorkerFilters() {
+        renderWorkerTable();
+      }
 
-function sortWorkersBy(field) {
-    if (workerSortField === field) {
-        workerSortDirection = workerSortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        workerSortField = field;
-        workerSortDirection = 'asc';
-    }
-
-    renderWorkerTable();
-}
-
-function updateWorkerSortIndicators() {
-    const fields = [
-        'full_name',
-        'age',
-        'gender',
-        'job_title'
-    ];
-
-    fields.forEach(field => {
-        const el = document.getElementById(`sort_${field}`);
-
-        if (!el) return;
-
-        if (field === workerSortField) {
-            el.innerText = workerSortDirection === 'asc' ? '▲' : '▼';
+      function sortWorkersBy(field) {
+        if (workerSortField === field) {
+          workerSortDirection = workerSortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            el.innerText = '';
+          workerSortField = field;
+          workerSortDirection = 'asc';
         }
-    });
-}
 
-function getCurrentCompany() {
-    const compId = document.getElementById('company_select').value;
-    return (COMPANY_ROWS || []).find(c => String(c.id) === String(compId)) || null;
-}
+        renderWorkerTable();
+      }
 
-function getDangerHoursForTraining(dangerClass) {
-    const dc = (dangerClass || '').toString().trim().toLowerCase();
-    if (dc.includes('çok')) return 16;
-    if (dc === 'tehlikeli' || dc.includes('tehlikeli')) return 12;
-    return 8;
-}
+      function updateWorkerSortIndicators() {
+        const fields = ['full_name', 'age', 'gender', 'job_title'];
 
-function defaultRequiredTrainings(company) {
-    const hours = getDangerHoursForTraining(company && company.danger_class);
-    return [
-        { training_type: 'Temel İş Sağlığı ve Güvenliği Eğitimi', required_hours: hours },
-        { training_type: 'Yangın Eğitimi', required_hours: hours },
-        { training_type: 'Acil Durum Eğitimi', required_hours: hours },
-        { training_type: 'KKD Kullanım Eğitimi', required_hours: hours },
-        { training_type: 'İlk Yardım Bilgilendirme', required_hours: 4 }
-    ];
-}
+        fields.forEach((field) => {
+          const el = document.getElementById(`sort_${field}`);
 
-function todayString() {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+          if (!el) return;
 
-function plusDaysString(days) {
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
+          if (field === workerSortField) {
+            el.innerText = workerSortDirection === 'asc' ? '▲' : '▼';
+          } else {
+            el.innerText = '';
+          }
+        });
+      }
 
-function trainingCompletionStatus(row) {
-    const req = Number(row.required_hours || 0);
-    const done = Number(row.completed_hours || 0);
-    if (done >= req && req > 0) return 'Tamamlandı';
-    if (done <= 0) return 'Hiç Katılmadı';
-    return 'Eksik';
-}
+      function getCurrentCompany() {
+        const compId = document.getElementById('company_select').value;
+        return (COMPANY_ROWS || []).find((c) => String(c.id) === String(compId)) || null;
+      }
 
-function trainingRenewalState(row) {
-    if (!row || trainingCompletionStatus(row) !== 'Tamamlandı') return 'Yok';
-    if (!row.renewal_date) return 'Yok';
-    const today = todayString();
-    const soon = plusDaysString(30);
-    if (row.renewal_date < today) return 'Geçerliliği Doldu';
-    if (row.renewal_date <= soon) return 'Yenileme Yaklaşıyor';
-    return 'Geçerli';
-}
+      function getDangerHoursForTraining(dangerClass) {
+        const dc = (dangerClass || '').toString().trim().toLowerCase();
+        if (dc.includes('çok')) return 16;
+        if (dc === 'tehlikeli' || dc.includes('tehlikeli')) return 12;
+        return 8;
+      }
 
-function eduBadge(text, type) {
-    return `<span class="edu-badge ${type || 'gray'}">${escapeHtml(text)}</span>`;
-}
+      function defaultRequiredTrainings(company) {
+        const hours = getDangerHoursForTraining(company && company.danger_class);
+        return [
+          { training_type: 'Temel İş Sağlığı ve Güvenliği Eğitimi', required_hours: hours },
+          { training_type: 'Yangın Eğitimi', required_hours: hours },
+          { training_type: 'Acil Durum Eğitimi', required_hours: hours },
+          { training_type: 'KKD Kullanım Eğitimi', required_hours: hours },
+          { training_type: 'İlk Yardım Bilgilendirme', required_hours: 4 }
+        ];
+      }
 
-function verifyLink(row) {
-    return `${window.location.origin}/training-verify.html?code=${encodeURIComponent(row.verification_code || '')}`;
-}
+      function todayString() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
 
-async function fetchRequiredTrainingCatalog(company) {
-    // İleride Supabase'de training_required_catalog tablosu varsa onu kullanır; yoksa varsayılan listeyle çalışır.
-    try {
-        let q = dbClient.from('training_required_catalog').select('*').eq('tenant_id', CURRENT_AUTH.tenant_id).eq('is_active', true);
-        const { data, error } = await q;
-        if (error || !data || data.length === 0) return defaultRequiredTrainings(company);
-        const danger = (company && company.danger_class || '').toString().toLowerCase();
-        return data
-            .filter(x => !x.danger_class || danger.includes((x.danger_class || '').toString().toLowerCase()) || x.danger_class === 'Tümü')
-            .map(x => ({ training_type: x.training_type || x.title, required_hours: Number(x.required_hours || getDangerHoursForTraining(company && company.danger_class)) }))
-            .filter(x => x.training_type);
-    } catch (err) {
-        return defaultRequiredTrainings(company);
-    }
-}
+      function plusDaysString(days) {
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
 
-async function openWorkerTrainingModal(workerId) {
-    const worker = workerTableRows.find(w => String(w.id) === String(workerId));
-    const company = getCurrentCompany();
-    const modal = document.getElementById('worker_training_modal');
-    const body = document.getElementById('worker_training_body');
-    const title = document.getElementById('worker_training_title');
-    const subtitle = document.getElementById('worker_training_subtitle');
-    if (!worker || !company) { alert('Çalışan veya firma bilgisi bulunamadı.'); return; }
+      function trainingCompletionStatus(row) {
+        const req = Number(row.required_hours || 0);
+        const done = Number(row.completed_hours || 0);
+        if (done >= req && req > 0) return 'Tamamlandı';
+        if (done <= 0) return 'Hiç Katılmadı';
+        return 'Eksik';
+      }
 
-    title.innerText = `${worker.full_name || '-'} - Eğitim ve Sertifika Dosyası`;
-    subtitle.innerText = `${company.company_name || '-'} | ${company.danger_class || 'Tehlike sınıfı belirtilmemiş'} | Kadro Yönetimi`;
-    body.innerHTML = '<div class="empty-state">Eğitim bilgileri yükleniyor...</div>';
-    modal.style.display = 'flex';
+      function trainingRenewalState(row) {
+        if (!row || trainingCompletionStatus(row) !== 'Tamamlandı') return 'Yok';
+        if (!row.renewal_date) return 'Yok';
+        const today = todayString();
+        const soon = plusDaysString(30);
+        if (row.renewal_date < today) return 'Geçerliliği Doldu';
+        if (row.renewal_date <= soon) return 'Yenileme Yaklaşıyor';
+        return 'Geçerli';
+      }
 
-    const [reqs, compRes, sessRes] = await Promise.all([
-        fetchRequiredTrainingCatalog(company),
-        dbClient.from('training_completions').select('*').eq('tenant_id', CURRENT_AUTH.tenant_id).eq('company_id', company.id).eq('worker_id', worker.id),
-        dbClient.from('training_attendance_entries').select('*').eq('tenant_id', CURRENT_AUTH.tenant_id).eq('company_id', company.id).eq('worker_id', worker.id).order('session_date', { ascending: false })
-    ]);
+      function eduBadge(text, type) {
+        return `<span class="edu-badge ${type || 'gray'}">${escapeHtml(text)}</span>`;
+      }
 
-    if (compRes.error) {
-        body.innerHTML = `<div class="empty-state" style="color:#b91c1c;">Eğitim dosyaları alınamadı: ${escapeHtml(compRes.error.message)}</div>`;
-        return;
-    }
-    if (sessRes.error) {
-        body.innerHTML = `<div class="empty-state" style="color:#b91c1c;">Oturum geçmişi alınamadı: ${escapeHtml(sessRes.error.message)}</div>`;
-        return;
-    }
+      function verifyLink(row) {
+        return `${window.location.origin}/training-verify.html?code=${encodeURIComponent(row.verification_code || '')}`;
+      }
 
-    renderWorkerTrainingReport(worker, company, reqs, compRes.data || [], sessRes.data || []);
-}
+      async function fetchRequiredTrainingCatalog(company) {
+        // İleride Supabase'de training_required_catalog tablosu varsa onu kullanır; yoksa varsayılan listeyle çalışır.
+        try {
+          let q = dbClient
+            .from('training_required_catalog')
+            .select('*')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .eq('is_active', true);
+          const { data, error } = await q;
+          if (error || !data || data.length === 0) return defaultRequiredTrainings(company);
+          const danger = ((company && company.danger_class) || '').toString().toLowerCase();
+          return data
+            .filter(
+              (x) =>
+                !x.danger_class ||
+                danger.includes((x.danger_class || '').toString().toLowerCase()) ||
+                x.danger_class === 'Tümü'
+            )
+            .map((x) => ({
+              training_type: x.training_type || x.title,
+              required_hours: Number(x.required_hours || getDangerHoursForTraining(company && company.danger_class))
+            }))
+            .filter((x) => x.training_type);
+        } catch (err) {
+          return defaultRequiredTrainings(company);
+        }
+      }
 
-function renderWorkerTrainingReport(worker, company, requirements, completions, sessions) {
-    const body = document.getElementById('worker_training_body');
-    const byType = new Map();
-    (completions || []).forEach(c => byType.set(c.training_type, c));
+      async function openWorkerTrainingModal(workerId) {
+        const worker = workerTableRows.find((w) => String(w.id) === String(workerId));
+        const company = getCurrentCompany();
+        const modal = document.getElementById('worker_training_modal');
+        const body = document.getElementById('worker_training_body');
+        const title = document.getElementById('worker_training_title');
+        const subtitle = document.getElementById('worker_training_subtitle');
+        if (!worker || !company) {
+          alert('Çalışan veya firma bilgisi bulunamadı.');
+          return;
+        }
 
-    const completed = completions.filter(c => trainingCompletionStatus(c) === 'Tamamlandı');
-    const incomplete = completions.filter(c => trainingCompletionStatus(c) !== 'Tamamlandı' && Number(c.completed_hours || 0) > 0);
-    const never = (requirements || []).filter(r => !byType.has(r.training_type));
-    const expired = completed.filter(c => trainingRenewalState(c) === 'Geçerliliği Doldu');
-    const upcoming = completed.filter(c => trainingRenewalState(c) === 'Yenileme Yaklaşıyor');
+        title.innerText = `${worker.full_name || '-'} - Eğitim ve Sertifika Dosyası`;
+        subtitle.innerText = `${company.company_name || '-'} | ${company.danger_class || 'Tehlike sınıfı belirtilmemiş'} | Kadro Yönetimi`;
+        body.innerHTML = '<div class="empty-state">Eğitim bilgileri yükleniyor...</div>';
+        modal.style.display = 'flex';
 
-    const completedRows = completed.map(c => {
-        const state = trainingRenewalState(c);
-        const badge = state === 'Geçerliliği Doldu' ? eduBadge(state, 'red') : state === 'Yenileme Yaklaşıyor' ? eduBadge(state, 'orange') : eduBadge(state, 'blue');
-        const cert = c.certificate_no ? `<strong>${escapeHtml(c.certificate_no)}</strong><br><span class="edu-code">${escapeHtml(c.verification_code || '-')}</span><br><a class="small-link" href="${escapeHtml(verifyLink(c))}" target="_blank">Doğrula</a>` : '-';
-        return `<tr><td><strong>${escapeHtml(c.training_type)}</strong></td><td>${escapeHtml(c.required_hours || 0)} saat</td><td>${escapeHtml(c.completed_hours || 0)} saat</td><td>${escapeHtml(c.completed_at || c.last_session_date || '-')}</td><td>${escapeHtml(c.renewal_date || '-')}<br>${badge}</td><td>${cert}</td></tr>`;
-    }).join('') || '<tr><td colspan="6" class="empty-state">Tamamlanan eğitim bulunmuyor.</td></tr>';
+        const [reqs, compRes, sessRes] = await Promise.all([
+          fetchRequiredTrainingCatalog(company),
+          dbClient
+            .from('training_completions')
+            .select('*')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .eq('company_id', company.id)
+            .eq('worker_id', worker.id),
+          dbClient
+            .from('training_attendance_entries')
+            .select('*')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .eq('company_id', company.id)
+            .eq('worker_id', worker.id)
+            .order('session_date', { ascending: false })
+        ]);
 
-    const incompleteRows = incomplete.map(c => {
-        const missing = Math.max(0, Number(c.required_hours || 0) - Number(c.completed_hours || 0));
-        return `<tr><td><strong>${escapeHtml(c.training_type)}</strong></td><td>${escapeHtml(c.required_hours || 0)} saat</td><td>${escapeHtml(c.completed_hours || 0)} saat</td><td>${missing} saat</td><td>${escapeHtml(c.last_session_date || '-')}</td><td>${eduBadge('Eksik', 'orange')}</td></tr>`;
-    }).join('') || '<tr><td colspan="6" class="empty-state">Devam eden / eksik eğitim bulunmuyor.</td></tr>';
+        if (compRes.error) {
+          body.innerHTML = `<div class="empty-state" style="color:#b91c1c;">Eğitim dosyaları alınamadı: ${escapeHtml(compRes.error.message)}</div>`;
+          return;
+        }
+        if (sessRes.error) {
+          body.innerHTML = `<div class="empty-state" style="color:#b91c1c;">Oturum geçmişi alınamadı: ${escapeHtml(sessRes.error.message)}</div>`;
+          return;
+        }
 
-    const neverRows = never.map(r => `<tr><td><strong>${escapeHtml(r.training_type)}</strong></td><td>${escapeHtml(r.required_hours || 0)} saat</td><td>${eduBadge('Hiç Katılmadı', 'red')}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">Zorunlu olup hiç katılmadığı eğitim görünmüyor.</td></tr>';
+        renderWorkerTrainingReport(worker, company, reqs, compRes.data || [], sessRes.data || []);
+      }
 
-    const sessionRows = (sessions || []).map(s => `<tr><td>${escapeHtml(s.session_date || '-')}</td><td>${escapeHtml(s.training_type || '-')}</td><td>${escapeHtml(s.attendance_status || '-')}</td><td>${escapeHtml(s.attended_hours || 0)} saat</td><td>${escapeHtml(s.trainer_name || '-')}</td><td>${escapeHtml(s.notes || '-')}</td></tr>`).join('') || '<tr><td colspan="6" class="empty-state">Katılım oturumu yok.</td></tr>';
+      function renderWorkerTrainingReport(worker, company, requirements, completions, sessions) {
+        const body = document.getElementById('worker_training_body');
+        const byType = new Map();
+        (completions || []).forEach((c) => byType.set(c.training_type, c));
 
-    body.innerHTML = `
+        const completed = completions.filter((c) => trainingCompletionStatus(c) === 'Tamamlandı');
+        const incomplete = completions.filter(
+          (c) => trainingCompletionStatus(c) !== 'Tamamlandı' && Number(c.completed_hours || 0) > 0
+        );
+        const never = (requirements || []).filter((r) => !byType.has(r.training_type));
+        const expired = completed.filter((c) => trainingRenewalState(c) === 'Geçerliliği Doldu');
+        const upcoming = completed.filter((c) => trainingRenewalState(c) === 'Yenileme Yaklaşıyor');
+
+        const completedRows =
+          completed
+            .map((c) => {
+              const state = trainingRenewalState(c);
+              const badge =
+                state === 'Geçerliliği Doldu'
+                  ? eduBadge(state, 'red')
+                  : state === 'Yenileme Yaklaşıyor'
+                    ? eduBadge(state, 'orange')
+                    : eduBadge(state, 'blue');
+              const cert = c.certificate_no
+                ? `<strong>${escapeHtml(c.certificate_no)}</strong><br><span class="edu-code">${escapeHtml(c.verification_code || '-')}</span><br><a class="small-link" href="${escapeHtml(verifyLink(c))}" target="_blank">Doğrula</a>`
+                : '-';
+              return `<tr><td><strong>${escapeHtml(c.training_type)}</strong></td><td>${escapeHtml(c.required_hours || 0)} saat</td><td>${escapeHtml(c.completed_hours || 0)} saat</td><td>${escapeHtml(c.completed_at || c.last_session_date || '-')}</td><td>${escapeHtml(c.renewal_date || '-')}<br>${badge}</td><td>${cert}</td></tr>`;
+            })
+            .join('') || '<tr><td colspan="6" class="empty-state">Tamamlanan eğitim bulunmuyor.</td></tr>';
+
+        const incompleteRows =
+          incomplete
+            .map((c) => {
+              const missing = Math.max(0, Number(c.required_hours || 0) - Number(c.completed_hours || 0));
+              return `<tr><td><strong>${escapeHtml(c.training_type)}</strong></td><td>${escapeHtml(c.required_hours || 0)} saat</td><td>${escapeHtml(c.completed_hours || 0)} saat</td><td>${missing} saat</td><td>${escapeHtml(c.last_session_date || '-')}</td><td>${eduBadge('Eksik', 'orange')}</td></tr>`;
+            })
+            .join('') || '<tr><td colspan="6" class="empty-state">Devam eden / eksik eğitim bulunmuyor.</td></tr>';
+
+        const neverRows =
+          never
+            .map(
+              (r) =>
+                `<tr><td><strong>${escapeHtml(r.training_type)}</strong></td><td>${escapeHtml(r.required_hours || 0)} saat</td><td>${eduBadge('Hiç Katılmadı', 'red')}</td></tr>`
+            )
+            .join('') ||
+          '<tr><td colspan="3" class="empty-state">Zorunlu olup hiç katılmadığı eğitim görünmüyor.</td></tr>';
+
+        const sessionRows =
+          (sessions || [])
+            .map(
+              (s) =>
+                `<tr><td>${escapeHtml(s.session_date || '-')}</td><td>${escapeHtml(s.training_type || '-')}</td><td>${escapeHtml(s.attendance_status || '-')}</td><td>${escapeHtml(s.attended_hours || 0)} saat</td><td>${escapeHtml(s.trainer_name || '-')}</td><td>${escapeHtml(s.notes || '-')}</td></tr>`
+            )
+            .join('') || '<tr><td colspan="6" class="empty-state">Katılım oturumu yok.</td></tr>';
+
+        body.innerHTML = `
         <div class="edu-summary-grid">
             <div class="edu-summary-box"><span>Zorunlu Eğitim</span><strong>${requirements.length}</strong></div>
             <div class="edu-summary-box"><span>Tamamlanan</span><strong>${completed.length}</strong></div>
@@ -1287,151 +660,173 @@ function renderWorkerTrainingReport(worker, company, requirements, completions, 
         <div class="edu-section"><h4>🚫 Zorunlu Olup Hiç Katılmadığı Eğitimler</h4><table class="edu-table"><thead><tr><th>Eğitim</th><th>Zorunlu Süre</th><th>Durum</th></tr></thead><tbody>${neverRows}</tbody></table></div>
         <div class="edu-section"><h4>🧾 Katılım / Oturum Geçmişi</h4><table class="edu-table"><thead><tr><th>Tarih</th><th>Eğitim</th><th>Katılım</th><th>Süre</th><th>Eğitmen</th><th>Not</th></tr></thead><tbody>${sessionRows}</tbody></table></div>
     `;
-}
+      }
 
-function closeWorkerTrainingModal() {
-    document.getElementById('worker_training_modal').style.display = 'none';
-}
+      function closeWorkerTrainingModal() {
+        document.getElementById('worker_training_modal').style.display = 'none';
+      }
 
-function printWorkerTrainingReport() {
-    window.print();
-}
+      function printWorkerTrainingReport() {
+        window.print();
+      }
 
+      function ppeEffectiveStatus(row) {
+        if (!row) return '-';
+        if (row.status && row.status !== 'Aktif') return row.status;
+        const today = todayString();
+        const soon = plusDaysString(30);
+        if (row.renewal_date && row.renewal_date < today) return 'Süresi Doldu';
+        if (row.renewal_date && row.renewal_date <= soon) return 'Yenileme Yaklaşıyor';
+        return row.status || 'Aktif';
+      }
 
-function ppeEffectiveStatus(row) {
-    if (!row) return '-';
-    if (row.status && row.status !== 'Aktif') return row.status;
-    const today = todayString();
-    const soon = plusDaysString(30);
-    if (row.renewal_date && row.renewal_date < today) return 'Süresi Doldu';
-    if (row.renewal_date && row.renewal_date <= soon) return 'Yenileme Yaklaşıyor';
-    return row.status || 'Aktif';
-}
+      function ppeBadge(text, type) {
+        return `<span class="ppe-badge ${type || 'gray'}">${escapeHtml(text)}</span>`;
+      }
 
-function ppeBadge(text, type) {
-    return `<span class="ppe-badge ${type || 'gray'}">${escapeHtml(text)}</span>`;
-}
+      function ppeStatusBadge(status) {
+        const st = status || 'Aktif';
+        if (st === 'Aktif') return ppeBadge('Aktif', 'green');
+        if (st === 'Yenileme Yaklaşıyor') return ppeBadge('Yenileme Yaklaşıyor', 'orange');
+        if (st === 'Süresi Doldu') return ppeBadge('Süresi Doldu', 'red');
+        if (st === 'İade Edildi' || st === 'Değiştirildi') return ppeBadge(st, 'blue');
+        if (st === 'Kayıp' || st === 'Hasarlı') return ppeBadge(st, 'red');
+        return ppeBadge(st, 'gray');
+      }
 
-function ppeStatusBadge(status) {
-    const st = status || 'Aktif';
-    if (st === 'Aktif') return ppeBadge('Aktif', 'green');
-    if (st === 'Yenileme Yaklaşıyor') return ppeBadge('Yenileme Yaklaşıyor', 'orange');
-    if (st === 'Süresi Doldu') return ppeBadge('Süresi Doldu', 'red');
-    if (st === 'İade Edildi' || st === 'Değiştirildi') return ppeBadge(st, 'blue');
-    if (st === 'Kayıp' || st === 'Hasarlı') return ppeBadge(st, 'red');
-    return ppeBadge(st, 'gray');
-}
+      function ppeCompanyName(row, company) {
+        if (row && row.customer_companies && row.customer_companies.company_name)
+          return row.customer_companies.company_name;
+        return company && company.company_name ? company.company_name : '-';
+      }
 
-function ppeCompanyName(row, company) {
-    if (row && row.customer_companies && row.customer_companies.company_name) return row.customer_companies.company_name;
-    return company && company.company_name ? company.company_name : '-';
-}
+      function ppeDeliveryFormHtml(row, company, worker) {
+        const issueDate = row.issue_date || todayString();
+        const formDate = todayString();
+        const companyName = ppeCompanyName(row, company);
+        const workerFullName = row.worker_name || (worker && worker.full_name) || '-';
+        const issuer = row.issued_by_email || (CURRENT_AUTH && CURRENT_AUTH.email) || '-';
+        return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>KKD Teslim Formu</title><style>@page{size:A4;margin:16mm}body{font-family:Inter,Arial,sans-serif;margin:0;background:#f8fafc;color:#111827}.toolbar{position:sticky;top:0;background:white;border-bottom:1px solid #e5e7eb;padding:12px 16px;display:flex;justify-content:flex-end;box-shadow:0 2px 8px rgba(15,23,42,.08)}button{background:#0f766e;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:900;cursor:pointer}.form{background:white;margin:18px auto;padding:30px;max-width:820px;border:2px solid #0f766e;border-radius:18px;min-height:900px}.title{text-align:center;font-size:26px;font-weight:900;color:#064e3b;margin-bottom:6px}.subtitle{text-align:center;color:#64748b;font-size:13px;margin-bottom:28px}.grid{display:grid;grid-template-columns:180px 1fr;gap:10px 14px;font-size:14px}.label{font-weight:900;color:#475569}.value{font-weight:750;color:#0f172a}.statement{margin-top:28px;border:1px solid #d1fae5;background:#ecfdf5;border-radius:14px;padding:18px;line-height:1.65;font-size:14px}.signatures{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:70px}.sig{border-top:1px solid #111827;text-align:center;padding-top:10px;font-weight:900}.sig small{display:block;color:#64748b;font-weight:700;margin-top:5px}.foot{margin-top:45px;text-align:center;color:#64748b;font-size:11px}@media print{body{background:white}.toolbar{display:none}.form{border-radius:0;border-width:1px;margin:0;max-width:none;min-height:auto}}</style></head><body><div class="toolbar"><button onclick="window.print()">🖨️ Yazdır / PDF Kaydet</button></div><main class="form"><div class="title">KKD Teslim ve Zimmet Formu</div><div class="subtitle">Kişisel Koruyucu Donanım Teslim Tutanağı</div><section class="grid"><div class="label">Firma</div><div class="value">${escapeHtml(companyName)}</div><div class="label">Çalışan</div><div class="value">${escapeHtml(workerFullName)}</div><div class="label">KKD Türü</div><div class="value">${escapeHtml(row.ppe_type_name || '-')}</div><div class="label">Adet</div><div class="value">${escapeHtml(row.quantity || 1)}</div><div class="label">Seri / Beden / Model</div><div class="value">${escapeHtml(row.serial_no || '-')}</div><div class="label">Veriliş Tarihi</div><div class="value">${escapeHtml(issueDate)}</div><div class="label">Yenileme Tarihi</div><div class="value">${escapeHtml(row.renewal_date || '-')}</div><div class="label">Teslim Eden</div><div class="value">${escapeHtml(issuer)}</div><div class="label">Form Tarihi</div><div class="value">${escapeHtml(formDate)}</div></section><div class="statement">Yukarıda bilgileri yer alan kişisel koruyucu donanımı eksiksiz ve kullanıma uygun şekilde teslim aldığımı, tarafıma kullanım amacı ve dikkat edilmesi gereken hususlar hakkında bilgilendirme yapıldığını, donanımı iş sağlığı ve güvenliği kurallarına uygun şekilde kullanacağımı kabul ve beyan ederim.</div><section class="signatures"><div class="sig">Çalışan İmzası<small>Ad Soyad / Tarih</small></div><div class="sig">Teslim Eden İmzası<small>Ad Soyad / Tarih</small></div></section><div class="foot">Bu form OSGB SaaS KKD Zimmet & Takip modülü üzerinden oluşturulmuştur.</div></main></body></html>`;
+      }
 
-function ppeDeliveryFormHtml(row, company, worker) {
-    const issueDate = row.issue_date || todayString();
-    const formDate = todayString();
-    const companyName = ppeCompanyName(row, company);
-    const workerFullName = row.worker_name || (worker && worker.full_name) || '-';
-    const issuer = row.issued_by_email || (CURRENT_AUTH && CURRENT_AUTH.email) || '-';
-    return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>KKD Teslim Formu</title><style>@page{size:A4;margin:16mm}body{font-family:Inter,Arial,sans-serif;margin:0;background:#f8fafc;color:#111827}.toolbar{position:sticky;top:0;background:white;border-bottom:1px solid #e5e7eb;padding:12px 16px;display:flex;justify-content:flex-end;box-shadow:0 2px 8px rgba(15,23,42,.08)}button{background:#0f766e;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:900;cursor:pointer}.form{background:white;margin:18px auto;padding:30px;max-width:820px;border:2px solid #0f766e;border-radius:18px;min-height:900px}.title{text-align:center;font-size:26px;font-weight:900;color:#064e3b;margin-bottom:6px}.subtitle{text-align:center;color:#64748b;font-size:13px;margin-bottom:28px}.grid{display:grid;grid-template-columns:180px 1fr;gap:10px 14px;font-size:14px}.label{font-weight:900;color:#475569}.value{font-weight:750;color:#0f172a}.statement{margin-top:28px;border:1px solid #d1fae5;background:#ecfdf5;border-radius:14px;padding:18px;line-height:1.65;font-size:14px}.signatures{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:70px}.sig{border-top:1px solid #111827;text-align:center;padding-top:10px;font-weight:900}.sig small{display:block;color:#64748b;font-weight:700;margin-top:5px}.foot{margin-top:45px;text-align:center;color:#64748b;font-size:11px}@media print{body{background:white}.toolbar{display:none}.form{border-radius:0;border-width:1px;margin:0;max-width:none;min-height:auto}}</style></head><body><div class="toolbar"><button onclick="window.print()">🖨️ Yazdır / PDF Kaydet</button></div><main class="form"><div class="title">KKD Teslim ve Zimmet Formu</div><div class="subtitle">Kişisel Koruyucu Donanım Teslim Tutanağı</div><section class="grid"><div class="label">Firma</div><div class="value">${escapeHtml(companyName)}</div><div class="label">Çalışan</div><div class="value">${escapeHtml(workerFullName)}</div><div class="label">KKD Türü</div><div class="value">${escapeHtml(row.ppe_type_name || '-')}</div><div class="label">Adet</div><div class="value">${escapeHtml(row.quantity || 1)}</div><div class="label">Seri / Beden / Model</div><div class="value">${escapeHtml(row.serial_no || '-')}</div><div class="label">Veriliş Tarihi</div><div class="value">${escapeHtml(issueDate)}</div><div class="label">Yenileme Tarihi</div><div class="value">${escapeHtml(row.renewal_date || '-')}</div><div class="label">Teslim Eden</div><div class="value">${escapeHtml(issuer)}</div><div class="label">Form Tarihi</div><div class="value">${escapeHtml(formDate)}</div></section><div class="statement">Yukarıda bilgileri yer alan kişisel koruyucu donanımı eksiksiz ve kullanıma uygun şekilde teslim aldığımı, tarafıma kullanım amacı ve dikkat edilmesi gereken hususlar hakkında bilgilendirme yapıldığını, donanımı iş sağlığı ve güvenliği kurallarına uygun şekilde kullanacağımı kabul ve beyan ederim.</div><section class="signatures"><div class="sig">Çalışan İmzası<small>Ad Soyad / Tarih</small></div><div class="sig">Teslim Eden İmzası<small>Ad Soyad / Tarih</small></div></section><div class="foot">Bu form OSGB SaaS KKD Zimmet & Takip modülü üzerinden oluşturulmuştur.</div></main></body></html>`;
-}
+      function openPpeDeliveryForm(assignmentId) {
+        const row = (window.__WORKER_PPE_ASSIGNMENTS__ || []).find((a) => String(a.id) === String(assignmentId));
+        const worker = window.__WORKER_PPE_WORKER__ || null;
+        const company = window.__WORKER_PPE_COMPANY__ || getCurrentCompany();
+        if (!row) {
+          alert('KKD zimmet kaydı bulunamadı.');
+          return;
+        }
+        const win = window.open(
+          '',
+          'ppeDeliveryFormPopup',
+          'width=920,height=760,left=120,top=80,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes'
+        );
+        if (!win) {
+          alert('Teslim formu penceresi açılamadı. Tarayıcı pop-up engelini kontrol edin.');
+          return;
+        }
+        win.document.open();
+        win.document.write(ppeDeliveryFormHtml(row, company, worker));
+        win.document.close();
+        win.focus();
+      }
 
-function openPpeDeliveryForm(assignmentId) {
-    const row = (window.__WORKER_PPE_ASSIGNMENTS__ || []).find(a => String(a.id) === String(assignmentId));
-    const worker = window.__WORKER_PPE_WORKER__ || null;
-    const company = window.__WORKER_PPE_COMPANY__ || getCurrentCompany();
-    if (!row) { alert('KKD zimmet kaydı bulunamadı.'); return; }
-    const win = window.open('', 'ppeDeliveryFormPopup', 'width=920,height=760,left=120,top=80,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes');
-    if (!win) { alert('Teslim formu penceresi açılamadı. Tarayıcı pop-up engelini kontrol edin.'); return; }
-    win.document.open();
-    win.document.write(ppeDeliveryFormHtml(row, company, worker));
-    win.document.close();
-    win.focus();
-}
+      async function openWorkerPpeModal(workerId) {
+        const worker = workerTableRows.find((w) => String(w.id) === String(workerId));
+        const company = getCurrentCompany();
+        const modal = document.getElementById('worker_ppe_modal');
+        const body = document.getElementById('worker_ppe_body');
+        const title = document.getElementById('worker_ppe_title');
+        const subtitle = document.getElementById('worker_ppe_subtitle');
+        if (!worker || !company) {
+          alert('Çalışan veya firma bilgisi bulunamadı.');
+          return;
+        }
 
-async function openWorkerPpeModal(workerId) {
-    const worker = workerTableRows.find(w => String(w.id) === String(workerId));
-    const company = getCurrentCompany();
-    const modal = document.getElementById('worker_ppe_modal');
-    const body = document.getElementById('worker_ppe_body');
-    const title = document.getElementById('worker_ppe_title');
-    const subtitle = document.getElementById('worker_ppe_subtitle');
-    if (!worker || !company) { alert('Çalışan veya firma bilgisi bulunamadı.'); return; }
+        title.innerText = `${worker.full_name || '-'} - KKD Zimmet Dosyası`;
+        subtitle.innerText = `${company.company_name || '-'} | Kadro Yönetimi`;
+        body.innerHTML = '<div class="empty-state">KKD bilgileri yükleniyor...</div>';
+        modal.style.display = 'flex';
 
-    title.innerText = `${worker.full_name || '-'} - KKD Zimmet Dosyası`;
-    subtitle.innerText = `${company.company_name || '-'} | Kadro Yönetimi`;
-    body.innerHTML = '<div class="empty-state">KKD bilgileri yükleniyor...</div>';
-    modal.style.display = 'flex';
+        const assignmentRes = await dbClient
+          .from('ppe_assignments')
+          .select('*, customer_companies(company_name, tenant_id)')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('company_id', company.id)
+          .eq('worker_id', worker.id)
+          .order('created_at', { ascending: false });
 
-    const assignmentRes = await dbClient
-        .from('ppe_assignments')
-        .select('*, customer_companies(company_name, tenant_id)')
-        .eq('tenant_id', CURRENT_AUTH.tenant_id)
-        .eq('company_id', company.id)
-        .eq('worker_id', worker.id)
-        .order('created_at', { ascending: false });
+        if (assignmentRes.error) {
+          body.innerHTML = `<div class="empty-state" style="color:#b91c1c;">KKD zimmetleri alınamadı: ${escapeHtml(assignmentRes.error.message)}</div>`;
+          return;
+        }
 
-    if (assignmentRes.error) {
-        body.innerHTML = `<div class="empty-state" style="color:#b91c1c;">KKD zimmetleri alınamadı: ${escapeHtml(assignmentRes.error.message)}</div>`;
-        return;
-    }
-
-    const assignments = assignmentRes.data || [];
-    let events = [];
-    const assignmentIds = assignments.map(a => a.id).filter(Boolean);
-    if (assignmentIds.length > 0) {
-        const eventRes = await dbClient
+        const assignments = assignmentRes.data || [];
+        let events = [];
+        const assignmentIds = assignments.map((a) => a.id).filter(Boolean);
+        if (assignmentIds.length > 0) {
+          const eventRes = await dbClient
             .from('ppe_assignment_events')
             .select('*')
             .eq('tenant_id', CURRENT_AUTH.tenant_id)
             .in('assignment_id', assignmentIds)
             .order('created_at', { ascending: false });
-        if (eventRes.error) {
+          if (eventRes.error) {
             console.warn('KKD işlem geçmişi alınamadı:', eventRes.error.message);
-        } else {
+          } else {
             events = eventRes.data || [];
+          }
         }
-    }
 
-    renderWorkerPpeReport(worker, company, assignments, events);
-}
+        renderWorkerPpeReport(worker, company, assignments, events);
+      }
 
-function renderWorkerPpeReport(worker, company, assignments, events) {
-    const body = document.getElementById('worker_ppe_body');
-    window.__WORKER_PPE_ASSIGNMENTS__ = assignments || [];
-    window.__WORKER_PPE_WORKER__ = worker;
-    window.__WORKER_PPE_COMPANY__ = company;
+      function renderWorkerPpeReport(worker, company, assignments, events) {
+        const body = document.getElementById('worker_ppe_body');
+        window.__WORKER_PPE_ASSIGNMENTS__ = assignments || [];
+        window.__WORKER_PPE_WORKER__ = worker;
+        window.__WORKER_PPE_COMPANY__ = company;
 
-    const active = assignments.filter(a => ppeEffectiveStatus(a) === 'Aktif');
-    const upcoming = assignments.filter(a => ppeEffectiveStatus(a) === 'Yenileme Yaklaşıyor');
-    const expired = assignments.filter(a => ppeEffectiveStatus(a) === 'Süresi Doldu');
-    const closed = assignments.filter(a => ['İade Edildi','Değiştirildi','Kayıp','Hasarlı'].includes(ppeEffectiveStatus(a)));
+        const active = assignments.filter((a) => ppeEffectiveStatus(a) === 'Aktif');
+        const upcoming = assignments.filter((a) => ppeEffectiveStatus(a) === 'Yenileme Yaklaşıyor');
+        const expired = assignments.filter((a) => ppeEffectiveStatus(a) === 'Süresi Doldu');
+        const closed = assignments.filter((a) =>
+          ['İade Edildi', 'Değiştirildi', 'Kayıp', 'Hasarlı'].includes(ppeEffectiveStatus(a))
+        );
 
-    const rowHtml = (rows, emptyText) => {
-        if (!rows || rows.length === 0) return `<tr><td colspan="7" class="empty-state">${escapeHtml(emptyText)}</td></tr>`;
-        return rows.map(r => {
-            const st = ppeEffectiveStatus(r);
-            return `<tr><td><strong>${escapeHtml(r.ppe_type_name || '-')}</strong></td><td>${escapeHtml(r.quantity || 1)}</td><td>${escapeHtml(r.serial_no || '-')}</td><td>${escapeHtml(r.issue_date || '-')}</td><td>${escapeHtml(r.renewal_date || '-')}</td><td>${ppeStatusBadge(st)}</td><td><button class="ppe-print-btn" style="padding:6px 9px;font-size:11px;" onclick="openPpeDeliveryForm('${escapeHtml(r.id)}')">Teslim Formu</button><br><a class="small-link" href="ppe.html" target="_blank">KKD sayfasında aç</a></td></tr>`;
-        }).join('');
-    };
+        const rowHtml = (rows, emptyText) => {
+          if (!rows || rows.length === 0)
+            return `<tr><td colspan="7" class="empty-state">${escapeHtml(emptyText)}</td></tr>`;
+          return rows
+            .map((r) => {
+              const st = ppeEffectiveStatus(r);
+              return `<tr><td><strong>${escapeHtml(r.ppe_type_name || '-')}</strong></td><td>${escapeHtml(r.quantity || 1)}</td><td>${escapeHtml(r.serial_no || '-')}</td><td>${escapeHtml(r.issue_date || '-')}</td><td>${escapeHtml(r.renewal_date || '-')}</td><td>${ppeStatusBadge(st)}</td><td><button class="ppe-print-btn" style="padding:6px 9px;font-size:11px;" onclick="openPpeDeliveryForm('${escapeHtml(r.id)}')">Teslim Formu</button><br><a class="small-link" href="ppe.html" target="_blank">KKD sayfasında aç</a></td></tr>`;
+            })
+            .join('');
+        };
 
-    const alerts = [...expired, ...upcoming].slice(0, 8);
-    const alertRows = rowHtml(alerts, 'Yenileme uyarısı bulunan KKD yok.');
-    const activeRows = rowHtml(active, 'Aktif KKD zimmeti yok.');
-    const historyRows = rowHtml(closed, 'Kapanmış / geçmiş KKD zimmeti yok.');
+        const alerts = [...expired, ...upcoming].slice(0, 8);
+        const alertRows = rowHtml(alerts, 'Yenileme uyarısı bulunan KKD yok.');
+        const activeRows = rowHtml(active, 'Aktif KKD zimmeti yok.');
+        const historyRows = rowHtml(closed, 'Kapanmış / geçmiş KKD zimmeti yok.');
 
-    let eventRows = '';
-    const eventList = (events || []).filter(e => assignments.some(a => String(a.id) === String(e.assignment_id))).slice(0, 12);
-    if (eventList.length === 0) {
-        eventRows = '<tr><td colspan="4" class="empty-state">İşlem geçmişi görünmüyor.</td></tr>';
-    } else {
-        eventRows = eventList.map(e => {
-            const related = assignments.find(a => String(a.id) === String(e.assignment_id));
-            return `<tr><td>${escapeHtml(e.event_date || '-')}</td><td><strong>${escapeHtml(e.event_type || '-')}</strong><br><small>${escapeHtml(related && related.ppe_type_name || '-')}</small></td><td>${escapeHtml(e.note || '-')}</td><td>${escapeHtml(e.created_by_email || '-')}</td></tr>`;
-        }).join('');
-    }
+        let eventRows = '';
+        const eventList = (events || [])
+          .filter((e) => assignments.some((a) => String(a.id) === String(e.assignment_id)))
+          .slice(0, 12);
+        if (eventList.length === 0) {
+          eventRows = '<tr><td colspan="4" class="empty-state">İşlem geçmişi görünmüyor.</td></tr>';
+        } else {
+          eventRows = eventList
+            .map((e) => {
+              const related = assignments.find((a) => String(a.id) === String(e.assignment_id));
+              return `<tr><td>${escapeHtml(e.event_date || '-')}</td><td><strong>${escapeHtml(e.event_type || '-')}</strong><br><small>${escapeHtml((related && related.ppe_type_name) || '-')}</small></td><td>${escapeHtml(e.note || '-')}</td><td>${escapeHtml(e.created_by_email || '-')}</td></tr>`;
+            })
+            .join('');
+        }
 
-    body.innerHTML = `
+        body.innerHTML = `
         <div class="ppe-summary-grid">
             <div class="ppe-summary-box"><span>Toplam Zimmet</span><strong>${assignments.length}</strong></div>
             <div class="ppe-summary-box"><span>Aktif</span><strong>${active.length}</strong></div>
@@ -1445,17 +840,17 @@ function renderWorkerPpeReport(worker, company, assignments, events) {
         <div class="ppe-section"><h4>📦 İade / Değişim / Kayıp / Hasarlı Geçmişi</h4><table class="ppe-table"><thead><tr><th>KKD</th><th>Adet</th><th>Seri/Beden</th><th>Veriliş</th><th>Yenileme</th><th>Durum</th><th>İşlem</th></tr></thead><tbody>${historyRows}</tbody></table></div>
         <div class="ppe-section"><h4>🧾 Son KKD İşlem Geçmişi</h4><table class="ppe-table"><thead><tr><th>Tarih</th><th>İşlem / KKD</th><th>Not</th><th>Kullanıcı</th></tr></thead><tbody>${eventRows}</tbody></table></div>
     `;
-}
+      }
 
-function closeWorkerPpeModal() {
-    document.getElementById('worker_ppe_modal').style.display = 'none';
-}
+      function closeWorkerPpeModal() {
+        document.getElementById('worker_ppe_modal').style.display = 'none';
+      }
 
-function printWorkerPpeReport() {
-    window.print();
-}
+      function printWorkerPpeReport() {
+        window.print();
+      }
 
-    async function saveWorker() {
+      async function saveWorker() {
         const compId = document.getElementById('company_select').value;
         const name = document.getElementById('worker_name').value;
         const age = document.getElementById('worker_age').value;
@@ -1463,14 +858,95 @@ function printWorkerPpeReport() {
         const job = document.getElementById('worker_job').value;
         const statusDiv = document.getElementById('status');
 
-        if(!compId || !name || !age) { statusDiv.style.color = "red"; statusDiv.innerText = "Eksik alanları doldurun!"; return; }
+        if (!compId || !name || !age) {
+          statusDiv.style.color = 'red';
+          statusDiv.innerText = 'Eksik alanları doldurun!';
+          return;
+        }
         const payload = { company_id: compId, full_name: name, age: parseInt(age), gender: gender, job_title: job };
         if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) payload.tenant_id = CURRENT_AUTH.tenant_id;
         const { error } = await dbClient.from('workers').insert([payload]);
         if (error) alert(error.message);
-        else { document.getElementById('worker_name').value = ''; document.getElementById('worker_age').value = ''; document.getElementById('worker_job').value = ''; fetchWorkers(); }
-    }
-    async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
-</script>
-</body>
+        else {
+          document.getElementById('worker_name').value = '';
+          document.getElementById('worker_age').value = '';
+          document.getElementById('worker_job').value = '';
+          setNewWorkerFormOpen(false);
+          fetchWorkers();
+        }
+      }
+
+      function openWorkerEditModal(workerId) {
+        const worker = workerTableRows.find((w) => String(w.id) === String(workerId));
+        if (!worker) {
+          alert('Çalışan bilgisi bulunamadı.');
+          return;
+        }
+
+        document.getElementById('edit_worker_id').value = worker.id;
+        document.getElementById('edit_worker_name').value = worker.full_name;
+        document.getElementById('edit_worker_age').value = worker.age;
+        document.getElementById('edit_worker_gender').value = worker.gender || 'Erkek';
+        document.getElementById('edit_worker_job').value = worker.job_title;
+
+        const statusDiv = document.getElementById('edit_status');
+        statusDiv.innerText = '';
+
+        document.getElementById('worker_edit_modal').style.display = 'flex';
+      }
+
+      function closeWorkerEditModal() {
+        document.getElementById('worker_edit_modal').style.display = 'none';
+      }
+
+      async function updateWorker() {
+        const id = document.getElementById('edit_worker_id').value;
+        const name = document.getElementById('edit_worker_name').value;
+        const age = document.getElementById('edit_worker_age').value;
+        const gender = document.getElementById('edit_worker_gender').value;
+        const job = document.getElementById('edit_worker_job').value;
+        const statusDiv = document.getElementById('edit_status');
+
+        if (!id || !name || !age) {
+          statusDiv.style.color = 'red';
+          statusDiv.innerText = 'Eksik alanları doldurun!';
+          return;
+        }
+
+        statusDiv.style.color = 'var(--text-muted)';
+        statusDiv.innerText = 'Güncelleniyor...';
+
+        try {
+          const payload = {
+            full_name: name,
+            age: parseInt(age),
+            gender: gender,
+            job_title: job
+          };
+
+          const { error } = await dbClient
+            .from('workers')
+            .update(payload)
+            .eq('id', id);
+
+          if (error) {
+            throw error;
+          }
+
+          statusDiv.style.color = 'green';
+          statusDiv.innerText = 'Başarıyla güncellendi.';
+          
+          setTimeout(() => {
+            closeWorkerEditModal();
+            fetchWorkers();
+          }, 500);
+
+        } catch (err) {
+          console.error(err.message);
+          statusDiv.style.color = 'red';
+          statusDiv.innerText = `Hata: ${err.message}`;
+        }
+      }
+    </script>
+  </body>
 </html>

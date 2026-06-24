@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSGB SaaS - İSG Kurul Toplantı Motoru</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean" style="display: none;">
+    <div class="card">
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
+        </div>
+
+        <div class="nav-container"></div>
+      </div>
+
+      <div class="crm-page-shell">
+        <div class="page-header-row" style="margin-bottom: 24px;">
+          <div class="page-title-group">
+            <h2 style="font-size: clamp(24px, 2.2vw, 34px); letter-spacing: -0.03em; color: #0f172a; font-weight: 800; margin: 0 0 6px;">🪧 İSG Kurul Toplantı Motoru</h2>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0;">
+              50+ çalışana sahip firmalarda kurul gerekliliğini takip edin, toplantı gündemi hazırlayın, üyeleri davet edin ve alınan kararları DÖF'e dönüştürün.
+            </p>
+          </div>
+        </div>
+
+        <!-- Kurul Gerekliliği Kontrolü -->
+        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
+          <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📊 Kurul Gerekliliği Kontrolü</h3>
+          <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+            Personel sayısına göre İSG kurulu gereksinimini hızlıca kontrol edin.
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="form-group-premium">
+              <label>Firmadaki Çalışan Sayısı</label>
+              <input type="number" id="company_size" min="0" placeholder="Örn: 80" oninput="calculateKurulRequirement()" />
+            </div>
+            <div class="form-group-premium">
+              <label>Durum</label>
+              <div id="kurul_requirement_status" style="padding: 14px 12px; border: 1px solid var(--uc-border); border-radius: 12px; background: var(--uc-bg-soft); min-height: 58px; display:flex; align-items:center; color: var(--uc-text); font-weight: 500; font-size: 14px;">
+                Çalışan sayısını girin.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toplantı Bilgileri -->
+        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
+          <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">🗂️ Toplantı Bilgileri</h3>
+          <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+            Toplantı tarihi, yeri ve başkanı girin. Tutanağı bu alanda kaydedin.
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+            <div class="form-group-premium">
+              <label>Toplantı Tarihi</label>
+              <input type="date" id="meeting_date" />
+            </div>
+            <div class="form-group-premium">
+              <label>Toplantı Yeri</label>
+              <input type="text" id="meeting_place" placeholder="Örn: Yönetim Odası" />
+            </div>
+            <div class="form-group-premium">
+              <label>Toplantı Başkanı</label>
+              <input type="text" id="meeting_chair" placeholder="Örn: İSG Uzmanı" />
+            </div>
+          </div>
+          <div class="form-group-premium">
+            <label>Toplantı Tutanağı</label>
+            <textarea id="meeting_notes" rows="4" placeholder="Toplantıda konuşulanları ve karar gerektiren notları buraya yazın..."></textarea>
+          </div>
+        </div>
+
+        <!-- Gündem Oluşturma -->
+        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
+          <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📝 Gündem Oluşturma</h3>
+          <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+            Toplantı için madde madde gündem oluşturun ve daha sonra karar alabilirsiniz.
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: end; margin-bottom: 16px;">
+            <div class="form-group-premium">
+              <label>Gündem Maddesi</label>
+              <input type="text" id="agenda_text" placeholder="Örn: Risk değerlendirme sonuçları" />
+            </div>
+            <button class="btn btn-blue" style="height: 48px; min-width: 140px; margin-bottom: 2px;" onclick="addAgendaItem()">Gündeme Ekle</button>
+          </div>
+          <div class="table-container-premium">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 60px;">#</th>
+                  <th>Gündem</th>
+                  <th style="width: 100px; text-align: right;">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="agenda_body">
+                <tr><td colspan="3" style="text-align:center; color: var(--uc-text-muted);">Henüz gündem yok.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Üyelere Davet -->
+        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
+          <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📧 Üyelere Davet</h3>
+          <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+            Toplantıya katılacak kurul üyelerini ekleyin. E-posta ile davet ettikçe listede görünür.
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; margin-bottom: 16px;">
+            <div class="form-group-premium">
+              <label>Üye Adı</label>
+              <input type="text" id="member_name" placeholder="Örn: Ahmet Yılmaz" />
+            </div>
+            <div class="form-group-premium">
+              <label>Üye E-Posta</label>
+              <input type="email" id="member_email" placeholder="isim@firma.com" />
+            </div>
+            <button class="btn btn-blue" style="height: 48px; min-width: 140px; margin-bottom: 2px;" onclick="addMember()">Üye Davet Et</button>
+          </div>
+          <div class="table-container-premium">
+            <table>
+              <thead>
+                <tr>
+                  <th>Adı</th>
+                  <th>E-Posta</th>
+                  <th style="width: 150px;">Durum</th>
+                  <th style="width: 100px; text-align: right;">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="members_body">
+                <tr><td colspan="4" style="text-align:center; color: var(--uc-text-muted);">Henüz üye eklenmedi.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Yan yana Kararlar ve Tutanaklar -->
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 24px; margin-bottom: 24px;">
+          <!-- Toplantı Kararları -->
+          <div class="stat-card-premium" style="padding: 24px; display: flex; flex-direction: column; height: 100%;">
+            <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">✅ Toplantı Kararları</h3>
+            <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+              Alınan kararları kaydedin. Gerektiğinde bu kararları DÖF'e dönüştürebilirsiniz.
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: end; margin-bottom: 16px;">
+              <div class="form-group-premium">
+                <label>Karar Metni</label>
+                <textarea id="decision_text" rows="2" placeholder="Karar maddesini yazın..." style="resize: none;"></textarea>
+              </div>
+              <button class="btn btn-blue" style="height: 64px; min-width: 140px; margin-bottom: 2px;" onclick="addDecision()">Kararı Kaydet</button>
+            </div>
+            <div class="table-container-premium" style="flex: 1; overflow-y: auto;">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>Karar</th>
+                    <th style="width: 140px;">Durum</th>
+                    <th style="width: 180px; text-align: right;">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody id="decisions_body">
+                  <tr><td colspan="4" style="text-align:center; color: var(--uc-text-muted);">Henüz karar yok.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Toplantı Tutanakları -->
+          <div class="stat-card-premium" style="padding: 24px; display: flex; flex-direction: column; height: 100%;">
+            <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📁 Toplantı Tutanakları</h3>
+            <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">
+              Kaydedilen toplantı notlarını görüntüleyin ve arşivleyin.
+            </p>
+            <div class="form-group-premium" style="flex: 1; display: flex; flex-direction: column; margin-bottom: 16px;">
+              <label>Tutanak Kaydı</label>
+              <textarea id="meeting_record" rows="8" placeholder="Toplantı tutanağını buraya kaydedin..." style="flex: 1; resize: none; min-height: 150px;"></textarea>
+            </div>
+            <div class="submit-actions" style="margin-top: auto; display: flex; align-items: center; justify-content: space-between;">
+              <div id="meeting_record_status" class="status-alert" style="display:none; color: var(--uc-teal); font-weight: 600; font-size: 13px;"></div>
+              <button class="btn btn-teal" style="margin-left: auto;" onclick="saveMeetingRecord()">Tutanak Kaydet</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      const KURUL_STORAGE_KEY = 'isg_kurul_meeting';
+      let kurulState = {
+        company_size: '',
+        meeting_date: '',
+        meeting_place: '',
+        meeting_chair: '',
+        meeting_notes: '',
+        meeting_record: '',
+        agenda: [],
+        members: [],
+        decisions: []
+      };
+
+      window.onload = async function () {
+        const auth = await requireAuthAndRole('kurul');
+        if (!auth) return;
+        document.body.style.display = 'block';
+        loadKurulState();
+        renderKurulState();
+      };
+
+      function calculateKurulRequirement() {
+        const count = parseInt(document.getElementById('company_size').value, 10);
+        const statusEl = document.getElementById('kurul_requirement_status');
+        if (!count || count <= 0) {
+          statusEl.innerText = 'Çalışan sayısını girin.';
+          return;
+        }
+        if (count >= 50) {
+          statusEl.innerHTML = '<strong style="color:var(--uc-teal);">Evet.</strong> Bu firma için İSG kurulu kurulması gereklidir.';
+        } else {
+          statusEl.innerHTML = '<strong style="color:var(--uc-orange);">Hayır.</strong> Bu firma için İSG kurulu henüz zorunlu değildir.';
+        }
+        kurulState.company_size = count;
+        saveKurulState();
+      }
+
+      function saveKurulState() {
+        localStorage.setItem(KURUL_STORAGE_KEY, JSON.stringify(kurulState));
+      }
+
+      function loadKurulState() {
+        const stored = localStorage.getItem(KURUL_STORAGE_KEY);
+        if (!stored) return;
+        try {
+          kurulState = JSON.parse(stored);
+        } catch (error) {
+          kurulState = {
+            company_size: '',
+            meeting_date: '',
+            meeting_place: '',
+            meeting_chair: '',
+            meeting_notes: '',
+            meeting_record: '',
+            agenda: [],
+            members: [],
+            decisions: []
+          };
+        }
+      }
+
+      function renderKurulState() {
+        document.getElementById('company_size').value = kurulState.company_size || '';
+        document.getElementById('meeting_date').value = kurulState.meeting_date || '';
+        document.getElementById('meeting_place').value = kurulState.meeting_place || '';
+        document.getElementById('meeting_chair').value = kurulState.meeting_chair || '';
+        document.getElementById('meeting_notes').value = kurulState.meeting_notes || '';
+        document.getElementById('meeting_record').value = kurulState.meeting_record || '';
+        if (kurulState.company_size) calculateKurulRequirement();
+        renderAgenda();
+        renderMembers();
+        renderDecisions();
+      }
+
+      function updateMeetingField(field, value) {
+        kurulState[field] = value;
+        saveKurulState();
+      }
+
+      document.getElementById('meeting_date').addEventListener('change', function () {
+        updateMeetingField('meeting_date', this.value);
+      });
+      document.getElementById('meeting_place').addEventListener('input', function () {
+        updateMeetingField('meeting_place', this.value);
+      });
+      document.getElementById('meeting_chair').addEventListener('input', function () {
+        updateMeetingField('meeting_chair', this.value);
+      });
+      document.getElementById('meeting_notes').addEventListener('input', function () {
+        updateMeetingField('meeting_notes', this.value);
+      });
+      document.getElementById('meeting_record').addEventListener('input', function () {
+        updateMeetingField('meeting_record', this.value);
+      });
+
+      function addAgendaItem() {
+        const text = document.getElementById('agenda_text').value.trim();
+        if (!text) return;
+        kurulState.agenda.push({ id: crypto.randomUUID(), text });
+        document.getElementById('agenda_text').value = '';
+        saveKurulState();
+        renderAgenda();
+      }
+
+      function renderAgenda() {
+        const tbody = document.getElementById('agenda_body');
+        tbody.innerHTML = '';
+        if (!kurulState.agenda.length) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--uc-text-muted);">Henüz gündem yok.</td></tr>`;
+          return;
+        }
+        kurulState.agenda.forEach((item, index) => {
+          tbody.innerHTML += `<tr>
+              <td>${index + 1}</td>
+              <td>${escapeHtml(item.text)}</td>
+              <td style="text-align: right;"><button class="btn btn-secondary btn-small" onclick="removeAgendaItem('${item.id}')">Sil</button></td>
+            </tr>`;
+        });
+      }
+
+      function removeAgendaItem(id) {
+        kurulState.agenda = kurulState.agenda.filter((item) => item.id !== id);
+        saveKurulState();
+        renderAgenda();
+      }
+
+      function addMember() {
+        const name = document.getElementById('member_name').value.trim();
+        const email = document.getElementById('member_email').value.trim();
+        if (!name || !email) {
+          alert('Lütfen üye adı ve e-posta girin.');
+          return;
+        }
+        kurulState.members.push({ id: crypto.randomUUID(), name, email, status: 'Davet edildi' });
+        document.getElementById('member_name').value = '';
+        document.getElementById('member_email').value = '';
+        saveKurulState();
+        renderMembers();
+      }
+
+      function renderMembers() {
+        const tbody = document.getElementById('members_body');
+        tbody.innerHTML = '';
+        if (!kurulState.members.length) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--uc-text-muted);">Henüz üye eklenmedi.</td></tr>`;
+          return;
+        }
+        kurulState.members.forEach((member) => {
+          tbody.innerHTML += `<tr>
+              <td>${escapeHtml(member.name)}</td>
+              <td>${escapeHtml(member.email)}</td>
+              <td><span class="status-badge status-badge-info">${escapeHtml(member.status)}</span></td>
+              <td style="text-align: right;"><button class="btn btn-secondary btn-small" onclick="removeMember('${member.id}')">Kaldır</button></td>
+            </tr>`;
+        });
+      }
+
+      function removeMember(id) {
+        kurulState.members = kurulState.members.filter((member) => member.id !== id);
+        saveKurulState();
+        renderMembers();
+      }
+
+      function addDecision() {
+        const text = document.getElementById('decision_text').value.trim();
+        if (!text) return;
+        kurulState.decisions.push({ id: crypto.randomUUID(), text, status: 'Beklemede', converted: false });
+        document.getElementById('decision_text').value = '';
+        saveKurulState();
+        renderDecisions();
+      }
+
+      function renderDecisions() {
+        const tbody = document.getElementById('decisions_body');
+        tbody.innerHTML = '';
+        if (!kurulState.decisions.length) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color: var(--uc-text-muted);">Henüz karar yok.</td></tr>`;
+          return;
+        }
+        kurulState.decisions.forEach((decision, index) => {
+          const statusBadge = decision.converted 
+            ? `<span class="status-badge status-badge-success">DÖF'e Dönüştürüldü</span>` 
+            : `<span class="status-badge status-badge-warning">${decision.status}</span>`;
+
+          tbody.innerHTML += `<tr>
+              <td>${index + 1}</td>
+              <td>${escapeHtml(decision.text)}</td>
+              <td>${statusBadge}</td>
+              <td style="white-space:nowrap; text-align: right;">
+                ${decision.converted ? '' : `<button class="btn btn-blue btn-small" style="margin-right:4px;" onclick="convertDecision('${decision.id}')">DÖF'e Dönüştür</button>`}
+                <button class="btn btn-red btn-small" onclick="removeDecision('${decision.id}')">Sil</button>
+              </td>
+            </tr>`;
+        });
+      }
+
+      function convertDecision(id) {
+        const item = kurulState.decisions.find((decision) => decision.id === id);
+        if (!item) return;
+        item.converted = true;
+        item.status = "DÖF'e Dönüştürüldü";
+        saveKurulState();
+        renderDecisions();
+      }
+
+      function removeDecision(id) {
+        kurulState.decisions = kurulState.decisions.filter((decision) => decision.id !== id);
+        saveKurulState();
+        renderDecisions();
+      }
+
+      function saveMeetingRecord() {
+        kurulState.meeting_record = document.getElementById('meeting_record').value;
+        saveKurulState();
+        const status = document.getElementById('meeting_record_status');
+        status.innerText = 'Tutanak kaydedildi.';
+        status.style.display = 'block';
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 2200);
+      }
+
+      function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+    </script>
+  </body>
+</html>

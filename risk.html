@@ -1,1025 +1,323 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OSGB SaaS - Uzman Risk Motoru</title>
+    <!-- Google Fonts - Manrope -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="manifest" href="manifest.json">
-    <style>
-        :root {
-            --bg-main: #f4f6f9;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --accent-green: #10b981;
-            --accent-green-hover: #059669;
-            --border-color: #e2e8f0;
-            --table-header: #f8fafc;
-            --nav-inactive-bg: #e2e8f0;
-            --nav-inactive-text: #475569;
-        }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); padding: 30px; display: none; transition: background 0.3s; }
-        .card { background: var(--bg-card); padding: 25px; border-radius: 12px; max-width: 1050px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); }
-        
-        /* 🏛️ GLOBAL STANDART ÜST BAR */
-        .global-header { border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
-        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .logo-area { font-size: 18px; font-weight: 800; color: var(--text-main); letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
-        .logo-badge { background: var(--primary); color: white; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-        .controls-group { display: flex; align-items: center; gap: 20px; }
-        .user-info { font-size: 13px; color: var(--text-muted); font-weight: 600; }
-        .logout-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; }
-        
-        .nav-container { display: flex; gap: 8px; justify-content: center; background: var(--table-header); padding: 6px; border-radius: 10px; border: 1px solid var(--border-color); }
-        .nav-btn { background: var(--nav-inactive-bg); color: var(--nav-inactive-text); padding: 10px 18px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; transition: all 0.2s ease; }
-        .nav-btn:hover { background: var(--border-color); color: var(--text-main); }
-        .nav-btn.active-page { background: var(--primary); color: white !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: var(--text-muted); font-weight: 600; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; background: var(--bg-card); color: var(--text-main); }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .score-box { background: var(--table-header); border: 2px dashed var(--border-color); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 15px; }
-        .score-value { font-size: 24px; font-weight: bold; color: var(--text-main); }
-        button.save-btn { background: var(--primary); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button.save-btn:hover { background: var(--primary-hover); }
-        
-        .close-btn { background: var(--accent-green); color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .close-btn:hover { background: var(--accent-green-hover); }
-        .delete-risk-btn { background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; margin-top: 6px; display: inline-block; }
-        .delete-risk-btn:hover { background: #b91c1c; }
-        .status-closed { opacity: 0.6; }
-
-        .table-container { margin-top: 35px; border-top: 2px solid var(--border-color); padding-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background-color: var(--table-header); color: var(--text-muted); font-weight: 600; }
-        .badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-
-        .photo-box { border: 1px dashed var(--border-color); background: var(--table-header); padding: 12px; border-radius: 8px; margin-bottom: 15px; }
-        .photo-preview { margin-top: 10px; display: none; max-width: 180px; border-radius: 8px; border: 1px solid var(--border-color); }
-        .offline-panel { background: var(--table-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin: 15px 0; font-size: 13px; }
-        .offline-panel strong { color: var(--text-main); }
-        .sync-btn { background: var(--text-main); color: var(--bg-card); border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 8px; }
-        .company-cache-line { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
-        .company-cache-btn { background: var(--table-header); color: var(--text-main); border: 1px solid var(--border-color); padding: 7px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px; }
-        .company-cache-btn:hover { background: var(--border-color); }
-        #company_cache_status { font-size: 12px; color: var(--text-muted); }
-        .template-panel { background: var(--table-header); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px; margin: 12px 0 15px 0; }
-        .template-panel-title { font-weight: 700; color: var(--text-main); margin-bottom: 8px; font-size: 13px; }
-        .template-row { display: grid; grid-template-columns: 1fr 1.6fr auto; gap: 10px; align-items: end; }
-        .template-apply-btn { background: var(--primary); color: white; border: none; padding: 10px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; white-space: nowrap; }
-        .template-apply-btn:hover { background: var(--primary-hover); }
-        #template_status { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .action-note { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
-            .tenant-logo-img { width:32px; height:32px; object-fit:contain; border-radius:8px; background:white; border:1px solid var(--border-color); padding:3px; box-sizing:border-box; }
-    
-
-        /* ================================
-           v24 UI POLISH - ortak arayuz duzeltmeleri
-           ================================ */
-        :root {
-            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.10);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
-            --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        .card {
-            width: min(100%, 1240px) !important;
-            max-width: 1240px !important;
-            border-radius: var(--radius-lg) !important;
-            box-shadow: var(--shadow-md) !important;
-        }
-
-        .global-header {
-            background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        .top-row {
-            gap: 14px;
-            align-items: center !important;
-        }
-
-        .logo-area {
-            min-width: 0;
-            font-size: 17px !important;
-            letter-spacing: 0 !important;
-            gap: 10px !important;
-        }
-
-        .logo-area span[id^="lbl_"] {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .tenant-logo-img {
-            width: 36px !important;
-            height: 36px !important;
-            padding: 4px !important;
-            border-radius: 10px !important;
-            box-shadow: var(--shadow-sm);
-            flex: 0 0 auto;
-        }
-
-        .logo-badge {
-            border-radius: 999px !important;
-            padding: 4px 9px !important;
-            font-size: 11px !important;
-            letter-spacing: .02em;
-            flex: 0 0 auto;
-        }
-
-        .controls-group {
-            gap: 10px !important;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .theme-selector-container {
-            border-radius: 999px !important;
-            padding: 6px 10px !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .theme-btn {
-            width: 18px !important;
-            height: 18px !important;
-            transition: transform .15s ease, box-shadow .15s ease;
-        }
-        .theme-btn:hover { transform: translateY(-1px) scale(1.08); box-shadow: 0 3px 8px rgba(15,23,42,.18); }
-
-        .user-info {
-            background: var(--table-header);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 7px 11px;
-            max-width: 280px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .logout-btn,
-        button,
-        .btn,
-        input[type="submit"] {
-            border-radius: 10px !important;
-            font-weight: 750 !important;
-            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-        }
-        button:hover,
-        .logout-btn:hover,
-        .btn:hover,
-        input[type="submit"]:hover {
-            transform: translateY(-1px);
-            filter: brightness(.98);
-            box-shadow: var(--shadow-sm);
-        }
-        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
-
-        .nav-container {
-            justify-content: flex-start !important;
-            gap: 7px !important;
-            padding: 8px !important;
-            border-radius: 14px !important;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .nav-btn {
-            white-space: nowrap;
-            border-radius: 10px !important;
-            padding: 9px 13px !important;
-            font-size: 12.5px !important;
-            box-shadow: none;
-        }
-        .nav-btn.active-page { box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important; }
-
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        h1 { font-size: clamp(24px, 3vw, 34px); }
-        h2 { font-size: clamp(20px, 2.4vw, 28px); }
-        h3 { font-size: clamp(16px, 1.8vw, 20px); }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px !important;
-            color: var(--text-main) !important;
-            font-size: 13px !important;
-            letter-spacing: .04em !important;
-        }
-
-        .panel,
-        .form-card,
-        .table-card,
-        .sub-card,
-        .mini-card,
-        .info-card {
-            border-radius: var(--radius-md) !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .metric-box {
-            border-radius: 14px !important;
-            box-shadow: 0 10px 24px rgba(15,23,42,.10) !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .metric-box:after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,.20), transparent 45%);
-            pointer-events: none;
-        }
-        .metric-title, .metric-sub, .metric-value { position: relative; z-index: 1; }
-
-        input,
-        select,
-        textarea {
-            border: 1px solid var(--border-color) !important;
-            border-radius: 10px !important;
-            background: var(--bg-card);
-            color: var(--text-main);
-            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--primary) !important;
-            box-shadow: var(--focus-ring) !important;
-        }
-        label { font-weight: 700; color: var(--text-main); }
-
-        table {
-            border-collapse: separate !important;
-            border-spacing: 0 !important;
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        th {
-            font-size: 11px !important;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            white-space: nowrap;
-        }
-        td { line-height: 1.45; }
-        tbody tr { transition: background .12s ease; }
-        tbody tr:hover { background: rgba(37, 99, 235, 0.035); }
-        .empty-state {
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            background: var(--table-header);
-        }
-
-        .badge {
-            border-radius: 999px !important;
-            letter-spacing: .02em;
-            padding: 4px 8px !important;
-        }
-
-        .small-link { text-underline-offset: 3px; }
-
-        .operational-banner {
-            box-shadow: var(--shadow-sm);
-            border: 0 !important;
-        }
-
-        @media (max-width: 900px) {
-            body { padding: 12px !important; }
-            .card { padding: 16px !important; border-radius: 16px !important; }
-            .top-row { align-items: stretch !important; }
-            .controls-group { justify-content: flex-start; }
-            .user-info { max-width: 100%; }
-            .nav-container { flex-wrap: nowrap !important; justify-content: flex-start !important; }
-            .nav-btn { flex: 0 0 auto; }
-            table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
-            th, td { padding: 9px 10px !important; }
-        }
-
-        @media (max-width: 520px) {
-            .logo-area { font-size: 15px !important; }
-            .tenant-logo-img { width: 32px !important; height: 32px !important; }
-            .theme-selector-container { width: 100%; justify-content: center; }
-            .logout-btn { width: 100%; }
-        }
-
-    
-
-        /* ================================
-           v25 PRODUCT DESIGN SYSTEM - derin arayuz revizyonu
-           ================================ */
-        :root {
-            --brand-50: #eff6ff;
-            --brand-100: #dbeafe;
-            --brand-500: #2563eb;
-            --brand-600: #1d4ed8;
-            --brand-700: #1e40af;
-            --ink-900: #0f172a;
-            --ink-700: #334155;
-            --ink-500: #64748b;
-            --surface-0: #ffffff;
-            --surface-1: #f8fafc;
-            --surface-2: #eef2f7;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --info: #0284c7;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(37,99,235,.15), transparent 32rem),
-                radial-gradient(circle at top right, rgba(14,165,233,.12), transparent 28rem),
-                linear-gradient(180deg, #f8fafc 0%, #edf2f7 52%, #e9eef6 100%) !important;
-            color: var(--ink-900) !important;
-        }
-
-        .card {
-            padding: 0 !important;
-            overflow: hidden;
-            background: rgba(255,255,255,.92) !important;
-            backdrop-filter: blur(10px);
-        }
-
-        .global-header {
-            padding: 18px 22px 14px !important;
-            margin-bottom: 0 !important;
-            background: linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,64,175,.92)) !important;
-            color: white;
-            border-bottom: 0 !important;
-        }
-        .global-header .logo-area,
-        .global-header .user-info,
-        .global-header .theme-selector-container span { color: white !important; }
-        .global-header .theme-selector-container,
-        .global-header .user-info {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-container {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.16) !important;
-            margin-top: 12px;
-        }
-        .global-header .nav-btn {
-            background: rgba(255,255,255,.10) !important;
-            color: rgba(255,255,255,.86) !important;
-            border: 1px solid rgba(255,255,255,.10);
-        }
-        .global-header .nav-btn:hover {
-            background: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-btn.active-page {
-            background: white !important;
-            color: var(--brand-700) !important;
-            box-shadow: 0 8px 18px rgba(15,23,42,.22) !important;
-        }
-        .global-header .tenant-logo-img {
-            width: 42px !important;
-            height: 42px !important;
-            background: white !important;
-            border-color: rgba(255,255,255,.35) !important;
-        }
-        .global-header .logo-badge {
-            background: rgba(255,255,255,.18) !important;
-            border: 1px solid rgba(255,255,255,.18);
-        }
-        .logout-btn { background: rgba(239,68,68,.92) !important; }
-
-        .card > h1,
-        .card > h2,
-        .card > .page-desc,
-        .card > .section-title,
-        .card > .dashboard-grid,
-        .card > .kpi-grid,
-        .card > .operational-banner,
-        .card > .content-grid,
-        .card > .grid,
-        .card > .panel,
-        .card > form,
-        .card > table,
-        .card > div:not(.global-header) {
-            margin-left: 22px;
-            margin-right: 22px;
-        }
-        .card > h1,
-        .card > h2 {
-            margin-top: 22px !important;
-            margin-bottom: 4px !important;
-            font-size: clamp(22px, 2.6vw, 31px) !important;
-            letter-spacing: -0.035em;
-            color: var(--ink-900);
-        }
-        .page-desc {
-            max-width: 780px;
-            color: var(--ink-500) !important;
-            font-size: 14px !important;
-            margin-bottom: 20px !important;
-        }
-
-        .section-title {
-            margin-top: 24px !important;
-            margin-bottom: 11px !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--ink-700) !important;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(226,232,240,.9);
-            padding: 7px 11px;
-            border-radius: 999px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .panel {
-            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)) !important;
-            border: 1px solid rgba(203,213,225,.85) !important;
-            box-shadow: 0 12px 30px rgba(15,23,42,.07) !important;
-            border-radius: 18px !important;
-        }
-        .panel h3 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            border-bottom: 1px solid rgba(226,232,240,.95) !important;
-            padding-bottom: 12px !important;
-            margin-bottom: 14px !important;
-            color: var(--ink-900);
-            letter-spacing: -0.01em;
-        }
-        .panel h3::after {
-            content: "";
-            flex: 1;
-            height: 3px;
-            max-width: 56px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: .7;
-        }
-
-        .dashboard-grid,
-        .kpi-grid {
-            gap: 16px !important;
-        }
-        .metric-box {
-            position: relative;
-            overflow: hidden;
-            min-height: 104px !important;
-            padding: 18px 19px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 18px 38px rgba(15,23,42,.13) !important;
-        }
-        .metric-box::before {
-            content: "";
-            position: absolute;
-            inset: -40% -30% auto auto;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.17);
-        }
-        .metric-title { font-size: 12.5px !important; text-transform: uppercase; letter-spacing: .045em; }
-        .metric-value { font-size: 34px !important; letter-spacing: -0.045em; }
-        .metric-sub { font-size: 12px !important; }
-        .metric-box.clickable:hover {
-            transform: translateY(-3px);
-            filter: saturate(1.04);
-        }
-
-        .content-grid {
-            margin-bottom: 24px;
-            align-items: start;
-        }
-        .operational-banner {
-            min-height: 86px;
-            padding: 20px 22px !important;
-            border-radius: 20px !important;
-        }
-        .op-text h4 { font-size: 18px !important; letter-spacing: -0.015em; }
-        .op-badge { border-radius: 16px !important; }
-
-        table {
-            background: white;
-            box-shadow: inset 0 0 0 1px rgba(226,232,240,.75);
-        }
-        th {
-            background: #f1f5f9 !important;
-            color: #475569 !important;
-        }
-        td {
-            background-clip: padding-box;
-        }
-        tbody tr:nth-child(even) td { background: rgba(248,250,252,.65); }
-
-        .btn-primary,
-        button.btn-primary {
-            background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-blue,
-        button.btn-blue {
-            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-secondary,
-        button.btn-secondary {
-            background: #f1f5f9 !important;
-            color: #334155 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        .btn-danger,
-        button.btn-danger {
-            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .status.ok {
-            background: #ecfdf5 !important;
-            color: #047857 !important;
-            border: 1px solid #a7f3d0 !important;
-        }
-        .status.err {
-            background: #fef2f2 !important;
-            color: #b91c1c !important;
-            border: 1px solid #fecaca !important;
-        }
-
-        /* SaaS Yonetimi urun paneli revizyonu */
-        .grid {
-            grid-template-columns: 420px minmax(0, 1fr) !important;
-            gap: 22px !important;
-            align-items: start !important;
-            margin-bottom: 24px;
-        }
-        .grid > div:first-child {
-            position: sticky;
-            top: 18px;
-            align-self: start;
-        }
-        .edit-panel {
-            border: 1px solid rgba(37,99,235,.22) !important;
-            background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
-        }
-        .link-box {
-            border-radius: 12px !important;
-            border: 1px solid #bfdbfe !important;
-            background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
-            color: #1e40af !important;
-            font-weight: 750;
-        }
-        .logo-upload-box {
-            border: 1px dashed #93c5fd !important;
-            background: #f8fbff !important;
-            border-radius: 16px !important;
-        }
-        .logo-preview {
-            width: 56px !important;
-            height: 56px !important;
-            border-radius: 14px !important;
-            box-shadow: var(--shadow-sm);
-        }
-        .actions {
-            gap: 9px !important;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .actions + .button-help,
-        .button-help {
-            margin-top: 10px;
-            display: grid;
-            gap: 7px;
-            color: var(--ink-500);
-            font-size: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 11px 12px;
-        }
-        .button-help strong { color: var(--ink-700); }
-
-        @media (max-width: 1040px) {
-            .grid { grid-template-columns: 1fr !important; }
-            .grid > div:first-child { position: static; }
-        }
-        @media (max-width: 900px) {
-            .card > h1,
-            .card > h2,
-            .card > .page-desc,
-            .card > .section-title,
-            .card > .dashboard-grid,
-            .card > .kpi-grid,
-            .card > .operational-banner,
-            .card > .content-grid,
-            .card > .grid,
-            .card > .panel,
-            .card > form,
-            .card > table,
-            .card > div:not(.global-header) {
-                margin-left: 14px !important;
-                margin-right: 14px !important;
-            }
-            .global-header { padding: 15px !important; }
-            .metric-box { min-height: 92px !important; }
-        }
-
-    
-
-        /* v26.2 hotfix: keep v26 visual system, add branding/table/layout fixes */
-        .logo-area { font-weight: 500 !important; letter-spacing: .01em !important; font-size: 18px !important; }
-        .logo-area #lbl_osgb_title { font-weight: 500 !important; }
-        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
-        table, thead, tbody, tr, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; }
-        table { font-size: 13px !important; border-collapse: separate !important; border-spacing: 0 !important; }
-        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
-        tbody td { padding: 9px 11px !important; }
-        .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
-        .page-desc { max-width: none !important; }
-/* Uzman Risk Motoru tablo filtreleme ve sıralama */
-.sortable-th {
-    cursor: pointer;
-    user-select: none;
-    position: relative;
-}
-
-.sortable-th:hover {
-    color: var(--primary);
-}
-
-.sort-indicator {
-    font-size: 10px;
-    margin-left: 4px;
-    opacity: 0.75;
-}
-
-.risk-filter-row th {
-    background: var(--bg-card) !important;
-    padding: 6px 8px !important;
-}
-
-.risk-filter-input {
-    width: 100%;
-    min-width: 70px;
-    padding: 7px 8px !important;
-    font-size: 12px !important;
-    border-radius: 8px !important;
-}
-
-.risk-filter-input::placeholder {
-    color: var(--text-muted);
-    opacity: 0.75;
-}
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
-    <div class="global-header">
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean-risk.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean">
+    <div class="card">
+      <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
+      <div class="global-header">
         <div class="top-row">
-            <div class="logo-area"><span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span></div>
-            <div class="controls-group">
-                <div class="user-info">👤 <span id="current_user_email">...</span></div>
-                <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
-            </div>
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
         </div>
 
         <div class="nav-container">
-            <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
-            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
-            <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
-            <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-            <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
-            <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
-            <a id="menu_risk" href="risk.html" class="nav-btn active-page" style="display:none;">🦺 Uzman Risk Motoru</a>
-            <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
+          <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+          <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display: none">🧩 SaaS Yönetimi</a>
+          <a id="menu_staff" href="staff.html" class="nav-btn" style="display: none">🔑 Personel Yönetimi</a>
+          <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+          <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+          <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+          <a id="menu_risk" href="risk.html" class="nav-btn active-page" style="display: none">🦺 Uzman Risk Motoru</a>
+          <a id="menu_medical" href="medical.html" class="nav-btn" style="display: none">🩺 Hekim Sağlık Kartı</a>
         </div>
-    </div>
+      </div>
 
-    <h2>🦺 Fine-Kinney Risk Analiz Motoru</h2>
-    <p style="color: var(--text-muted); font-size: 14px;">Sahada tespit edilen tehlikeleri girin veya mevcut açık riskleri kapatın.</p>
-    
-    <div class="form-group">
-        <label>İlgili Müşteri Firma</label>
-        <select id="company_select" onchange="updateRiskTemplateOptions()"><option value="">Firmalar yükleniyor...</option></select>
-        <div class="company-cache-line">
-            <button type="button" class="company-cache-btn" onclick="manualRefreshCompanyCache()">Firma Listesini Cihaza Güncelle</button>
-            <span id="company_cache_status">Firma listesi kontrol ediliyor...</span>
+      <div class="risk-page-shell">
+        <h2>🦺 Fine-Kinney Risk Analiz Motoru</h2>
+        <p class="page-desc">
+          Sahada tespit edilen tehlikeleri girin veya mevcut açık riskleri kapatın.
+        </p>
+
+      <div class="panel">
+        <div class="form-row" style="align-items: flex-end;">
+          <div class="form-group double">
+            <label>İlgili Müşteri Firma</label>
+            <select id="company_select" onchange="updateRiskTemplateOptions()">
+              <option value="">Firmalar yükleniyor...</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 0 0 auto;">
+            <button type="button" class="btn btn-secondary" onclick="manualRefreshCompanyCache()">
+              🔄 Cihaza Güncelle
+            </button>
+          </div>
+          <div class="form-group" style="flex: 0 0 auto; justify-content: center; height: 35px;">
+            <span id="company_cache_status" style="font-size: 12px; color: var(--uc-text-muted);">Firma listesi kontrol ediliyor...</span>
+          </div>
         </div>
-    </div>
 
-    <div class="template-panel">
-        <div class="template-panel-title">⚡ Kategorili Hazır Risk Şablonları</div>
-        <div class="template-row">
-            <div>
-                <label>Kategori Seç</label>
-                <select id="risk_template_category" onchange="updateRiskTemplateOptions(true)">
-                    <option value="auto">Firma/NACE Önerileri</option>
-                    <option value="general">Genel İşyeri</option>
-                    <option value="construction">İnşaat / Şantiye</option>
-                    <option value="warehouse">Depo / Lojistik</option>
-                    <option value="office">Ofis</option>
-                    <option value="school">Okul / Eğitim Kurumu</option>
-                    <option value="healthcare">Sağlık Kurumu</option>
-                    <option value="kitchen">Restoran / Mutfak</option>
-                    <option value="manufacturing">Üretim / Atölye</option>
-                    <option value="chemical">Kimyasal Çalışma</option>
-                    <option value="electrical">Elektrik İşleri</option>
-                    <option value="height">Yüksekte Çalışma</option>
-                    <option value="confined">Kapalı Alan</option>
-                    <option value="fire">Yangın / Acil Durum</option>
-                    <option value="ergonomics">Ergonomi</option>
-                    <option value="hygiene">Temizlik / Hijyen</option>
-                    <option value="physical">Gürültü / Toz / Titreşim</option>
-                </select>
+        <div class="template-panel" style="margin-top: 16px !important;">
+          <div class="template-panel-title">⚡ Kategorili Hazır Risk Şablonları</div>
+          <div class="form-row" style="align-items: flex-end; margin-bottom: 0;">
+            <div class="form-group">
+              <label>Kategori Seç</label>
+              <select id="risk_template_category" onchange="updateRiskTemplateOptions(true)">
+                <option value="auto">Firma/NACE Önerileri</option>
+                <option value="general">Genel İşyeri</option>
+                <option value="construction">İnşaat / Şantiye</option>
+                <option value="warehouse">Depo / Lojistik</option>
+                <option value="office">Ofis</option>
+                <option value="school">Okul / Eğitim Kurumu</option>
+                <option value="healthcare">Sağlık Kurumu</option>
+                <option value="kitchen">Restoran / Mutfak</option>
+                <option value="manufacturing">Üretim / Atölye</option>
+                <option value="chemical">Kimyasal Çalışma</option>
+                <option value="electrical">Elektrik İşleri</option>
+                <option value="height">Yüksekte Çalışma</option>
+                <option value="confined">Kapalı Alan</option>
+                <option value="fire">Yangın / Acil Durum</option>
+                <option value="ergonomics">Ergonomi</option>
+                <option value="hygiene">Temizlik / Hijyen</option>
+                <option value="physical">Gürültü / Toz / Titreşim</option>
+              </select>
             </div>
-            <div>
-                <label>Hazır Şablon Seç</label>
-                <select id="risk_template_select">
-                    <option value="">Önce firma veya kategori seçin...</option>
-                </select>
+            <div class="form-group double">
+              <label>Hazır Şablon Seç</label>
+              <select id="risk_template_select">
+                <option value="">Önce firma veya kategori seçin...</option>
+              </select>
             </div>
-            <button type="button" class="template-apply-btn" onclick="applyRiskTemplate()">Şablonu Uygula</button>
+            <div class="form-group" style="flex: 0 0 auto;">
+              <button type="button" class="btn btn-blue" onclick="applyRiskTemplate()">Şablonu Uygula</button>
+            </div>
+          </div>
+          <div id="template_status" style="font-size: 11px; color: var(--uc-text-muted); margin-top: 8px;">
+            Firma/NACE önerilerini kullanabilir veya kategori seçerek tüm yerel şablonları görüntüleyebilirsiniz. Offline
+            modda da çalışır.
+          </div>
         </div>
-        <div id="template_status">Firma/NACE önerilerini kullanabilir veya kategori seçerek tüm yerel şablonları görüntüleyebilirsiniz. Offline modda da çalışır.</div>
-    </div>
 
-    <div class="form-group">
-        <label>Tehlike Tanımı / Bulgusu</label>
-        <textarea id="hazard_title" rows="2" placeholder="Örn: Yangın tüplerinin periyodik kontrol tarihi geçmiş..."></textarea>
-    </div>
+        <div class="form-row" style="margin-top: 14px;">
+          <div class="form-group">
+            <label>Tehlike Tanımı / Bulgusu</label>
+            <textarea
+              id="hazard_title"
+              rows="2"
+              placeholder="Örn: Yangın tüplerinin periyodik kontrol tarihi geçmiş..."
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label>Önerilen Önlem / Aksiyon (DÖF)</label>
+            <textarea
+              id="action_plan"
+              rows="2"
+              placeholder="Örn: Periyodik kontrol yenilenecek, kontrol etiketi görünür şekilde asılacak ve sorumlu kişiye takip görevi atanacak."
+            ></textarea>
+          </div>
+        </div>
 
-    <div class="form-group">
-        <label>Önerilen Önlem / Aksiyon</label>
-        <textarea id="action_plan" rows="2" placeholder="Örn: Periyodik kontrol yenilenecek, kontrol etiketi görünür şekilde asılacak ve sorumlu kişiye takip görevi atanacak."></textarea>
-        <div class="action-note">Bu alan DÖF takip kaydının önerilen düzeltici/önleyici faaliyet bölümüdür.</div>
-    </div>
-
-    <div class="grid-2">
-        <div class="form-group">
+        <div class="form-row">
+          <div class="form-group double">
             <label>Sorumlu Kişi / Firma Yetkilisi</label>
-            <input type="text" id="responsible_person" placeholder="Örn: Şantiye Şefi / Bakım Sorumlusu">
-        </div>
-        <div class="form-group">
+            <input type="text" id="responsible_person" placeholder="Örn: Şantiye Şefi / Bakım Sorumlusu" />
+          </div>
+          <div class="form-group">
             <label>DÖF İlk Durumu</label>
-            <input type="text" value="Açık" disabled>
+            <input type="text" value="Açık" disabled />
+          </div>
+          <div class="form-group">
+            <label>Termin Tarihi (Hedef Çözüm)</label>
+            <input type="date" id="target_date" />
+          </div>
         </div>
-    </div>
 
-    <div class="grid-3">
-        <div class="form-group">
+        <div class="fine-kinney-row">
+          <div class="form-group">
             <label>Olasılık (O)</label>
             <select id="prob" onchange="calculateFineKinney()">
-                <option value="0.1">0.1 - Zayıf İhtimal</option>
-                <option value="1">1 - Oldukça Düşük</option>
-                <option value="3">3 - Nadir Fakat Mümkün</option>
-                <option value="6">6 - Kuvvetle Muhtemel</option>
-                <option value="10">10 - Beklenir/Kaçınılmaz</option>
+              <option value="0.1">0.1 - Zayıf İhtimal</option>
+              <option value="1">1 - Oldukça Düşük</option>
+              <option value="3">3 - Nadir Fakat Mümkün</option>
+              <option value="6">6 - Kuvvetle Muhtemel</option>
+              <option value="10">10 - Beklenir/Kaçınılmaz</option>
             </select>
-        </div>
-        <div class="form-group">
+          </div>
+          <div class="form-group">
             <label>Frekans (F)</label>
             <select id="freq" onchange="calculateFineKinney()">
-                <option value="0.5">0.5 - Çok Nadir</option>
-                <option value="1">1 - Yılda Birkaç Kez</option>
-                <option value="2">2 - Ayda Birkez</option>
-                <option value="6">6 - Günlük</option>
-                <option value="10">10 - Sürekli</option>
+              <option value="0.5">0.5 - Çok Nadir</option>
+              <option value="1">1 - Yılda Birkaç Kez</option>
+              <option value="2">2 - Ayda Birkez</option>
+              <option value="6">6 - Günlük</option>
+              <option value="10">10 - Sürekli</option>
             </select>
-        </div>
-        <div class="form-group">
+          </div>
+          <div class="form-group">
             <label>Şiddet (Ş)</label>
             <select id="sev" onchange="calculateFineKinney()">
-                <option value="1">1 - Dikkat Edilmeli</option>
-                <option value="3">3 - Hafif Yaralanma</option>
-                <option value="7">7 - Ciddi Yaralanma</option>
-                <option value="15">15 - Ölümcül/Kayıp</option>
-                <option value="40">40 - Afet/Çoklu Ölüm</option>
+              <option value="1">1 - Dikkat Edilmeli</option>
+              <option value="3">3 - Hafif Yaralanma</option>
+              <option value="7">7 - Ciddi Yaralanma</option>
+              <option value="15">15 - Ölümcül/Kayıp</option>
+              <option value="40">40 - Afet/Çoklu Ölüm</option>
             </select>
+          </div>
+          <div class="score-box">
+            <div>Hesaplanan Risk Skoru (R)</div>
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span class="score-value" id="risk_score_display">0.5</span>
+              <span id="risk_level_display" style="font-size: 11px; font-weight: 700; color: var(--uc-text-muted);">Düşük Risk</span>
+            </div>
+          </div>
         </div>
-    </div>
 
-    <div class="score-box">
-        <div>Hesaplanan Risk Skoru (R)</div>
-        <div class="score-value" id="risk_score_display">0.5</div>
-        <div id="risk_level_display" style="font-size: 14px; font-weight: 600; margin-top: 5px;">Düşük Risk</div>
-    </div>
+        <div class="form-row" style="align-items: stretch; margin-bottom: 16px;">
+          <div class="form-group" style="flex: 1;">
+            <div class="photo-box" style="height: 100%; justify-content: center;">
+              <label>Kanıt Fotoğrafı (Offline destekli)</label>
+              <input type="file" id="risk_photo" accept="image/*" capture="environment" onchange="prepareRiskPhoto()" />
+              <img id="risk_photo_preview" class="photo-preview" alt="Seçilen risk fotoğrafı önizlemesi" />
+              <div id="photo_compress_status" style="font-size: 11px; color: var(--uc-text-muted); margin-top: 4px">
+                Fotoğraf internet yokken cihazda saklanır.
+              </div>
+            </div>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <div class="offline-panel" style="height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; padding: 14px !important;">
+              <div>
+                <strong>Offline Durum:</strong> <span id="connection_status">Kontrol ediliyor...</span><br />
+                <strong>Bekleyen kayıt sayısı:</strong> <span id="pending_risk_count">0</span>
+                <div id="offline_error" style="margin-top: 4px; color: #b91c1c; display: none; font-weight: 600; font-size: 11px;"></div>
+                <div id="offline_status" style="margin-top: 4px; color: var(--uc-text-muted); font-size: 11px;">Henüz işlem yapılmadı.</div>
+              </div>
+              <button type="button" class="btn btn-secondary" onclick="manualSyncRisks()" style="width: 100%; margin-top: 8px;">Bekleyenleri Şimdi Gönder</button>
+            </div>
+          </div>
+        </div>
 
-    <div class="form-group">
-        <label>Termin Tarihi (Hedef Çözüm)</label>
-        <input type="date" id="target_date">
-    </div>
+        <div class="form-row" style="justify-content: flex-end; margin-bottom: 0;">
+          <button class="btn btn-teal" onclick="saveRisk()" style="padding: 10px 24px; font-size: 14px;">🦺 Risk Analizini Kaydet</button>
+        </div>
+        <div id="status" style="margin-top: 8px; font-size: 12px;"></div>
+      </div>
 
-    <div class="photo-box">
-        <label>Kanıt Fotoğrafı (Offline destekli)</label>
-        <input type="file" id="risk_photo" accept="image/*" capture="environment" onchange="prepareRiskPhoto()">
-        <img id="risk_photo_preview" class="photo-preview" alt="Seçilen risk fotoğrafı önizlemesi">
-        <div id="photo_compress_status" style="font-size:12px; color:var(--text-muted); margin-top:6px;">Fotoğraf internet yokken cihazda saklanır; bağlantı gelince Supabase Storage'a yüklenir.</div>
-    </div>
-
-    <div class="offline-panel">
-        <strong>Offline Durum:</strong> <span id="connection_status">Kontrol ediliyor...</span><br>
-        <strong>Cihazda bekleyen risk kaydı:</strong> <span id="pending_risk_count">0</span>
-        <div id="offline_error" style="margin-top:6px; color:#b91c1c; display:none; font-weight:600;"></div>
-        <div id="offline_status" style="margin-top:6px; color:var(--text-muted);">Henüz işlem yapılmadı.</div>
-        <button class="sync-btn" onclick="manualSyncRisks()">Bekleyenleri Şimdi Gönder</button>
-    </div>
-
-    <button class="save-btn" onclick="saveRisk()">Risk Analizini Kaydet</button>
-    <div id="status"></div>
-
-    <div class="table-container">
+      <div class="table-container">
         <h3>📋 Sahadaki Risk Bulguları Takip Matrisi (Canlı)</h3>
         <table>
-            <thead>
-    <tr>
-        <th class="sortable-th" onclick="sortRisksBy('company_name')">Firma Unvanı <span id="sort_company_name" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortRisksBy('hazard_title')">Tehlike / Önerilen Önlem <span id="sort_hazard_title" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortRisksBy('responsible_person')">Sorumlu <span id="sort_responsible_person" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortRisksBy('has_photo')">Foto <span id="sort_has_photo" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortRisksBy('risk_score')">Skor <span id="sort_risk_score" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortRisksBy('status')">Risk / DÖF Durumu <span id="sort_status" class="sort-indicator"></span></th>
-        <th class="sortable-th" onclick="sortRisksBy('target_date')">Termin <span id="sort_target_date" class="sort-indicator"></span></th>
-        <th>Aksiyon</th>
-    </tr>
-    <tr class="risk-filter-row">
-        <th><input class="risk-filter-input" data-field="company_name" oninput="applyRiskFilters()" placeholder="Firma"></th>
-        <th><input class="risk-filter-input" data-field="hazard_text" oninput="applyRiskFilters()" placeholder="Tehlike / önlem"></th>
-        <th><input class="risk-filter-input" data-field="responsible_person" oninput="applyRiskFilters()" placeholder="Sorumlu"></th>
-        <th><input class="risk-filter-input" data-field="photo_text" oninput="applyRiskFilters()" placeholder="Var/Yok"></th>
-        <th><input class="risk-filter-input" data-field="risk_score" oninput="applyRiskFilters()" placeholder="Skor"></th>
-        <th><input class="risk-filter-input" data-field="status_text" oninput="applyRiskFilters()" placeholder="Durum"></th>
-        <th><input class="risk-filter-input" data-field="target_date" oninput="applyRiskFilters()" placeholder="Termin"></th>
-        <th></th>
-    </tr>
-</thead>
-            <tbody id="risk_table_body"><tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Veriler yükleniyor...</td></tr></tbody>
+          <thead>
+            <tr>
+              <th class="sortable-th" onclick="sortRisksBy('company_name')">
+                Firma Unvanı <span id="sort_company_name" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortRisksBy('hazard_title')">
+                Tehlike / Önerilen Önlem <span id="sort_hazard_title" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortRisksBy('responsible_person')">
+                Sorumlu <span id="sort_responsible_person" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortRisksBy('has_photo')">
+                Foto <span id="sort_has_photo" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortRisksBy('risk_score')">
+                Skor <span id="sort_risk_score" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortRisksBy('status')">
+                Risk / DÖF Durumu <span id="sort_status" class="sort-indicator"></span>
+              </th>
+              <th class="sortable-th" onclick="sortRisksBy('target_date')">
+                Termin <span id="sort_target_date" class="sort-indicator"></span>
+              </th>
+              <th>Aksiyon</th>
+            </tr>
+            <tr class="risk-filter-row">
+              <th>
+                <input
+                  class="risk-filter-input"
+                  data-field="company_name"
+                  oninput="applyRiskFilters()"
+                  placeholder="Firma"
+                />
+              </th>
+              <th>
+                <input
+                  class="risk-filter-input"
+                  data-field="hazard_text"
+                  oninput="applyRiskFilters()"
+                  placeholder="Tehlike / önlem"
+                />
+              </th>
+              <th>
+                <input
+                  class="risk-filter-input"
+                  data-field="responsible_person"
+                  oninput="applyRiskFilters()"
+                  placeholder="Sorumlu"
+                />
+              </th>
+              <th>
+                <input
+                  class="risk-filter-input"
+                  data-field="photo_text"
+                  oninput="applyRiskFilters()"
+                  placeholder="Var/Yok"
+                />
+              </th>
+              <th>
+                <input
+                  class="risk-filter-input"
+                  data-field="risk_score"
+                  oninput="applyRiskFilters()"
+                  placeholder="Skor"
+                />
+              </th>
+              <th>
+                <input
+                  class="risk-filter-input"
+                  data-field="status_text"
+                  oninput="applyRiskFilters()"
+                  placeholder="Durum"
+                />
+              </th>
+              <th>
+                <input
+                  class="risk-filter-input"
+                  data-field="target_date"
+                  oninput="applyRiskFilters()"
+                  placeholder="Termin"
+                />
+              </th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="risk_table_body">
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-muted)">Veriler yükleniyor...</td>
+            </tr>
+          </tbody>
         </table>
+      </div>
     </div>
-</div>
+  </div>
 
-<script src="offline-db.js"></script>
-<script src="sync-risks.js"></script>
-<script>
-    const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <script defer src="js/offline-db.js"></script>
+    <script defer src="js/sync-risks.js"></script>
+    <script>
+      // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
+      // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
+      // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
 
-    // 🔐 GERÇEK ROL / ERİŞİM YARDIMCILARI
-    // Öncelik: osgb_staff.access_role + can_login + aktiflik bilgisi.
-    // Geçiş döneminde kayıt bulunamazsa e-posta bazlı eski mantığa güvenli fallback yapılır.
-    function normalizeAccessRole(value) {
-        const v = (value || '').toString().trim().toLowerCase();
-        if (['super_admin', 'super admin', 'saas_admin', 'sistem sahibi'].includes(v)) return 'super_admin';
-        if (['admin', 'yonetici', 'yönetici'].includes(v)) return 'admin';
-        if (['uzman', 'isg_uzmani', 'isg uzmanı', 'iş güvenliği uzmanı'].includes(v)) return 'uzman';
-        if (['hekim', 'isyeri hekimi', 'işyeri hekimi'].includes(v)) return 'hekim';
-        if (['dsp', 'diğer sağlık personeli', 'diger saglik personeli'].includes(v)) return 'dsp';
-        if (['firma_yetkilisi', 'firma yetkilisi', 'musteri', 'müşteri'].includes(v)) return 'firma_yetkilisi';
-        return '';
-    }
-
-    function inferAccessRoleFromEmail(email) {
-        const e = (email || '').toLowerCase();
-        if (e.includes('orhan.vardar@gmail.com')) return 'super_admin';
-        if (e.includes('admin')) return 'admin';
-        if (e.includes('hekim')) return 'hekim';
-        if (e.includes('dsp')) return 'dsp';
-        if (e.includes('firma') || e.includes('musteri') || e.includes('müşteri')) return 'firma_yetkilisi';
-        if (e.includes('uzman')) return 'uzman';
-        return 'uzman';
-    }
-
-    function isStaffAccessActive(record) {
-        if (!record) return true;
-        if (record.can_login === false) return false;
-        if (record.is_active_manual === 'Aktif') return true;
-        if (record.is_active_manual === 'Pasif') return false;
-        const today = new Date(); today.setHours(0,0,0,0);
-        if (record.hire_date) {
-            const hire = new Date(record.hire_date); hire.setHours(0,0,0,0);
-            if (hire > today) return false;
-        }
-        if (record.termination_date) {
-            const term = new Date(record.termination_date); term.setHours(0,0,0,0);
-            if (term <= today) return false;
-        }
-        return true;
-    }
-
-    async function getCurrentAuthContext() {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) return { session: null, email: '', role: '', canLogin: false, staff: null };
-        const email = session.user.email || '';
-        let staff = null;
-        try {
-            const { data } = await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email', email).maybeSingle();
-            staff = data || null;
-        } catch (err) {
-            console.warn('Rol kaydı okunamadı, e-posta bazlı geçici role dönülüyor:', err.message);
-        }
-        const role = normalizeAccessRole(staff && staff.access_role) || normalizeAccessRole(staff && staff.staff_role) || inferAccessRoleFromEmail(email);
-        const canLogin = isStaffAccessActive(staff);
-        return { session, email, role, canLogin, staff, tenant: staff && staff.tenants ? staff.tenants : null, tenant_id: staff ? staff.tenant_id : null };
-    }
-
-    function canAccessPage(role, page) {
-        if (role === 'super_admin' || role === 'admin') return true;
-        if (page === 'risk') return role === 'uzman';
-        if (page === 'medical') return role === 'hekim';
-        if (page === 'staff') return false;
-        if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
-        return true;
-    }
-
-    function roleLabel(role) {
-        return { super_admin: 'Super Admin', admin: 'Admin', uzman: 'İSG Uzmanı', hekim: 'İşyeri Hekimi', dsp: 'DSP', firma_yetkilisi: 'Firma Yetkilisi' }[role] || role || 'Rol yok';
-    }
-
-    function applyRoleBasedNavigation(role) {
-        const riskMenu = document.getElementById('menu_risk');
-        const medicalMenu = document.getElementById('menu_medical');
-        const staffMenu = document.getElementById('menu_staff');
-        const saasMenu = document.getElementById('menu_saas');
-        if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
-        if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
-        if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
-        if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
-        if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
-    }
-
-
-    function setTenantBranding(tenant) {
-        const titleEl = document.getElementById('lbl_osgb_title');
-        if (titleEl) titleEl.innerText = (tenant && tenant.name) ? tenant.name : 'Eses Software';
-        const area = titleEl ? titleEl.closest('.logo-area') : null;
-        if (!area) return;
-        let img = area.querySelector('.tenant-logo-img');
-        const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
-        if (logoUrl) {
-            if (!img) {
-                img = document.createElement('img');
-                img.className = 'tenant-logo-img';
-                img.alt = 'Logo';
-                area.insertBefore(img, titleEl);
-            }
-            img.src = logoUrl;
-        } else if (img) {
-            img.remove();
-        }
-    }
-
-    async function requireAuthAndRole(page) {
-        const auth = await getCurrentAuthContext();
-        if (!auth.session) { window.location.href = 'login.html'; return null; }
-        if (!auth.canLogin) {
-            await dbClient.auth.signOut();
-            alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
-            window.location.href = 'login.html';
-            return null;
-        }
-        const userInfo = document.getElementById('current_user_email');
-        if (userInfo) userInfo.innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-        setTenantBranding(auth.tenant);
-        applyRoleBasedNavigation(auth.role);
-        if (page && !canAccessPage(auth.role, page)) {
-            window.location.href = 'dashboard.html';
-            return null;
-        }
-        return auth;
-    }
-
-    window.dbClient = dbClient;
-
-
-    const TEMPLATE_CATEGORY_LABELS = {
+      const TEMPLATE_CATEGORY_LABELS = {
         auto: 'Firma/NACE Önerileri',
         general: 'Genel İşyeri',
         construction: 'İnşaat / Şantiye',
@@ -1037,105 +335,741 @@
         ergonomics: 'Ergonomi',
         hygiene: 'Temizlik / Hijyen',
         physical: 'Gürültü / Toz / Titreşim'
-    };
+      };
 
-    const RISK_TEMPLATE_LIBRARY = [
-        { code: 'GEN-001', category: 'general', tags: ['all'], title: 'Elektrik panosunda uygunsuzluk', hazard: 'Elektrik panosu kapağı, uyarı etiketi, kaçak akım rölesi veya pano içi düzeninde uygunsuzluk tespit edildi.', action: 'Elektrik panosu yetkili elektrik personeli tarafından kontrol edilecek; eksik uyarı levhaları tamamlanacak, kaçak akım rölesi ve pano içi düzen mevzuata uygun hale getirilecek.', o: 3, f: 2, s: 15, days: 30 },
-        { code: 'GEN-002', category: 'general', tags: ['all'], title: 'Acil çıkış ve tahliye yolu engeli', hazard: 'Acil çıkış kapısı veya tahliye yolu üzerinde geçişi engelleyen malzeme/ekipman bulunduğu tespit edildi.', action: 'Acil çıkış ve tahliye güzergahı derhal boşaltılacak; kapıların açılabilirliği kontrol edilecek ve düzenli kontrol sorumlusu atanacak.', o: 6, f: 6, s: 15, days: 7 },
-        { code: 'GEN-003', category: 'fire', tags: ['all', 'fire'], title: 'Yangın ekipmanı periyodik kontrol eksikliği', hazard: 'Yangın söndürme cihazı, yangın dolabı veya algılama ekipmanlarında periyodik kontrol/etiket eksikliği tespit edildi.', action: 'Yangın ekipmanlarının periyodik kontrolleri yetkili firma tarafından yapılacak; kontrol etiketleri güncellenecek ve erişim alanları açık tutulacak.', o: 3, f: 2, s: 15, days: 30 },
-        { code: 'GEN-004', category: 'general', tags: ['all'], title: 'KKD kullanımı eksikliği', hazard: 'Çalışanın işin gerektirdiği kişisel koruyucu donanımı kullanmadığı veya uygun olmayan KKD kullandığı gözlendi.', action: 'Uygun KKD temin edilecek, çalışanlara kullanım eğitimi verilecek ve saha sorumlusu tarafından düzenli kullanım kontrolü yapılacak.', o: 6, f: 6, s: 7, days: 30 },
-        { code: 'GEN-005', category: 'general', tags: ['all'], title: 'Kaygan zemin / takılma riski', hazard: 'Çalışma veya geçiş alanında kaygan zemin, dağınık malzeme, seviye farkı veya takılma riski tespit edildi.', action: 'Geçiş alanı temizlenecek, kaymaz zemin uygulaması yapılacak, seviye farkları işaretlenecek ve düzenli saha kontrolü planlanacak.', o: 3, f: 6, s: 7, days: 30 },
-        { code: 'GEN-006', category: 'fire', tags: ['all', 'fire'], title: 'Acil durum yönlendirme levhası eksikliği', hazard: 'Acil çıkış, toplanma alanı veya yangın ekipmanı yönlendirme levhalarında eksiklik/uygunsuzluk tespit edildi.', action: 'Eksik yönlendirme levhaları tamamlanacak, görünürlük kontrol edilecek ve acil durum krokileri güncellenecek.', o: 3, f: 2, s: 15, days: 30 },
-        { code: 'GEN-007', category: 'general', tags: ['all'], title: 'İlk yardım dolabı içerik eksikliği', hazard: 'İlk yardım dolabında eksik, tarihi geçmiş veya uygunsuz malzeme bulunduğu tespit edildi.', action: 'İlk yardım dolabı içeriği güncellenecek, sorumlu kişi atanacak ve periyodik kontrol listesi oluşturulacak.', o: 3, f: 2, s: 7, days: 30 },
+      const RISK_TEMPLATE_LIBRARY = [
+        {
+          code: 'GEN-001',
+          category: 'general',
+          tags: ['all'],
+          title: 'Elektrik panosunda uygunsuzluk',
+          hazard:
+            'Elektrik panosu kapağı, uyarı etiketi, kaçak akım rölesi veya pano içi düzeninde uygunsuzluk tespit edildi.',
+          action:
+            'Elektrik panosu yetkili elektrik personeli tarafından kontrol edilecek; eksik uyarı levhaları tamamlanacak, kaçak akım rölesi ve pano içi düzen mevzuata uygun hale getirilecek.',
+          o: 3,
+          f: 2,
+          s: 15,
+          days: 30
+        },
+        {
+          code: 'GEN-002',
+          category: 'general',
+          tags: ['all'],
+          title: 'Acil çıkış ve tahliye yolu engeli',
+          hazard:
+            'Acil çıkış kapısı veya tahliye yolu üzerinde geçişi engelleyen malzeme/ekipman bulunduğu tespit edildi.',
+          action:
+            'Acil çıkış ve tahliye güzergahı derhal boşaltılacak; kapıların açılabilirliği kontrol edilecek ve düzenli kontrol sorumlusu atanacak.',
+          o: 6,
+          f: 6,
+          s: 15,
+          days: 7
+        },
+        {
+          code: 'GEN-003',
+          category: 'fire',
+          tags: ['all', 'fire'],
+          title: 'Yangın ekipmanı periyodik kontrol eksikliği',
+          hazard:
+            'Yangın söndürme cihazı, yangın dolabı veya algılama ekipmanlarında periyodik kontrol/etiket eksikliği tespit edildi.',
+          action:
+            'Yangın ekipmanlarının periyodik kontrolleri yetkili firma tarafından yapılacak; kontrol etiketleri güncellenecek ve erişim alanları açık tutulacak.',
+          o: 3,
+          f: 2,
+          s: 15,
+          days: 30
+        },
+        {
+          code: 'GEN-004',
+          category: 'general',
+          tags: ['all'],
+          title: 'KKD kullanımı eksikliği',
+          hazard:
+            'Çalışanın işin gerektirdiği kişisel koruyucu donanımı kullanmadığı veya uygun olmayan KKD kullandığı gözlendi.',
+          action:
+            'Uygun KKD temin edilecek, çalışanlara kullanım eğitimi verilecek ve saha sorumlusu tarafından düzenli kullanım kontrolü yapılacak.',
+          o: 6,
+          f: 6,
+          s: 7,
+          days: 30
+        },
+        {
+          code: 'GEN-005',
+          category: 'general',
+          tags: ['all'],
+          title: 'Kaygan zemin / takılma riski',
+          hazard:
+            'Çalışma veya geçiş alanında kaygan zemin, dağınık malzeme, seviye farkı veya takılma riski tespit edildi.',
+          action:
+            'Geçiş alanı temizlenecek, kaymaz zemin uygulaması yapılacak, seviye farkları işaretlenecek ve düzenli saha kontrolü planlanacak.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 30
+        },
+        {
+          code: 'GEN-006',
+          category: 'fire',
+          tags: ['all', 'fire'],
+          title: 'Acil durum yönlendirme levhası eksikliği',
+          hazard:
+            'Acil çıkış, toplanma alanı veya yangın ekipmanı yönlendirme levhalarında eksiklik/uygunsuzluk tespit edildi.',
+          action:
+            'Eksik yönlendirme levhaları tamamlanacak, görünürlük kontrol edilecek ve acil durum krokileri güncellenecek.',
+          o: 3,
+          f: 2,
+          s: 15,
+          days: 30
+        },
+        {
+          code: 'GEN-007',
+          category: 'general',
+          tags: ['all'],
+          title: 'İlk yardım dolabı içerik eksikliği',
+          hazard: 'İlk yardım dolabında eksik, tarihi geçmiş veya uygunsuz malzeme bulunduğu tespit edildi.',
+          action:
+            'İlk yardım dolabı içeriği güncellenecek, sorumlu kişi atanacak ve periyodik kontrol listesi oluşturulacak.',
+          o: 3,
+          f: 2,
+          s: 7,
+          days: 30
+        },
 
-        { code: 'CON-001', category: 'height', tags: ['construction', 'height', 'çok tehlikeli'], title: 'Yüksekte çalışma kenar koruma eksikliği', hazard: 'Yüksekte çalışma alanında korkuluk, ara korkuluk, topuk levhası veya düşmeye karşı koruma önlemlerinde eksiklik tespit edildi.', action: 'Çalışma alanında toplu koruma önlemleri tamamlanmadan çalışma başlatılmayacak; uygun iskele/kenar koruma kurulacak ve düşüş durdurucu sistemler kontrol edilecek.', o: 6, f: 6, s: 40, days: 7 },
-        { code: 'CON-002', category: 'construction', tags: ['construction', 'height', 'çok tehlikeli'], title: 'İskele kontrol ve etiket eksikliği', hazard: 'İskelede uygunluk etiketi, periyodik kontrol kaydı veya güvenli kullanım koşullarında eksiklik tespit edildi.', action: 'İskele yetkin kişi tarafından kontrol edilecek; uygunsuzluklar giderilene kadar kullanım durdurulacak ve kontrol etiketi güncellenecek.', o: 3, f: 6, s: 40, days: 7 },
-        { code: 'CON-003', category: 'construction', tags: ['construction', 'çok tehlikeli'], title: 'Kazı alanı çevre emniyeti eksikliği', hazard: 'Kazı alanı çevresinde bariyer, uyarı levhası veya düşmeye karşı çevre güvenliği önlemlerinde eksiklik tespit edildi.', action: 'Kazı alanı bariyerlerle çevrilecek, uyarı levhaları yerleştirilecek ve yetkisiz giriş engellenecek.', o: 6, f: 3, s: 40, days: 7 },
-        { code: 'CON-004', category: 'height', tags: ['construction', 'height', 'çok tehlikeli'], title: 'Merdiven güvenliği uygunsuzluğu', hazard: 'Portatif merdivenin sabitlenmediği, uygun açıyla kullanılmadığı veya hasarlı olduğu tespit edildi.', action: 'Hasarlı merdivenler kullanımdan kaldırılacak, merdivenler uygun açıyla/sabitleme ile kullanılacak ve çalışanlara bilgilendirme yapılacak.', o: 3, f: 3, s: 15, days: 7 },
-        { code: 'CON-005', category: 'construction', tags: ['construction', 'çok tehlikeli'], title: 'Şantiye içi düzensiz malzeme istifi', hazard: 'Şantiye alanında malzemelerin devrilme, düşme veya geçişi engelleme riski oluşturacak şekilde istiflendiği tespit edildi.', action: 'Malzeme istif alanları düzenlenecek, devrilmeye karşı sabitleme yapılacak ve geçiş yolları açık tutulacak.', o: 3, f: 6, s: 15, days: 30 },
+        {
+          code: 'CON-001',
+          category: 'height',
+          tags: ['construction', 'height', 'çok tehlikeli'],
+          title: 'Yüksekte çalışma kenar koruma eksikliği',
+          hazard:
+            'Yüksekte çalışma alanında korkuluk, ara korkuluk, topuk levhası veya düşmeye karşı koruma önlemlerinde eksiklik tespit edildi.',
+          action:
+            'Çalışma alanında toplu koruma önlemleri tamamlanmadan çalışma başlatılmayacak; uygun iskele/kenar koruma kurulacak ve düşüş durdurucu sistemler kontrol edilecek.',
+          o: 6,
+          f: 6,
+          s: 40,
+          days: 7
+        },
+        {
+          code: 'CON-002',
+          category: 'construction',
+          tags: ['construction', 'height', 'çok tehlikeli'],
+          title: 'İskele kontrol ve etiket eksikliği',
+          hazard:
+            'İskelede uygunluk etiketi, periyodik kontrol kaydı veya güvenli kullanım koşullarında eksiklik tespit edildi.',
+          action:
+            'İskele yetkin kişi tarafından kontrol edilecek; uygunsuzluklar giderilene kadar kullanım durdurulacak ve kontrol etiketi güncellenecek.',
+          o: 3,
+          f: 6,
+          s: 40,
+          days: 7
+        },
+        {
+          code: 'CON-003',
+          category: 'construction',
+          tags: ['construction', 'çok tehlikeli'],
+          title: 'Kazı alanı çevre emniyeti eksikliği',
+          hazard:
+            'Kazı alanı çevresinde bariyer, uyarı levhası veya düşmeye karşı çevre güvenliği önlemlerinde eksiklik tespit edildi.',
+          action: 'Kazı alanı bariyerlerle çevrilecek, uyarı levhaları yerleştirilecek ve yetkisiz giriş engellenecek.',
+          o: 6,
+          f: 3,
+          s: 40,
+          days: 7
+        },
+        {
+          code: 'CON-004',
+          category: 'height',
+          tags: ['construction', 'height', 'çok tehlikeli'],
+          title: 'Merdiven güvenliği uygunsuzluğu',
+          hazard: 'Portatif merdivenin sabitlenmediği, uygun açıyla kullanılmadığı veya hasarlı olduğu tespit edildi.',
+          action:
+            'Hasarlı merdivenler kullanımdan kaldırılacak, merdivenler uygun açıyla/sabitleme ile kullanılacak ve çalışanlara bilgilendirme yapılacak.',
+          o: 3,
+          f: 3,
+          s: 15,
+          days: 7
+        },
+        {
+          code: 'CON-005',
+          category: 'construction',
+          tags: ['construction', 'çok tehlikeli'],
+          title: 'Şantiye içi düzensiz malzeme istifi',
+          hazard:
+            'Şantiye alanında malzemelerin devrilme, düşme veya geçişi engelleme riski oluşturacak şekilde istiflendiği tespit edildi.',
+          action:
+            'Malzeme istif alanları düzenlenecek, devrilmeye karşı sabitleme yapılacak ve geçiş yolları açık tutulacak.',
+          o: 3,
+          f: 6,
+          s: 15,
+          days: 30
+        },
 
-        { code: 'DEP-001', category: 'warehouse', tags: ['logistics', 'warehouse', 'transport', 'tehlikeli'], title: 'Forklift-yaya yolu ayrımı eksikliği', hazard: 'Forklift/araç trafiği ile yaya yollarının yeterince ayrılmadığı veya işaretlenmediği tespit edildi.', action: 'Yaya yolları çizgi/bariyer ile ayrılacak, uyarı levhaları yerleştirilecek, forklift hız ve geçiş kuralları tekrar duyurulacak.', o: 6, f: 6, s: 15, days: 30 },
-        { code: 'DEP-002', category: 'warehouse', tags: ['logistics', 'warehouse'], title: 'Raf sisteminde devrilme/sabitleme riski', hazard: 'Depo raf sistemlerinde sabitleme, yük etiketi veya hasarlı raf elemanı uygunsuzluğu tespit edildi.', action: 'Raf sistemleri teknik kontrolden geçirilecek, hasarlı parçalar değiştirilecek, yük limitleri görünür şekilde işaretlenecek.', o: 3, f: 3, s: 15, days: 30 },
-        { code: 'DEP-003', category: 'warehouse', tags: ['logistics', 'warehouse'], title: 'Yükleme boşaltma alanında kontrolsüz trafik', hazard: 'Yükleme/boşaltma alanında araç manevrası, kör nokta veya geri hareket sırasında yaya güvenliği riski tespit edildi.', action: 'Yükleme alanı trafik planı oluşturulacak, manevra alanları işaretlenecek ve gerektiğinde refakatçi/spotter görevlendirilecek.', o: 6, f: 3, s: 15, days: 30 },
-        { code: 'DEP-004', category: 'warehouse', tags: ['logistics', 'warehouse'], title: 'Palet istif yüksekliği uygunsuzluğu', hazard: 'Paletli yüklerin devrilme riski oluşturacak yükseklikte veya dengesiz şekilde istiflendiği tespit edildi.', action: 'Palet istif kuralları belirlenecek, maksimum istif yüksekliği işaretlenecek ve dengesiz yükler yeniden düzenlenecek.', o: 3, f: 6, s: 7, days: 30 },
+        {
+          code: 'DEP-001',
+          category: 'warehouse',
+          tags: ['logistics', 'warehouse', 'transport', 'tehlikeli'],
+          title: 'Forklift-yaya yolu ayrımı eksikliği',
+          hazard: 'Forklift/araç trafiği ile yaya yollarının yeterince ayrılmadığı veya işaretlenmediği tespit edildi.',
+          action:
+            'Yaya yolları çizgi/bariyer ile ayrılacak, uyarı levhaları yerleştirilecek, forklift hız ve geçiş kuralları tekrar duyurulacak.',
+          o: 6,
+          f: 6,
+          s: 15,
+          days: 30
+        },
+        {
+          code: 'DEP-002',
+          category: 'warehouse',
+          tags: ['logistics', 'warehouse'],
+          title: 'Raf sisteminde devrilme/sabitleme riski',
+          hazard: 'Depo raf sistemlerinde sabitleme, yük etiketi veya hasarlı raf elemanı uygunsuzluğu tespit edildi.',
+          action:
+            'Raf sistemleri teknik kontrolden geçirilecek, hasarlı parçalar değiştirilecek, yük limitleri görünür şekilde işaretlenecek.',
+          o: 3,
+          f: 3,
+          s: 15,
+          days: 30
+        },
+        {
+          code: 'DEP-003',
+          category: 'warehouse',
+          tags: ['logistics', 'warehouse'],
+          title: 'Yükleme boşaltma alanında kontrolsüz trafik',
+          hazard:
+            'Yükleme/boşaltma alanında araç manevrası, kör nokta veya geri hareket sırasında yaya güvenliği riski tespit edildi.',
+          action:
+            'Yükleme alanı trafik planı oluşturulacak, manevra alanları işaretlenecek ve gerektiğinde refakatçi/spotter görevlendirilecek.',
+          o: 6,
+          f: 3,
+          s: 15,
+          days: 30
+        },
+        {
+          code: 'DEP-004',
+          category: 'warehouse',
+          tags: ['logistics', 'warehouse'],
+          title: 'Palet istif yüksekliği uygunsuzluğu',
+          hazard:
+            'Paletli yüklerin devrilme riski oluşturacak yükseklikte veya dengesiz şekilde istiflendiği tespit edildi.',
+          action:
+            'Palet istif kuralları belirlenecek, maksimum istif yüksekliği işaretlenecek ve dengesiz yükler yeniden düzenlenecek.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 30
+        },
 
-        { code: 'OFF-001', category: 'office', tags: ['office', 'az tehlikeli'], title: 'Ergonomi ve kablo dağınıklığı', hazard: 'Ofis alanında kablo dağınıklığı, takılma riski veya ergonomik uygunsuzluk tespit edildi.', action: 'Kablolar kablo kanalıyla düzenlenecek, geçiş yolları temizlenecek ve çalışma istasyonları ergonomi açısından gözden geçirilecek.', o: 3, f: 2, s: 3, days: 90 },
-        { code: 'OFF-002', category: 'ergonomics', tags: ['office', 'ergonomics', 'az tehlikeli'], title: 'Uygun olmayan ekran/masa düzeni', hazard: 'Çalışma istasyonunda ekran yüksekliği, sandalye ayarı veya masa düzeni ergonomik açıdan uygunsuz tespit edildi.', action: 'Çalışma istasyonu ergonomik olarak düzenlenecek, çalışan bilgilendirilecek ve ekran/sandalye ayarları kontrol edilecek.', o: 3, f: 6, s: 3, days: 90 },
-        { code: 'OFF-003', category: 'office', tags: ['office', 'az tehlikeli'], title: 'Aşırı priz/uzatma kablosu kullanımı', hazard: 'Ofis alanında çoklu priz veya uzatma kablolarının aşırı yüklendiği/uygunsuz kullanıldığı tespit edildi.', action: 'Elektrik yükü kontrol edilecek, kalıcı priz ihtiyacı değerlendirilecek ve uygunsuz çoklu priz kullanımı kaldırılacak.', o: 3, f: 3, s: 7, days: 30 },
+        {
+          code: 'OFF-001',
+          category: 'office',
+          tags: ['office', 'az tehlikeli'],
+          title: 'Ergonomi ve kablo dağınıklığı',
+          hazard: 'Ofis alanında kablo dağınıklığı, takılma riski veya ergonomik uygunsuzluk tespit edildi.',
+          action:
+            'Kablolar kablo kanalıyla düzenlenecek, geçiş yolları temizlenecek ve çalışma istasyonları ergonomi açısından gözden geçirilecek.',
+          o: 3,
+          f: 2,
+          s: 3,
+          days: 90
+        },
+        {
+          code: 'OFF-002',
+          category: 'ergonomics',
+          tags: ['office', 'ergonomics', 'az tehlikeli'],
+          title: 'Uygun olmayan ekran/masa düzeni',
+          hazard:
+            'Çalışma istasyonunda ekran yüksekliği, sandalye ayarı veya masa düzeni ergonomik açıdan uygunsuz tespit edildi.',
+          action:
+            'Çalışma istasyonu ergonomik olarak düzenlenecek, çalışan bilgilendirilecek ve ekran/sandalye ayarları kontrol edilecek.',
+          o: 3,
+          f: 6,
+          s: 3,
+          days: 90
+        },
+        {
+          code: 'OFF-003',
+          category: 'office',
+          tags: ['office', 'az tehlikeli'],
+          title: 'Aşırı priz/uzatma kablosu kullanımı',
+          hazard:
+            'Ofis alanında çoklu priz veya uzatma kablolarının aşırı yüklendiği/uygunsuz kullanıldığı tespit edildi.',
+          action:
+            'Elektrik yükü kontrol edilecek, kalıcı priz ihtiyacı değerlendirilecek ve uygunsuz çoklu priz kullanımı kaldırılacak.',
+          o: 3,
+          f: 3,
+          s: 7,
+          days: 30
+        },
 
-        { code: 'SCH-001', category: 'school', tags: ['school', 'education', 'az tehlikeli'], title: 'Merdiven ve koridorlarda düşme riski', hazard: 'Okul koridoru veya merdivenlerinde kayma/takılma riski, yetersiz uyarı veya uygunsuz zemin tespit edildi.', action: 'Kaymaz bant/uyarı uygulamaları yapılacak, koridorlar açık tutulacak ve nöbet/saha kontrol listesine eklenecek.', o: 3, f: 6, s: 7, days: 30 },
-        { code: 'SCH-002', category: 'school', tags: ['school', 'education'], title: 'Laboratuvar kimyasal dolabı uygunsuzluğu', hazard: 'Okul laboratuvarında kimyasalların etiket, SDS veya uyumlu depolama açısından uygunsuz olduğu tespit edildi.', action: 'Kimyasallar etiketlenecek, SDS dosyaları erişilebilir yapılacak, uyumsuz kimyasallar ayrıştırılacak ve laboratuvar sorumlusu kontrol planı oluşturacak.', o: 3, f: 2, s: 15, days: 30 },
-        { code: 'SCH-003', category: 'school', tags: ['school', 'education'], title: 'Atölye/derslik ekipman güvenliği eksikliği', hazard: 'Atölye veya derslikte kullanılan ekipmanda koruyucu, talimat veya gözetim eksikliği tespit edildi.', action: 'Ekipman kullanım talimatları görünür hale getirilecek, koruyucular kontrol edilecek ve öğretmen/gözetmen bilgilendirmesi yapılacak.', o: 3, f: 3, s: 7, days: 30 },
+        {
+          code: 'SCH-001',
+          category: 'school',
+          tags: ['school', 'education', 'az tehlikeli'],
+          title: 'Merdiven ve koridorlarda düşme riski',
+          hazard:
+            'Okul koridoru veya merdivenlerinde kayma/takılma riski, yetersiz uyarı veya uygunsuz zemin tespit edildi.',
+          action:
+            'Kaymaz bant/uyarı uygulamaları yapılacak, koridorlar açık tutulacak ve nöbet/saha kontrol listesine eklenecek.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 30
+        },
+        {
+          code: 'SCH-002',
+          category: 'school',
+          tags: ['school', 'education'],
+          title: 'Laboratuvar kimyasal dolabı uygunsuzluğu',
+          hazard:
+            'Okul laboratuvarında kimyasalların etiket, SDS veya uyumlu depolama açısından uygunsuz olduğu tespit edildi.',
+          action:
+            'Kimyasallar etiketlenecek, SDS dosyaları erişilebilir yapılacak, uyumsuz kimyasallar ayrıştırılacak ve laboratuvar sorumlusu kontrol planı oluşturacak.',
+          o: 3,
+          f: 2,
+          s: 15,
+          days: 30
+        },
+        {
+          code: 'SCH-003',
+          category: 'school',
+          tags: ['school', 'education'],
+          title: 'Atölye/derslik ekipman güvenliği eksikliği',
+          hazard: 'Atölye veya derslikte kullanılan ekipmanda koruyucu, talimat veya gözetim eksikliği tespit edildi.',
+          action:
+            'Ekipman kullanım talimatları görünür hale getirilecek, koruyucular kontrol edilecek ve öğretmen/gözetmen bilgilendirmesi yapılacak.',
+          o: 3,
+          f: 3,
+          s: 7,
+          days: 30
+        },
 
-        { code: 'HLT-001', category: 'healthcare', tags: ['healthcare', 'tehlikeli'], title: 'Tıbbi atık ayrıştırma uygunsuzluğu', hazard: 'Tıbbi atıkların uygun renk/kategori ayrımına göre toplanmadığı veya geçici depolama koşullarında uygunsuzluk olduğu tespit edildi.', action: 'Tıbbi atık ayrıştırma kuralları uygulanacak, atık kutuları etiketlenecek ve çalışanlara tekrar bilgilendirme yapılacak.', o: 3, f: 6, s: 15, days: 30 },
-        { code: 'HLT-002', category: 'healthcare', tags: ['healthcare', 'hygiene'], title: 'Kesici-delici alet kutusu uygunsuzluğu', hazard: 'Kesici-delici atık kutusunun uygun yerde bulunmadığı, doluluk oranının aşıldığı veya uygunsuz kullanıldığı tespit edildi.', action: 'Kesici-delici atık kutuları uygun noktalara yerleştirilecek, doluluk sınırı takip edilecek ve kullanım kuralları hatırlatılacak.', o: 3, f: 6, s: 15, days: 7 },
-        { code: 'HLT-003', category: 'hygiene', tags: ['healthcare', 'hygiene'], title: 'El hijyeni istasyonu eksikliği', hazard: 'El hijyeni noktalarında dezenfektan, lavabo erişimi veya bilgilendirme levhası eksikliği tespit edildi.', action: 'El hijyeni istasyonları tamamlanacak, sarf malzeme takibi yapılacak ve ilgili alanlara bilgilendirme levhaları asılacak.', o: 3, f: 6, s: 7, days: 30 },
+        {
+          code: 'HLT-001',
+          category: 'healthcare',
+          tags: ['healthcare', 'tehlikeli'],
+          title: 'Tıbbi atık ayrıştırma uygunsuzluğu',
+          hazard:
+            'Tıbbi atıkların uygun renk/kategori ayrımına göre toplanmadığı veya geçici depolama koşullarında uygunsuzluk olduğu tespit edildi.',
+          action:
+            'Tıbbi atık ayrıştırma kuralları uygulanacak, atık kutuları etiketlenecek ve çalışanlara tekrar bilgilendirme yapılacak.',
+          o: 3,
+          f: 6,
+          s: 15,
+          days: 30
+        },
+        {
+          code: 'HLT-002',
+          category: 'healthcare',
+          tags: ['healthcare', 'hygiene'],
+          title: 'Kesici-delici alet kutusu uygunsuzluğu',
+          hazard:
+            'Kesici-delici atık kutusunun uygun yerde bulunmadığı, doluluk oranının aşıldığı veya uygunsuz kullanıldığı tespit edildi.',
+          action:
+            'Kesici-delici atık kutuları uygun noktalara yerleştirilecek, doluluk sınırı takip edilecek ve kullanım kuralları hatırlatılacak.',
+          o: 3,
+          f: 6,
+          s: 15,
+          days: 7
+        },
+        {
+          code: 'HLT-003',
+          category: 'hygiene',
+          tags: ['healthcare', 'hygiene'],
+          title: 'El hijyeni istasyonu eksikliği',
+          hazard:
+            'El hijyeni noktalarında dezenfektan, lavabo erişimi veya bilgilendirme levhası eksikliği tespit edildi.',
+          action:
+            'El hijyeni istasyonları tamamlanacak, sarf malzeme takibi yapılacak ve ilgili alanlara bilgilendirme levhaları asılacak.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 30
+        },
 
-        { code: 'KIT-001', category: 'kitchen', tags: ['kitchen', 'food', 'tehlikeli'], title: 'Mutfakta sıcak yüzey/yanık riski', hazard: 'Mutfak alanında sıcak yüzey, buhar veya kızgın yağ kaynaklı yanık riskine karşı uyarı/koruma eksikliği tespit edildi.', action: 'Sıcak yüzeyler işaretlenecek, uygun eldiven/önlük kullanımı sağlanacak ve çalışma talimatı görünür hale getirilecek.', o: 3, f: 6, s: 7, days: 30 },
-        { code: 'KIT-002', category: 'kitchen', tags: ['kitchen', 'food'], title: 'Kesici ekipman kullanım riski', hazard: 'Bıçak, dilimleyici veya kesici ekipman kullanımında koruyucu, talimat veya saklama düzeni eksikliği tespit edildi.', action: 'Kesici ekipmanlar için güvenli kullanım talimatı hazırlanacak, koruyucular kontrol edilecek ve güvenli saklama alanı düzenlenecek.', o: 3, f: 6, s: 7, days: 30 },
-        { code: 'KIT-003', category: 'hygiene', tags: ['kitchen', 'food', 'hygiene'], title: 'Gıda hijyeni / çapraz bulaşma riski', hazard: 'Gıda hazırlık alanında çiğ-pişmiş ürün ayrımı, yüzey temizliği veya hijyen prosedürlerinde uygunsuzluk tespit edildi.', action: 'Hazırlık alanları ayrıştırılacak, temizlik-dezenfeksiyon planı uygulanacak ve çalışanlara hijyen kuralları hatırlatılacak.', o: 3, f: 6, s: 7, days: 30 },
+        {
+          code: 'KIT-001',
+          category: 'kitchen',
+          tags: ['kitchen', 'food', 'tehlikeli'],
+          title: 'Mutfakta sıcak yüzey/yanık riski',
+          hazard:
+            'Mutfak alanında sıcak yüzey, buhar veya kızgın yağ kaynaklı yanık riskine karşı uyarı/koruma eksikliği tespit edildi.',
+          action:
+            'Sıcak yüzeyler işaretlenecek, uygun eldiven/önlük kullanımı sağlanacak ve çalışma talimatı görünür hale getirilecek.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 30
+        },
+        {
+          code: 'KIT-002',
+          category: 'kitchen',
+          tags: ['kitchen', 'food'],
+          title: 'Kesici ekipman kullanım riski',
+          hazard:
+            'Bıçak, dilimleyici veya kesici ekipman kullanımında koruyucu, talimat veya saklama düzeni eksikliği tespit edildi.',
+          action:
+            'Kesici ekipmanlar için güvenli kullanım talimatı hazırlanacak, koruyucular kontrol edilecek ve güvenli saklama alanı düzenlenecek.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 30
+        },
+        {
+          code: 'KIT-003',
+          category: 'hygiene',
+          tags: ['kitchen', 'food', 'hygiene'],
+          title: 'Gıda hijyeni / çapraz bulaşma riski',
+          hazard:
+            'Gıda hazırlık alanında çiğ-pişmiş ürün ayrımı, yüzey temizliği veya hijyen prosedürlerinde uygunsuzluk tespit edildi.',
+          action:
+            'Hazırlık alanları ayrıştırılacak, temizlik-dezenfeksiyon planı uygulanacak ve çalışanlara hijyen kuralları hatırlatılacak.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 30
+        },
 
-        { code: 'MAN-001', category: 'manufacturing', tags: ['manufacturing', 'tehlikeli', 'çok tehlikeli'], title: 'Makine koruyucu eksikliği', hazard: 'Makine üzerinde hareketli parçalara temas riskini önleyen koruyucu veya acil durdurma sistemi eksik/uygunsuz tespit edildi.', action: 'Makine koruyucuları tamamlanacak, acil durdurma butonları test edilecek; uygunsuzluk giderilene kadar makine kontrollü şekilde devre dışı bırakılacak.', o: 6, f: 6, s: 15, days: 7 },
-        { code: 'MAN-002', category: 'manufacturing', tags: ['manufacturing', 'tehlikeli'], title: 'LOTO / enerji izolasyonu eksikliği', hazard: 'Bakım/onarım sırasında enerji izolasyonu ve kilitleme-etiketleme uygulamasında eksiklik tespit edildi.', action: 'LOTO prosedürü uygulanacak, kilitleme ekipmanları temin edilecek ve bakım personeline tekrar eğitim verilecek.', o: 3, f: 3, s: 40, days: 7 },
-        { code: 'MAN-003', category: 'manufacturing', tags: ['manufacturing'], title: 'Basınçlı kap / kompresör kontrol eksikliği', hazard: 'Basınçlı ekipmanın periyodik kontrol, emniyet valfi veya kullanım alanı güvenliği açısından uygunsuz olduğu tespit edildi.', action: 'Basınçlı ekipman periyodik kontrole alınacak, emniyet donanımları kontrol edilecek ve uygunsuzluk giderilene kadar kullanım kısıtlanacak.', o: 3, f: 2, s: 15, days: 30 },
-        { code: 'MAN-004', category: 'physical', tags: ['manufacturing', 'physical'], title: 'Gürültü maruziyeti kontrol eksikliği', hazard: 'Gürültülü alanda kulak koruyucu kullanımı, uyarı levhası veya maruziyet kontrolünde eksiklik tespit edildi.', action: 'Gürültü ölçümü/alan işaretlemesi yapılacak, uygun kulak koruyucular temin edilecek ve kullanım denetimi yapılacak.', o: 3, f: 6, s: 7, days: 30 },
-        { code: 'MAN-005', category: 'physical', tags: ['manufacturing', 'physical'], title: 'Toz veya duman maruziyeti', hazard: 'Üretim alanında toz/duman oluşumu için lokal emiş, havalandırma veya uygun solunum koruyucu eksikliği tespit edildi.', action: 'Lokal havalandırma/filtrasyon kontrol edilecek, maruziyet ölçümü planlanacak ve uygun solunum koruyucu kullanımı sağlanacak.', o: 3, f: 6, s: 15, days: 30 },
+        {
+          code: 'MAN-001',
+          category: 'manufacturing',
+          tags: ['manufacturing', 'tehlikeli', 'çok tehlikeli'],
+          title: 'Makine koruyucu eksikliği',
+          hazard:
+            'Makine üzerinde hareketli parçalara temas riskini önleyen koruyucu veya acil durdurma sistemi eksik/uygunsuz tespit edildi.',
+          action:
+            'Makine koruyucuları tamamlanacak, acil durdurma butonları test edilecek; uygunsuzluk giderilene kadar makine kontrollü şekilde devre dışı bırakılacak.',
+          o: 6,
+          f: 6,
+          s: 15,
+          days: 7
+        },
+        {
+          code: 'MAN-002',
+          category: 'manufacturing',
+          tags: ['manufacturing', 'tehlikeli'],
+          title: 'LOTO / enerji izolasyonu eksikliği',
+          hazard:
+            'Bakım/onarım sırasında enerji izolasyonu ve kilitleme-etiketleme uygulamasında eksiklik tespit edildi.',
+          action:
+            'LOTO prosedürü uygulanacak, kilitleme ekipmanları temin edilecek ve bakım personeline tekrar eğitim verilecek.',
+          o: 3,
+          f: 3,
+          s: 40,
+          days: 7
+        },
+        {
+          code: 'MAN-003',
+          category: 'manufacturing',
+          tags: ['manufacturing'],
+          title: 'Basınçlı kap / kompresör kontrol eksikliği',
+          hazard:
+            'Basınçlı ekipmanın periyodik kontrol, emniyet valfi veya kullanım alanı güvenliği açısından uygunsuz olduğu tespit edildi.',
+          action:
+            'Basınçlı ekipman periyodik kontrole alınacak, emniyet donanımları kontrol edilecek ve uygunsuzluk giderilene kadar kullanım kısıtlanacak.',
+          o: 3,
+          f: 2,
+          s: 15,
+          days: 30
+        },
+        {
+          code: 'MAN-004',
+          category: 'physical',
+          tags: ['manufacturing', 'physical'],
+          title: 'Gürültü maruziyeti kontrol eksikliği',
+          hazard:
+            'Gürültülü alanda kulak koruyucu kullanımı, uyarı levhası veya maruziyet kontrolünde eksiklik tespit edildi.',
+          action:
+            'Gürültü ölçümü/alan işaretlemesi yapılacak, uygun kulak koruyucular temin edilecek ve kullanım denetimi yapılacak.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 30
+        },
+        {
+          code: 'MAN-005',
+          category: 'physical',
+          tags: ['manufacturing', 'physical'],
+          title: 'Toz veya duman maruziyeti',
+          hazard:
+            'Üretim alanında toz/duman oluşumu için lokal emiş, havalandırma veya uygun solunum koruyucu eksikliği tespit edildi.',
+          action:
+            'Lokal havalandırma/filtrasyon kontrol edilecek, maruziyet ölçümü planlanacak ve uygun solunum koruyucu kullanımı sağlanacak.',
+          o: 3,
+          f: 6,
+          s: 15,
+          days: 30
+        },
 
-        { code: 'CHM-001', category: 'chemical', tags: ['chemical', 'manufacturing', 'tehlikeli'], title: 'Kimyasal etiket ve SDS eksikliği', hazard: 'Kimyasal madde ambalajında etiketleme, uygun depolama veya Güvenlik Bilgi Formu erişimi eksikliği tespit edildi.', action: 'Kimyasallar uygun etiketlenecek, uyumlu depolama yapılacak, SDS formları erişilebilir hale getirilecek ve çalışanlara bilgilendirme yapılacak.', o: 3, f: 2, s: 15, days: 30 },
-        { code: 'CHM-002', category: 'chemical', tags: ['chemical'], title: 'Uyumsuz kimyasalların birlikte depolanması', hazard: 'Birbiriyle reaksiyona girebilecek kimyasalların aynı alanda/uygunsuz şekilde depolandığı tespit edildi.', action: 'Kimyasallar uyumluluk tablosuna göre ayrıştırılacak, ikincil kaplama/sızdırmazlık sağlanacak ve depo sorumlusu kontrol listesi oluşturacak.', o: 3, f: 2, s: 40, days: 7 },
-        { code: 'CHM-003', category: 'chemical', tags: ['chemical'], title: 'Dökülme kiti eksikliği', hazard: 'Kimyasal kullanım/depolama alanında dökülme müdahale kiti veya acil müdahale talimatı bulunmadığı tespit edildi.', action: 'Dökülme kiti temin edilecek, acil müdahale talimatı asılacak ve ilgili çalışanlar bilgilendirilecek.', o: 3, f: 2, s: 15, days: 30 },
+        {
+          code: 'CHM-001',
+          category: 'chemical',
+          tags: ['chemical', 'manufacturing', 'tehlikeli'],
+          title: 'Kimyasal etiket ve SDS eksikliği',
+          hazard:
+            'Kimyasal madde ambalajında etiketleme, uygun depolama veya Güvenlik Bilgi Formu erişimi eksikliği tespit edildi.',
+          action:
+            'Kimyasallar uygun etiketlenecek, uyumlu depolama yapılacak, SDS formları erişilebilir hale getirilecek ve çalışanlara bilgilendirme yapılacak.',
+          o: 3,
+          f: 2,
+          s: 15,
+          days: 30
+        },
+        {
+          code: 'CHM-002',
+          category: 'chemical',
+          tags: ['chemical'],
+          title: 'Uyumsuz kimyasalların birlikte depolanması',
+          hazard:
+            'Birbiriyle reaksiyona girebilecek kimyasalların aynı alanda/uygunsuz şekilde depolandığı tespit edildi.',
+          action:
+            'Kimyasallar uyumluluk tablosuna göre ayrıştırılacak, ikincil kaplama/sızdırmazlık sağlanacak ve depo sorumlusu kontrol listesi oluşturacak.',
+          o: 3,
+          f: 2,
+          s: 40,
+          days: 7
+        },
+        {
+          code: 'CHM-003',
+          category: 'chemical',
+          tags: ['chemical'],
+          title: 'Dökülme kiti eksikliği',
+          hazard:
+            'Kimyasal kullanım/depolama alanında dökülme müdahale kiti veya acil müdahale talimatı bulunmadığı tespit edildi.',
+          action:
+            'Dökülme kiti temin edilecek, acil müdahale talimatı asılacak ve ilgili çalışanlar bilgilendirilecek.',
+          o: 3,
+          f: 2,
+          s: 15,
+          days: 30
+        },
 
-        { code: 'ELC-001', category: 'electrical', tags: ['electrical', 'tehlikeli'], title: 'Açıkta kablo / geçici elektrik hattı', hazard: 'Çalışma alanında açıkta kablo, ezilme riski bulunan geçici elektrik hattı veya uygunsuz bağlantı tespit edildi.', action: 'Geçici hatlar uygun kablo kanalı/askı sistemiyle korunacak, yetkisiz bağlantılar kaldırılacak ve elektrik sorumlusu kontrol edecek.', o: 3, f: 6, s: 15, days: 7 },
-        { code: 'ELC-002', category: 'electrical', tags: ['electrical'], title: 'Topraklama/kaçak akım kontrol eksikliği', hazard: 'Elektrikli ekipman veya pano için topraklama/kaçak akım koruma kontrol kayıtlarında eksiklik tespit edildi.', action: 'Topraklama ve kaçak akım kontrolleri yetkili kişilerce yapılacak, kayıtlar arşivlenecek ve eksikler giderilecek.', o: 3, f: 2, s: 15, days: 30 },
+        {
+          code: 'ELC-001',
+          category: 'electrical',
+          tags: ['electrical', 'tehlikeli'],
+          title: 'Açıkta kablo / geçici elektrik hattı',
+          hazard:
+            'Çalışma alanında açıkta kablo, ezilme riski bulunan geçici elektrik hattı veya uygunsuz bağlantı tespit edildi.',
+          action:
+            'Geçici hatlar uygun kablo kanalı/askı sistemiyle korunacak, yetkisiz bağlantılar kaldırılacak ve elektrik sorumlusu kontrol edecek.',
+          o: 3,
+          f: 6,
+          s: 15,
+          days: 7
+        },
+        {
+          code: 'ELC-002',
+          category: 'electrical',
+          tags: ['electrical'],
+          title: 'Topraklama/kaçak akım kontrol eksikliği',
+          hazard:
+            'Elektrikli ekipman veya pano için topraklama/kaçak akım koruma kontrol kayıtlarında eksiklik tespit edildi.',
+          action:
+            'Topraklama ve kaçak akım kontrolleri yetkili kişilerce yapılacak, kayıtlar arşivlenecek ve eksikler giderilecek.',
+          o: 3,
+          f: 2,
+          s: 15,
+          days: 30
+        },
 
-        { code: 'CFS-001', category: 'confined', tags: ['confined', 'çok tehlikeli'], title: 'Kapalı alan giriş prosedürü eksikliği', hazard: 'Kapalı alan çalışmasında gaz ölçümü, izin formu, gözcü veya kurtarma planı eksikliği tespit edildi.', action: 'Kapalı alan giriş izin prosedürü uygulanacak, gaz ölçümü yapılacak, gözcü görevlendirilecek ve kurtarma planı hazır olmadan giriş yapılmayacak.', o: 3, f: 2, s: 40, days: 7 },
-        { code: 'CFS-002', category: 'confined', tags: ['confined'], title: 'Kapalı alan havalandırma eksikliği', hazard: 'Kapalı alanda yeterli havalandırma veya atmosfer izleme önlemi bulunmadığı tespit edildi.', action: 'Mekanik havalandırma sağlanacak, atmosfer düzenli izlenecek ve izinli çalışma sistemi uygulanacak.', o: 3, f: 2, s: 40, days: 7 },
+        {
+          code: 'CFS-001',
+          category: 'confined',
+          tags: ['confined', 'çok tehlikeli'],
+          title: 'Kapalı alan giriş prosedürü eksikliği',
+          hazard: 'Kapalı alan çalışmasında gaz ölçümü, izin formu, gözcü veya kurtarma planı eksikliği tespit edildi.',
+          action:
+            'Kapalı alan giriş izin prosedürü uygulanacak, gaz ölçümü yapılacak, gözcü görevlendirilecek ve kurtarma planı hazır olmadan giriş yapılmayacak.',
+          o: 3,
+          f: 2,
+          s: 40,
+          days: 7
+        },
+        {
+          code: 'CFS-002',
+          category: 'confined',
+          tags: ['confined'],
+          title: 'Kapalı alan havalandırma eksikliği',
+          hazard: 'Kapalı alanda yeterli havalandırma veya atmosfer izleme önlemi bulunmadığı tespit edildi.',
+          action: 'Mekanik havalandırma sağlanacak, atmosfer düzenli izlenecek ve izinli çalışma sistemi uygulanacak.',
+          o: 3,
+          f: 2,
+          s: 40,
+          days: 7
+        },
 
-        { code: 'ERG-001', category: 'ergonomics', tags: ['ergonomics', 'all'], title: 'Elle taşıma ergonomi riski', hazard: 'Çalışanların ağır yükleri uygunsuz duruşla kaldırdığı/taşıdığı veya yardımcı ekipman kullanılmadığı tespit edildi.', action: 'Yük ağırlıkları sınırlandırılacak, taşıma arabası/yardımcı ekipman kullanılacak ve çalışanlara doğru kaldırma-taşıma eğitimi verilecek.', o: 3, f: 6, s: 7, days: 30 },
-        { code: 'ERG-002', category: 'ergonomics', tags: ['ergonomics'], title: 'Tekrarlayan hareket / uygunsuz çalışma yüksekliği', hazard: 'Tekrarlayan hareket veya uygunsuz tezgah yüksekliği nedeniyle kas-iskelet sistemi riski tespit edildi.', action: 'İş istasyonu yüksekliği ayarlanacak, rotasyon/molalar planlanacak ve ergonomik yardımcı ekipman değerlendirilecek.', o: 3, f: 6, s: 7, days: 60 },
+        {
+          code: 'ERG-001',
+          category: 'ergonomics',
+          tags: ['ergonomics', 'all'],
+          title: 'Elle taşıma ergonomi riski',
+          hazard:
+            'Çalışanların ağır yükleri uygunsuz duruşla kaldırdığı/taşıdığı veya yardımcı ekipman kullanılmadığı tespit edildi.',
+          action:
+            'Yük ağırlıkları sınırlandırılacak, taşıma arabası/yardımcı ekipman kullanılacak ve çalışanlara doğru kaldırma-taşıma eğitimi verilecek.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 30
+        },
+        {
+          code: 'ERG-002',
+          category: 'ergonomics',
+          tags: ['ergonomics'],
+          title: 'Tekrarlayan hareket / uygunsuz çalışma yüksekliği',
+          hazard:
+            'Tekrarlayan hareket veya uygunsuz tezgah yüksekliği nedeniyle kas-iskelet sistemi riski tespit edildi.',
+          action:
+            'İş istasyonu yüksekliği ayarlanacak, rotasyon/molalar planlanacak ve ergonomik yardımcı ekipman değerlendirilecek.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 60
+        },
 
-        { code: 'HYG-001', category: 'hygiene', tags: ['hygiene', 'all'], title: 'Temizlik planı ve kayıt eksikliği', hazard: 'Ortak kullanım alanlarında temizlik planı, kontrol kaydı veya sorumlu kişi atamasında eksiklik tespit edildi.', action: 'Temizlik planı hazırlanacak, kontrol kayıt formu oluşturulacak ve sorumlular belirlenecek.', o: 3, f: 6, s: 3, days: 30 },
-        { code: 'HYG-002', category: 'hygiene', tags: ['hygiene'], title: 'Sanitasyon / lavabo sarf malzeme eksikliği', hazard: 'Lavabo veya hijyen noktalarında sabun, kağıt havlu, dezenfektan veya atık kutusu eksikliği tespit edildi.', action: 'Sarf malzemeler tamamlanacak, periyodik kontrol sorumlusu atanacak ve hijyen noktaları görünür şekilde düzenlenecek.', o: 3, f: 6, s: 3, days: 30 },
+        {
+          code: 'HYG-001',
+          category: 'hygiene',
+          tags: ['hygiene', 'all'],
+          title: 'Temizlik planı ve kayıt eksikliği',
+          hazard:
+            'Ortak kullanım alanlarında temizlik planı, kontrol kaydı veya sorumlu kişi atamasında eksiklik tespit edildi.',
+          action: 'Temizlik planı hazırlanacak, kontrol kayıt formu oluşturulacak ve sorumlular belirlenecek.',
+          o: 3,
+          f: 6,
+          s: 3,
+          days: 30
+        },
+        {
+          code: 'HYG-002',
+          category: 'hygiene',
+          tags: ['hygiene'],
+          title: 'Sanitasyon / lavabo sarf malzeme eksikliği',
+          hazard:
+            'Lavabo veya hijyen noktalarında sabun, kağıt havlu, dezenfektan veya atık kutusu eksikliği tespit edildi.',
+          action:
+            'Sarf malzemeler tamamlanacak, periyodik kontrol sorumlusu atanacak ve hijyen noktaları görünür şekilde düzenlenecek.',
+          o: 3,
+          f: 6,
+          s: 3,
+          days: 30
+        },
 
-        { code: 'PHY-001', category: 'physical', tags: ['physical'], title: 'Titreşimli ekipman kullanım riski', hazard: 'Titreşimli el aletleri kullanımında maruziyet süresi, bakım durumu veya uygun eldiven kullanımı açısından eksiklik tespit edildi.', action: 'Titreşimli ekipman bakım planına alınacak, kullanım süreleri sınırlandırılacak ve uygun KKD/rotasyon uygulanacak.', o: 3, f: 3, s: 7, days: 30 },
-        { code: 'PHY-002', category: 'physical', tags: ['physical'], title: 'Yetersiz aydınlatma', hazard: 'Çalışma veya geçiş alanında yetersiz aydınlatma nedeniyle hata, çarpma veya düşme riski tespit edildi.', action: 'Aydınlatma seviyesi ölçülecek/gözden geçirilecek, arızalı armatürler değiştirilecek ve kritik alanlar güçlendirilecek.', o: 3, f: 6, s: 7, days: 30 }
-    ];
+        {
+          code: 'PHY-001',
+          category: 'physical',
+          tags: ['physical'],
+          title: 'Titreşimli ekipman kullanım riski',
+          hazard:
+            'Titreşimli el aletleri kullanımında maruziyet süresi, bakım durumu veya uygun eldiven kullanımı açısından eksiklik tespit edildi.',
+          action:
+            'Titreşimli ekipman bakım planına alınacak, kullanım süreleri sınırlandırılacak ve uygun KKD/rotasyon uygulanacak.',
+          o: 3,
+          f: 3,
+          s: 7,
+          days: 30
+        },
+        {
+          code: 'PHY-002',
+          category: 'physical',
+          tags: ['physical'],
+          title: 'Yetersiz aydınlatma',
+          hazard:
+            'Çalışma veya geçiş alanında yetersiz aydınlatma nedeniyle hata, çarpma veya düşme riski tespit edildi.',
+          action:
+            'Aydınlatma seviyesi ölçülecek/gözden geçirilecek, arızalı armatürler değiştirilecek ve kritik alanlar güçlendirilecek.',
+          o: 3,
+          f: 6,
+          s: 7,
+          days: 30
+        }
+      ];
 
-    let lastLoadedCompanies = [];
-    let CURRENT_AUTH = null;
-    window.CURRENT_AUTH = CURRENT_AUTH;
-let riskTableRows = [];
-let riskSortField = '';
-let riskSortDirection = 'asc';
+      let lastLoadedCompanies = [];
+      let CURRENT_AUTH = null;
+      window.CURRENT_AUTH = CURRENT_AUTH;
+      let riskTableRows = [];
+      let riskSortField = '';
+      let riskSortDirection = 'asc';
 
-    function normalizeTextForMatch(value) {
+      function normalizeTextForMatch(value) {
         return String(value || '').toLocaleLowerCase('tr-TR');
-    }
+      }
 
-    function inferCompanyTemplateTags(company) {
-        const haystack = normalizeTextForMatch(`${company?.company_name || ''} ${company?.nace_code || ''} ${company?.danger_class || ''}`);
+      function inferCompanyTemplateTags(company) {
+        const haystack = normalizeTextForMatch(
+          `${company?.company_name || ''} ${company?.nace_code || ''} ${company?.danger_class || ''}`
+        );
         const tags = ['all'];
         if (haystack.includes('çok tehlikeli')) tags.push('çok tehlikeli');
         if (haystack.includes('tehlikeli')) tags.push('tehlikeli');
         if (haystack.includes('az tehlikeli')) tags.push('az tehlikeli');
-        if (haystack.includes('inşaat') || haystack.includes('insaat') || haystack.includes('şantiye') || haystack.includes('santiye') || haystack.includes('41') || haystack.includes('42') || haystack.includes('43')) tags.push('construction');
-        if (haystack.includes('imalat') || haystack.includes('üretim') || haystack.includes('uretim') || haystack.includes('fabrika') || haystack.includes('makine') || haystack.includes('metal')) tags.push('manufacturing');
-        if (haystack.includes('lojistik') || haystack.includes('depo') || haystack.includes('taşıma') || haystack.includes('tasima') || haystack.includes('nakliye')) tags.push('logistics', 'warehouse', 'transport');
-        if (haystack.includes('okul') || haystack.includes('eğitim') || haystack.includes('egitim') || haystack.includes('kolej') || haystack.includes('üniversite') || haystack.includes('universite')) tags.push('school', 'education');
-        if (haystack.includes('hastane') || haystack.includes('sağlık') || haystack.includes('saglik') || haystack.includes('klinik') || haystack.includes('poliklinik')) tags.push('healthcare');
-        if (haystack.includes('restoran') || haystack.includes('mutfak') || haystack.includes('gıda') || haystack.includes('gida') || haystack.includes('yemek')) tags.push('kitchen', 'food');
-        if (haystack.includes('kimya') || haystack.includes('kimyasal') || haystack.includes('laboratuvar')) tags.push('chemical');
+        if (
+          haystack.includes('inşaat') ||
+          haystack.includes('insaat') ||
+          haystack.includes('şantiye') ||
+          haystack.includes('santiye') ||
+          haystack.includes('41') ||
+          haystack.includes('42') ||
+          haystack.includes('43')
+        )
+          tags.push('construction');
+        if (
+          haystack.includes('imalat') ||
+          haystack.includes('üretim') ||
+          haystack.includes('uretim') ||
+          haystack.includes('fabrika') ||
+          haystack.includes('makine') ||
+          haystack.includes('metal')
+        )
+          tags.push('manufacturing');
+        if (
+          haystack.includes('lojistik') ||
+          haystack.includes('depo') ||
+          haystack.includes('taşıma') ||
+          haystack.includes('tasima') ||
+          haystack.includes('nakliye')
+        )
+          tags.push('logistics', 'warehouse', 'transport');
+        if (
+          haystack.includes('okul') ||
+          haystack.includes('eğitim') ||
+          haystack.includes('egitim') ||
+          haystack.includes('kolej') ||
+          haystack.includes('üniversite') ||
+          haystack.includes('universite')
+        )
+          tags.push('school', 'education');
+        if (
+          haystack.includes('hastane') ||
+          haystack.includes('sağlık') ||
+          haystack.includes('saglik') ||
+          haystack.includes('klinik') ||
+          haystack.includes('poliklinik')
+        )
+          tags.push('healthcare');
+        if (
+          haystack.includes('restoran') ||
+          haystack.includes('mutfak') ||
+          haystack.includes('gıda') ||
+          haystack.includes('gida') ||
+          haystack.includes('yemek')
+        )
+          tags.push('kitchen', 'food');
+        if (haystack.includes('kimya') || haystack.includes('kimyasal') || haystack.includes('laboratuvar'))
+          tags.push('chemical');
         if (haystack.includes('elektrik') || haystack.includes('enerji')) tags.push('electrical');
         if (haystack.includes('ofis') || haystack.includes('büro') || haystack.includes('buro')) tags.push('office');
         return Array.from(new Set(tags));
-    }
+      }
 
-    function getSelectedCompanyFromCache() {
+      function getSelectedCompanyFromCache() {
         const selectedId = document.getElementById('company_select')?.value;
         return (lastLoadedCompanies || []).find((c) => String(c.id) === String(selectedId)) || null;
-    }
+      }
 
-    function updateRiskTemplateOptions(categoryChanged = false) {
+      function updateRiskTemplateOptions(categoryChanged = false) {
         const categorySelect = document.getElementById('risk_template_category');
         const templateSelect = document.getElementById('risk_template_select');
         const statusEl = document.getElementById('template_status');
@@ -1146,53 +1080,60 @@ let riskSortDirection = 'asc';
         let matching = [];
 
         if (selectedCategory && selectedCategory !== 'auto') {
-            matching = RISK_TEMPLATE_LIBRARY.filter((tpl) => tpl.category === selectedCategory);
-            templateSelect.innerHTML = '<option value="">-- Hazır şablon seçin --</option>';
-            matching.forEach((tpl) => {
-                templateSelect.innerHTML += `<option value="${tpl.code}">[${tpl.code}] ${tpl.title}</option>`;
-            });
-            if (statusEl) {
-                statusEl.style.color = 'var(--text-muted)';
-                statusEl.innerText = `${TEMPLATE_CATEGORY_LABELS[selectedCategory] || 'Kategori'} kategorisinde ${matching.length} şablon listelendi.`;
-            }
-            return;
+          matching = RISK_TEMPLATE_LIBRARY.filter((tpl) => tpl.category === selectedCategory);
+          templateSelect.innerHTML = '<option value="">-- Hazır şablon seçin --</option>';
+          matching.forEach((tpl) => {
+            templateSelect.innerHTML += `<option value="${tpl.code}">[${tpl.code}] ${tpl.title}</option>`;
+          });
+          if (statusEl) {
+            statusEl.style.color = 'var(--text-muted)';
+            statusEl.innerText = `${TEMPLATE_CATEGORY_LABELS[selectedCategory] || 'Kategori'} kategorisinde ${matching.length} şablon listelendi.`;
+          }
+          return;
         }
 
         if (!company) {
-            templateSelect.innerHTML = '<option value="">Önce firma seçin veya kategori seçin...</option>';
-            if (statusEl) {
-                statusEl.style.color = 'var(--text-muted)';
-                statusEl.innerText = 'Firma/NACE önerileri için firma seçin. İsterseniz kategori seçerek tüm yerel şablonları da görüntüleyebilirsiniz.';
-            }
-            return;
+          templateSelect.innerHTML = '<option value="">Önce firma seçin veya kategori seçin...</option>';
+          if (statusEl) {
+            statusEl.style.color = 'var(--text-muted)';
+            statusEl.innerText =
+              'Firma/NACE önerileri için firma seçin. İsterseniz kategori seçerek tüm yerel şablonları da görüntüleyebilirsiniz.';
+          }
+          return;
         }
 
         const tags = inferCompanyTemplateTags(company);
         matching = RISK_TEMPLATE_LIBRARY.filter((tpl) => tpl.tags.some((tag) => tags.includes(tag)));
         templateSelect.innerHTML = '<option value="">-- Hazır şablon seçin --</option>';
         matching.forEach((tpl) => {
-            const categoryLabel = TEMPLATE_CATEGORY_LABELS[tpl.category] || tpl.category;
-            templateSelect.innerHTML += `<option value="${tpl.code}">[${categoryLabel}] ${tpl.title}</option>`;
+          const categoryLabel = TEMPLATE_CATEGORY_LABELS[tpl.category] || tpl.category;
+          templateSelect.innerHTML += `<option value="${tpl.code}">[${categoryLabel}] ${tpl.title}</option>`;
         });
         if (statusEl) {
-            statusEl.style.color = 'var(--text-muted)';
-            const info = [company.nace_code, company.danger_class].filter(Boolean).join(' / ') || company.company_name;
-            statusEl.innerText = `${info} için ${matching.length} hazır öneri listelendi. Daha fazla seçenek için kategori seçebilirsiniz.`;
+          statusEl.style.color = 'var(--text-muted)';
+          const info = [company.nace_code, company.danger_class].filter(Boolean).join(' / ') || company.company_name;
+          statusEl.innerText = `${info} için ${matching.length} hazır öneri listelendi. Daha fazla seçenek için kategori seçebilirsiniz.`;
         }
-    }
+      }
 
-    function addDaysToToday(days) {
+      function addDaysToToday(days) {
         const d = new Date();
         d.setDate(d.getDate() + Number(days || 30));
         return d.toISOString().slice(0, 10);
-    }
+      }
 
-    function applyRiskTemplate() {
+      function applyRiskTemplate() {
         const templateSelect = document.getElementById('risk_template_select');
         const code = templateSelect ? templateSelect.value : '';
-        if (!code) { alert('Lütfen önce bir risk şablonu seçin.'); return; }
+        if (!code) {
+          alert('Lütfen önce bir risk şablonu seçin.');
+          return;
+        }
         const tpl = RISK_TEMPLATE_LIBRARY.find((item) => item.code === code);
-        if (!tpl) { alert('Şablon bulunamadı.'); return; }
+        if (!tpl) {
+          alert('Şablon bulunamadı.');
+          return;
+        }
 
         document.getElementById('hazard_title').value = tpl.hazard;
         document.getElementById('action_plan').value = tpl.action;
@@ -1204,340 +1145,416 @@ let riskSortDirection = 'asc';
 
         const statusEl = document.getElementById('template_status');
         if (statusEl) {
-            statusEl.style.color = 'var(--accent-green)';
-            statusEl.innerText = `“${tpl.title}” şablonu forma uygulandı. Gerekirse metni sahadaki duruma göre düzenleyin.`;
+          statusEl.style.color = 'var(--accent-green)';
+          statusEl.innerText = `“${tpl.title}” şablonu forma uygulandı. Gerekirse metni sahadaki duruma göre düzenleyin.`;
         }
-    }
+      }
 
-    const themes = {
-        isgm: { '--bg-main': '#f4f6f9', '--bg-card': '#ffffff', '--text-main': '#1e293b', '--text-muted': '#64748b', '--primary': '#2563eb', '--primary-hover': '#1d4ed8', '--accent-green': '#10b981', '--accent-green-hover': '#059669', '--border-color': '#e2e8f0', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        'hekim-dark': { '--bg-main': '#0f172a', '--bg-card': '#1e293b', '--text-main': '#f8fafc', '--text-muted': '#94a3b8', '--primary': '#38bdf8', '--border-color': '#334155', '--table-header': '#1e293b', '--nav-inactive-bg': '#334155', '--nav-inactive-text': '#94a3b8' },
-        eskisehir: { '--bg-main': '#fffbf4', '--bg-card': '#ffffff', '--text-main': '#431407', '--text-muted': '#9a3412', '--primary': '#ea580c', '--border-color': '#fed7aa', '--table-header': '#fff7ed', '--nav-inactive-bg': '#ffedd5', '--nav-inactive-text': '#9a3412' },
-        kartal: { '--bg-main': '#f1f5f9', '--bg-card': '#ffffff', '--text-main': '#020617', '--text-muted': '#475569', '--primary': '#0f172a', '--border-color': '#cbd5e1', '--table-header': '#f8fafc', '--nav-inactive-bg': '#e2e8f0', '--nav-inactive-text': '#475569' },
-        doga: { '--bg-main': '#f0fdf4', '--bg-card': '#ffffff', '--text-main': '#14532d', '--text-muted': '#166534', '--primary': '#15803d', '--border-color': '#bbf7d0', '--table-header': '#f0fdf4', '--nav-inactive-bg': '#dcfce7', '--nav-inactive-text': '#14532d' }
-    };
+      window.onload = async function () {
+        const auth = await requireAuthAndRole('risk');
+        if (!auth) return;
 
-    window.onload = async function() {
-        const activeTheme = localStorage.getItem('selected_theme') || 'isgm';
-        if (themes[activeTheme]) { Object.keys(themes[activeTheme]).forEach(key => { document.documentElement.style.setProperty(key, themes[activeTheme][key]); }); }
+        CURRENT_AUTH = auth;
 
-const auth = await requireAuthAndRole('risk');
-if (!auth) return;
+        if (!CURRENT_AUTH.tenant_id) {
+          alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
+          await dbClient.auth.signOut();
+          window.location.href = 'login.html';
+          return;
+        }
 
-CURRENT_AUTH = auth;
+        document.body.style.display = 'block';
+        calculateFineKinney();
+        await fetchCompaniesToSelect();
+        fetchRisks();
+        updateConnectionStatus();
+        updateOfflineRiskCount();
+        registerServiceWorker();
+        if (navigator.onLine && window.OSGBRiskSync) {
+          window.OSGBRiskSync.syncPendingRisks();
+        }
+      };
 
-if (!CURRENT_AUTH.tenant_id) {
-    alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
-    await dbClient.auth.signOut();
-    window.location.href = 'login.html';
-    return;
-}
-
-document.body.style.display = "block";
-calculateFineKinney();
-await fetchCompaniesToSelect();
-fetchRisks();
-        updateConnectionStatus(); updateOfflineRiskCount(); registerServiceWorker();
-        if (navigator.onLine && window.OSGBRiskSync) { window.OSGBRiskSync.syncPendingRisks(); }
-    };
-
-    function calculateFineKinney() {
+      function calculateFineKinney() {
         const o = parseFloat(document.getElementById('prob').value);
         const f = parseFloat(document.getElementById('freq').value);
         const s = parseFloat(document.getElementById('sev').value);
         const score = o * f * s;
         document.getElementById('risk_score_display').innerText = score.toFixed(1);
         const lvl = document.getElementById('risk_level_display');
-        if(score < 20) { lvl.innerText = "Düşük Risk"; lvl.style.color = "var(--accent-green)"; }
-        else if(score < 70) { lvl.innerText = "Olası Risk (İzlenmeli)"; lvl.style.color = "orange"; }
-        else if(score < 200) { lvl.innerText = "Önemli Risk (Önlem Al)"; lvl.style.color = "darkorange"; }
-        else { lvl.innerText = "ESASLI RİSK (İŞİ DURDUR)"; lvl.style.color = "red"; }
-    }
+        if (score < 20) {
+          lvl.innerText = 'Düşük Risk';
+          lvl.style.color = 'var(--accent-green)';
+        } else if (score < 70) {
+          lvl.innerText = 'Olası Risk (İzlenmeli)';
+          lvl.style.color = 'orange';
+        } else if (score < 200) {
+          lvl.innerText = 'Önemli Risk (Önlem Al)';
+          lvl.style.color = 'darkorange';
+        } else {
+          lvl.innerText = 'ESASLI RİSK (İŞİ DURDUR)';
+          lvl.style.color = 'red';
+        }
+      }
 
-    function renderCompanyOptions(companies, placeholderText) {
+      function renderCompanyOptions(companies, placeholderText) {
         lastLoadedCompanies = Array.isArray(companies) ? companies : [];
         const select = document.getElementById('company_select');
         select.innerHTML = `<option value="">${placeholderText || '-- Lütfen Firma Seçin --'}</option>`;
-        (companies || []).forEach(c => {
-            const detail = [c.nace_code, c.danger_class].filter(Boolean).join(' / ');
-            select.innerHTML += `<option value="${c.id}">${c.company_name}${detail ? ' (' + detail + ')' : ''}</option>`;
+        (companies || []).forEach((c) => {
+          const detail = [c.nace_code, c.danger_class].filter(Boolean).join(' / ');
+          select.innerHTML += `<option value="${c.id}">${c.company_name}${detail ? ' (' + detail + ')' : ''}</option>`;
         });
         updateRiskTemplateOptions();
-    }
+      }
 
-    function formatCacheDate(isoString) {
+      function formatCacheDate(isoString) {
         if (!isoString) return '-';
-        try { return new Date(isoString).toLocaleString('tr-TR'); }
-        catch (err) { return isoString; }
-    }
+        try {
+          return new Date(isoString).toLocaleString('tr-TR');
+        } catch (err) {
+          return isoString;
+        }
+      }
 
-    function setCompanyCacheStatus(message, color) {
+      function setCompanyCacheStatus(message, color) {
         const el = document.getElementById('company_cache_status');
         if (!el) return;
         el.innerText = message;
         el.style.color = color || 'var(--text-muted)';
-    }
+      }
 
-   async function loadCompaniesFromCache() {
-    if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-        renderCompanyOptions([], '-- Tenant bilgisi bulunamadı --');
-        setCompanyCacheStatus('Tenant bilgisi olmadığı için offline firma listesi kullanılmadı.', '#b91c1c');
+      async function loadCompaniesFromCache() {
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
+          renderCompanyOptions([], '-- Tenant bilgisi bulunamadı --');
+          setCompanyCacheStatus('Tenant bilgisi olmadığı için offline firma listesi kullanılmadı.', '#b91c1c');
+          return false;
+        }
+
+        if (!window.OSGBOfflineDB || !window.OSGBOfflineDB.getCompanies) return false;
+
+        const cachedCompaniesRaw = await window.OSGBOfflineDB.getCompanies();
+        const meta = await window.OSGBOfflineDB.getCompanyCacheMeta();
+
+        const cachedCompanies = (cachedCompaniesRaw || []).filter((c) => {
+          return c.tenant_id && String(c.tenant_id) === String(CURRENT_AUTH.tenant_id);
+        });
+
+        if (cachedCompanies && cachedCompanies.length > 0) {
+          renderCompanyOptions(cachedCompanies, '-- Offline firma listesinden seçim yapın --');
+          setCompanyCacheStatus(
+            `Tenant firma listesi cihazdan yüklendi. ${cachedCompanies.length} firma. Son güncelleme: ${formatCacheDate(meta && meta.updated_at)}`,
+            '#c2410c'
+          );
+          return true;
+        }
+
+        renderCompanyOptions([], '-- Bu tenant için cihazda firma listesi yok --');
+        setCompanyCacheStatus(
+          'Bu tenant için cihazda firma listesi bulunamadı. İnternet varken firma listesini güncelleyin.',
+          '#b91c1c'
+        );
         return false;
-    }
+      }
+      async function fetchCompaniesToSelect() {
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
+          renderCompanyOptions([], '-- Tenant bilgisi bulunamadı --');
+          setCompanyCacheStatus('Tenant bilgisi bulunamadı.', '#b91c1c');
+          return;
+        }
 
-    if (!window.OSGBOfflineDB || !window.OSGBOfflineDB.getCompanies) return false;
+        if (!navigator.onLine) {
+          await loadCompaniesFromCache();
+          return;
+        }
 
-    const cachedCompaniesRaw = await window.OSGBOfflineDB.getCompanies();
-    const meta = await window.OSGBOfflineDB.getCompanyCacheMeta();
-
-    const cachedCompanies = (cachedCompaniesRaw || []).filter(c => {
-        return c.tenant_id && String(c.tenant_id) === String(CURRENT_AUTH.tenant_id);
-    });
-
-    if (cachedCompanies && cachedCompanies.length > 0) {
-        renderCompanyOptions(cachedCompanies, '-- Offline firma listesinden seçim yapın --');
-        setCompanyCacheStatus(`Tenant firma listesi cihazdan yüklendi. ${cachedCompanies.length} firma. Son güncelleme: ${formatCacheDate(meta && meta.updated_at)}`, '#c2410c');
-        return true;
-    }
-
-    renderCompanyOptions([], '-- Bu tenant için cihazda firma listesi yok --');
-    setCompanyCacheStatus('Bu tenant için cihazda firma listesi bulunamadı. İnternet varken firma listesini güncelleyin.', '#b91c1c');
-    return false;
-}
-    async function fetchCompaniesToSelect() {
-    if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-        renderCompanyOptions([], '-- Tenant bilgisi bulunamadı --');
-        setCompanyCacheStatus('Tenant bilgisi bulunamadı.', '#b91c1c');
-        return;
-    }
-
-    if (!navigator.onLine) {
-        await loadCompaniesFromCache();
-        return;
-    }
-
-    try {
-        const { data, error } = await dbClient
+        try {
+          const { data, error } = await dbClient
             .from('customer_companies')
             .select('id, company_name, nace_code, danger_class, tenant_id')
             .eq('tenant_id', CURRENT_AUTH.tenant_id)
             .order('company_name');
 
-        if (error) throw error;
+          if (error) throw error;
 
-        renderCompanyOptions(data || [], '-- Lütfen Firma Seçin --');
+          renderCompanyOptions(data || [], '-- Lütfen Firma Seçin --');
 
-        if (window.OSGBOfflineDB && window.OSGBOfflineDB.saveCompanies) {
+          if (window.OSGBOfflineDB && window.OSGBOfflineDB.saveCompanies) {
             await window.OSGBOfflineDB.saveCompanies(data || []);
-            setCompanyCacheStatus(`Firma listesi Supabase’den güncellendi ve cihaza kaydedildi. ${(data || []).length} firma.`, 'var(--accent-green)');
-        } else {
-            setCompanyCacheStatus('Firma listesi yüklendi; ancak offline veritabanı hazır olmadığı için cihaza kaydedilemedi.', '#c2410c');
+            setCompanyCacheStatus(
+              `Firma listesi Supabase’den güncellendi ve cihaza kaydedildi. ${(data || []).length} firma.`,
+              'var(--accent-green)'
+            );
+          } else {
+            setCompanyCacheStatus(
+              'Firma listesi yüklendi; ancak offline veritabanı hazır olmadığı için cihaza kaydedilemedi.',
+              '#c2410c'
+            );
+          }
+        } catch (err) {
+          console.warn('Firma listesi Supabase’den çekilemedi, cihaz önbelleği deneniyor:', err.message);
+          await loadCompaniesFromCache();
         }
-    } catch (err) {
-        console.warn('Firma listesi Supabase’den çekilemedi, cihaz önbelleği deneniyor:', err.message);
-        await loadCompaniesFromCache();
-    }
-}
+      }
 
-    async function manualRefreshCompanyCache() {
+      async function manualRefreshCompanyCache() {
         const statusEl = document.getElementById('company_cache_status');
         if (!navigator.onLine) {
-            await loadCompaniesFromCache();
-            alert('Şu anda internet yok. Varsa cihazdaki son firma listesi kullanılacak.');
-            return;
+          await loadCompaniesFromCache();
+          alert('Şu anda internet yok. Varsa cihazdaki son firma listesi kullanılacak.');
+          return;
         }
 
         if (statusEl) {
-            statusEl.style.color = 'var(--text-muted)';
-            statusEl.innerText = 'Firma listesi Supabase’den güncelleniyor...';
+          statusEl.style.color = 'var(--text-muted)';
+          statusEl.innerText = 'Firma listesi Supabase’den güncelleniyor...';
         }
         await fetchCompaniesToSelect();
-    }
+      }
 
-   async function fetchRisks() {
-    const tbody = document.getElementById('risk_table_body');
+      async function fetchRisksOffline() {
+        const tbody = document.getElementById('risk_table_body');
+        if (!window.OSGBOfflineDB) {
+          riskTableRows = [];
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Çevrimdışı veritabanı hazır değil.</td></tr>`;
+          return;
+        }
 
-    if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-        riskTableRows = [];
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
-        return;
-    }
+        try {
+          const pending = await window.OSGBOfflineDB.getPendingRisks();
+          const filteredPending = (pending || []).filter(
+            (r) => r.tenant_id && String(r.tenant_id) === String(CURRENT_AUTH.tenant_id)
+          );
 
-    const { data, error } = await dbClient
-        .from('risk_assessments')
-        .select('*, customer_companies!inner(company_name, tenant_id)')
-        .eq('tenant_id', CURRENT_AUTH.tenant_id)
-        .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
-        .order('status', { ascending: false })
-        .order('created_at', { ascending: false });
+          if (filteredPending.length === 0) {
+            riskTableRows = [];
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Çevrimdışı mod: Cihazda gönderilmeyi bekleyen risk kaydı bulunamadı. Canlı kayıtları listelemek için internet bağlantısı gereklidir.</td></tr>`;
+            return;
+          }
 
-    if (error) {
-        riskTableRows = [];
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">Hata: ${error.message}</td></tr>`;
-        return;
-    }
+          riskTableRows = filteredPending.map((r) => {
+            const comp = lastLoadedCompanies.find((c) => String(c.id) === String(r.company_id));
+            const companyName = comp ? comp.company_name : 'Bilinmeyen Firma (Offline)';
+            const hazard = r.hazard_title || '';
+            const actionPlan = r.action_plan || '';
+            const hasPhoto = !!r.photo_blob;
 
-    if (!data || data.length === 0) {
-        riskTableRows = [];
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Kayıtlı risk bulgusu yok.</td></tr>`;
-        return;
-    }
+            return {
+              id: r.local_id,
+              is_offline_pending: true,
+              company_name: companyName,
+              hazard_title: hazard,
+              action_plan: actionPlan,
+              hazard_text: `${hazard} ${actionPlan}`,
+              responsible_person: r.responsible_person || '',
+              image_url: r.photo_blob ? URL.createObjectURL(r.photo_blob) : '',
+              has_photo: hasPhoto ? 1 : 0,
+              photo_text: hasPhoto ? 'var' : 'yok',
+              risk_score: Number(r.risk_score) || 0,
+              status: 'Bekliyor (Çevrimdışı)',
+              status_text: 'Bekliyor (Çevrimdışı)',
+              target_date: r.target_date || '',
+              close_note: ''
+            };
+          });
 
-    riskTableRows = data.map(r => {
-        const companyName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
-        const hazard = r.hazard_title || '';
-        const actionPlan = r.action_plan || '';
-        const closeNote = r.close_note || '';
-        const statusText = r.status || 'Açık';
-        const hasPhoto = !!r.image_url;
+          renderRiskTable();
+        } catch (err) {
+          console.warn('Çevrimdışı riskler listelenirken hata:', err.message);
+          riskTableRows = [];
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">Offline hata: ${err.message}</td></tr>`;
+        }
+      }
 
-        return {
-            id: r.id,
-            company_name: companyName,
-            hazard_title: hazard,
-            action_plan: actionPlan,
-            hazard_text: `${hazard} ${actionPlan} ${closeNote}`,
-            responsible_person: r.responsible_person || '',
-            image_url: r.image_url || '',
-            has_photo: hasPhoto ? 1 : 0,
-            photo_text: hasPhoto ? 'var' : 'yok',
-            risk_score: Number(r.risk_score) || 0,
-            status: statusText,
-            status_text: statusText,
-            target_date: r.target_date || '',
-            close_note: closeNote
-        };
-    });
+      async function fetchRisks() {
+        const tbody = document.getElementById('risk_table_body');
 
-    renderRiskTable();
-}
-function escapeHtml(value) {
-    return (value || '').toString().replace(/[&<>'"]/g, function (char) {
-        return {
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
+          riskTableRows = [];
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
+          return;
+        }
+
+        if (!navigator.onLine) {
+          await fetchRisksOffline();
+          return;
+        }
+
+        try {
+          const { data, error } = await dbClient
+            .from('risk_assessments')
+            .select('*, customer_companies!inner(company_name, tenant_id)')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
+            .order('status', { ascending: false })
+            .order('created_at', { ascending: false });
+
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+            riskTableRows = [];
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Kayıtlı risk bulgusu yok.</td></tr>`;
+            return;
+          }
+
+          riskTableRows = data.map((r) => {
+            const companyName = r.customer_companies ? r.customer_companies.company_name : 'Bilinmeyen Firma';
+            const hazard = r.hazard_title || '';
+            const actionPlan = r.action_plan || '';
+            const closeNote = r.close_note || '';
+            const statusText = r.status || 'Açık';
+            const hasPhoto = !!r.image_url;
+
+            return {
+              id: r.id,
+              company_name: companyName,
+              hazard_title: hazard,
+              action_plan: actionPlan,
+              hazard_text: `${hazard} ${actionPlan} ${closeNote}`,
+              responsible_person: r.responsible_person || '',
+              image_url: r.image_url || '',
+              has_photo: hasPhoto ? 1 : 0,
+              photo_text: hasPhoto ? 'var' : 'yok',
+              risk_score: Number(r.risk_score) || 0,
+              status: statusText,
+              status_text: statusText,
+              target_date: r.target_date || '',
+              close_note: closeNote
+            };
+          });
+
+          renderRiskTable();
+        } catch (err) {
+          console.warn('Canlı risk listesi çekilemedi, çevrimdışı listesi denenecek:', err.message);
+          await fetchRisksOffline();
+        }
+      }
+      function escapeHtml(value) {
+        return (value || '').toString().replace(/[&<>'"]/g, function (char) {
+          return {
             '&': '&amp;',
             '<': '&lt;',
             '>': '&gt;',
             "'": '&#39;',
             '"': '&quot;'
-        }[char];
-    });
-}
+          }[char];
+        });
+      }
 
-function getRiskLevelInfo(score) {
-    let badgeColor = '#dcfce7';
-    let textColor = '#15803d';
-    let lvlText = 'Düşük';
+      function getRiskLevelInfo(score) {
+        let badgeColor = '#dcfce7';
+        let textColor = '#15803d';
+        let lvlText = 'Düşük';
 
-    if (score >= 20 && score < 70) {
-        badgeColor = '#ffedd5';
-        textColor = '#c2410c';
-        lvlText = 'Olası';
-    } else if (score >= 70 && score < 200) {
-        badgeColor = '#fee2e2';
-        textColor = '#b91c1c';
-        lvlText = 'Önemli';
-    } else if (score >= 200) {
-        badgeColor = '#f87171';
-        textColor = '#ffffff';
-        lvlText = 'ESASLI';
-    }
-
-    return { badgeColor, textColor, lvlText };
-}
-
-function getRiskFilteredRows() {
-    const filters = {};
-
-    document.querySelectorAll('.risk-filter-input').forEach(input => {
-        const field = input.dataset.field;
-        const value = (input.value || '').toString().trim().toLowerCase();
-
-        if (field && value) {
-            filters[field] = value;
+        if (score >= 20 && score < 70) {
+          badgeColor = '#ffedd5';
+          textColor = '#c2410c';
+          lvlText = 'Olası';
+        } else if (score >= 70 && score < 200) {
+          badgeColor = '#fee2e2';
+          textColor = '#b91c1c';
+          lvlText = 'Önemli';
+        } else if (score >= 200) {
+          badgeColor = '#f87171';
+          textColor = '#ffffff';
+          lvlText = 'ESASLI';
         }
-    });
 
-    let rows = [...riskTableRows];
+        return { badgeColor, textColor, lvlText };
+      }
 
-    Object.keys(filters).forEach(field => {
-        const value = filters[field];
+      function getRiskFilteredRows() {
+        const filters = {};
 
-        rows = rows.filter(row => {
-            const cellValue = row[field] !== undefined && row[field] !== null
-                ? row[field].toString().toLowerCase()
-                : '';
+        document.querySelectorAll('.risk-filter-input').forEach((input) => {
+          const field = input.dataset.field;
+          const value = (input.value || '').toString().trim().toLowerCase();
+
+          if (field && value) {
+            filters[field] = value;
+          }
+        });
+
+        let rows = [...riskTableRows];
+
+        Object.keys(filters).forEach((field) => {
+          const value = filters[field];
+
+          rows = rows.filter((row) => {
+            const cellValue =
+              row[field] !== undefined && row[field] !== null ? row[field].toString().toLowerCase() : '';
 
             return cellValue.includes(value);
+          });
         });
-    });
 
-    if (riskSortField) {
-        rows.sort((a, b) => {
+        if (riskSortField) {
+          rows.sort((a, b) => {
             const av = a[riskSortField];
             const bv = b[riskSortField];
 
             if (typeof av === 'number' && typeof bv === 'number') {
-                return riskSortDirection === 'asc' ? av - bv : bv - av;
+              return riskSortDirection === 'asc' ? av - bv : bv - av;
             }
 
             return riskSortDirection === 'asc'
-                ? (av || '').toString().localeCompare((bv || '').toString(), 'tr')
-                : (bv || '').toString().localeCompare((av || '').toString(), 'tr');
-        });
-    }
+              ? (av || '').toString().localeCompare((bv || '').toString(), 'tr')
+              : (bv || '').toString().localeCompare((av || '').toString(), 'tr');
+          });
+        }
 
-    return rows;
-}
+        return rows;
+      }
 
-function renderRiskTable() {
-    const tbody = document.getElementById('risk_table_body');
-    const rows = getRiskFilteredRows();
+      function renderRiskTable() {
+        const tbody = document.getElementById('risk_table_body');
+        const rows = getRiskFilteredRows();
 
-    updateRiskSortIndicators();
+        updateRiskSortIndicators();
 
-    if (!rows || rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Filtreye uygun risk bulgusu bulunamadı.</td></tr>`;
-        return;
-    }
+        if (!rows || rows.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted);">Filtreye uygun risk bulgusu bulunamadı.</td></tr>`;
+          return;
+        }
 
-    tbody.innerHTML = '';
+        tbody.innerHTML = '';
 
-    rows.forEach(r => {
-        const level = getRiskLevelInfo(r.risk_score);
-        const isClosed = r.status === 'Kapalı';
-        const isInProgress = r.status === 'Devam Ediyor';
+        rows.forEach((r) => {
+          const level = getRiskLevelInfo(r.risk_score);
+          const isClosed = r.status === 'Kapalı';
+          const isInProgress = r.status === 'Devam Ediyor';
 
-        const progressButton = (!isClosed && !isInProgress)
-            ? `<button class="close-btn" style="background:#f97316;" onclick="setRiskInProgress('${r.id}')">Devam Ediyor</button>`
-            : '';
+          const progressButton =
+            !isClosed && !isInProgress && !r.is_offline_pending
+              ? `<button class="btn btn-warning-soft btn-small" onclick="setRiskInProgress('${r.id}')">Devam Ediyor</button>`
+              : '';
 
-        const closeButton = isClosed
+          const closeButton = isClosed
             ? '<span style="color:var(--accent-green); font-weight:bold; display:block; margin-bottom:6px;">✓ Giderildi</span>'
-            : `<button class="close-btn" onclick="closeRisk('${r.id}')">Riski Kapat</button>`;
+            : r.is_offline_pending
+              ? ''
+              : `<button class="btn btn-danger-soft btn-small" onclick="closeRisk('${r.id}')">Riski Kapat</button>`;
 
-        const actionCell = `${progressButton ? progressButton + '<br>' : ''}${closeButton}<br><button class="delete-risk-btn" onclick="deleteRisk('${r.id}')">Sil</button>`;
+          const actionCell = `${progressButton ? progressButton + '<br>' : ''}${closeButton}<br><button class="btn btn-red btn-small" onclick="deleteRisk('${r.id}')">Sil</button>`;
 
-        const photoCell = r.image_url
+          const photoCell = r.image_url
             ? `<a href="${escapeHtml(r.image_url)}" target="_blank" style="color:var(--primary); font-weight:bold; text-decoration:none;">📷 Var</a>`
             : '<span style="color:var(--text-muted);">Yok</span>';
 
-        const hazardText = isClosed
-            ? `<s>${escapeHtml(r.hazard_title)}</s>`
-            : escapeHtml(r.hazard_title);
+          const hazardText = isClosed ? `<s>${escapeHtml(r.hazard_title)}</s>` : escapeHtml(r.hazard_title);
 
-        const actionText = r.action_plan
+          const actionText = r.action_plan
             ? `<div class="action-note"><strong>Önlem:</strong> ${escapeHtml(r.action_plan)}</div>`
             : '<div class="action-note">Önlem girilmemiş</div>';
 
-        const closeNote = r.close_note
+          const closeNote = r.close_note
             ? `<div class="action-note"><strong>Kapanış:</strong> ${escapeHtml(r.close_note)}</div>`
             : '';
 
-        const statusColor = r.status === 'Kapalı'
-            ? 'var(--accent-green)'
-            : (r.status === 'Devam Ediyor' ? '#f97316' : '#b91c1c');
+          const statusColor =
+            r.status === 'Kapalı' ? 'var(--accent-green)' : r.status === 'Devam Ediyor' ? '#f97316' : '#b91c1c';
 
-        tbody.innerHTML += `
+          tbody.innerHTML += `
             <tr class="${isClosed ? 'status-closed' : ''}">
                 <td><strong>${escapeHtml(r.company_name)}</strong></td>
                 <td>${hazardText}${actionText}${closeNote}</td>
@@ -1552,196 +1569,225 @@ function renderRiskTable() {
                 <td>${actionCell}</td>
             </tr>
         `;
-    });
-}
+        });
+      }
 
-function applyRiskFilters() {
-    renderRiskTable();
-}
+      function applyRiskFilters() {
+        renderRiskTable();
+      }
 
-function sortRisksBy(field) {
-    if (riskSortField === field) {
-        riskSortDirection = riskSortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        riskSortField = field;
-        riskSortDirection = 'asc';
-    }
-
-    renderRiskTable();
-}
-
-function updateRiskSortIndicators() {
-    const fields = [
-        'company_name',
-        'hazard_title',
-        'responsible_person',
-        'has_photo',
-        'risk_score',
-        'status',
-        'target_date'
-    ];
-
-    fields.forEach(field => {
-        const el = document.getElementById(`sort_${field}`);
-
-        if (!el) return;
-
-        if (field === riskSortField) {
-            el.innerText = riskSortDirection === 'asc' ? '▲' : '▼';
+      function sortRisksBy(field) {
+        if (riskSortField === field) {
+          riskSortDirection = riskSortDirection === 'asc' ? 'desc' : 'asc';
         } else {
-            el.innerText = '';
+          riskSortField = field;
+          riskSortDirection = 'asc';
         }
-    });
-}
-    window.fetchRisks = fetchRisks;
 
-   async function setRiskInProgress(id) {
-    if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-        alert('Tenant bilgisi bulunamadı.');
-        return;
-    }
+        renderRiskTable();
+      }
 
-    const { error } = await dbClient
-        .from('risk_assessments')
-        .update({ status: 'Devam Ediyor' })
-        .eq('id', id)
-        .eq('tenant_id', CURRENT_AUTH.tenant_id);
+      function updateRiskSortIndicators() {
+        const fields = [
+          'company_name',
+          'hazard_title',
+          'responsible_person',
+          'has_photo',
+          'risk_score',
+          'status',
+          'target_date'
+        ];
 
-    if (error) {
-        alert('Durum güncellenemedi: ' + error.message);
-        return;
-    }
+        fields.forEach((field) => {
+          const el = document.getElementById(`sort_${field}`);
 
-    fetchRisks();
-}
+          if (!el) return;
 
-    async function closeRisk(id) {
-    if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-        alert('Tenant bilgisi bulunamadı.');
-        return;
-    }
+          if (field === riskSortField) {
+            el.innerText = riskSortDirection === 'asc' ? '▲' : '▼';
+          } else {
+            el.innerText = '';
+          }
+        });
+      }
+      window.fetchRisks = fetchRisks;
 
-    const note = prompt('Bu risk/DÖF nasıl giderildi? Kapanış açıklamasını yazın:');
-    if (note === null) return;
-    if (!note.trim()) {
-        alert('Kapanış açıklaması boş bırakılamaz.');
-        return;
-    }
+      async function setRiskInProgress(id) {
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
 
-    const { error } = await dbClient
-        .from('risk_assessments')
-        .update({
+        const { error } = await dbClient
+          .from('risk_assessments')
+          .update({ status: 'Devam Ediyor' })
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id);
+
+        if (error) {
+          alert('Durum güncellenemedi: ' + error.message);
+          return;
+        }
+
+        fetchRisks();
+      }
+
+      async function closeRisk(id) {
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
+
+        const note = prompt('Bu risk/DÖF nasıl giderildi? Kapanış açıklamasını yazın:');
+        if (note === null) return;
+        if (!note.trim()) {
+          alert('Kapanış açıklaması boş bırakılamaz.');
+          return;
+        }
+
+        const { error } = await dbClient
+          .from('risk_assessments')
+          .update({
             status: 'Kapalı',
             close_note: note.trim(),
             closed_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .eq('tenant_id', CURRENT_AUTH.tenant_id);
+          })
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id);
 
-    if (error) {
-        alert('Kapatma hatası: ' + error.message);
-        return;
-    }
+        if (error) {
+          alert('Kapatma hatası: ' + error.message);
+          return;
+        }
 
-    fetchRisks();
-}
+        fetchRisks();
+      }
 
-    function extractStoragePathFromPublicUrl(publicUrl) {
+      function extractStoragePathFromPublicUrl(publicUrl) {
         if (!publicUrl) return null;
         try {
-            const marker = '/storage/v1/object/public/risk-photos/';
-            const idx = publicUrl.indexOf(marker);
-            if (idx === -1) return null;
-            return decodeURIComponent(publicUrl.substring(idx + marker.length).split('?')[0]);
+          const marker = '/storage/v1/object/public/risk-photos/';
+          const idx = publicUrl.indexOf(marker);
+          if (idx === -1) return null;
+          return decodeURIComponent(publicUrl.substring(idx + marker.length).split('?')[0]);
         } catch (err) {
-            return null;
+          return null;
         }
-    }
+      }
 
-    async function deleteRisk(id) {
-        if(!confirm("Bu risk kaydı ve varsa bağlı fotoğrafı kalıcı olarak silinsin mi?")) return;
+      async function deleteRisk(id) {
+        if (!confirm('Bu risk kaydı ve varsa bağlı fotoğrafı kalıcı olarak silinsin mi?')) return;
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-    alert('Tenant bilgisi bulunamadı.');
-    return;
-}
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
 
-const { data: risk, error: readError } = await dbClient
-    .from('risk_assessments')
-    .select('id, image_url, image_path')
-    .eq('id', id)
-    .eq('tenant_id', CURRENT_AUTH.tenant_id)
-    .single();
+        const isOfflinePending = (riskTableRows || []).some(
+          (row) => String(row.id) === String(id) && row.is_offline_pending
+        );
+
+        if (isOfflinePending || id.toString().startsWith('local_') || !navigator.onLine) {
+          if (window.OSGBOfflineDB && window.OSGBOfflineDB.deleteRisk) {
+            try {
+              await window.OSGBOfflineDB.deleteRisk(id);
+              alert('Çevrimdışı kaydedilen bekleyen risk cihazdan silindi.');
+              await updateOfflineRiskCount();
+              fetchRisks();
+            } catch (err) {
+              alert('Cihazdan silinirken hata oluştu: ' + err.message);
+            }
+          } else {
+            alert('Çevrimdışı veritabanı hazır değil.');
+          }
+          return;
+        }
+
+        const { data: risk, error: readError } = await dbClient
+          .from('risk_assessments')
+          .select('id, image_url, image_path')
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .single();
 
         if (readError) {
-            alert("Silme öncesi kayıt okunamadı: " + readError.message);
-            return;
+          alert('Silme öncesi kayıt okunamadı: ' + readError.message);
+          return;
         }
 
         const imagePath = risk && (risk.image_path || extractStoragePathFromPublicUrl(risk.image_url));
 
         if (imagePath) {
-            const { error: storageError } = await dbClient.storage
-                .from('risk-photos')
-                .remove([imagePath]);
+          const { error: storageError } = await dbClient.storage.from('risk-photos').remove([imagePath]);
 
-            if (storageError) {
-                const devam = confirm("Fotoğraf Storage'dan silinemedi: " + storageError.message + "\n\nYine de risk kaydını tablodan silmek istiyor musunuz?");
-                if (!devam) return;
-            }
+          if (storageError) {
+            const devam = confirm(
+              "Fotoğraf Storage'dan silinemedi: " +
+                storageError.message +
+                '\n\nYine de risk kaydını tablodan silmek istiyor musunuz?'
+            );
+            if (!devam) return;
+          }
         }
 
         const { error } = await dbClient
-    .from('risk_assessments')
-    .delete()
-    .eq('id', id)
-    .eq('tenant_id', CURRENT_AUTH.tenant_id);
-        if (error) { alert("Silme hatası: " + error.message); return; }
+          .from('risk_assessments')
+          .delete()
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id);
+        if (error) {
+          alert('Silme hatası: ' + error.message);
+          return;
+        }
         fetchRisks();
-    }
+      }
 
-    function makeLocalId() {
+      function makeLocalId() {
         if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
         return 'local_' + Date.now() + '_' + Math.random().toString(16).slice(2);
-    }
+      }
 
-    let selectedRiskPhotoBlob = null;
-    let selectedRiskPhotoName = null;
-    let selectedRiskPhotoType = null;
+      let selectedRiskPhotoBlob = null;
+      let selectedRiskPhotoName = null;
+      let selectedRiskPhotoType = null;
 
-    function formatBytes(bytes) {
+      function formatBytes(bytes) {
         if (!bytes && bytes !== 0) return '-';
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
         return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-    }
+      }
 
-    function setPhotoStatus(message, color) {
+      function setPhotoStatus(message, color) {
         const el = document.getElementById('photo_compress_status');
         if (!el) return;
         el.innerText = message;
         el.style.color = color || 'var(--text-muted)';
-    }
+      }
 
-    function loadImageFromFile(file) {
+      function loadImageFromFile(file) {
         return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error('Fotoğraf okunamadı.'));
-            img.src = URL.createObjectURL(file);
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => reject(new Error('Fotoğraf okunamadı.'));
+          img.src = URL.createObjectURL(file);
         });
-    }
+      }
 
-    function canvasToBlob(canvas, type, quality) {
+      function canvasToBlob(canvas, type, quality) {
         return new Promise((resolve, reject) => {
-            canvas.toBlob((blob) => {
-                if (blob) resolve(blob);
-                else reject(new Error('Fotoğraf sıkıştırılamadı.'));
-            }, type, quality);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) resolve(blob);
+              else reject(new Error('Fotoğraf sıkıştırılamadı.'));
+            },
+            type,
+            quality
+          );
         });
-    }
+      }
 
-    async function compressImageFile(file) {
+      async function compressImageFile(file) {
         const maxWidth = 1280;
         const outputType = 'image/jpeg';
         const quality = 0.72;
@@ -1762,9 +1808,9 @@ const { data: risk, error: readError } = await dbClient
         const compressed = await canvasToBlob(canvas, outputType, quality);
         if (compressed.size >= file.size) return file;
         return compressed;
-    }
+      }
 
-    async function prepareRiskPhoto() {
+      async function prepareRiskPhoto() {
         const fileInput = document.getElementById('risk_photo');
         const preview = document.getElementById('risk_photo_preview');
         const file = fileInput.files && fileInput.files[0];
@@ -1774,10 +1820,10 @@ const { data: risk, error: readError } = await dbClient
         selectedRiskPhotoType = null;
 
         if (!file) {
-            preview.style.display = 'none';
-            preview.src = '';
-            setPhotoStatus("Fotoğraf internet yokken cihazda saklanır; bağlantı gelince Supabase Storage'a yüklenir.");
-            return;
+          preview.style.display = 'none';
+          preview.src = '';
+          setPhotoStatus("Fotoğraf internet yokken cihazda saklanır; bağlantı gelince Supabase Storage'a yüklenir.");
+          return;
         }
 
         preview.src = URL.createObjectURL(file);
@@ -1785,65 +1831,89 @@ const { data: risk, error: readError } = await dbClient
         setPhotoStatus('Fotoğraf hazırlanıyor ve sıkıştırılıyor...', 'var(--text-muted)');
 
         try {
-            const compressed = await compressImageFile(file);
-            selectedRiskPhotoBlob = compressed;
-            selectedRiskPhotoName = (file.name || 'risk-photo').replace(/\.[^.]+$/, '') + '.jpg';
-            selectedRiskPhotoType = compressed.type || 'image/jpeg';
+          const compressed = await compressImageFile(file);
+          selectedRiskPhotoBlob = compressed;
+          selectedRiskPhotoName = (file.name || 'risk-photo').replace(/\.[^.]+$/, '') + '.jpg';
+          selectedRiskPhotoType = compressed.type || 'image/jpeg';
 
-            if (compressed.size < file.size) {
-                setPhotoStatus(`Fotoğraf sıkıştırıldı: ${formatBytes(file.size)} → ${formatBytes(compressed.size)}.`, 'var(--accent-green)');
-            } else {
-                setPhotoStatus(`Fotoğraf zaten uygun boyutta: ${formatBytes(file.size)}.`, 'var(--text-muted)');
-                selectedRiskPhotoName = file.name || selectedRiskPhotoName;
-                selectedRiskPhotoType = file.type || selectedRiskPhotoType;
-            }
+          if (compressed.size < file.size) {
+            setPhotoStatus(
+              `Fotoğraf sıkıştırıldı: ${formatBytes(file.size)} → ${formatBytes(compressed.size)}.`,
+              'var(--accent-green)'
+            );
+          } else {
+            setPhotoStatus(`Fotoğraf zaten uygun boyutta: ${formatBytes(file.size)}.`, 'var(--text-muted)');
+            selectedRiskPhotoName = file.name || selectedRiskPhotoName;
+            selectedRiskPhotoType = file.type || selectedRiskPhotoType;
+          }
         } catch (err) {
-            selectedRiskPhotoBlob = file;
-            selectedRiskPhotoName = file.name || 'risk-photo.jpg';
-            selectedRiskPhotoType = file.type || 'image/jpeg';
-            setPhotoStatus('Fotoğraf sıkıştırılamadı; orijinal dosya kullanılacak. Detay: ' + err.message, '#c2410c');
+          selectedRiskPhotoBlob = file;
+          selectedRiskPhotoName = file.name || 'risk-photo.jpg';
+          selectedRiskPhotoType = file.type || 'image/jpeg';
+          setPhotoStatus('Fotoğraf sıkıştırılamadı; orijinal dosya kullanılacak. Detay: ' + err.message, '#c2410c');
         }
-    }
+      }
 
-    function updateConnectionStatus() {
+      function updateConnectionStatus() {
         const el = document.getElementById('connection_status');
         if (!el) return;
-        if (navigator.onLine) { el.innerText = 'İnternet var'; el.style.color = 'var(--accent-green)'; }
-        else { el.innerText = 'İnternet yok - kayıtlar cihazda bekleyecek'; el.style.color = '#c2410c'; }
-    }
+        if (navigator.onLine) {
+          el.innerText = 'İnternet var';
+          el.style.color = 'var(--accent-green)';
+        } else {
+          el.innerText = 'İnternet yok - kayıtlar cihazda bekleyecek';
+          el.style.color = '#c2410c';
+        }
+      }
 
-    async function updateOfflineRiskCount() {
+      async function updateOfflineRiskCount() {
         if (!window.OSGBOfflineDB) return;
         const count = await window.OSGBOfflineDB.countPendingRisks();
         document.getElementById('pending_risk_count').innerText = count;
-    }
-    window.updateOfflineRiskCount = updateOfflineRiskCount;
+      }
+      window.updateOfflineRiskCount = updateOfflineRiskCount;
 
-    async function manualSyncRisks() {
+      async function manualSyncRisks() {
         updateConnectionStatus();
         const statusEl = document.getElementById('offline_status');
         const errorEl = document.getElementById('offline_error');
-        if (errorEl) { errorEl.style.display = 'none'; errorEl.innerText = ''; }
-        if (!navigator.onLine) { alert('Şu anda internet yok. Kayıtlar cihazda beklemeye devam edecek.'); return; }
-        if (statusEl) { statusEl.style.color = 'var(--text-muted)'; statusEl.innerText = 'Bekleyen kayıtlar gönderiliyor...'; }
+        if (errorEl) {
+          errorEl.style.display = 'none';
+          errorEl.innerText = '';
+        }
+        if (!navigator.onLine) {
+          alert('Şu anda internet yok. Kayıtlar cihazda beklemeye devam edecek.');
+          return;
+        }
+        if (statusEl) {
+          statusEl.style.color = 'var(--text-muted)';
+          statusEl.innerText = 'Bekleyen kayıtlar gönderiliyor...';
+        }
         if (window.OSGBRiskSync) {
-            const result = await window.OSGBRiskSync.syncPendingRisks();
-            await updateOfflineRiskCount();
-            return result;
+          const result = await window.OSGBRiskSync.syncPendingRisks();
+          await updateOfflineRiskCount();
+          return result;
         }
-    }
+      }
 
-    async function registerServiceWorker() {
+      async function registerServiceWorker() {
         if ('serviceWorker' in navigator) {
-            try { await navigator.serviceWorker.register('service-worker.js'); }
-            catch (err) { console.warn('Service worker kaydı yapılamadı:', err.message); }
+          try {
+            await navigator.serviceWorker.register('service-worker.js');
+          } catch (err) {
+            console.warn('Service worker kaydı yapılamadı:', err.message);
+          }
         }
-    }
+      }
 
-    window.addEventListener('online', function() { updateConnectionStatus(); fetchCompaniesToSelect(); manualSyncRisks(); });
-    window.addEventListener('offline', updateConnectionStatus);
+      window.addEventListener('online', function () {
+        updateConnectionStatus();
+        fetchCompaniesToSelect();
+        manualSyncRisks();
+      });
+      window.addEventListener('offline', updateConnectionStatus);
 
-    async function saveRisk() {
+      async function saveRisk() {
         const compId = document.getElementById('company_select').value;
         const hazard = document.getElementById('hazard_title').value;
         const actionPlan = document.getElementById('action_plan').value;
@@ -1856,39 +1926,44 @@ const { data: risk, error: readError } = await dbClient
         const originalPhotoFile = photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
         const photoFile = selectedRiskPhotoBlob || originalPhotoFile;
 
-        if(!compId || !hazard || !target) { alert("Lütfen firma, tehlike tanımı ve termin tarihini doldurun!"); return; }
+        if (!compId || !hazard || !target) {
+          alert('Lütfen firma, tehlike tanımı ve termin tarihini doldurun!');
+          return;
+        }
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-    alert('Tenant bilgisi bulunamadı.');
-    return;
-}
+          alert('Tenant bilgisi bulunamadı.');
+          return;
+        }
 
-const companyAllowed = lastLoadedCompanies.some(c => String(c.id) === String(compId) && String(c.tenant_id) === String(CURRENT_AUTH.tenant_id));
+        const companyAllowed = lastLoadedCompanies.some(
+          (c) => String(c.id) === String(compId) && String(c.tenant_id) === String(CURRENT_AUTH.tenant_id)
+        );
 
-if (!companyAllowed) {
-    alert('Seçilen firma bu tenant altında bulunamadı.');
-    return;
-}
+        if (!companyAllowed) {
+          alert('Seçilen firma bu tenant altında bulunamadı.');
+          return;
+        }
 
-const localRisk = {
-    local_id: makeLocalId(),
-    tenant_id: CURRENT_AUTH.tenant_id,
-    company_id: compId,
-    hazard_title: hazard,
-            action_plan: actionPlan || null,
-            responsible_person: responsible || null,
-            probability_o: o,
-            frequency_f: f,
-            severity_s: sev,
-            risk_score: (o * f * sev),
-            target_date: target,
-            status: 'Açık',
-            photo_blob: photoFile,
-            photo_name: photoFile ? (selectedRiskPhotoName || originalPhotoFile?.name || 'risk-photo.jpg') : null,
-            photo_type: photoFile ? (selectedRiskPhotoType || originalPhotoFile?.type || 'image/jpeg') : null,
-            sync_status: 'pending',
-            created_at: new Date().toISOString(),
-            created_offline: !navigator.onLine
+        const localRisk = {
+          local_id: makeLocalId(),
+          tenant_id: CURRENT_AUTH.tenant_id,
+          company_id: compId,
+          hazard_title: hazard,
+          action_plan: actionPlan || null,
+          responsible_person: responsible || null,
+          probability_o: o,
+          frequency_f: f,
+          severity_s: sev,
+          risk_score: o * f * sev,
+          target_date: target,
+          status: 'Açık',
+          photo_blob: photoFile,
+          photo_name: photoFile ? selectedRiskPhotoName || originalPhotoFile?.name || 'risk-photo.jpg' : null,
+          photo_type: photoFile ? selectedRiskPhotoType || originalPhotoFile?.type || 'image/jpeg' : null,
+          sync_status: 'pending',
+          created_at: new Date().toISOString(),
+          created_offline: !navigator.onLine
         };
 
         await window.OSGBOfflineDB.saveRisk(localRisk);
@@ -1900,24 +1975,25 @@ const localRisk = {
         document.getElementById('risk_photo').value = '';
         document.getElementById('risk_photo_preview').style.display = 'none';
         document.getElementById('risk_photo_preview').src = '';
-        selectedRiskPhotoBlob = null; selectedRiskPhotoName = null; selectedRiskPhotoType = null;
+        selectedRiskPhotoBlob = null;
+        selectedRiskPhotoName = null;
+        selectedRiskPhotoType = null;
         setPhotoStatus("Fotoğraf internet yokken cihazda saklanır; bağlantı gelince Supabase Storage'a yüklenir.");
 
         document.getElementById('offline_status').style.color = navigator.onLine ? 'var(--text-muted)' : '#c2410c';
         document.getElementById('offline_status').innerText = navigator.onLine
-            ? 'Kayıt önce cihaza alındı. Şimdi Supabase’e gönderilmeye çalışılıyor.'
-            : 'İnternet yok. Risk kaydı ve fotoğraf cihazda bekliyor.';
+          ? 'Kayıt önce cihaza alındı. Şimdi Supabase’e gönderilmeye çalışılıyor.'
+          : 'İnternet yok. Risk kaydı ve fotoğraf cihazda bekliyor.';
 
         await updateOfflineRiskCount();
 
         if (navigator.onLine && window.OSGBRiskSync) {
-    await window.OSGBRiskSync.syncPendingRisks();
-}
+          await window.OSGBRiskSync.syncPendingRisks();
+        }
 
-await updateOfflineRiskCount();
-fetchRisks();
-    }
-    async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
-</script>
-</body>
+        await updateOfflineRiskCount();
+        fetchRisks();
+      }
+    </script>
+  </body>
 </html>

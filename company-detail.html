@@ -1,838 +1,368 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OSGB SaaS - Firma Detay ve DÖF Raporu</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; padding: 30px; display: none; color: #1e293b; }
-        .card { background: white; padding: 25px; border-radius: 12px; max-width: 1180px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .top-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .back-btn { background: #64748b; color: white; border: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; }
-        .back-btn:hover { background: #475569; }
-        .actions-link { background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 13px; }
-        .actions-link:hover { background: #1e293b; }
-        
-        .company-profile { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-top: 20px; margin-bottom: 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        .profile-item { font-size: 14px; }
-        .profile-label { color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 11px; }
-        .profile-value { color: #1e293b; font-weight: bold; font-size: 15px; margin-top: 4px; }
-
-        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-        .summary-box { border-radius: 10px; padding: 14px 16px; color: white; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08); }
-        .summary-title { font-size: 12px; font-weight: 700; opacity: 0.92; }
-        .summary-value { font-size: 26px; font-weight: 800; margin-top: 4px; }
-        .sum-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-        .sum-orange { background: linear-gradient(135deg, #f97316, #c2410c); }
-        .sum-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
-        .sum-green { background: linear-gradient(135deg, #10b981, #047857); }
-
-        .detail-layout { display: grid; grid-template-columns: 1.35fr 0.95fr; gap: 20px; margin-top: 20px; }
-        .panel { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-        .panel-title-uzman { color: #0284c7; border-bottom: 2px solid #0284c7; padding-bottom: 8px; margin-top: 0; }
-        .panel-title-hekim { color: #16a34a; border-bottom: 2px solid #16a34a; padding-bottom: 8px; margin-top: 0; }
-        .panel-title-takvim { color: #ea580c; border-bottom: 2px solid #ea580c; padding-bottom: 8px; margin-top: 0; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-        th { background-color: #f8fafc; color: #475569; font-weight: 700; }
-        tr:hover { background: #f8fafc; }
-        .badge { padding: 4px 7px; border-radius: 5px; font-size: 10px; font-weight: 800; display: inline-block; }
-        .badge-open { background: #fee2e2; color: #b91c1c; }
-        .badge-progress { background: #dbeafe; color: #1d4ed8; }
-        .badge-closed { background: #dcfce7; color: #15803d; }
-        .badge-overdue { background: #7f1d1d; color: #ffffff; }
-        .status-closed { background-color: #f0fdf4; opacity: 0.85; }
-        .risk-thumb { width: 54px; height: 54px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer; }
-        .risk-no-photo { color:#94a3b8; font-size:11px; white-space: nowrap; }
-        .muted { color: #64748b; }
-        .small { font-size: 11px; }
-        .hazard-title { font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-        .action-plan { color: #475569; border-left: 3px solid #cbd5e1; padding-left: 8px; margin-top: 6px; }
-        .close-note { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 7px; border-radius: 6px; margin-top: 8px; color: #475569; }
-        .pdf-btn { background: #16a34a; color: white; border: none; padding: 5px 9px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
-        .pdf-btn:hover { background: #15803d; }
-        .detail-btn { background: #2563eb; color: white; border: none; padding: 5px 9px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; text-decoration: none; display: inline-block; }
-        @media (max-width: 900px) {
-            body { padding: 12px; }
-            .company-profile, .summary-grid, .detail-layout { grid-template-columns: 1fr; }
-            .card { padding: 16px; }
-            table { font-size: 11px; }
-            th, td { padding: 8px; }
-        }
-    
-
-        /* ================================
-           v24 UI POLISH - ortak arayuz duzeltmeleri
-           ================================ */
-        :root {
-            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
-            --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.10);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 18px;
-            --focus-ring: 0 0 0 3px rgba(37, 99, 235, 0.18);
-        }
-
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            text-rendering: optimizeLegibility;
-        }
-
-        .card {
-            width: min(100%, 1240px) !important;
-            max-width: 1240px !important;
-            border-radius: var(--radius-lg) !important;
-            box-shadow: var(--shadow-md) !important;
-        }
-
-        .global-header {
-            background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0));
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        .top-row {
-            gap: 14px;
-            align-items: center !important;
-        }
-
-        .logo-area {
-            min-width: 0;
-            font-size: 17px !important;
-            letter-spacing: 0 !important;
-            gap: 10px !important;
-        }
-
-        .logo-area span[id^="lbl_"] {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .tenant-logo-img {
-            width: 36px !important;
-            height: 36px !important;
-            padding: 4px !important;
-            border-radius: 10px !important;
-            box-shadow: var(--shadow-sm);
-            flex: 0 0 auto;
-        }
-
-        .logo-badge {
-            border-radius: 999px !important;
-            padding: 4px 9px !important;
-            font-size: 11px !important;
-            letter-spacing: .02em;
-            flex: 0 0 auto;
-        }
-
-        .controls-group {
-            gap: 10px !important;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .theme-selector-container {
-            border-radius: 999px !important;
-            padding: 6px 10px !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .theme-btn {
-            width: 18px !important;
-            height: 18px !important;
-            transition: transform .15s ease, box-shadow .15s ease;
-        }
-        .theme-btn:hover { transform: translateY(-1px) scale(1.08); box-shadow: 0 3px 8px rgba(15,23,42,.18); }
-
-        .user-info {
-            background: var(--table-header);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            padding: 7px 11px;
-            max-width: 280px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .logout-btn,
-        button,
-        .btn,
-        input[type="submit"] {
-            border-radius: 10px !important;
-            font-weight: 750 !important;
-            transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
-        }
-        button:hover,
-        .logout-btn:hover,
-        .btn:hover,
-        input[type="submit"]:hover {
-            transform: translateY(-1px);
-            filter: brightness(.98);
-            box-shadow: var(--shadow-sm);
-        }
-        button:disabled { opacity: .55; cursor: not-allowed; transform: none !important; }
-
-        .nav-container {
-            justify-content: flex-start !important;
-            gap: 7px !important;
-            padding: 8px !important;
-            border-radius: 14px !important;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .nav-btn {
-            white-space: nowrap;
-            border-radius: 10px !important;
-            padding: 9px 13px !important;
-            font-size: 12.5px !important;
-            box-shadow: none;
-        }
-        .nav-btn.active-page { box-shadow: 0 4px 10px rgba(37, 99, 235, 0.22) !important; }
-
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        h1 { font-size: clamp(24px, 3vw, 34px); }
-        h2 { font-size: clamp(20px, 2.4vw, 28px); }
-        h3 { font-size: clamp(16px, 1.8vw, 20px); }
-
-        .section-title {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 24px !important;
-            color: var(--text-main) !important;
-            font-size: 13px !important;
-            letter-spacing: .04em !important;
-        }
-
-        .panel,
-        .form-card,
-        .table-card,
-        .sub-card,
-        .mini-card,
-        .info-card {
-            border-radius: var(--radius-md) !important;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .metric-box {
-            border-radius: 14px !important;
-            box-shadow: 0 10px 24px rgba(15,23,42,.10) !important;
-            position: relative;
-            overflow: hidden;
-        }
-        .metric-box:after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,.20), transparent 45%);
-            pointer-events: none;
-        }
-        .metric-title, .metric-sub, .metric-value { position: relative; z-index: 1; }
-
-        input,
-        select,
-        textarea {
-            border: 1px solid var(--border-color) !important;
-            border-radius: 10px !important;
-            background: var(--bg-card);
-            color: var(--text-main);
-            transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
-        }
-        input:focus,
-        select:focus,
-        textarea:focus {
-            outline: none !important;
-            border-color: var(--primary) !important;
-            box-shadow: var(--focus-ring) !important;
-        }
-        label { font-weight: 700; color: var(--text-main); }
-
-        table {
-            border-collapse: separate !important;
-            border-spacing: 0 !important;
-            overflow: hidden;
-            border-radius: 12px;
-        }
-        th {
-            font-size: 11px !important;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            white-space: nowrap;
-        }
-        td { line-height: 1.45; }
-        tbody tr { transition: background .12s ease; }
-        tbody tr:hover { background: rgba(37, 99, 235, 0.035); }
-        .empty-state {
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            background: var(--table-header);
-        }
-
-        .badge {
-            border-radius: 999px !important;
-            letter-spacing: .02em;
-            padding: 4px 8px !important;
-        }
-
-        .small-link { text-underline-offset: 3px; }
-
-        .operational-banner {
-            box-shadow: var(--shadow-sm);
-            border: 0 !important;
-        }
-
-        @media (max-width: 900px) {
-            body { padding: 12px !important; }
-            .card { padding: 16px !important; border-radius: 16px !important; }
-            .top-row { align-items: stretch !important; }
-            .controls-group { justify-content: flex-start; }
-            .user-info { max-width: 100%; }
-            .nav-container { flex-wrap: nowrap !important; justify-content: flex-start !important; }
-            .nav-btn { flex: 0 0 auto; }
-            table { display: block; width: 100%; overflow-x: auto; white-space: nowrap; }
-            th, td { padding: 9px 10px !important; }
-        }
-
-        @media (max-width: 520px) {
-            .logo-area { font-size: 15px !important; }
-            .tenant-logo-img { width: 32px !important; height: 32px !important; }
-            .theme-selector-container { width: 100%; justify-content: center; }
-            .logout-btn { width: 100%; }
-        }
-
-    
-
-        /* ================================
-           v25 PRODUCT DESIGN SYSTEM - derin arayuz revizyonu
-           ================================ */
-        :root {
-            --brand-50: #eff6ff;
-            --brand-100: #dbeafe;
-            --brand-500: #2563eb;
-            --brand-600: #1d4ed8;
-            --brand-700: #1e40af;
-            --ink-900: #0f172a;
-            --ink-700: #334155;
-            --ink-500: #64748b;
-            --surface-0: #ffffff;
-            --surface-1: #f8fafc;
-            --surface-2: #eef2f7;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --info: #0284c7;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(37,99,235,.15), transparent 32rem),
-                radial-gradient(circle at top right, rgba(14,165,233,.12), transparent 28rem),
-                linear-gradient(180deg, #f8fafc 0%, #edf2f7 52%, #e9eef6 100%) !important;
-            color: var(--ink-900) !important;
-        }
-
-        .card {
-            padding: 0 !important;
-            overflow: hidden;
-            background: rgba(255,255,255,.92) !important;
-            backdrop-filter: blur(10px);
-        }
-
-        .global-header {
-            padding: 18px 22px 14px !important;
-            margin-bottom: 0 !important;
-            background: linear-gradient(135deg, rgba(15,23,42,.98), rgba(30,64,175,.92)) !important;
-            color: white;
-            border-bottom: 0 !important;
-        }
-        .global-header .logo-area,
-        .global-header .user-info,
-        .global-header .theme-selector-container span { color: white !important; }
-        .global-header .theme-selector-container,
-        .global-header .user-info {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-container {
-            background: rgba(255,255,255,.10) !important;
-            border-color: rgba(255,255,255,.16) !important;
-            margin-top: 12px;
-        }
-        .global-header .nav-btn {
-            background: rgba(255,255,255,.10) !important;
-            color: rgba(255,255,255,.86) !important;
-            border: 1px solid rgba(255,255,255,.10);
-        }
-        .global-header .nav-btn:hover {
-            background: rgba(255,255,255,.18) !important;
-            color: white !important;
-        }
-        .global-header .nav-btn.active-page {
-            background: white !important;
-            color: var(--brand-700) !important;
-            box-shadow: 0 8px 18px rgba(15,23,42,.22) !important;
-        }
-        .global-header .tenant-logo-img {
-            width: 42px !important;
-            height: 42px !important;
-            background: white !important;
-            border-color: rgba(255,255,255,.35) !important;
-        }
-        .global-header .logo-badge {
-            background: rgba(255,255,255,.18) !important;
-            border: 1px solid rgba(255,255,255,.18);
-        }
-        .logout-btn { background: rgba(239,68,68,.92) !important; }
-
-        .card > h1,
-        .card > h2,
-        .card > .page-desc,
-        .card > .section-title,
-        .card > .dashboard-grid,
-        .card > .kpi-grid,
-        .card > .operational-banner,
-        .card > .content-grid,
-        .card > .grid,
-        .card > .panel,
-        .card > form,
-        .card > table,
-        .card > div:not(.global-header) {
-            margin-left: 22px;
-            margin-right: 22px;
-        }
-        .card > h1,
-        .card > h2 {
-            margin-top: 22px !important;
-            margin-bottom: 4px !important;
-            font-size: clamp(22px, 2.6vw, 31px) !important;
-            letter-spacing: -0.035em;
-            color: var(--ink-900);
-        }
-        .page-desc {
-            max-width: 780px;
-            color: var(--ink-500) !important;
-            font-size: 14px !important;
-            margin-bottom: 20px !important;
-        }
-
-        .section-title {
-            margin-top: 24px !important;
-            margin-bottom: 11px !important;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            color: var(--ink-700) !important;
-            background: rgba(255,255,255,.72);
-            border: 1px solid rgba(226,232,240,.9);
-            padding: 7px 11px;
-            border-radius: 999px;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .panel {
-            background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)) !important;
-            border: 1px solid rgba(203,213,225,.85) !important;
-            box-shadow: 0 12px 30px rgba(15,23,42,.07) !important;
-            border-radius: 18px !important;
-        }
-        .panel h3 {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            border-bottom: 1px solid rgba(226,232,240,.95) !important;
-            padding-bottom: 12px !important;
-            margin-bottom: 14px !important;
-            color: var(--ink-900);
-            letter-spacing: -0.01em;
-        }
-        .panel h3::after {
-            content: "";
-            flex: 1;
-            height: 3px;
-            max-width: 56px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--primary), transparent);
-            opacity: .7;
-        }
-
-        .dashboard-grid,
-        .kpi-grid {
-            gap: 16px !important;
-        }
-        .metric-box {
-            position: relative;
-            overflow: hidden;
-            min-height: 104px !important;
-            padding: 18px 19px !important;
-            border-radius: 20px !important;
-            box-shadow: 0 18px 38px rgba(15,23,42,.13) !important;
-        }
-        .metric-box::before {
-            content: "";
-            position: absolute;
-            inset: -40% -30% auto auto;
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            background: rgba(255,255,255,.17);
-        }
-        .metric-title { font-size: 12.5px !important; text-transform: uppercase; letter-spacing: .045em; }
-        .metric-value { font-size: 34px !important; letter-spacing: -0.045em; }
-        .metric-sub { font-size: 12px !important; }
-        .metric-box.clickable:hover {
-            transform: translateY(-3px);
-            filter: saturate(1.04);
-        }
-
-        .content-grid {
-            margin-bottom: 24px;
-            align-items: start;
-        }
-        .operational-banner {
-            min-height: 86px;
-            padding: 20px 22px !important;
-            border-radius: 20px !important;
-        }
-        .op-text h4 { font-size: 18px !important; letter-spacing: -0.015em; }
-        .op-badge { border-radius: 16px !important; }
-
-        table {
-            background: white;
-            box-shadow: inset 0 0 0 1px rgba(226,232,240,.75);
-        }
-        th {
-            background: #f1f5f9 !important;
-            color: #475569 !important;
-        }
-        td {
-            background-clip: padding-box;
-        }
-        tbody tr:nth-child(even) td { background: rgba(248,250,252,.65); }
-
-        .btn-primary,
-        button.btn-primary {
-            background: linear-gradient(135deg, var(--brand-600), var(--brand-700)) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-blue,
-        button.btn-blue {
-            background: linear-gradient(135deg, #0284c7, #0369a1) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .btn-secondary,
-        button.btn-secondary {
-            background: #f1f5f9 !important;
-            color: #334155 !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        .btn-danger,
-        button.btn-danger {
-            background: linear-gradient(135deg, #dc2626, #991b1b) !important;
-            color: white !important;
-            border: 0 !important;
-        }
-        .status.ok {
-            background: #ecfdf5 !important;
-            color: #047857 !important;
-            border: 1px solid #a7f3d0 !important;
-        }
-        .status.err {
-            background: #fef2f2 !important;
-            color: #b91c1c !important;
-            border: 1px solid #fecaca !important;
-        }
-
-        /* SaaS Yonetimi urun paneli revizyonu */
-        .grid {
-            grid-template-columns: 420px minmax(0, 1fr) !important;
-            gap: 22px !important;
-            align-items: start !important;
-            margin-bottom: 24px;
-        }
-        .grid > div:first-child {
-            position: sticky;
-            top: 18px;
-            align-self: start;
-        }
-        .edit-panel {
-            border: 1px solid rgba(37,99,235,.22) !important;
-            background: linear-gradient(180deg, #ffffff, #f8fbff) !important;
-        }
-        .link-box {
-            border-radius: 12px !important;
-            border: 1px solid #bfdbfe !important;
-            background: linear-gradient(180deg, #eff6ff, #ffffff) !important;
-            color: #1e40af !important;
-            font-weight: 750;
-        }
-        .logo-upload-box {
-            border: 1px dashed #93c5fd !important;
-            background: #f8fbff !important;
-            border-radius: 16px !important;
-        }
-        .logo-preview {
-            width: 56px !important;
-            height: 56px !important;
-            border-radius: 14px !important;
-            box-shadow: var(--shadow-sm);
-        }
-        .actions {
-            gap: 9px !important;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .actions + .button-help,
-        .button-help {
-            margin-top: 10px;
-            display: grid;
-            gap: 7px;
-            color: var(--ink-500);
-            font-size: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 11px 12px;
-        }
-        .button-help strong { color: var(--ink-700); }
-
-        @media (max-width: 1040px) {
-            .grid { grid-template-columns: 1fr !important; }
-            .grid > div:first-child { position: static; }
-        }
-        @media (max-width: 900px) {
-            .card > h1,
-            .card > h2,
-            .card > .page-desc,
-            .card > .section-title,
-            .card > .dashboard-grid,
-            .card > .kpi-grid,
-            .card > .operational-banner,
-            .card > .content-grid,
-            .card > .grid,
-            .card > .panel,
-            .card > form,
-            .card > table,
-            .card > div:not(.global-header) {
-                margin-left: 14px !important;
-                margin-right: 14px !important;
-            }
-            .global-header { padding: 15px !important; }
-            .metric-box { min-height: 92px !important; }
-        }
-
-    
-
-        /* v26.2 hotfix: keep v26 visual system, add branding/table/layout fixes */
-        .logo-area { font-weight: 500 !important; letter-spacing: .01em !important; font-size: 18px !important; }
-        .logo-area #lbl_osgb_title { font-weight: 500 !important; }
-        .tenant-logo-img { width: 34px !important; height: 34px !important; object-fit: contain !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--border-color) !important; padding: 3px !important; box-sizing: border-box !important; flex: 0 0 auto !important; }
-        table, thead, tbody, tr, th, td { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important; }
-        table { font-size: 13px !important; border-collapse: separate !important; border-spacing: 0 !important; }
-        th, td { line-height: 1.35 !important; vertical-align: middle !important; }
-        tbody td { padding: 9px 11px !important; }
-        .worker-count-link { display:inline-flex !important; align-items:center !important; justify-content:center !important; min-width:56px !important; min-height:28px !important; padding:5px 9px !important; line-height:1.1 !important; border-radius:999px !important; text-decoration:none !important; }
-        .page-desc { max-width: none !important; }
-
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <div class="top-actions">
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean-company-detail.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean">
+    <div class="card">
+      <div class="company-detail-shell">
+      <div class="top-actions">
         <a href="index.html" class="back-btn">← Firma Yönetimine Dön</a>
-        <span style="font-size: 13px; color: #94a3b8; font-weight: bold;">Eses Software 360° DÖF VE KURUMSAL RADAR PANELİ</span>
+        <span style="font-size: 13px; color: #94a3b8; font-weight: bold"
+          >Eses Software 360° DÖF VE KURUMSAL RADAR PANELİ</span
+        >
         <a id="company_actions_link" href="actions.html" class="actions-link">🚨 Aksiyon Havuzuna Git</a>
-    </div>
+      </div>
 
-    <div class="company-profile">
+      <div class="company-profile">
         <div class="profile-item">
-            <div class="profile-label">Firma Ticari Unvanı</div>
-            <div class="profile-value" id="lbl_company_name">Yükleniyor...</div>
+          <div class="profile-label">Firma Ticari Unvanı</div>
+          <div class="profile-value" id="lbl_company_name">Yükleniyor...</div>
         </div>
         <div class="profile-item">
-            <div class="profile-label">Vergi Numarası</div>
-            <div class="profile-value" id="lbl_tax_number">-</div>
+          <div class="profile-label">Vergi Numarası</div>
+          <div class="profile-value" id="lbl_tax_number">-</div>
         </div>
         <div class="profile-item">
-            <div class="profile-label">NACE Kodu</div>
-            <div class="profile-value" id="lbl_nace_code">-</div>
+          <div class="profile-label">NACE Kodu</div>
+          <div class="profile-value" id="lbl_nace_code">-</div>
         </div>
         <div class="profile-item">
-            <div class="profile-label">Tehlike Sınıfı</div>
-            <div class="profile-value" id="lbl_danger_class">-</div>
+          <div class="profile-label">Tehlike Sınıfı</div>
+          <div class="profile-value" id="lbl_danger_class">-</div>
         </div>
-    </div>
+      </div>
 
-    <div class="summary-grid">
-        <div class="summary-box sum-red"><div class="summary-title">Geciken DÖF</div><div class="summary-value" id="sum_overdue">0</div></div>
-        <div class="summary-box sum-orange"><div class="summary-title">Açık DÖF</div><div class="summary-value" id="sum_open">0</div></div>
-        <div class="summary-box sum-blue"><div class="summary-title">Devam Eden</div><div class="summary-value" id="sum_progress">0</div></div>
-        <div class="summary-box sum-green"><div class="summary-title">Kapalı DÖF</div><div class="summary-value" id="sum_closed">0</div></div>
-    </div>
+      <div class="summary-grid">
+        <div class="summary-box sum-red">
+          <div class="summary-title">Geciken DÖF</div>
+          <div class="summary-value" id="sum_overdue">0</div>
+        </div>
+        <div class="summary-box sum-orange">
+          <div class="summary-title">Açık DÖF</div>
+          <div class="summary-value" id="sum_open">0</div>
+        </div>
+        <div class="summary-box sum-blue">
+          <div class="summary-title">Devam Eden</div>
+          <div class="summary-value" id="sum_progress">0</div>
+        </div>
+        <div class="summary-box sum-green">
+          <div class="summary-title">Kapalı DÖF</div>
+          <div class="summary-value" id="sum_closed">0</div>
+        </div>
+      </div>
 
-    <div class="detail-layout">
+      <div class="detail-layout">
         <div>
-            <div class="panel">
-                <h3 class="panel-title-uzman">🦺 Firma DÖF / Risk Bulguları ve Kanıt Fotoğrafları</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width:70px;">Foto</th>
-                            <th>Bulgu / Önerilen Önlem</th>
-                            <th style="width:110px;">Sorumlu</th>
-                            <th style="width:95px;">Skor / Termin</th>
-                            <th style="width:120px;">Durum / Kapanış</th>
-                        </tr>
-                    </thead>
-                    <tbody id="company_risk_tbody">
-                        <tr><td colspan="5" style="text-align:center; color:#94a3b8;">Veriler süzülüyor...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+          <div class="panel">
+            <h3 class="panel-title-uzman">🦺 Firma DÖF / Risk Bulguları ve Kanıt Fotoğrafları</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 70px">Foto</th>
+                  <th>Bulgu / Önerilen Önlem</th>
+                  <th style="width: 110px">Sorumlu</th>
+                  <th style="width: 95px">Skor / Termin</th>
+                  <th style="width: 120px">Durum / Kapanış</th>
+                </tr>
+              </thead>
+              <tbody id="company_risk_tbody">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: #94a3b8">Veriler süzülüyor...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div>
-            <div class="panel">
-                <h3 class="panel-title-takvim">📅 Gerçekleşen & Planlanan Saha Ziyaretleri</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tarih</th>
-                            <th>Sorumlu Personel</th>
-                            <th>Süre</th>
-                        </tr>
-                    </thead>
-                    <tbody id="company_schedule_tbody">
-                        <tr><td colspan="3" style="text-align:center; color:#94a3b8;">Ziyaretler yükleniyor...</td></tr>
-                    </tbody>
-                </table>
+          <!-- 📁 İlk Temas Yasal Evrak Kontrol Listesi Paneli -->
+          <div class="panel" style="padding: 16px; margin-bottom: 14px;">
+            <button class="panel-toggle" id="checklist_toggle" type="button" onclick="toggleChecklist()" aria-expanded="false" style="width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: none; padding: 0; cursor: pointer; color: inherit; outline: none;">
+              <h3 style="margin: 0; font-size: 14px; font-weight: 800; color: #334155; display: flex; align-items: center; gap: 8px;">📁 İlk Temas Yasal Evrak Kontrol Listesi</h3>
+              <span id="checklist_toggle_icon" style="font-size: 14px; transition: transform 0.2s ease;">▾</span>
+            </button>
+            
+            <div id="checklist_content" style="display: none; padding-top: 14px; border-top: 1px solid var(--uc-line); margin-top: 12px;">
+              <p style="font-size: 12px; color: var(--uc-text-muted); margin: 0 0 12px 0; line-height: 1.4;">
+                Firmayla ilk temasta istenmesi gereken yasal belgelerin durumunu buradan güncelleyebilirsiniz.
+              </p>
+              
+              <div id="checklist_items_container" class="checklist-container">
+                <!-- JavaScript ile dinamik olarak 31 belge doldurulacak -->
+              </div>
+              
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--uc-line); padding-top: 12px;">
+                <span id="checklist_progress_label" style="font-size: 12px; font-weight: 700; color: #7c3aed;">0 / 31 Tamamlandı</span>
+                <button class="btn-primary" onclick="saveChecklist()" style="font-size: 12px; padding: 6px 12px; border-radius: 8px; border: none; background: #7c3aed; color: #fff; font-weight: 700; cursor: pointer;">💾 Değişiklikleri Kaydet</button>
+              </div>
+              <div id="checklist_status" style="margin-top: 8px; font-size: 12px; text-align: right; font-weight: 600; min-height: 18px;"></div>
             </div>
+          </div>
 
-            <div class="panel">
-                <h3 class="panel-title-hekim">🩺 Hekim Sağlık Kartları Rapor Havuzu</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Çalışan Bilgisi</th>
-                            <th>Hekim Nihai Kararı</th>
-                            <th>Aksiyon</th>
-                        </tr>
-                    </thead>
-                    <tbody id="company_medical_tbody">
-                        <tr><td colspan="3" style="text-align:center; color:#94a3b8;">Veriler süzülüyor...</td></tr>
-                    </tbody>
-                </table>
-            </div>
+          <div class="panel">
+            <h3 class="panel-title-takvim">📅 Gerçekleşen & Planlanan Saha Ziyaretleri</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Tarih</th>
+                  <th>Sorumlu Personel</th>
+                  <th>Süre</th>
+                </tr>
+              </thead>
+              <tbody id="company_schedule_tbody">
+                <tr>
+                  <td colspan="3" style="text-align: center; color: #94a3b8">Ziyaretler yükleniyor...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <h3 class="panel-title-hekim">🩺 Hekim Sağlık Kartları Rapor Havuzu</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Çalışan Bilgisi</th>
+                  <th>Hekim Nihai Kararı</th>
+                  <th>Aksiyon</th>
+                </tr>
+              </thead>
+              <tbody id="company_medical_tbody">
+                <tr>
+                  <td colspan="3" style="text-align: center; color: #94a3b8">Veriler süzülüyor...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
+      </div>
+      </div>
     </div>
-</div>
 
-<script>
-    const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let currentCompanyName = "";
-    let CURRENT_AUTH = null;
-    let CURRENT_COMPANY_ID = null;
+    <script>
+      const CHECKLIST_DOCUMENTS = [
+        // 1. İdari ve Yasal Görevlendirmeler (Sözleşmeler ve Atamalar)
+        "İSG-KATİP Üzerinden Onaylanmış OSGB Hizmet Sözleşmesi",
+        "İş Güvenliği Uzmanı ve İşyeri Hekimi İSG-KATİP Atama Onayları",
+        "Onaylı Defter (Tespit ve Öneri Defteri) İlk Sayfa Fotokopisi",
+        "Çalışan Temsilcisi Seçim / Atama Tutanağı ve Eğitim Belgeleri",
+        "Destek Elemanları Görevlendirme Belgeleri ve Eğitim Kayıtları",
+        "İlkyardımcı Sertifikaları ve Görevlendirme Yazıları",
+        
+        // 2. İSG Kurul ve Organizasyon Yapısı
+        "İş Sağlığı ve Güvenliği Kurulu Karar Defteri ve Temsilci Atama Yazıları (50+ Çalışan Varsa)",
+        "Risk Değerlendirme Ekibi Kurulum Tutanağı ve Eğitim Kayıtları",
+        
+        // 3. İSG Planlama ve Analiz Belgeleri
+        "Yıllık Çalışma Planı ve Yıllık İSG Eğitim Programı (Onaylı)",
+        "Bir Önceki Yıla Ait Yıllık Değerlendirme Raporu",
+        "6331 Sayılı Kanuna Uygun Güncel Risk Değerlendirme Raporu",
+        "İşyeri Acil Durum Planı ve Krokileri",
+        "Acil Durum Ekipleri (Söndürme, Kurtarma, Koruma, İlkyardım) Görevlendirme Yazıları",
+        "Yıllık Acil Durum Tahliye ve Yangın Söndürme Tatbikat Raporu",
+        "Patlamadan Korunma Dokümanı (PKD) (Gereklilik Halinde)",
+        
+        // 4. Çalışan Eğitim, Talimat ve Ekipman Kayıtları
+        "Çalışanların Temel İş Sağlığı ve Güvenliği Eğitimi Katılım Tutanakları ve Sertifikaları",
+        "Yangın Eğitimi ve Uygulamalı Yangın Söndürme Tatbikat Katılım Belgeleri",
+        "Yüksekte Çalışma Eğitimi ve İlgili Sağlık/Yeterlilik Belgeleri (Yapılan İşin Niteliğine Göre)",
+        "Tehlikeli ve Çok Tehlikeli Sınıftaki İşler İçin Mesleki Eğitim ve Yeterlilik Belgeleri",
+        "Hijyen Eğitimi Sertifikaları (İlgili Sektörler İçin)",
+        "İSG Talimatları ve Çalışma Prosedürleri Tebellüğ-Tebliğ Formları",
+        "Kişisel Koruyucu Donanım (KKD) Teslim-Tesellüm Tutanakları ve Zimmet Formları",
+        
+        // 5. Çalışan Sağlık Gözetim Kayıtları
+        "İşe Giriş ve Periyodik Sağlık Raporları (Ek-2 Formları) ve Laboratuvar Tetkikleri",
+        
+        // 6. Teknik Periyodik Kontroller ve Ortam Ölçümleri
+        "İş Ekipmanlarının Periyodik Kontrol, Muayene ve Kalibrasyon Raporları",
+        "Elektrik İç Tesisat Uygunluk Belgesi, Topraklama ve Paratoner Ölçüm Raporları",
+        "Yangın Tesisatı ve Söndürme Ekipmanları Periyodik Muayene Raporları",
+        "Basınçlı Kaplar, Kazanlar ve Havalandırma Tesisatı Periyodik Muayene Raporları",
+        "İş Makineleri Periyodik Kontrol ve Muayene Raporları",
+        "Kimyasal Maddeler İçin Güvenlik Bilgi Formları (SDS / Türkçe)",
+        "İş Hijyeni Ölçüm, Test ve Analiz Raporları (Fiziksel ve Kimyasal Ortam Ölçümleri)",
+        
+        // 7. İş Kazaları, Ramak Kala ve İncelemeler
+        "İş Kazası, Meslek Hastalığı ve Ramak Kala Olay Kayıt ve Analiz Dosyaları"
+      ];
 
-    async function getCurrentAuthContext() {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) return { session: null, email: '', tenant_id: null, staff: null, tenant: null };
+      let currentChecklistData = {};
 
-        const email = session.user.email || '';
-        let staff = null;
+      function renderChecklist() {
+        const container = document.getElementById('checklist_items_container');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        CHECKLIST_DOCUMENTS.forEach((doc, idx) => {
+          const isChecked = !!currentChecklistData[doc];
+          container.innerHTML += `
+            <label class="checklist-label ${isChecked ? 'is-checked' : ''}" id="lbl_doc_${idx}">
+              <span class="index-no">${idx + 1}.</span>
+              <input type="checkbox" class="checklist-item-checkbox" data-doc="${escapeHtml(doc)}" data-idx="${idx}" ${isChecked ? 'checked' : ''} onchange="handleCheckboxChange(this)" />
+              <span class="doc-name">${escapeHtml(doc)}</span>
+            </label>
+          `;
+        });
+        updateChecklistProgress();
+      }
 
+      function handleCheckboxChange(cb) {
+        const label = document.getElementById(`lbl_doc_${cb.dataset.idx}`);
+        if (label) {
+          if (cb.checked) {
+            label.classList.add('is-checked');
+          } else {
+            label.classList.remove('is-checked');
+          }
+        }
+        updateChecklistProgress();
+      }
+
+      function updateChecklistProgress() {
+        const checkboxes = document.querySelectorAll('.checklist-item-checkbox');
+        let completed = 0;
+        checkboxes.forEach(cb => {
+          if (cb.checked) completed++;
+        });
+        
+        const label = document.getElementById('checklist_progress_label');
+        if (label) {
+          label.innerText = `${completed} / ${CHECKLIST_DOCUMENTS.length} Tamamlandı`;
+        }
+      }
+
+      function toggleChecklist() {
+        const content = document.getElementById('checklist_content');
+        const icon = document.getElementById('checklist_toggle_icon');
+        const toggle = document.getElementById('checklist_toggle');
+        if (!content || !icon || !toggle) return;
+        
+        const isCollapsed = content.style.display === 'none';
+        content.style.display = isCollapsed ? 'block' : 'none';
+        icon.style.transform = isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)';
+        toggle.setAttribute('aria-expanded', isCollapsed ? 'true' : 'false');
+      }
+
+      async function saveChecklist() {
+        const statusEl = document.getElementById('checklist_status');
+        if (statusEl) {
+          statusEl.style.color = 'blue';
+          statusEl.innerText = 'Kaydediliyor...';
+        }
+        
+        const checkboxes = document.querySelectorAll('.checklist-item-checkbox');
+        const updatedChecklist = {};
+        checkboxes.forEach(cb => {
+          updatedChecklist[cb.dataset.doc] = cb.checked;
+        });
+        
         try {
-            const { data, error } = await dbClient
-                .from('osgb_staff')
-                .select('tenant_id, access_role, can_login, tenants(id, name, slug, logo_url, primary_color, is_active)')
-                .ilike('email', email)
-                .maybeSingle();
-
-            if (error) throw error;
-            staff = data || null;
+          const { error } = await dbClient
+            .from('customer_companies')
+            .update({ document_checklist: updatedChecklist })
+            .eq('id', CURRENT_COMPANY_ID);
+            
+          if (error) throw error;
+          
+          currentChecklistData = updatedChecklist;
+          if (statusEl) {
+            statusEl.style.color = 'green';
+            statusEl.innerText = '✅ Değişiklikler kaydedildi.';
+            setTimeout(() => { if(statusEl.innerText.startsWith('✅')) statusEl.innerText = ''; }, 3000);
+          }
         } catch (err) {
-            console.warn('Personel/tenant bilgisi okunamadı:', err.message);
+          console.error('Checklist save error:', err);
+          if (statusEl) {
+            statusEl.style.color = 'red';
+            statusEl.innerText = '❌ Hata: ' + err.message;
+          }
+          alert('Hata: Belge listesi kaydedilemedi. SQL Editor üzerinden upgrade_document_checklist.sql dosyasındaki komutun çalıştırıldığından emin olun.');
         }
+      }
 
-        return {
-            session,
-            email,
-            staff,
-            tenant_id: staff ? staff.tenant_id : null,
-            tenant: staff && staff.tenants ? staff.tenants : null
-        };
-    }
+      let currentCompanyName = '';
+      let CURRENT_AUTH = null;
+      let CURRENT_COMPANY_ID = null;
 
-    function setTenantBranding(tenant) {
-        const badge = document.querySelector('.top-actions span');
-        if (badge && tenant && tenant.name) {
-            badge.innerText = `${tenant.name} 360° DÖF VE KURUMSAL RADAR PANELİ`;
-        }
-    }
-
-    function escapeHtml(value) {
+      function escapeHtml(value) {
         return (value === null || value === undefined ? '' : String(value))
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
 
-    function clearTurkishChars(str) {
-        if(!str) return "-";
-        return str.toString().replace(/Ş/g, "S").replace(/ş/g, "s").replace(/Ç/g, "C").replace(/ç/g, "c").replace(/Ğ/g, "G").replace(/ğ/g, "g").replace(/İ/g, "I").replace(/ı/g, "i").replace(/Ö/g, "O").replace(/ö/g, "o").replace(/Ü/g, "U").replace(/ü/g, "u");
-    }
+      function clearTurkishChars(str) {
+        if (!str) return '-';
+        return str
+          .toString()
+          .replace(/Ş/g, 'S')
+          .replace(/ş/g, 's')
+          .replace(/Ç/g, 'C')
+          .replace(/ç/g, 'c')
+          .replace(/Ğ/g, 'G')
+          .replace(/ğ/g, 'g')
+          .replace(/İ/g, 'I')
+          .replace(/ı/g, 'i')
+          .replace(/Ö/g, 'O')
+          .replace(/ö/g, 'o')
+          .replace(/Ü/g, 'U')
+          .replace(/ü/g, 'u');
+      }
 
-    function formatDate(value) {
+      function formatDate(value) {
         if (!value) return '-';
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return value;
         return date.toLocaleDateString('tr-TR');
-    }
+      }
 
-    function isOverdue(record) {
+      function isOverdue(record) {
         if (!record || record.status === 'Kapalı' || !record.target_date) return false;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const target = new Date(record.target_date);
         target.setHours(0, 0, 0, 0);
         return target < today;
-    }
+      }
 
-    function statusBadge(record) {
+      function statusBadge(record) {
         if (record.status === 'Kapalı') return '<span class="badge badge-closed">Kapalı</span>';
         if (isOverdue(record)) return '<span class="badge badge-overdue">Gecikti</span>';
         if (record.status === 'Devam Ediyor') return '<span class="badge badge-progress">Devam Ediyor</span>';
         return '<span class="badge badge-open">Açık</span>';
-    }
+      }
 
-    window.onload = async function() {
+      window.onload = async function () {
         const auth = await getCurrentAuthContext();
-        if (!auth.session) { window.location.href = "login.html"; return; }
+        if (!auth.session) {
+          window.location.href = 'login.html';
+          return;
+        }
 
         if (!auth.tenant_id) {
-            alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen çıkış yapıp doğru tenant hesabıyla tekrar giriş yapın.');
-            await dbClient.auth.signOut();
-            window.location.href = "login.html";
-            return;
+          alert(
+            'Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen çıkış yapıp doğru tenant hesabıyla tekrar giriş yapın.'
+          );
+          await dbClient.auth.signOut();
+          window.location.href = 'login.html';
+          return;
         }
 
         CURRENT_AUTH = auth;
@@ -840,44 +370,48 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const companyId = urlParams.get('id');
-        if (!companyId) { window.location.href = "index.html"; return; }
+        if (!companyId) {
+          window.location.href = 'index.html';
+          return;
+        }
 
         CURRENT_COMPANY_ID = companyId;
-        document.getElementById('company_actions_link').href = `actions.html?company_id=${encodeURIComponent(companyId)}`;
+        document.getElementById('company_actions_link').href =
+          `actions.html?company_id=${encodeURIComponent(companyId)}`;
 
         const ok = await fetchCompanyProfile(companyId);
         if (!ok) return;
 
-        document.body.style.display = "block";
+        document.body.style.display = 'block';
         fetchCompanyRisks(companyId);
         fetchCompanyMedical(companyId);
         fetchCompanySchedules(companyId);
-    };
+      };
 
-    async function fetchCompanyProfile(id) {
+      async function fetchCompanyProfile(id) {
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            alert('Tenant bilgisi bulunamadı.');
-            window.location.href = "index.html";
-            return false;
+          alert('Tenant bilgisi bulunamadı.');
+          window.location.href = 'index.html';
+          return false;
         }
 
         const { data, error } = await dbClient
-            .from('customer_companies')
-            .select('*')
-            .eq('id', id)
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .maybeSingle();
+          .from('customer_companies')
+          .select('*')
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .maybeSingle();
 
         if (error) {
-            alert('Firma bilgisi okunamadı: ' + error.message);
-            window.location.href = "index.html";
-            return false;
+          alert('Firma bilgisi okunamadı: ' + error.message);
+          window.location.href = 'index.html';
+          return false;
         }
 
         if (!data) {
-            alert('Bu firma bu tenant altında bulunamadı veya erişim yetkiniz yok.');
-            window.location.href = "index.html";
-            return false;
+          alert('Bu firma bu tenant altında bulunamadı veya erişim yetkiniz yok.');
+          window.location.href = 'index.html';
+          return false;
         }
 
         currentCompanyName = data.company_name;
@@ -885,42 +419,50 @@
         document.getElementById('lbl_tax_number').innerText = data.tax_number || '-';
         document.getElementById('lbl_nace_code').innerText = data.nace_code || '-';
         document.getElementById('lbl_danger_class').innerText = data.danger_class || '-';
-        return true;
-    }
 
-    async function fetchCompanyRisks(id) {
+        currentChecklistData = data.document_checklist || {};
+        renderChecklist();
+        return true;
+      }
+
+      async function fetchCompanyRisks(id) {
         const tbody = document.getElementById('company_risk_tbody');
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
-            updateDofSummary([]);
-            return;
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
+          updateDofSummary([]);
+          return;
         }
 
         const { data, error } = await dbClient
-            .from('risk_assessments')
-            .select('*')
-            .eq('company_id', id)
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .order('created_at', { ascending: false });
-        if (error) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#b91c1c;">Hata: ${escapeHtml(error.message)}</td></tr>`; return; }
+          .from('risk_assessments')
+          .select('*')
+          .eq('company_id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .order('created_at', { ascending: false });
+        if (error) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#b91c1c;">Hata: ${escapeHtml(error.message)}</td></tr>`;
+          return;
+        }
         if (!data || data.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Kayıtlı DÖF / risk bulgusu yok.</td></tr>`;
-            updateDofSummary([]);
-            return;
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#94a3b8;">Kayıtlı DÖF / risk bulgusu yok.</td></tr>`;
+          updateDofSummary([]);
+          return;
         }
         updateDofSummary(data);
         tbody.innerHTML = '';
-        data.forEach(r => {
-            const isClosed = r.status === 'Kapalı';
-            const imgHTML = r.image_url
-                ? `<img src="${escapeHtml(r.image_url)}" class="risk-thumb" onclick="window.open('${escapeHtml(r.image_url)}', '_blank')" title="Kanıt fotoğrafını aç">`
-                : `<span class="risk-no-photo">📷 Yok</span>`;
-            const actionPlan = r.action_plan ? `<div class="action-plan"><strong>Önerilen Önlem:</strong><br>${escapeHtml(r.action_plan)}</div>` : `<div class="action-plan muted">Önerilen önlem girilmemiş.</div>`;
-            const closeInfo = isClosed
-                ? `<div class="close-note"><strong>Kapanış:</strong> ${escapeHtml(r.close_note || 'Açıklama girilmedi.')}<br><span class="small muted">${formatDate(r.closed_at)}</span></div>`
-                : '';
-            const terminClass = isOverdue(r) ? 'color:#b91c1c; font-weight:800;' : '';
-            tbody.innerHTML += `
+        data.forEach((r) => {
+          const isClosed = r.status === 'Kapalı';
+          const imgHTML = r.image_url
+            ? `<img src="${escapeHtml(r.image_url)}" class="risk-thumb" onclick="window.open('${escapeHtml(r.image_url)}', '_blank')" title="Kanıt fotoğrafını aç">`
+            : `<span class="risk-no-photo">📷 Yok</span>`;
+          const actionPlan = r.action_plan
+            ? `<div class="action-plan"><strong>Önerilen Önlem:</strong><br>${escapeHtml(r.action_plan)}</div>`
+            : `<div class="action-plan muted">Önerilen önlem girilmemiş.</div>`;
+          const closeInfo = isClosed
+            ? `<div class="close-note"><strong>Kapanış:</strong> ${escapeHtml(r.close_note || 'Açıklama girilmedi.')}<br><span class="small muted">${formatDate(r.closed_at)}</span></div>`
+            : '';
+          const terminClass = isOverdue(r) ? 'color:#b91c1c; font-weight:800;' : '';
+          tbody.innerHTML += `
                 <tr class="${isClosed ? 'status-closed' : ''}">
                     <td>${imgHTML}</td>
                     <td>
@@ -935,91 +477,123 @@
                     <td>${statusBadge(r)}${closeInfo}</td>
                 </tr>`;
         });
-    }
+      }
 
-    function updateDofSummary(records) {
-        const overdue = records.filter(r => isOverdue(r)).length;
-        const open = records.filter(r => r.status === 'Açık').length;
-        const progress = records.filter(r => r.status === 'Devam Ediyor').length;
-        const closed = records.filter(r => r.status === 'Kapalı').length;
+      function updateDofSummary(records) {
+        const overdue = records.filter((r) => isOverdue(r)).length;
+        const open = records.filter((r) => r.status === 'Açık').length;
+        const progress = records.filter((r) => r.status === 'Devam Ediyor').length;
+        const closed = records.filter((r) => r.status === 'Kapalı').length;
         document.getElementById('sum_overdue').innerText = overdue;
         document.getElementById('sum_open').innerText = open;
         document.getElementById('sum_progress').innerText = progress;
         document.getElementById('sum_closed').innerText = closed;
-    }
+      }
 
-    async function fetchCompanySchedules(id) {
+      async function fetchCompanySchedules(id) {
         const tbody = document.getElementById('company_schedule_tbody');
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
-            return;
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
+          return;
         }
 
         const { data, error } = await dbClient
-            .from('field_schedules')
-            .select('*')
-            .eq('company_id', id)
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .order('visit_date', { ascending: false });
-        if (error) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#b91c1c;">Hata: ${escapeHtml(error.message)}</td></tr>`; return; }
-        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Ziyaret kaydı bulunmuyor.</td></tr>`; return; }
+          .from('field_schedules')
+          .select('*')
+          .eq('company_id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .order('visit_date', { ascending: false });
+        if (error) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#b91c1c;">Hata: ${escapeHtml(error.message)}</td></tr>`;
+          return;
+        }
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Ziyaret kaydı bulunmuyor.</td></tr>`;
+          return;
+        }
         tbody.innerHTML = '';
-        data.forEach(s => {
-            tbody.innerHTML += `<tr><td>📅 ${formatDate(s.visit_date)}</td><td>👤 ${escapeHtml(s.assigned_staff || 'Atanmamış')}</td><td>⏱️ ${escapeHtml(s.planned_minutes ?? '-')} Dk</td></tr>`;
+        data.forEach((s) => {
+          tbody.innerHTML += `<tr><td>📅 ${formatDate(s.visit_date)}</td><td>👤 ${escapeHtml(s.assigned_staff || 'Atanmamış')}</td><td>⏱️ ${escapeHtml(s.planned_minutes ?? '-')} Dk</td></tr>`;
         });
-    }
+      }
 
-    async function fetchCompanyMedical(id) {
+      async function fetchCompanyMedical(id) {
         const tbody = document.getElementById('company_medical_tbody');
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
-            return;
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>`;
+          return;
         }
 
         const { data, error } = await dbClient
-            .from('worker_medical_records')
-            .select('*')
-            .eq('company_id', id)
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .order('created_at', { ascending: false });
-        if (error) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#b91c1c;">Hata: ${escapeHtml(error.message)}</td></tr>`; return; }
-        if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Sağlık muayene kaydı yok.</td></tr>`; return; }
+          .from('worker_medical_records')
+          .select('*')
+          .eq('company_id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .order('created_at', { ascending: false });
+        if (error) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#b91c1c;">Hata: ${escapeHtml(error.message)}</td></tr>`;
+          return;
+        }
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Sağlık muayene kaydı yok.</td></tr>`;
+          return;
+        }
         tbody.innerHTML = '';
         data.forEach((m, index) => {
-            const payloadId = `medical_payload_${index}`;
-            window[payloadId] = {
-                name: m.worker_name,
-                age: m.worker_age,
-                gender: m.worker_gender,
-                goz: m.goz_secure,
-                kalp: m.kalp_secure,
-                kas: m.kas_secure,
-                decision: m.final_decision
-            };
-            tbody.innerHTML += `<tr><td><strong>${escapeHtml(m.worker_name || 'İsimsiz')}</strong><br><small>${escapeHtml(m.worker_age || '-')} Yaş / ${escapeHtml(m.worker_gender || '-')}</small></td><td><span style="font-size:11px; font-weight:bold; color:#1e40af;">${escapeHtml(m.final_decision || '-')}</span></td><td><button class="pdf-btn" onclick="generateEk2PDFFromPayload('${payloadId}')">📄 Ek-2 PDF</button></td></tr>`;
+          const payloadId = `medical_payload_${index}`;
+          window[payloadId] = {
+            name: m.worker_name,
+            age: m.worker_age,
+            gender: m.worker_gender,
+            goz: m.goz_secure,
+            kalp: m.kalp_secure,
+            kas: m.kas_secure,
+            decision: m.final_decision
+          };
+          tbody.innerHTML += `<tr><td><strong>${escapeHtml(m.worker_name || 'İsimsiz')}</strong><br><small>${escapeHtml(m.worker_age || '-')} Yaş / ${escapeHtml(m.worker_gender || '-')}</small></td><td><span style="font-size:11px; font-weight:bold; color:#1e40af;">${escapeHtml(m.final_decision || '-')}</span></td><td><button class="pdf-btn" onclick="generateEk2PDFFromPayload('${payloadId}')">📄 Ek-2 PDF</button></td></tr>`;
         });
-    }
+      }
 
-    async function handleLogout() { await dbClient.auth.signOut(); window.location.href = "login.html"; }
-
-    function generateEk2PDFFromPayload(payloadId) {
+      function generateEk2PDFFromPayload(payloadId) {
         const p = window[payloadId] || {};
         generateEk2PDF(p.name, p.age, p.gender, p.goz, p.kalp, p.kas, p.decision);
-    }
+      }
 
-    function generateEk2PDF(name, age, gender, goz, kalp, kas, decision) {
-        const { jsPDF } = window.jspdf; const doc = new jsPDF();
-        doc.setFont("Helvetica", "bold"); doc.setFontSize(14);
-        doc.text(clearTurkishChars("T.C. CALISMA VE SOSYAL GUVENLIK BAKANLIGI"), 105, 15, { align: "center" });
-        doc.setFontSize(11); doc.text(clearTurkishChars("EK-2 CALISAN PERIYODIK SAGLIK MUAYENE KARTI"), 105, 25, { align: "center" });
+      function generateEk2PDF(name, age, gender, goz, kalp, kas, decision) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(14);
+        doc.text(clearTurkishChars('T.C. CALISMA VE SOSYAL GUVENLIK BAKANLIGI'), 105, 15, { align: 'center' });
+        doc.setFontSize(11);
+        doc.text(clearTurkishChars('EK-2 CALISAN PERIYODIK SAGLIK MUAYENE KARTI'), 105, 25, { align: 'center' });
         doc.line(15, 30, 195, 30);
-        doc.text(clearTurkishChars("1. CALISAN VE ISYERI KUNYE BILGILERI"), 15, 38);
-        doc.autoTable({ startY: 41, theme: 'grid', body: [[clearTurkishChars("Ilgili Sirket"), clearTurkishChars(currentCompanyName)], [clearTurkishChars("Calisanin Adi Soyadi"), clearTurkishChars(name)], [clearTurkishChars("Yas / Cinsiyet"), (age || '-') + " / " + clearTurkishChars(gender)]], styles: { font: "Helvetica", fontSize: 10 } });
-        doc.text(clearTurkishChars("2. PERIYODIK KLINIK MUAYENE BULGULARI"), 15, doc.lastAutoTable.finalY + 10);
-        doc.autoTable({ startY: doc.lastAutoTable.finalY + 13, theme: 'grid', body: [[clearTurkishChars("Goz Muayenesi"), clearTurkishChars(goz)], [clearTurkishChars("Kardiyovaskuler"), clearTurkishChars(kalp)], [clearTurkishChars("Kas-Iskelet"), clearTurkishChars(kas)]], styles: { font: "Helvetica", fontSize: 10 } });
-        doc.setFont("Helvetica", "bold"); doc.text(clearTurkishChars("NIHAI KARAR: " + (decision || '-')), 15, doc.lastAutoTable.finalY + 15);
-        doc.save("EK_2_" + clearTurkishChars(name || 'calisan').replace(/\s+/g, '_') + ".pdf");
-    }
-</script>
-</body>
+        doc.text(clearTurkishChars('1. CALISAN VE ISYERI KUNYE BILGILERI'), 15, 38);
+        doc.autoTable({
+          startY: 41,
+          theme: 'grid',
+          body: [
+            [clearTurkishChars('Ilgili Sirket'), clearTurkishChars(currentCompanyName)],
+            [clearTurkishChars('Calisanin Adi Soyadi'), clearTurkishChars(name)],
+            [clearTurkishChars('Yas / Cinsiyet'), (age || '-') + ' / ' + clearTurkishChars(gender)]
+          ],
+          styles: { font: 'Helvetica', fontSize: 10 }
+        });
+        doc.text(clearTurkishChars('2. PERIYODIK KLINIK MUAYENE BULGULARI'), 15, doc.lastAutoTable.finalY + 10);
+        doc.autoTable({
+          startY: doc.lastAutoTable.finalY + 13,
+          theme: 'grid',
+          body: [
+            [clearTurkishChars('Goz Muayenesi'), clearTurkishChars(goz)],
+            [clearTurkishChars('Kardiyovaskuler'), clearTurkishChars(kalp)],
+            [clearTurkishChars('Kas-Iskelet'), clearTurkishChars(kas)]
+          ],
+          styles: { font: 'Helvetica', fontSize: 10 }
+        });
+        doc.setFont('Helvetica', 'bold');
+        doc.text(clearTurkishChars('NIHAI KARAR: ' + (decision || '-')), 15, doc.lastAutoTable.finalY + 15);
+        doc.save('EK_2_' + clearTurkishChars(name || 'calisan').replace(/\s+/g, '_') + '.pdf');
+      }
+    </script>
+  </body>
 </html>

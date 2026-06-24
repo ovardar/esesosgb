@@ -1,0 +1,287 @@
+/* Direction 1 tuning for company-detail.html */
+
+body.theme-ultra-clean .company-detail-shell {
+  padding: 28px 28px 38px;
+}
+
+body.theme-ultra-clean .top-actions {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+body.theme-ultra-clean .back-btn,
+body.theme-ultra-clean .actions-link,
+body.theme-ultra-clean .pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+body.theme-ultra-clean .back-btn,
+body.theme-ultra-clean .actions-link,
+body.theme-ultra-clean .pdf-btn {
+  background: #1f6b73;
+  color: #f8fbfc;
+  border: none;
+}
+
+body.theme-ultra-clean .company-profile {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+body.theme-ultra-clean .profile-item,
+body.theme-ultra-clean .summary-box,
+body.theme-ultra-clean .panel {
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  box-shadow: none;
+  background: #ffffff;
+}
+
+body.theme-ultra-clean .profile-item {
+  padding: 14px 16px;
+}
+
+body.theme-ultra-clean .profile-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #607086;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+body.theme-ultra-clean .profile-value {
+  color: #0f172a;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+body.theme-ultra-clean .summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+body.theme-ultra-clean .summary-box {
+  padding: 16px;
+}
+
+body.theme-ultra-clean .summary-title {
+  color: #607086;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+body.theme-ultra-clean .summary-value {
+  margin-top: 6px;
+  color: #0f172a;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+body.theme-ultra-clean .detail-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 14px;
+}
+
+body.theme-ultra-clean .panel {
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+body.theme-ultra-clean .panel h3 {
+  margin: 0 0 12px;
+  color: #334155;
+  font-size: 14px;
+}
+
+body.theme-ultra-clean table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+body.theme-ultra-clean th {
+  background: #f7fafc;
+  border-bottom: 1px solid #dbe4ee;
+  color: #4f5f74;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+body.theme-ultra-clean td {
+  border-bottom: 1px solid #e8edf4;
+  font-size: 13px;
+  vertical-align: top;
+}
+
+body.theme-ultra-clean tbody tr:hover td {
+  background: #f8fbff;
+}
+
+body.theme-ultra-clean .badge {
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+body.theme-ultra-clean .risk-thumb {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #dbe4ee;
+}
+
+body.theme-ultra-clean .risk-no-photo,
+body.theme-ultra-clean .muted,
+body.theme-ultra-clean .small {
+  color: #607086;
+}
+
+body.theme-ultra-clean .hazard-title {
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+body.theme-ultra-clean .action-plan,
+body.theme-ultra-clean .close-note {
+  margin-top: 6px;
+  line-height: 1.45;
+}
+
+@media (max-width: 980px) {
+  body.theme-ultra-clean .company-detail-shell {
+    padding: 18px 14px 24px;
+  }
+
+  body.theme-ultra-clean .top-actions,
+  body.theme-ultra-clean .company-profile,
+  body.theme-ultra-clean .summary-grid,
+  body.theme-ultra-clean .detail-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Checklist styling */
+.checklist-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-bottom: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Scrollbar styling for checklist container */
+.checklist-container::-webkit-scrollbar {
+  width: 6px;
+}
+.checklist-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+.checklist-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+.checklist-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.checklist-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  margin-bottom: 0 !important;
+  font-weight: 500 !important;
+  color: #334155 !important;
+  background: transparent;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.checklist-label:hover {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+.checklist-label .index-no {
+  font-weight: 700;
+  color: #94a3b8;
+  font-size: 11px;
+  min-width: 20px;
+  text-align: right;
+}
+
+.checklist-label input[type="checkbox"].checklist-item-checkbox {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  accent-color: #7c3aed !important;
+  cursor: pointer !important;
+  border-radius: 4px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  background: #fff !important;
+  appearance: checkbox !important;
+  box-shadow: none !important;
+}
+
+.checklist-label input[type="checkbox"].checklist-item-checkbox:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+
+.checklist-label .doc-name {
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: #475569;
+  transition: color 0.15s ease;
+}
+
+.checklist-label:hover .doc-name {
+  color: #0f172a;
+}
+
+.checklist-label.is-checked {
+  background: #f5f3ff !important;
+  border-color: #ddd6fe !important;
+}
+.checklist-label.is-checked .doc-name {
+  color: #6d28d9;
+  font-weight: 600;
+}

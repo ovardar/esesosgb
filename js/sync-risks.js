@@ -45,22 +45,20 @@
     const safeCompanyId = String(risk.company_id || 'unknown-company');
     const path = `${safeTenantId}/${safeCompanyId}/${risk.local_id}.${ext}`;
 
-    const { error } = await dbClient.storage
-      .from(RISK_PHOTO_BUCKET)
-      .upload(path, risk.photo_blob, {
-        contentType: risk.photo_type || 'image/jpeg',
-        upsert: true
-      });
+    const { error } = await dbClient.storage.from(RISK_PHOTO_BUCKET).upload(path, risk.photo_blob, {
+      contentType: risk.photo_type || 'image/jpeg',
+      upsert: true
+    });
 
     if (error) {
-      throw new Error('Fotoğraf yüklenemedi. risk-photos bucket ve Storage izinlerini kontrol edin. Detay: ' + error.message);
+      throw new Error(
+        'Fotoğraf yüklenemedi. risk-photos bucket ve Storage izinlerini kontrol edin. Detay: ' + error.message
+      );
     }
 
-    const { data } = dbClient.storage
-      .from(RISK_PHOTO_BUCKET)
-      .getPublicUrl(path);
+    const { data } = dbClient.storage.from(RISK_PHOTO_BUCKET).getPublicUrl(path);
 
-    return { url: data && data.publicUrl ? data.publicUrl : null, path }; 
+    return { url: data && data.publicUrl ? data.publicUrl : null, path };
   }
 
   async function findExistingRiskByLocalId(localId) {
@@ -72,7 +70,10 @@
       .maybeSingle();
 
     if (error) {
-      throw new Error('local_id kontrolü yapılamadı. risk_assessments tablosuna local_id alanını eklediğinizden emin olun. Detay: ' + error.message);
+      throw new Error(
+        'local_id kontrolü yapılamadı. risk_assessments tablosuna local_id alanını eklediğinizden emin olun. Detay: ' +
+          error.message
+      );
     }
 
     return data || null;
@@ -142,11 +143,7 @@
     if (imageInfo && imageInfo.url) payload.image_url = imageInfo.url;
     if (imageInfo && imageInfo.path) payload.image_path = imageInfo.path;
 
-    const { data, error } = await dbClient
-      .from('risk_assessments')
-      .insert([payload])
-      .select('id')
-      .single();
+    const { data, error } = await dbClient.from('risk_assessments').insert([payload]).select('id').single();
 
     if (error) {
       if (error.message && error.message.toLowerCase().includes('duplicate')) {
@@ -163,7 +160,11 @@
     clearError();
 
     if (syncInProgress) {
-      setText('offline_status', 'Senkronizasyon zaten devam ediyor. Lütfen birkaç saniye bekleyin.', 'var(--text-muted)');
+      setText(
+        'offline_status',
+        'Senkronizasyon zaten devam ediyor. Lütfen birkaç saniye bekleyin.',
+        'var(--text-muted)'
+      );
       return { ok: true, synced: 0, failed: 0, message: 'already-running' };
     }
 
@@ -185,7 +186,9 @@
       return { ok: false, synced: 0, failed: 0, message: msg };
     }
 
-    const { data: { session } } = await dbClient.auth.getSession();
+    const {
+      data: { session }
+    } = await dbClient.auth.getSession();
     if (!session) {
       const msg = 'Oturum bulunamadı. Yeniden giriş yapın.';
       showError(msg);

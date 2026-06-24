@@ -1,314 +1,616 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ramak Kala Bildirimi</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    :root{--bg:#f8fafc;--card:#fff;--text:#0f172a;--muted:#64748b;--primary:#0f766e;--border:#e2e8f0;--danger:#dc2626;--ok:#059669}
-    *{box-sizing:border-box} body{margin:0;min-height:100vh;background:radial-gradient(circle at top left,rgba(15,118,110,.16),transparent 28rem),linear-gradient(180deg,#f8fafc,#eef2f7);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--text);padding:18px;}
-    .wrap{max-width:760px;margin:0 auto}.card{background:rgba(255,255,255,.96);border:1px solid var(--border);border-radius:22px;box-shadow:0 18px 42px rgba(15,23,42,.10);overflow:hidden}.hero{background:linear-gradient(135deg,#0f766e,#059669);color:white;padding:22px 24px}.hero h1{margin:0;font-size:clamp(22px,4vw,32px);letter-spacing:-.04em}.hero p{margin:8px 0 0;font-size:14px;opacity:.92}.body{padding:22px 24px}.tenant-box{border:1px solid #bbf7d0;background:#f0fdf4;border-radius:16px;padding:13px 14px;margin-bottom:18px;color:#065f46}.tenant-box strong{display:block;font-size:16px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.form-group{margin-bottom:14px}label{display:block;margin-bottom:6px;font-size:13px;font-weight:800;color:#0f172a}input,select,textarea{width:100%;border:1px solid var(--border);border-radius:12px;padding:11px;background:white;color:var(--text);font:inherit}textarea{min-height:94px;resize:vertical}input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(15,118,110,.14)}.reporter-extra{display:none}.btn{width:100%;border:none;border-radius:14px;background:linear-gradient(135deg,#0f766e,#047857);color:white;padding:13px 14px;font-size:15px;font-weight:900;cursor:pointer}.btn:disabled{opacity:.55;cursor:not-allowed}.status{margin-top:14px;font-weight:850;font-size:13px;border-radius:12px;padding:11px 12px;display:none}.status.ok{display:block;background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}.status.err{display:block;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}.help{font-size:12px;color:var(--muted);line-height:1.45;margin-top:5px}.required{color:var(--danger)}.footer-note{margin-top:16px;font-size:12px;color:var(--muted);line-height:1.45;text-align:center}@media(max-width:640px){body{padding:10px}.body,.hero{padding:18px}.grid{grid-template-columns:1fr}}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ramak Kala Bildirimi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="js/supabase-config.js"></script>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --card: #fff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --primary: #0f766e;
+        --border: #e2e8f0;
+        --danger: #dc2626;
+        --ok: #059669;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at top left, rgba(15, 118, 110, 0.16), transparent 28rem),
+          linear-gradient(180deg, #f8fafc, #eef2f7);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          Arial,
+          sans-serif;
+        color: var(--text);
+        padding: 18px;
+      }
+      .wrap {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: 0 18px 42px rgba(15, 23, 42, 0.1);
+        overflow: hidden;
+      }
+      .hero {
+        background: linear-gradient(135deg, #0f766e, #059669);
+        color: white;
+        padding: 22px 24px;
+      }
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(22px, 4vw, 32px);
+        letter-spacing: -0.04em;
+      }
+      .hero p {
+        margin: 8px 0 0;
+        font-size: 14px;
+        opacity: 0.92;
+      }
+      .body {
+        padding: 22px 24px;
+      }
+      .tenant-box {
+        border: 1px solid #bbf7d0;
+        background: #f0fdf4;
+        border-radius: 16px;
+        padding: 13px 14px;
+        margin-bottom: 18px;
+        color: #065f46;
+      }
+      .tenant-box strong {
+        display: block;
+        font-size: 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 13px;
+      }
+      .form-group {
+        margin-bottom: 14px;
+      }
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 13px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 11px;
+        background: white;
+        color: var(--text);
+        font: inherit;
+      }
+      textarea {
+        min-height: 94px;
+        resize: vertical;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+      }
+      .reporter-extra {
+        display: none;
+      }
+      .btn {
+        width: 100%;
+        border: none;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #0f766e, #047857);
+        color: white;
+        padding: 13px 14px;
+        font-size: 15px;
+        font-weight: 900;
+        cursor: pointer;
+      }
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+      .status {
+        margin-top: 14px;
+        font-weight: 850;
+        font-size: 13px;
+        border-radius: 12px;
+        padding: 11px 12px;
+        display: none;
+      }
+      .status.ok {
+        display: block;
+        background: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+      }
+      .status.err {
+        display: block;
+        background: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+      }
+      .help {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45;
+        margin-top: 5px;
+      }
+      .required {
+        color: var(--danger);
+      }
+      .footer-note {
+        margin-top: 16px;
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.45;
+        text-align: center;
+      }
+      @media (max-width: 640px) {
+        body {
+          padding: 10px;
+        }
+        .body,
+        .hero {
+          padding: 18px;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
 
-    .access-panel{border:1px solid #bfdbfe;background:#eff6ff;border-radius:16px;padding:14px 15px;margin-bottom:18px;color:#1e3a8a}
-    .access-panel.hidden{display:none}
-    .access-panel h2{font-size:18px;margin:0 0 6px;letter-spacing:-.02em}
-    .access-panel p{font-size:13px;margin:0 0 12px;line-height:1.45;color:#1e40af}
-    .access-grid{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}
-    .access-panel label{color:#1e3a8a}
-    .access-panel .btn-mini{width:auto;border:none;border-radius:12px;background:linear-gradient(135deg,#0f766e,#047857);color:white;padding:11px 14px;font-weight:900;cursor:pointer;white-space:nowrap}
-    .context-hidden{display:none!important}
-    @media(max-width:640px){.access-grid{grid-template-columns:1fr}.access-panel .btn-mini{width:100%}}
-  </style>
-</head>
-<body>
-  <div class="wrap">
-    <div class="card">
-      <div class="hero">
-        <h1>⚠️ Ramak Kala Bildirimi</h1>
-        <p>Tehlikeli durumu hızlıca bildirin. Bu form için kullanıcı girişi gerekmez.</p>
-      </div>
-      <div class="body">
-        <div class="access-panel hidden" id="access_panel">
-          <h2>Ramak Kala Bildirim Formuna Erişim</h2>
-          <p>QR kod yoksa OSGB kısa kodunu girerek veya size verilen firma bağlantısını kullanarak formu açabilirsiniz. Bu işlem için kullanıcı girişi gerekmez.</p>
-          <div class="access-grid">
-            <div>
-              <label>OSGB Kısa Kodu</label>
-              <input id="access_tenant_code" placeholder="Örn. eses" autocapitalize="none">
+      .access-panel {
+        border: 1px solid #bfdbfe;
+        background: #eff6ff;
+        border-radius: 16px;
+        padding: 14px 15px;
+        margin-bottom: 18px;
+        color: #1e3a8a;
+      }
+      .access-panel.hidden {
+        display: none;
+      }
+      .access-panel h2 {
+        font-size: 18px;
+        margin: 0 0 6px;
+        letter-spacing: -0.02em;
+      }
+      .access-panel p {
+        font-size: 13px;
+        margin: 0 0 12px;
+        line-height: 1.45;
+        color: #1e40af;
+      }
+      .access-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 10px;
+        align-items: end;
+      }
+      .access-panel label {
+        color: #1e3a8a;
+      }
+      .access-panel .btn-mini {
+        width: auto;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #0f766e, #047857);
+        color: white;
+        padding: 11px 14px;
+        font-weight: 900;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .context-hidden {
+        display: none !important;
+      }
+      @media (max-width: 640px) {
+        .access-grid {
+          grid-template-columns: 1fr;
+        }
+        .access-panel .btn-mini {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <div class="hero">
+          <h1>⚠️ Ramak Kala Bildirimi</h1>
+          <p>Tehlikeli durumu hızlıca bildirin. Bu form için kullanıcı girişi gerekmez.</p>
+        </div>
+        <div class="body">
+          <div class="access-panel hidden" id="access_panel">
+            <h2>Ramak Kala Bildirim Formuna Erişim</h2>
+            <p>
+              QR kod yoksa OSGB kısa kodunu girerek veya size verilen firma bağlantısını kullanarak formu açabilirsiniz.
+              Bu işlem için kullanıcı girişi gerekmez.
+            </p>
+            <div class="access-grid">
+              <div>
+                <label>OSGB Kısa Kodu</label>
+                <input id="access_tenant_code" placeholder="Örn. eses" autocapitalize="none" />
+              </div>
+              <div>
+                <label>Firma</label>
+                <select id="access_company_select">
+                  <option value="">Önce OSGB kodunu girin</option>
+                </select>
+              </div>
+              <button class="btn-mini" onclick="openContextFromAccess()">Formu Aç</button>
             </div>
-            <div>
-              <label>Firma</label>
-              <select id="access_company_select"><option value="">Önce OSGB kodunu girin</option></select>
+            <div class="help">
+              Ofis veya İSG ekibi size kısa kod verdiyse buraya yazın. Firma seçildikten sonra bildirim doğrudan ilgili
+              OSGB ekranına düşer.
             </div>
-            <button class="btn-mini" onclick="openContextFromAccess()">Formu Aç</button>
           </div>
-          <div class="help">Ofis veya İSG ekibi size kısa kod verdiyse buraya yazın. Firma seçildikten sonra bildirim doğrudan ilgili OSGB ekranına düşer.</div>
-        </div>
 
-        <div class="tenant-box" id="context_box">
-          <strong>Form hazırlanıyor...</strong>
-          <span>Firma ve OSGB bilgileri yükleniyor.</span>
-        </div>
-
-        <div class="grid">
-          <div class="form-group">
-            <label>Olay Tarihi <span class="required">*</span></label>
-            <input type="date" id="incident_date">
+          <div class="tenant-box" id="context_box">
+            <strong>Form hazırlanıyor...</strong>
+            <span>Firma ve OSGB bilgileri yükleniyor.</span>
           </div>
-          <div class="form-group">
-            <label>Tehlike Türü <span class="required">*</span></label>
-            <select id="hazard_type">
-              <option value="Düşme / Kayma Riski">Düşme / Kayma Riski</option>
-              <option value="Elektrik Tehlikesi">Elektrik Tehlikesi</option>
-              <option value="Makine / Ekipman Tehlikesi">Makine / Ekipman Tehlikesi</option>
-              <option value="Kimyasal / Toz / Gaz">Kimyasal / Toz / Gaz</option>
-              <option value="Yangın / Patlama Riski">Yangın / Patlama Riski</option>
-              <option value="Ergonomi / Elle Taşıma">Ergonomi / Elle Taşıma</option>
-              <option value="KKD Eksikliği">KKD Eksikliği</option>
-              <option value="Diğer">Diğer</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="form-group">
-          <label>Olay Yeri <span class="required">*</span></label>
-          <input id="incident_location" placeholder="Örn. Depo girişi, üretim hattı, merdiven, şantiye alanı">
-        </div>
-
-        <div class="form-group">
-          <label>Ramak Kala / Tehlikeli Durum Açıklaması <span class="required">*</span></label>
-          <textarea id="description" placeholder="Ne gördünüz? Nerede oldu? Kaza olmadan önce nasıl fark edildi?"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label>Önerilen Aksiyon</label>
-          <textarea id="suggested_action" placeholder="Varsa çözüm önerinizi yazın. Örn. alan kapatılsın, uyarı levhası konulsun, bakım yapılsın."></textarea>
-        </div>
-
-        <div class="grid">
-          <div class="form-group">
-            <label>Bildirim Şekli</label>
-            <select id="reporter_type" onchange="toggleReporterFields()">
-              <option value="Anonim">Anonim</option>
-              <option value="İsimli">İsimli</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Fotoğraf / Dosya</label>
-            <input type="file" id="report_file" accept="image/png,image/jpeg,image/webp,application/pdf">
-            <div class="help">Opsiyonel. En fazla 10 MB.</div>
-          </div>
-        </div>
-
-        <div id="reporter_extra" class="reporter-extra">
           <div class="grid">
-            <div class="form-group"><label>Ad Soyad</label><input id="reporter_name" placeholder="Opsiyonel"></div>
-            <div class="form-group"><label>Telefon / İletişim</label><input id="reporter_phone" placeholder="Opsiyonel"></div>
+            <div class="form-group">
+              <label>Olay Tarihi <span class="required">*</span></label>
+              <input type="date" id="incident_date" />
+            </div>
+            <div class="form-group">
+              <label>Tehlike Türü <span class="required">*</span></label>
+              <select id="hazard_type">
+                <option value="Düşme / Kayma Riski">Düşme / Kayma Riski</option>
+                <option value="Elektrik Tehlikesi">Elektrik Tehlikesi</option>
+                <option value="Makine / Ekipman Tehlikesi">Makine / Ekipman Tehlikesi</option>
+                <option value="Kimyasal / Toz / Gaz">Kimyasal / Toz / Gaz</option>
+                <option value="Yangın / Patlama Riski">Yangın / Patlama Riski</option>
+                <option value="Ergonomi / Elle Taşıma">Ergonomi / Elle Taşıma</option>
+                <option value="KKD Eksikliği">KKD Eksikliği</option>
+                <option value="Diğer">Diğer</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Olay Yeri <span class="required">*</span></label>
+            <input id="incident_location" placeholder="Örn. Depo girişi, üretim hattı, merdiven, şantiye alanı" />
+          </div>
+
+          <div class="form-group">
+            <label>Ramak Kala / Tehlikeli Durum Açıklaması <span class="required">*</span></label>
+            <textarea
+              id="description"
+              placeholder="Ne gördünüz? Nerede oldu? Kaza olmadan önce nasıl fark edildi?"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Önerilen Aksiyon</label>
+            <textarea
+              id="suggested_action"
+              placeholder="Varsa çözüm önerinizi yazın. Örn. alan kapatılsın, uyarı levhası konulsun, bakım yapılsın."
+            ></textarea>
+          </div>
+
+          <div class="grid">
+            <div class="form-group">
+              <label>Bildirim Şekli</label>
+              <select id="reporter_type" onchange="toggleReporterFields()">
+                <option value="Anonim">Anonim</option>
+                <option value="İsimli">İsimli</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Fotoğraf / Dosya</label>
+              <input type="file" id="report_file" accept="image/png,image/jpeg,image/webp,application/pdf" />
+              <div class="help">Opsiyonel. En fazla 10 MB.</div>
+            </div>
+          </div>
+
+          <div id="reporter_extra" class="reporter-extra">
+            <div class="grid">
+              <div class="form-group"><label>Ad Soyad</label><input id="reporter_name" placeholder="Opsiyonel" /></div>
+              <div class="form-group">
+                <label>Telefon / İletişim</label><input id="reporter_phone" placeholder="Opsiyonel" />
+              </div>
+            </div>
+          </div>
+
+          <button class="btn" id="submit_btn" onclick="submitNearMiss()">Bildirimi Gönder</button>
+          <div id="status_box" class="status"></div>
+          <div class="footer-note">
+            Bildirimler ilgili OSGB/İSG uzmanı ekranına düşer. Acil ve hayati tehlike varsa önce yetkili amire veya acil
+            durum ekibine haber verin.
           </div>
         </div>
-
-        <button class="btn" id="submit_btn" onclick="submitNearMiss()">Bildirimi Gönder</button>
-        <div id="status_box" class="status"></div>
-        <div class="footer-note">Bildirimler ilgili OSGB/İSG uzmanı ekranına düşer. Acil ve hayati tehlike varsa önce yetkili amire veya acil durum ekibine haber verin.</div>
       </div>
     </div>
-  </div>
 
-<script>
-const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
-const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const FILE_BUCKET = 'near-miss-files';
-let FORM_CONTEXT = { tenant:null, company:null };
+    <script>
+      const FILE_BUCKET = 'near-miss-files';
+      let FORM_CONTEXT = { tenant: null, company: null };
 
-function qs(name){ return new URLSearchParams(window.location.search).get(name) || ''; }
-function escapeHtml(value){ return (value||'').toString().replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
-function todayString(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function setStatus(msg, ok){ const el=document.getElementById('status_box'); el.className='status '+(ok?'ok':'err'); el.innerText=msg||''; }
-function toggleReporterFields(){ document.getElementById('reporter_extra').style.display = document.getElementById('reporter_type').value === 'İsimli' ? 'block' : 'none'; }
-function safeStorageName(value){ return (value||'dosya').toString().trim().replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ._-]/g,'_').substring(0,90) || 'dosya'; }
+      function qs(name) {
+        return new URLSearchParams(window.location.search).get(name) || '';
+      }
+      function escapeHtml(value) {
+        return (value || '')
+          .toString()
+          .replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]);
+      }
+      function todayString() {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
+      function setStatus(msg, ok) {
+        const el = document.getElementById('status_box');
+        el.className = 'status ' + (ok ? 'ok' : 'err');
+        el.innerText = msg || '';
+      }
+      function toggleReporterFields() {
+        document.getElementById('reporter_extra').style.display =
+          document.getElementById('reporter_type').value === 'İsimli' ? 'block' : 'none';
+      }
+      function safeStorageName(value) {
+        return (
+          (value || 'dosya')
+            .toString()
+            .trim()
+            .replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ._-]/g, '_')
+            .substring(0, 90) || 'dosya'
+        );
+      }
 
-window.onload = async function(){
-  document.getElementById('incident_date').value = todayString();
-  const codeEl=document.getElementById('access_tenant_code');
-  if(codeEl){
-    codeEl.addEventListener('change', async ()=>{
-      try{
-        const tenant=await findTenantBySlug(codeEl.value);
-        if(tenant){ await loadCompaniesForTenant(tenant.id, 'access_company_select'); await setContext(tenant, null); }
-      }catch(err){ console.warn(err.message); }
-    });
-  }
-  await loadContext();
-};
+      window.onload = async function () {
+        document.getElementById('incident_date').value = todayString();
+        const codeEl = document.getElementById('access_tenant_code');
+        if (codeEl) {
+          codeEl.addEventListener('change', async () => {
+            try {
+              const tenant = await findTenantBySlug(codeEl.value);
+              if (tenant) {
+                await loadCompaniesForTenant(tenant.id, 'access_company_select');
+                await setContext(tenant, null);
+              }
+            } catch (err) {
+              console.warn(err.message);
+            }
+          });
+        }
+        await loadContext();
+      };
 
-function setSubmitEnabled(enabled){
-  const btn=document.getElementById('submit_btn');
-  if(btn) btn.disabled = !enabled;
-}
+      function setSubmitEnabled(enabled) {
+        const btn = document.getElementById('submit_btn');
+        if (btn) btn.disabled = !enabled;
+      }
 
-function showAccessPanel(show){
-  const panel=document.getElementById('access_panel');
-  if(panel) panel.classList.toggle('hidden', !show);
-}
+      function showAccessPanel(show) {
+        const panel = document.getElementById('access_panel');
+        if (panel) panel.classList.toggle('hidden', !show);
+      }
 
-async function findTenantBySlug(slug){
-  const clean=(slug||'').toString().trim().toLowerCase();
-  if(!clean) return null;
-  const {data,error}=await dbClient.from('tenants').select('id,name,slug,is_active').eq('slug',clean).maybeSingle();
-  if(error) throw error;
-  if(!data || data.is_active===false) return null;
-  return data;
-}
+      async function findTenantBySlug(slug) {
+        const clean = (slug || '').toString().trim().toLowerCase();
+        if (!clean) return null;
+        const { data, error } = await dbClient
+          .from('tenants')
+          .select('id,name,slug,is_active')
+          .eq('slug', clean)
+          .maybeSingle();
+        if (error) throw error;
+        if (!data || data.is_active === false) return null;
+        return data;
+      }
 
-async function loadCompaniesForTenant(tenantId, selectId){
-  const select=document.getElementById(selectId);
-  if(!select) return [];
-  select.innerHTML='<option value="">Firmalar yükleniyor...</option>';
-  const {data,error}=await dbClient.from('customer_companies').select('id, company_name, tenant_id').eq('tenant_id',tenantId).order('company_name');
-  if(error){
-    select.innerHTML='<option value="">Firma listesi alınamadı</option>';
-    throw error;
-  }
-  select.innerHTML='<option value="">-- Firmanızı seçin --</option>';
-  (data||[]).forEach(c=>{select.innerHTML += `<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`;});
-  return data||[];
-}
+      async function loadCompaniesForTenant(tenantId, selectId) {
+        const select = document.getElementById(selectId);
+        if (!select) return [];
+        select.innerHTML = '<option value="">Firmalar yükleniyor...</option>';
+        const { data, error } = await dbClient
+          .from('customer_companies')
+          .select('id, company_name, tenant_id')
+          .eq('tenant_id', tenantId)
+          .order('company_name');
+        if (error) {
+          select.innerHTML = '<option value="">Firma listesi alınamadı</option>';
+          throw error;
+        }
+        select.innerHTML = '<option value="">-- Firmanızı seçin --</option>';
+        (data || []).forEach((c) => {
+          select.innerHTML += `<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`;
+        });
+        return data || [];
+      }
 
-async function setContext(tenant, company){
-  const box=document.getElementById('context_box');
-  FORM_CONTEXT.tenant=tenant||null;
-  FORM_CONTEXT.company=company||null;
-  if(!tenant){
-    box.innerHTML='<strong>OSGB bilgisi bekleniyor</strong><span>QR kod, kısa link veya OSGB kısa kodu ile formu açabilirsiniz.</span>';
-    setSubmitEnabled(false);
-    return;
-  }
-  if(!company){
-    box.innerHTML=`<strong>${escapeHtml(tenant.name)}</strong><span>Lütfen aşağıdan firmanızı seçerek bildirimi ilgili firmaya bağlayın.</span>`;
-    setSubmitEnabled(false);
-    return;
-  }
-  box.innerHTML=`<strong>${escapeHtml(company.company_name)}</strong><span>${escapeHtml(tenant.name)} ramak kala bildirim formu</span>`;
-  setSubmitEnabled(true);
-}
+      async function setContext(tenant, company) {
+        const box = document.getElementById('context_box');
+        FORM_CONTEXT.tenant = tenant || null;
+        FORM_CONTEXT.company = company || null;
+        if (!tenant) {
+          box.innerHTML =
+            '<strong>OSGB bilgisi bekleniyor</strong><span>QR kod, kısa link veya OSGB kısa kodu ile formu açabilirsiniz.</span>';
+          setSubmitEnabled(false);
+          return;
+        }
+        if (!company) {
+          box.innerHTML = `<strong>${escapeHtml(tenant.name)}</strong><span>Lütfen aşağıdan firmanızı seçerek bildirimi ilgili firmaya bağlayın.</span>`;
+          setSubmitEnabled(false);
+          return;
+        }
+        box.innerHTML = `<strong>${escapeHtml(company.company_name)}</strong><span>${escapeHtml(tenant.name)} ramak kala bildirim formu</span>`;
+        setSubmitEnabled(true);
+      }
 
-async function openContextFromAccess(){
-  try{
-    setStatus('', true);
-    const slug=document.getElementById('access_tenant_code').value.trim().toLowerCase();
-    const tenant=await findTenantBySlug(slug);
-    if(!tenant) throw new Error('Bu OSGB kısa kodu bulunamadı veya aktif değil.');
-    const companyId=document.getElementById('access_company_select').value;
-    if(!companyId){
-      await loadCompaniesForTenant(tenant.id, 'access_company_select');
-      await setContext(tenant, null);
-      throw new Error('Lütfen firma seçimini yapıp tekrar Formu Aç butonuna basın.');
-    }
-    const {data:company,error}=await dbClient.from('customer_companies').select('id,company_name,tenant_id').eq('id',companyId).eq('tenant_id',tenant.id).maybeSingle();
-    if(error) throw error;
-    if(!company) throw new Error('Seçilen firma bu OSGB altında bulunamadı.');
-    await setContext(tenant, company);
-    const url=new URL(window.location.href);
-    url.searchParams.set('tenant', tenant.slug);
-    url.searchParams.set('company', company.id);
-    window.history.replaceState({}, '', url.toString());
-    showAccessPanel(false);
-  }catch(err){
-    setStatus('Hata: '+(err.message||err), false);
-  }
-}
+      async function openContextFromAccess() {
+        try {
+          setStatus('', true);
+          const slug = document.getElementById('access_tenant_code').value.trim().toLowerCase();
+          const tenant = await findTenantBySlug(slug);
+          if (!tenant) throw new Error('Bu OSGB kısa kodu bulunamadı veya aktif değil.');
+          const companyId = document.getElementById('access_company_select').value;
+          if (!companyId) {
+            await loadCompaniesForTenant(tenant.id, 'access_company_select');
+            await setContext(tenant, null);
+            throw new Error('Lütfen firma seçimini yapıp tekrar Formu Aç butonuna basın.');
+          }
+          const { data: company, error } = await dbClient
+            .from('customer_companies')
+            .select('id,company_name,tenant_id')
+            .eq('id', companyId)
+            .eq('tenant_id', tenant.id)
+            .maybeSingle();
+          if (error) throw error;
+          if (!company) throw new Error('Seçilen firma bu OSGB altında bulunamadı.');
+          await setContext(tenant, company);
+          const url = new URL(window.location.href);
+          url.searchParams.set('tenant', tenant.slug);
+          url.searchParams.set('company', company.id);
+          window.history.replaceState({}, '', url.toString());
+          showAccessPanel(false);
+        } catch (err) {
+          setStatus('Hata: ' + (err.message || err), false);
+        }
+      }
 
-async function loadContext(){
-  const tenantSlug = qs('tenant');
-  const companyId = qs('company');
-  const box = document.getElementById('context_box');
-  setSubmitEnabled(false);
+      async function loadContext() {
+        const tenantSlug = qs('tenant');
+        const companyId = qs('company');
+        const box = document.getElementById('context_box');
+        setSubmitEnabled(false);
 
-  if(!tenantSlug){
-    showAccessPanel(true);
-    box.innerHTML='<strong>OSGB / Firma seçimi gerekli</strong><span>QR kod yoksa OSGB kısa kodunu girip firmanızı seçin.</span>';
-    return;
-  }
+        if (!tenantSlug) {
+          showAccessPanel(true);
+          box.innerHTML =
+            '<strong>OSGB / Firma seçimi gerekli</strong><span>QR kod yoksa OSGB kısa kodunu girip firmanızı seçin.</span>';
+          return;
+        }
 
-  const tenant=await findTenantBySlug(tenantSlug);
-  if(!tenant){
-    showAccessPanel(true);
-    const codeEl=document.getElementById('access_tenant_code');
-    if(codeEl) codeEl.value=tenantSlug;
-    box.innerHTML='<strong>Geçersiz OSGB bağlantısı</strong><span>Bu bildirim formu aktif değil veya kısa kod hatalı.</span>';
-    return;
-  }
+        const tenant = await findTenantBySlug(tenantSlug);
+        if (!tenant) {
+          showAccessPanel(true);
+          const codeEl = document.getElementById('access_tenant_code');
+          if (codeEl) codeEl.value = tenantSlug;
+          box.innerHTML =
+            '<strong>Geçersiz OSGB bağlantısı</strong><span>Bu bildirim formu aktif değil veya kısa kod hatalı.</span>';
+          return;
+        }
 
-  const codeEl=document.getElementById('access_tenant_code');
-  if(codeEl) codeEl.value=tenant.slug;
+        const codeEl = document.getElementById('access_tenant_code');
+        if (codeEl) codeEl.value = tenant.slug;
 
-  if(companyId){
-    const {data:company}=await dbClient.from('customer_companies').select('id,company_name,tenant_id').eq('id',companyId).eq('tenant_id',tenant.id).maybeSingle();
-    if(company){
-      await setContext(tenant, company);
-      showAccessPanel(false);
-      return;
-    }
-  }
+        if (companyId) {
+          const { data: company } = await dbClient
+            .from('customer_companies')
+            .select('id,company_name,tenant_id')
+            .eq('id', companyId)
+            .eq('tenant_id', tenant.id)
+            .maybeSingle();
+          if (company) {
+            await setContext(tenant, company);
+            showAccessPanel(false);
+            return;
+          }
+        }
 
-  showAccessPanel(true);
-  await loadCompaniesForTenant(tenant.id, 'access_company_select');
-  await setContext(tenant, null);
-}
+        showAccessPanel(true);
+        await loadCompaniesForTenant(tenant.id, 'access_company_select');
+        await setContext(tenant, null);
+      }
 
-async function uploadFile(file){
-  if(!file) return {url:null,path:null};
-  if(file.size > 10*1024*1024) throw new Error('Dosya en fazla 10 MB olabilir.');
-  const tenantId = FORM_CONTEXT.tenant.id;
-  const companyId = FORM_CONTEXT.company ? FORM_CONTEXT.company.id : 'genel';
-  const path = `${tenantId}/${companyId}/${Date.now()}_${safeStorageName(file.name)}`;
-  const {error}=await dbClient.storage.from(FILE_BUCKET).upload(path,file,{contentType:file.type||'application/octet-stream',upsert:false});
-  if(error) throw new Error('Dosya yüklenemedi. near-miss-files bucket ve Storage izinlerini kontrol edin. Detay: '+error.message);
-  const {data}=dbClient.storage.from(FILE_BUCKET).getPublicUrl(path);
-  return {url:data&&data.publicUrl?data.publicUrl:null,path};
-}
+      async function uploadFile(file) {
+        if (!file) return { url: null, path: null };
+        if (file.size > 10 * 1024 * 1024) throw new Error('Dosya en fazla 10 MB olabilir.');
+        const tenantId = FORM_CONTEXT.tenant.id;
+        const companyId = FORM_CONTEXT.company ? FORM_CONTEXT.company.id : 'genel';
+        const path = `${tenantId}/${companyId}/${Date.now()}_${safeStorageName(file.name)}`;
+        const { error } = await dbClient.storage
+          .from(FILE_BUCKET)
+          .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+        if (error)
+          throw new Error(
+            'Dosya yüklenemedi. near-miss-files bucket ve Storage izinlerini kontrol edin. Detay: ' + error.message
+          );
+        const { data } = dbClient.storage.from(FILE_BUCKET).getPublicUrl(path);
+        return { url: data && data.publicUrl ? data.publicUrl : null, path };
+      }
 
-async function submitNearMiss(){
-  try{
-    setStatus('',true);
-    if(!FORM_CONTEXT.tenant) throw new Error('OSGB/tenant bilgisi yüklenemedi.');
-    const incidentDate=document.getElementById('incident_date').value;
-    const hazardType=document.getElementById('hazard_type').value;
-    const location=document.getElementById('incident_location').value.trim();
-    const description=document.getElementById('description').value.trim();
-    const suggestedAction=document.getElementById('suggested_action').value.trim()||null;
-    const reporterType=document.getElementById('reporter_type').value;
-    const reporterName=reporterType==='İsimli' ? (document.getElementById('reporter_name').value.trim()||null) : null;
-    const reporterPhone=reporterType==='İsimli' ? (document.getElementById('reporter_phone').value.trim()||null) : null;
-    const file=document.getElementById('report_file').files[0]||null;
-    if(!incidentDate || !hazardType || !location || !description) throw new Error('Olay tarihi, tehlike türü, olay yeri ve açıklama zorunlu.');
-    document.getElementById('submit_btn').disabled=true;
-    const fileInfo=await uploadFile(file);
-    const {error}=await dbClient.from('near_miss_reports').insert([{
-      tenant_id: FORM_CONTEXT.tenant.id,
-      company_id: FORM_CONTEXT.company ? FORM_CONTEXT.company.id : null,
-      incident_date: incidentDate,
-      incident_location: location,
-      hazard_type: hazardType,
-      description,
-      suggested_action: suggestedAction,
-      reporter_type: reporterType,
-      reporter_name: reporterName,
-      reporter_phone: reporterPhone,
-      file_url: fileInfo.url,
-      file_path: fileInfo.path,
-      status: 'Yeni'
-    }]);
-    if(error) throw error;
-    ['incident_location','description','suggested_action','reporter_name','reporter_phone'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-    document.getElementById('report_file').value='';
-    document.getElementById('reporter_type').value='Anonim'; toggleReporterFields();
-    setStatus('Bildiriminiz alındı. Teşekkür ederiz.', true);
-  }catch(err){ setStatus('Hata: '+(err.message||err), false); }
-  finally{ document.getElementById('submit_btn').disabled=false; }
-}
-</script>
-</body>
+      async function submitNearMiss() {
+        try {
+          setStatus('', true);
+          if (!FORM_CONTEXT.tenant) throw new Error('OSGB/tenant bilgisi yüklenemedi.');
+          const incidentDate = document.getElementById('incident_date').value;
+          const hazardType = document.getElementById('hazard_type').value;
+          const location = document.getElementById('incident_location').value.trim();
+          const description = document.getElementById('description').value.trim();
+          const suggestedAction = document.getElementById('suggested_action').value.trim() || null;
+          const reporterType = document.getElementById('reporter_type').value;
+          const reporterName =
+            reporterType === 'İsimli' ? document.getElementById('reporter_name').value.trim() || null : null;
+          const reporterPhone =
+            reporterType === 'İsimli' ? document.getElementById('reporter_phone').value.trim() || null : null;
+          const file = document.getElementById('report_file').files[0] || null;
+          if (!incidentDate || !hazardType || !location || !description)
+            throw new Error('Olay tarihi, tehlike türü, olay yeri ve açıklama zorunlu.');
+          document.getElementById('submit_btn').disabled = true;
+          const fileInfo = await uploadFile(file);
+          const { error } = await dbClient.from('near_miss_reports').insert([
+            {
+              tenant_id: FORM_CONTEXT.tenant.id,
+              company_id: FORM_CONTEXT.company ? FORM_CONTEXT.company.id : null,
+              incident_date: incidentDate,
+              incident_location: location,
+              hazard_type: hazardType,
+              description,
+              suggested_action: suggestedAction,
+              reporter_type: reporterType,
+              reporter_name: reporterName,
+              reporter_phone: reporterPhone,
+              file_url: fileInfo.url,
+              file_path: fileInfo.path,
+              status: 'Yeni'
+            }
+          ]);
+          if (error) throw error;
+          ['incident_location', 'description', 'suggested_action', 'reporter_name', 'reporter_phone'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+          });
+          document.getElementById('report_file').value = '';
+          document.getElementById('reporter_type').value = 'Anonim';
+          toggleReporterFields();
+          setStatus('Bildiriminiz alındı. Teşekkür ederiz.', true);
+        } catch (err) {
+          setStatus('Hata: ' + (err.message || err), false);
+        } finally {
+          document.getElementById('submit_btn').disabled = false;
+        }
+      }
+    </script>
+  </body>
 </html>

@@ -1,0 +1,275 @@
+Bu OSGB projesinde hayat döngüsü müşteri / firma ekleme ile başlıyor. Ama öncesinde CRM konumlandırmamız gerekiyor. OSGB projesinde CRM’i “satış takibi” gibi dar değil, müşteri/firma yaşam döngüsünün başlangıç katmanı olarak konumlandırmak gerekir. Yani CRM; müşteri adayından başlayıp firma kaydına, sözleşmeye, hizmet planına, çalışan yönetimine, eğitimlere, muayenelere ve raporlara bağlanan ana giriş kapısı olmalı.
+Önerdiğim yapı şöyle:
+1. CRM’in temel amacı ne olmalı?
+CRM şu sorulara cevap vermeli:
+Bu firma kim?
+Bize nasıl geldi?
+Şu anda hangi aşamada?
+Hangi hizmetlerle ilgileniyor?
+Teklif verdik mi?
+Sözleşmeye döndü mü?
+Aktif müşteriye dönüştüğünde hangi modüllere aktarılacak?
+Bu yüzden CRM’i sadece “firma ekleme” ekranı değil, potansiyel müşteri → teklif → sözleşme → aktif müşteri geçişini yöneten yapı olarak düşünmeliyiz.
+Önerilen CRM Akışı
+1. Potansiyel Müşteri / Lead Kaydı
+Hayat döngüsü burada başlamalı.
+Bir firma sisteme ilk kez geldiğinde doğrudan “aktif müşteri” yapılmamalı. Önce CRM tarafında şu statülerden biriyle açılmalı:
+Yeni kayıt
+İlk görüşme yapılacak
+Görüşme yapıldı
+Teklif hazırlanacak
+Teklif gönderildi
+Pazarlıkta
+Sözleşme bekleniyor
+Kazanıldı
+Kaybedildi
+Askıda / sonra tekrar aranacak
+Bu yapı ileride satış performansı, dönüşüm oranı ve takip süreçleri için çok işe yarar.
+2. Firma Temel Bilgileri
+CRM’de firma bilgisi ilk kez burada toplanmalı. Ama bu aşamada çok ağır bir form olmamalı. İlk kayıt hızlı yapılabilmeli.
+Temel alanlar:
+Alan	Açıklama
+Firma adı	Ticari unvan veya kısa ad
+Vergi no / TCKN	Şahıs firması da olabilir
+Vergi dairesi	Faturalama için
+Sektör	Tehlike sınıfı için önemli
+NACE kodu	OSGB süreçleriyle bağlantılı
+Tehlike sınıfı	Az tehlikeli / tehlikeli / çok tehlikeli
+Çalışan sayısı	Hizmet süresi ve fiyatlandırma için kritik
+Şehir / ilçe	Lokasyon bazlı planlama için
+Adres	Ziyaret, sözleşme ve hizmet için
+Web sitesi	Opsiyonel
+Notlar	Serbest açıklama alanı
+Burada özellikle NACE kodu, tehlike sınıfı ve çalışan sayısı OSGB tarafında çok kritik. Çünkü teklif, uzman/hekim süreleri, hizmet planı ve fiyatlandırma bunlara göre şekillenebilir.
+3. Yetkili / İletişim Kişileri
+Firma tek bir kişiden ibaret olmamalı. Bir firmada birden fazla muhatap olabilir.
+Örneğin:
+Genel müdür
+İnsan kaynakları yetkilisi
+İSG sorumlusu
+Muhasebe / finans yetkilisi
+Operasyon sorumlusu
+Saha iletişim kişisi
+Her kişi için:
+Alan	Açıklama
+Ad soyad	Kişi adı
+Görev / unvan	İK, muhasebe, yönetici vb.
+Telefon	Arama / WhatsApp için
+E-posta	Teklif ve yazışmalar için
+Birincil kişi mi?	Ana muhatap
+Fatura kişisi mi?	Finans iletişimi
+Sözleşme yetkilisi mi?	İmza süreci için
+Not	Kişisel takip notu
+Bence burada en azından bir kişi “birincil iletişim” olarak işaretlenmeli.
+4. CRM Aşamaları
+CRM’in kalbi bence “aşama yönetimi” olmalı.
+Önerilen pipeline:
+A. Lead / İlk Kayıt
+Firma sisteme girilir. Henüz teklif yoktur.
+Örnek bilgiler:
+Firma adı
+İletişim kişisi
+Kaynak
+İlk not
+Tahmini çalışan sayısı
+İlgilendiği hizmetler
+B. Görüşme
+Firma ile ilk temas kurulmuştur.
+Bu aşamada şu bilgiler eklenebilir:
+Görüşme tarihi
+Görüşen kişi
+Firma ihtiyacı
+Mevcut OSGB var mı?
+Değiştirme sebebi
+Beklenen başlangıç tarihi
+Bütçe / fiyat hassasiyeti
+Rakip firma bilgisi
+C. İhtiyaç Analizi
+OSGB için bu aşama önemli. Burada firma ihtiyacı netleşir.
+Alanlar:
+Çalışan sayısı
+Lokasyon sayısı
+Tehlike sınıfı
+Vardiya yapısı
+İşyeri hekimi ihtiyacı
+İş güvenliği uzmanı ihtiyacı
+Diğer sağlık personeli ihtiyacı
+Eğitim ihtiyacı
+Risk analizi ihtiyacı
+Acil durum planı ihtiyacı
+Periyodik muayene ihtiyacı
+Mobil sağlık ihtiyacı
+Ortam ölçümü ihtiyacı
+Buradan sonra sistem teklif üretmeye hazır hâle gelir.
+D. Teklif
+Bu aşamada CRM, teklif modülüyle bağlantılı olmalı.
+Teklif bilgileri:
+Alan	Açıklama
+Teklif no	Otomatik üretilebilir
+Teklif tarihi	
+Geçerlilik tarihi	
+Hizmet kalemleri	Uzman, hekim, eğitim vb.
+Çalışan sayısı	Hesaplama için
+Aylık ücret	
+Ek hizmetler	Eğitim, muayene, analiz vb.
+İskonto	Varsa
+KDV	
+Toplam tutar	
+Teklif durumu	Hazırlandı / gönderildi / revize / kabul / red
+Bence teklif birden fazla revizyona izin vermeli. Örneğin:
+Teklif v1
+Teklif v2
+Teklif v3
+Çünkü OSGB satışında fiyat ve kapsam revizyonları sık olur.
+E. Sözleşme
+Teklif kabul edilirse “sözleşme” aşamasına geçilmeli.
+Alanlar:
+Sözleşme başlangıç tarihi
+Sözleşme bitiş tarihi
+Sözleşme süresi
+Hizmet başlangıç tarihi
+Aylık anlaşma bedeli
+Ödeme periyodu
+Fatura günü
+Sözleşme dosyası
+İmzalı nüsha yüklendi mi?
+İSG-Katip süreci tamamlandı mı?
+Atanacak uzman / hekim
+Sözleşme durumu
+Durumlar:
+Hazırlanıyor
+Müşteriye gönderildi
+İmza bekleniyor
+İmzalandı
+İSG-Katip bekleniyor
+Aktif
+İptal
+F. Aktif Müşteriye Dönüşüm
+Bu en kritik nokta.
+CRM’de “Kazanıldı / Sözleşme Aktif” olduğunda firma artık ana müşteri/firma modülüne aktarılmalı.
+Bu geçişte sistem şunları oluşturabilir:
+Firma kaydı
+Lokasyon / şube kaydı
+Yetkili kişiler
+Sözleşme kaydı
+Hizmet planı
+Çalışan listesi için boş yapı
+Eğitim takip alanı
+Sağlık muayenesi takip alanı
+Risk analizi / doküman takip alanı
+Faturalama başlangıcı
+Yani CRM, operasyon modüllerine veri taşıyan başlangıç katmanı olmalı.
+CRM’de Olması Gereken Ana Menüler
+Bence sol menüde CRM ayrı bir başlık olmalı:
+CRM
+Altında:
+Dashboard
+Potansiyel Firmalar
+Görüşmeler
+Teklifler
+Sözleşme Süreci
+Kaybedilen Fırsatlar
+Takip Görevleri
+CRM Raporları
+CRM Dashboard Nasıl Olmalı?
+CRM ana ekranı yöneticiye hızlı özet vermeli.
+Örneğin:
+Kart	Anlamı
+Yeni lead sayısı	Bu ay gelen firma sayısı
+Teklif bekleyenler	Henüz teklif hazırlanmayanlar
+Gönderilen teklifler	Açık teklifler
+Sözleşme bekleyenler	Kabul edilmiş ama imzalanmamış
+Kazanılan müşteriler	Aktif müşteriye dönüşenler
+Kaybedilen fırsatlar	Red / iptal olanlar
+Tahmini aylık gelir	Açık tekliflerin toplam potansiyeli
+Kazanılan aylık gelir	Aktifleşen sözleşmelerin toplamı
+Ayrıca bir pipeline görünümü çok faydalı olur:
+Yeni Lead → Görüşme → İhtiyaç Analizi → Teklif → Pazarlık → Sözleşme → Aktif Müşteri
+Firma Kartı Yapısı
+CRM’de her firma için detay sayfası olmalı.
+Firma detay ekranında sekmeler şöyle olabilir:
+1. Genel Bilgiler
+Firma adı, sektör, NACE, çalışan sayısı, adres, durum.
+2. İletişim Kişileri
+Yetkililer, telefonlar, e-postalar.
+3. Görüşmeler / Aktiviteler
+Tüm arama, toplantı, e-posta, WhatsApp, not kayıtları.
+Örneğin:
+18.06.2026 - Telefon görüşmesi yapıldı
+20.06.2026 - Teklif gönderilecek
+21.06.2026 - İK müdürüyle toplantı planlandı
+4. İhtiyaç Analizi
+Hangi OSGB hizmetlerine ihtiyaç var?
+5. Teklifler
+Hazırlanan tüm teklifler ve versiyonları.
+6. Sözleşme
+Sözleşme durumu, başlangıç-bitiş tarihi, dosyalar.
+7. Dosyalar
+Vergi levhası, imza sirküleri, sözleşme, çalışan listesi, eski dokümanlar.
+8. Notlar
+Serbest CRM notları.
+Aktivite / Görev Takibi Çok Önemli
+CRM’in güçlü olması için sadece firma kaydı yetmez. Her lead için takip görevi olmalı.
+Örneğin:
+“Yarın tekrar ara”
+“Teklif revizyonu gönder”
+“Sözleşme dosyasını iste”
+“İSG-Katip onayını kontrol et”
+“Muhasebe ile ödeme koşullarını netleştir”
+Görev alanları:
+Alan	Açıklama
+Görev başlığı	Örn. Teklif gönder
+Firma	Bağlı olduğu firma
+Sorumlu kişi	Kim takip edecek?
+Son tarih	Takip tarihi
+Öncelik	Düşük / normal / yüksek
+Durum	Açık / tamamlandı / ertelendi
+Not	Açıklama
+Bence CRM dashboard’da “Bugünkü Takipler” ayrı bir kart olarak mutlaka olmalı.
+Lead Kaynağı Takibi
+Bu da önemli. Firma nereden geldi?
+Kaynak seçenekleri:
+Web sitesi
+Telefon
+Referans
+Mevcut müşteri tavsiyesi
+Google araması
+Sosyal medya
+Saha ziyareti
+E-posta
+Fuar / etkinlik
+Soğuk arama
+Diğer
+Bunun raporu ileride çok değerli olur: “En çok müşteri hangi kanaldan geliyor?”
+OSGB’ye Özel CRM Alanları
+Genel CRM’den farkı burada ortaya çıkıyor. OSGB CRM’de şu alanlar mutlaka düşünülmeli:
+Firma Risk / Hizmet Bilgileri
+NACE kodu
+Tehlike sınıfı
+Çalışan sayısı
+Lokasyon sayısı
+Vardiya düzeni
+Mevcut OSGB firması
+Sözleşme bitiş tarihi
+İSG-Katip durumu
+Uzman sınıfı ihtiyacı
+Hekim hizmet süresi
+DSP ihtiyacı
+Eğitim ihtiyacı
+Risk analizi durumu
+Acil durum planı durumu
+Sağlık taraması ihtiyacı
+Periyodik kontrol ihtiyacı
+Müşteriye Dönüşünce CRM Bitmemeli
+Firma aktif müşteriye dönüştüğünde CRM kaydı kapanmamalı; “müşteri ilişkileri” tarafında yaşamaya devam etmeli.
+Aktif müşteri tarafında CRM şu işlere yarar:
+Memnuniyet görüşmeleri
+Sözleşme yenileme takibi
+Ek hizmet satışı
+Şube ekleme
+Çalışan sayısı artış takibi
+Fiyat revizyonu
+Sözleşme bitiş uyarısı
+Tahsilat/muhasebe iletişimi
+Şikayet/talep takibi
+Yani CRM sadece satış öncesi değil, müşteri yaşam döngüsü yönetimi olmalı.

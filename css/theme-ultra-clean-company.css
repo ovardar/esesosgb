@@ -1,0 +1,118 @@
+/* Direction 1 fine-tuning for index.html (Firma Yonetimi) */
+
+body.theme-ultra-clean .company-page-shell {
+  padding: 28px 28px 38px;
+}
+
+body.theme-ultra-clean .company-page-shell h2 {
+  margin: 0 0 6px;
+  font-size: clamp(24px, 2.3vw, 34px);
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+body.theme-ultra-clean .company-page-shell .page-desc {
+  margin: 0 0 18px;
+  color: #607086;
+  font-size: 13px;
+}
+
+body.theme-ultra-clean .company-page-shell .panel {
+  margin: 0 0 14px;
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  box-shadow: none;
+  background: #ffffff;
+}
+
+body.theme-ultra-clean .company-page-shell .panel h3 {
+  margin-bottom: 12px;
+  color: #334155;
+  font-size: 14px;
+}
+
+body.theme-ultra-clean .company-page-shell .form-grid {
+  gap: 12px;
+}
+
+body.theme-ultra-clean .company-page-shell .form-group label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #607086;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+body.theme-ultra-clean .company-page-shell .form-group input,
+body.theme-ultra-clean .company-page-shell .form-group select,
+body.theme-ultra-clean .company-page-shell .form-group textarea,
+body.theme-ultra-clean .company-page-shell .company-filter-row input {
+  border: 1px solid #d1dbe7;
+  border-radius: 10px;
+  background: #fff;
+}
+
+body.theme-ultra-clean .company-page-shell .form-group input:focus,
+body.theme-ultra-clean .company-page-shell .form-group select:focus,
+body.theme-ultra-clean .company-page-shell .form-group textarea:focus,
+body.theme-ultra-clean .company-page-shell .company-filter-row input:focus {
+  border-color: #0e7490;
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.12);
+  outline: none;
+}
+
+body.theme-ultra-clean .company-page-shell .btn.btn-blue {
+  background: #1f6b73;
+  color: #f8fbfc;
+  border-radius: 999px;
+  border: none;
+  font-weight: 700;
+}
+
+body.theme-ultra-clean .company-page-shell #status {
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+body.theme-ultra-clean .company-page-shell .table-container {
+  margin-top: 0;
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  overflow: auto;
+}
+
+body.theme-ultra-clean .company-page-shell .table-container table {
+  min-width: 920px;
+}
+
+body.theme-ultra-clean .company-page-shell .table-container thead th {
+  background: #f7fafc;
+  border-bottom: 1px solid #dbe4ee;
+  color: #4f5f74;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+body.theme-ultra-clean .company-page-shell .table-container tbody td {
+  border-bottom: 1px solid #e8edf4;
+  font-size: 13px;
+}
+
+body.theme-ultra-clean .company-page-shell .table-container tbody tr:hover td {
+  background: #f8fbff;
+}
+
+body.theme-ultra-clean .company-page-shell .worker-count-link {
+  border: 1px solid #dbe4ee;
+  border-radius: 999px;
+  padding: 2px 8px;
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  body.theme-ultra-clean .company-page-shell {
+    padding: 18px 14px 24px;
+  }
+}

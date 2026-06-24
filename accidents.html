@@ -1,366 +1,310 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OSGB SaaS - İş Kazası & Kök Neden Analizi</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root {
-            --bg-main: #f4f6f9;
-            --bg-card: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --accent-green: #10b981;
-            --accent-green-hover: #059669;
-            --border-color: #e2e8f0;
-            --table-header: #f8fafc;
-            --nav-inactive-bg: #e2e8f0;
-            --nav-inactive-text: #475569;
-            --danger: #dc2626;
-            --warning: #f97316;
-            --success: #059669;
-            --info: #0284c7;
-        }
-        body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; background: radial-gradient(circle at top left, rgba(37,99,235,.13), transparent 30rem), linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%); color: var(--text-main); padding: 30px; display: none; margin:0; }
-        .card { background: rgba(255,255,255,.94); padding: 0; border-radius: 18px; max-width: 1240px; margin: 0 auto; box-shadow: 0 8px 24px rgba(15,23,42,.08); border: 1px solid var(--border-color); overflow: hidden; }
-        .global-header { padding: 18px 22px 14px; margin-bottom: 0; background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 58%, #991b1b 100%); color: white; border-bottom: 0; }
-        .top-row { display:flex; justify-content:space-between; align-items:center; gap:14px; margin-bottom:15px; }
-        .logo-area { font-size:18px; font-weight:500; display:flex; align-items:center; gap:10px; min-width:0; }
-        .logo-area span[id^="lbl_"] { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .logo-badge { display:none; }
-        .tenant-logo-img { width:34px; height:34px; object-fit:contain; border-radius:8px; background:#fff; border:1px solid rgba(255,255,255,.35); padding:3px; box-sizing:border-box; flex:0 0 auto; }
-        .controls-group { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
-        .user-info { font-size:13px; color:white; font-weight:600; background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.18); border-radius:999px; padding:7px 11px; max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .logout-btn { background:rgba(239,68,68,.92); color:white; border:none; padding:7px 12px; border-radius:10px; cursor:pointer; font-size:12px; font-weight:800; }
-        .nav-container { display:flex; gap:7px; justify-content:flex-start; background:rgba(255,255,255,.10); padding:8px; border-radius:14px; border:1px solid rgba(255,255,255,.16); flex-wrap:wrap; overflow-x:auto; }
-        .nav-btn { background:rgba(255,255,255,.10); color:rgba(255,255,255,.86); padding:9px 13px; border-radius:10px; text-decoration:none; font-weight:800; font-size:12.5px; border:1px solid rgba(255,255,255,.10); white-space:nowrap; }
-        .nav-btn:hover { background:rgba(255,255,255,.18); color:white; }
-        .nav-btn.active-page { background:white; color:#991b1b !important; box-shadow:0 8px 18px rgba(15,23,42,.22); }
-        h2 { margin:22px 22px 4px; font-size:clamp(22px,2.6vw,31px); letter-spacing:-.035em; }
-        .page-desc { margin:0 22px 20px; color:var(--text-muted); font-size:14px; max-width:960px; }
-        .section-title { margin:24px 22px 11px; display:inline-flex; align-items:center; gap:7px; color:#334155; background:rgba(255,255,255,.72); border:1px solid rgba(226,232,240,.9); padding:7px 11px; border-radius:999px; box-shadow:0 1px 2px rgba(15,23,42,.05); font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:.04em; }
-        .main-grid { display:grid; grid-template-columns: 1.05fr .95fr; gap:18px; margin:0 22px 24px; align-items:start; }
-        .panel { background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,250,252,.94)); border:1px solid rgba(203,213,225,.85); border-radius:18px; padding:18px; box-shadow:0 12px 30px rgba(15,23,42,.07); }
-        .panel h3 { margin:0 0 14px; padding-bottom:12px; border-bottom:1px solid rgba(226,232,240,.95); font-size:17px; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; }
-        .form-group { margin-bottom:13px; }
-        label { display:block; margin-bottom:5px; color:#0f172a; font-weight:750; font-size:13px; }
-        input, select, textarea { width:100%; padding:10px; border:1px solid var(--border-color); border-radius:10px; box-sizing:border-box; background:#fff; color:var(--text-main); font-family:inherit; }
-        input:focus, select:focus, textarea:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(37,99,235,.14); }
-        textarea { resize:vertical; min-height:74px; }
-        .row-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
-        .btn { border:none; border-radius:10px; padding:10px 12px; font-weight:850; cursor:pointer; font-size:13px; }
-        .btn-primary { background:linear-gradient(135deg,#b91c1c,#7f1d1d); color:white; }
-        .btn-blue { background:linear-gradient(135deg,#0284c7,#0369a1); color:white; }
-        .btn-green { background:linear-gradient(135deg,#16a34a,#047857); color:white; }
-        .btn-secondary { background:#f1f5f9; color:#334155; border:1px solid #cbd5e1; }
-        .btn-small { padding:7px 9px; font-size:11px; }
-        .action-row { display:flex; gap:9px; flex-wrap:wrap; align-items:center; margin-top:8px; }
-        .save-btn { width:100%; margin-top:8px; }
-        .status { margin-top:10px; font-size:12px; font-weight:850; }
-        .status.ok { color:#15803d; } .status.err { color:#b91c1c; }
-        .help-text { color:var(--text-muted); font-size:12px; line-height:1.45; margin:6px 0 12px; }
-        .ishikawa-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .fishbone-card { border:1px solid #e2e8f0; background:#fff; border-radius:14px; padding:12px; }
-        .fishbone-card label { font-size:12px; color:#334155; }
-        table { width:100%; border-collapse:separate; border-spacing:0; background:white; box-shadow:inset 0 0 0 1px rgba(226,232,240,.75); border-radius:12px; overflow:hidden; margin-top:14px; font-size:12px; }
-        th, td { padding:9px 11px; text-align:left; border-bottom:1px solid var(--border-color); vertical-align:top; line-height:1.35; }
-        th { background:#f1f5f9; color:#475569; font-weight:850; text-transform:uppercase; letter-spacing:.035em; font-size:11px; }
-        tbody tr:nth-child(even) td { background:rgba(248,250,252,.65); }
-        .badge { display:inline-block; border-radius:999px; padding:4px 8px; font-size:10px; font-weight:900; white-space:nowrap; letter-spacing:.02em; }
-        .badge-red { background:#fee2e2; color:#b91c1c; }
-        .badge-orange { background:#ffedd5; color:#c2410c; }
-        .badge-green { background:#dcfce7; color:#15803d; }
-        .badge-blue { background:#dbeafe; color:#1d4ed8; }
-        .badge-gray { background:#e2e8f0; color:#475569; }
-        .empty-state { text-align:center; color:var(--text-muted); padding:18px; }
-        .countdown-critical td { background:#fff1f2 !important; }
-        .countdown-warning td { background:#fff7ed !important; }
-        .file-link { color:var(--primary); font-weight:850; text-decoration:none; }
-        .file-link:hover { text-decoration:underline; }
-        @media (max-width: 980px) { body{padding:12px;} .top-row,.controls-group{align-items:stretch;} .top-row{flex-direction:column;} .main-grid,.row-2,.row-3,.ishikawa-grid{grid-template-columns:1fr;} .card{border-radius:16px;} table{display:block; overflow-x:auto; white-space:nowrap;} }
-    </style>
-</head>
-<body>
-<div class="card">
-    <div class="global-header">
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+  </head>
+  <body class="theme-ultra-clean" style="display: none;">
+    <div class="card">
+      <div class="global-header">
         <div class="top-row">
-            <div class="logo-area"><span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span></div>
-            <div class="controls-group">
-                <div class="user-info">👤 <span id="current_user_email">...</span></div>
-                <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
-            </div>
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
         </div>
         <div class="nav-container">
-            <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
-            <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display:none;">🧩 SaaS Yönetimi</a>
-            <a id="menu_staff" href="staff.html" class="nav-btn" style="display:none;">🔑 Personel Yönetimi</a>
-            <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
-            <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
-            <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
-            <a id="menu_risk" href="risk.html" class="nav-btn" style="display:none;">🦺 Uzman Risk Motoru</a>
-            <a id="menu_medical" href="medical.html" class="nav-btn" style="display:none;">🩺 Hekim Sağlık Kartı</a>
-            <a id="menu_accidents" href="accidents.html" class="nav-btn active-page">🚑 İş Kazaları</a>
+          <a href="dashboard.html" class="nav-btn">🏠 Ana Sayfa</a>
+          <a id="menu_saas" href="saas-admin.html" class="nav-btn" style="display: none">🧩 SaaS Yönetimi</a>
+          <a id="menu_staff" href="staff.html" class="nav-btn" style="display: none">🔑 Personel Yönetimi</a>
+          <a href="schedule.html" class="nav-btn">📅 Aylık Takvim</a>
+          <a href="index.html" class="nav-btn">🏢 Firma Yönetimi</a>
+          <a href="workers.html" class="nav-btn">👥 Kadro Yönetimi</a>
+          <a id="menu_risk" href="risk.html" class="nav-btn" style="display: none">🦺 Uzman Risk Motoru</a>
+          <a id="menu_medical" href="medical.html" class="nav-btn" style="display: none">🩺 Hekim Sağlık Kartı</a>
+          <a id="menu_accidents" href="accidents.html" class="nav-btn active-page">🚑 İş Kazaları</a>
         </div>
-    </div>
+      </div>
 
-    <h2>🚑 İş Kazası & Kök Neden Analizi</h2>
-    <p class="page-desc">Kaza bildirimi, şahit ifadesi, Balık Kılçığı kök neden analizi ve SGK 3 iş günü bildirim geri sayımını tek ekranda yönetin. İstenirse kayıt DÖF’e dönüştürülebilir.</p>
-
-    <div class="main-grid">
-        <div class="panel">
-            <h3>📝 Yeni İş Kazası Kaydı</h3>
-            <div class="row-2">
-                <div class="form-group">
-                    <label>Firma</label>
-                    <select id="accident_company_select" onchange="fetchWorkersForSelect(this.value, 'accident_worker_select')"><option value="">Firmalar yükleniyor...</option></select>
-                </div>
-                <div class="form-group">
-                    <label>Çalışan</label>
-                    <select id="accident_worker_select"><option value="">Önce firma seçin</option></select>
-                </div>
-            </div>
-
-            <div class="row-3">
-                <div class="form-group"><label>Kaza Tarihi</label><input type="date" id="accident_date" onchange="previewSgkDeadline()"></div>
-                <div class="form-group"><label>Kaza Saati</label><input type="time" id="accident_time"></div>
-                <div class="form-group"><label>Kaza Türü</label><select id="accident_type"><option value="Yaralanmalı Kaza">Yaralanmalı Kaza</option><option value="Maddi Hasarlı Kaza">Maddi Hasarlı Kaza</option><option value="Ramak Kala Sonrası Kaza">Ramak Kala Sonrası Kaza</option><option value="Meslek Hastalığı Şüphesi">Meslek Hastalığı Şüphesi</option><option value="Diğer">Diğer</option></select></div>
-            </div>
-
-            <div class="row-3">
-                <div class="form-group"><label>Kaza Yeri</label><input id="accident_location" placeholder="Örn. Üretim hattı, depo, merdiven"></div>
-                <div class="form-group"><label>Yaralanma Durumu</label><select id="injury_status"><option value="Yaralanma Var">Yaralanma Var</option><option value="Yaralanma Yok">Yaralanma Yok</option><option value="İlk Yardım">İlk Yardım</option><option value="Hastane Sevk">Hastane Sevk</option></select></div>
-                <div class="form-group"><label>Önem Derecesi</label><select id="severity"><option value="Düşük">Düşük</option><option value="Orta">Orta</option><option value="Yüksek">Yüksek</option><option value="Kritik">Kritik</option></select></div>
-            </div>
-
-            <div class="form-group"><label>Olay Açıklaması</label><textarea id="accident_description" placeholder="Kazanın nasıl meydana geldiğini açık ve kronolojik biçimde yazın."></textarea></div>
-            <div class="form-group"><label>İlk Müdahale / Acil Aksiyon</label><textarea id="immediate_action" placeholder="İlk yardım, alan izolasyonu, ekipman durdurma vb."></textarea></div>
-
-            <div class="row-2">
-                <div class="form-group"><label>Kaza Fotoğrafı / Dosya</label><input type="file" id="accident_file" accept="application/pdf,image/png,image/jpeg,image/webp"></div>
-                <div class="form-group"><label>SGK Bildirim Son Tarihi</label><input id="sgk_deadline_preview" disabled placeholder="Kaza tarihine göre otomatik hesaplanır"></div>
-            </div>
-
-            <h3>👥 Şahit İfadesi</h3>
-            <div class="row-2">
-                <div class="form-group"><label>Şahit Adı Soyadı</label><input id="witness_name" placeholder="Opsiyonel"></div>
-                <div class="form-group"><label>Şahit Görevi / İletişim</label><input id="witness_contact" placeholder="Opsiyonel"></div>
-            </div>
-            <div class="form-group"><label>Şahit İfadesi</label><textarea id="witness_statement" placeholder="Şahidin olayla ilgili beyanı"></textarea></div>
+      <div class="crm-page-shell">
+        <div class="page-header-row" style="margin-bottom: 24px;">
+          <div class="page-title-group">
+            <h2 style="font-size: clamp(24px, 2.2vw, 34px); letter-spacing: -0.03em; color: #0f172a; font-weight: 800; margin: 0 0 6px;">🚑 İş Kazası & Kök Neden Analizi</h2>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0;">
+              Kaza bildirimi, şahit ifadesi, Balık Kılçığı kök neden analizi ve SGK 3 iş günü bildirim geri sayımını tek ekranda yönetin. İstenirse kayıt DÖF’e dönüştürülebilir.
+            </p>
+          </div>
         </div>
 
-        <div class="panel">
-            <h3>🐟 Balık Kılçığı Kök Neden Analizi</h3>
-            <p class="help-text">Kök neden alanlarını kısa ama aksiyona dönüşebilir şekilde doldurun. Kayıt sonrası isterseniz bu analizden DÖF oluşturabilirsiniz.</p>
-            <div class="ishikawa-grid">
-                <div class="fishbone-card"><label>İnsan</label><textarea id="cause_human" placeholder="Eğitim eksikliği, dikkatsizlik, iletişim vb."></textarea></div>
-                <div class="fishbone-card"><label>Makine / Ekipman</label><textarea id="cause_machine" placeholder="Koruyucu eksikliği, arıza, bakım vb."></textarea></div>
-                <div class="fishbone-card"><label>Yöntem / Prosedür</label><textarea id="cause_method" placeholder="Talimat eksikliği, yanlış iş akışı vb."></textarea></div>
-                <div class="fishbone-card"><label>Malzeme</label><textarea id="cause_material" placeholder="Uygun olmayan malzeme, eksik KKD vb."></textarea></div>
-                <div class="fishbone-card"><label>Ortam</label><textarea id="cause_environment" placeholder="Aydınlatma, zemin, gürültü, hava vb."></textarea></div>
-                <div class="fishbone-card"><label>Yönetim</label><textarea id="cause_management" placeholder="Denetim, planlama, organizasyon vb."></textarea></div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; margin-bottom: 24px;">
+          <!-- Sol Sütun: Kaza Bildirimi & Şahit İfadesi -->
+          <div class="stat-card-premium" style="padding: 24px;">
+            <h3 style="margin: 0 0 16px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📝 Yeni İş Kazası Kaydı</h3>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+              <div class="form-group-premium">
+                <label>Firma</label>
+                <select id="accident_company_select" onchange="fetchWorkersForSelect(this.value, 'accident_worker_select')">
+                  <option value="">Firmalar yükleniyor...</option>
+                </select>
+              </div>
+              <div class="form-group-premium">
+                <label>Çalışan</label>
+                <select id="accident_worker_select">
+                  <option value="">Önce firma seçin</option>
+                </select>
+              </div>
             </div>
-            <div class="form-group"><label>Kök Neden Özeti</label><textarea id="root_cause_summary" placeholder="Ana kök nedeni ve sistemsel açıklamayı özetleyin."></textarea></div>
-            <div class="form-group"><label>Düzeltici / Önleyici Faaliyet Önerisi</label><textarea id="corrective_action" placeholder="Bu kazanın tekrarını önlemek için uygulanacak faaliyet."></textarea></div>
-            <div class="row-2">
-                <div class="form-group"><label>Sorumlu Kişi</label><input id="responsible_person" placeholder="Örn. İGU / Birim amiri"></div>
-                <div class="form-group"><label>DÖF Hedef Tarihi</label><input type="date" id="corrective_target_date"></div>
-            </div>
-            <button class="btn btn-primary save-btn" onclick="saveAccident()">İş Kazasını Kaydet</button>
-            <div id="accident_status" class="status"></div>
-        </div>
-    </div>
 
-    <div class="section-title">🚨 İş Kazası Bildirim Takibi</div>
-    <div class="main-grid">
-        <div class="panel" style="grid-column:1 / -1;">
-            <h3>📋 Son İş Kazası Kayıtları</h3>
-            <p class="help-text">SGK 3 iş günü bildirim süresi için kalan süre otomatik hesaplanır. Geciken veya süresi yaklaşan kayıtlar vurgulanır.</p>
-            <table>
-                <thead>
-                    <tr><th>Firma / Çalışan</th><th>Kaza</th><th>SGK Süre</th><th>Kök Neden / Aksiyon</th><th>İşlem</th></tr>
-                </thead>
-                <tbody id="accidents_tbody"><tr><td colspan="5" class="empty-state">Kaza kayıtları yükleniyor...</td></tr></tbody>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+              <div class="form-group-premium">
+                <label>Kaza Tarihi</label>
+                <input type="date" id="accident_date" onchange="previewSgkDeadline()" />
+              </div>
+              <div class="form-group-premium">
+                <label>Kaza Saati</label>
+                <input type="time" id="accident_time" />
+              </div>
+              <div class="form-group-premium">
+                <label>Kaza Türü</label>
+                <select id="accident_type">
+                  <option value="Yaralanmalı Kaza">Yaralanmalı Kaza</option>
+                  <option value="Maddi Hasarlı Kaza">Maddi Hasarlı Kaza</option>
+                  <option value="Ramak Kala Sonrası Kaza">Ramak Kala Sonrası Kaza</option>
+                  <option value="Meslek Hastalığı Şüphesi">Meslek Hastalığı Şüphesi</option>
+                  <option value="Diğer">Diğer</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+              <div class="form-group-premium">
+                <label>Kaza Yeri</label>
+                <input id="accident_location" placeholder="Örn. Üretim hattı, depo, merdiven" />
+              </div>
+              <div class="form-group-premium">
+                <label>Yaralanma Durumu</label>
+                <select id="injury_status">
+                  <option value="Yaralanma Var">Yaralanma Var</option>
+                  <option value="Yaralanma Yok">Yaralanma Yok</option>
+                  <option value="İlk Yardım">İlk Yardım</option>
+                  <option value="Hastane Sevk">Hastane Sevk</option>
+                </select>
+              </div>
+              <div class="form-group-premium">
+                <label>Önem Derecesi</label>
+                <select id="severity">
+                  <option value="Düşük">Düşük</option>
+                  <option value="Orta">Orta</option>
+                  <option value="Yüksek">Yüksek</option>
+                  <option value="Kritik">Kritik</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group-premium" style="margin-bottom: 14px;">
+              <label>Olay Açıklaması</label>
+              <textarea id="accident_description" rows="3" placeholder="Kazanın nasıl meydana geldiğini açık ve kronolojik biçimde yazın."></textarea>
+            </div>
+            
+            <div class="form-group-premium" style="margin-bottom: 14px;">
+              <label>İlk Müdahale / Acil Aksiyon</label>
+              <textarea id="immediate_action" rows="2" placeholder="İlk yardım, alan izolasyonu, ekipman durdurma vb."></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
+              <div class="form-group-premium">
+                <label>Kaza Fotoğrafı / Dosya</label>
+                <input type="file" id="accident_file" accept="application/pdf,image/png,image/jpeg,image/webp" style="padding: 6px 14px;" />
+              </div>
+              <div class="form-group-premium">
+                <label>SGK Bildirim Son Tarihi</label>
+                <input id="sgk_deadline_preview" disabled placeholder="Kaza tarihine göre otomatik hesaplanır" style="background:#f1f5f9; color:var(--uc-text-muted);" />
+              </div>
+            </div>
+
+            <h3 style="margin: 20px 0 16px; font-size: 16px; color: var(--uc-text); font-weight: 800; border-top: 1px solid var(--uc-line); padding-top: 20px;">👥 Şahit İfadesi</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+              <div class="form-group-premium">
+                <label>Şahit Adı Soyadı</label>
+                <input id="witness_name" placeholder="Opsiyonel" />
+              </div>
+              <div class="form-group-premium">
+                <label>Şahit Görevi / İletişim</label>
+                <input id="witness_contact" placeholder="Opsiyonel" />
+              </div>
+            </div>
+            <div class="form-group-premium">
+              <label>Şahit İfadesi</label>
+              <textarea id="witness_statement" rows="3" placeholder="Şahidin olayla ilgili beyanı"></textarea>
+            </div>
+          </div>
+
+          <!-- Sağ Sütun: Balık Kılçığı Analizi -->
+          <div class="stat-card-premium" style="padding: 24px;">
+            <h3 style="margin: 0 0 8px; font-size: 16px; color: var(--uc-text); font-weight: 800;">🐟 Balık Kılçığı Kök Neden Analizi</h3>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0 0 20px;">
+              Kök neden alanlarını kısa ama aksiyona dönüşebilir şekilde doldurun. Kayıt sonrası isterseniz bu analizden DÖF oluşturabilirsiniz.
+            </p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+              <div class="form-group-premium">
+                <label>İnsan</label>
+                <textarea id="cause_human" rows="2" placeholder="Eğitim eksikliği, dikkatsizlik, iletişim vb."></textarea>
+              </div>
+              <div class="form-group-premium">
+                <label>Makine / Ekipman</label>
+                <textarea id="cause_machine" rows="2" placeholder="Koruyucu eksikliği, arıza, bakım vb."></textarea>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+              <div class="form-group-premium">
+                <label>Yöntem / Prosedür</label>
+                <textarea id="cause_method" rows="2" placeholder="Talimat eksikliği, yanlış iş akışı vb."></textarea>
+              </div>
+              <div class="form-group-premium">
+                <label>Malzeme</label>
+                <textarea id="cause_material" rows="2" placeholder="Uygun olmayan malzeme, eksik KKD vb."></textarea>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px;">
+              <div class="form-group-premium">
+                <label>Ortam</label>
+                <textarea id="cause_environment" rows="2" placeholder="Aydınlatma, zemin, gürültü, hava vb."></textarea>
+              </div>
+              <div class="form-group-premium">
+                <label>Yönetim</label>
+                <textarea id="cause_management" rows="2" placeholder="Denetim, planlama, organizasyon vb."></textarea>
+              </div>
+            </div>
+
+            <div class="form-group-premium" style="margin-bottom: 14px;">
+              <label>Kök Neden Özeti</label>
+              <textarea id="root_cause_summary" rows="2" placeholder="Ana kök nedeni ve sistemsel açıklamayı özetleyin."></textarea>
+            </div>
+            
+            <div class="form-group-premium" style="margin-bottom: 14px;">
+              <label>Düzeltici / Önleyici Faaliyet Önerisi</label>
+              <textarea id="corrective_action" rows="2" placeholder="Bu kazanın tekrarını önlemek için uygulanacak faaliyet."></textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
+              <div class="form-group-premium">
+                <label>Sorumlu Kişi</label>
+                <input id="responsible_person" placeholder="Örn. İGU / Birim amiri" />
+              </div>
+              <div class="form-group-premium">
+                <label>DÖF Hedef Tarihi</label>
+                <input type="date" id="corrective_target_date" />
+              </div>
+            </div>
+
+            <button class="btn-add-lead-btn" onclick="saveAccident()" style="width: 100%; border: none; font-size:14px; padding: 12px 24px; border-radius: 12px; cursor:pointer;">💾 İş Kazasını Kaydet</button>
+            <div id="accident_status" class="status" style="margin-top: 10px; font-size: 13px; font-weight: 600; text-align: center;"></div>
+          </div>
+        </div>
+
+        <!-- Alt Bölüm: Son İş Kazası Kayıtları -->
+        <div class="stat-card-premium" style="padding: 24px;">
+          <h3 style="margin: 0 0 8px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📋 Son İş Kazası Kayıtları</h3>
+          <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0 0 20px;">
+            SGK 3 iş günü bildirim süresi için kalan süre otomatik hesaplanır. Geciken veya süresi yaklaşan kayıtlar vurgulanır.
+          </p>
+          <div class="table-container-premium" style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr>
+                  <th style="padding: 12px 16px;">Firma / Çalışan</th>
+                  <th style="padding: 12px 16px;">Kaza Bilgileri</th>
+                  <th style="padding: 12px 16px;">SGK Süre</th>
+                  <th style="padding: 12px 16px;">Kök Neden / Aksiyon</th>
+                  <th style="padding: 12px 16px;">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="accidents_tbody">
+                <tr>
+                  <td colspan="5" style="text-align: center; color: #94a3b8; padding: 24px;">Kaza kayıtları yükleniyor...</td>
+                </tr>
+              </tbody>
             </table>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<script>
-    const SUPABASE_URL = "https://dnvuizausfcjzkcsynql.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_LtrytF9wyS3u-KgSZk7heg_SZc7hhoY";
-    const dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const ACCIDENT_FILE_BUCKET = 'accident-files';
-    let CURRENT_AUTH = null;
-    let accidentRows = [];
+    <script>
+      const ACCIDENT_FILE_BUCKET = 'accident-files';
+      let CURRENT_AUTH = null;
+      let accidentRows = [];
 
-    function normalizeAccessRole(value) {
-        const v = (value || '').toString().trim().toLowerCase();
-        if (['super_admin', 'super admin', 'saas_admin', 'sistem sahibi'].includes(v)) return 'super_admin';
-        if (['admin', 'yonetici', 'yönetici'].includes(v)) return 'admin';
-        if (['uzman', 'isg_uzmani', 'isg uzmanı', 'iş güvenliği uzmanı'].includes(v)) return 'uzman';
-        if (['hekim', 'isyeri hekimi', 'işyeri hekimi'].includes(v)) return 'hekim';
-        if (['dsp', 'diğer sağlık personeli', 'diger saglik personeli'].includes(v)) return 'dsp';
-        if (['firma_yetkilisi', 'firma yetkilisi', 'musteri', 'müşteri'].includes(v)) return 'firma_yetkilisi';
-        return '';
-    }
-
-    function inferAccessRoleFromEmail(email) {
-        const e = (email || '').toLowerCase();
-        if (e.includes('orhan.vardar@gmail.com')) return 'super_admin';
-        if (e.includes('admin')) return 'admin';
-        if (e.includes('hekim')) return 'hekim';
-        if (e.includes('dsp')) return 'dsp';
-        if (e.includes('firma') || e.includes('musteri') || e.includes('müşteri')) return 'firma_yetkilisi';
-        if (e.includes('uzman')) return 'uzman';
-        return 'uzman';
-    }
-
-    function isStaffAccessActive(record) {
-        if (!record) return true;
-        if (record.can_login === false) return false;
-        if (record.is_active_manual === 'Aktif') return true;
-        if (record.is_active_manual === 'Pasif') return false;
-        const today = new Date(); today.setHours(0,0,0,0);
-        if (record.hire_date) {
-            const hire = new Date(record.hire_date); hire.setHours(0,0,0,0);
-            if (hire > today) return false;
-        }
-        if (record.termination_date) {
-            const term = new Date(record.termination_date); term.setHours(0,0,0,0);
-            if (term <= today) return false;
-        }
-        return true;
-    }
-
-    async function getCurrentAuthContext() {
-        const { data: { session } } = await dbClient.auth.getSession();
-        if (!session) return { session: null, email: '', role: '', canLogin: false, staff: null };
-        const email = session.user.email || '';
-        let staff = null;
-        try {
-            const { data } = await dbClient.from('osgb_staff').select('*, tenants(id, name, slug, logo_url, primary_color, is_active)').ilike('email', email).maybeSingle();
-            staff = data || null;
-        } catch (err) {
-            console.warn('Rol kaydı okunamadı, e-posta bazlı geçici role dönülüyor:', err.message);
-        }
-        const role = normalizeAccessRole(staff && staff.access_role) || normalizeAccessRole(staff && staff.staff_role) || inferAccessRoleFromEmail(email);
-        const canLogin = isStaffAccessActive(staff);
-        return { session, email, role, canLogin, staff, tenant: staff && staff.tenants ? staff.tenants : null, tenant_id: staff ? staff.tenant_id : null };
-    }
-
-    function canAccessPage(role, page) {
-        if (role === 'super_admin' || role === 'admin') return true;
-        if (page === 'risk' || page === 'accidents') return role === 'uzman';
-        if (page === 'medical') return role === 'hekim';
-        if (page === 'staff') return false;
-        if (page === 'company' || page === 'workers' || page === 'schedule') return ['uzman','hekim','dsp'].includes(role);
-        return true;
-    }
-
-    function roleLabel(role) {
-        return { super_admin: 'Super Admin', admin: 'Admin', uzman: 'İSG Uzmanı', hekim: 'İşyeri Hekimi', dsp: 'DSP', firma_yetkilisi: 'Firma Yetkilisi' }[role] || role || 'Rol yok';
-    }
-
-    function applyRoleBasedNavigation(role) {
-        const riskMenu = document.getElementById('menu_risk');
-        const medicalMenu = document.getElementById('menu_medical');
-        const staffMenu = document.getElementById('menu_staff');
-        const saasMenu = document.getElementById('menu_saas');
-        const accidentsMenu = document.getElementById('menu_accidents');
-        if (riskMenu && canAccessPage(role, 'risk')) riskMenu.style.display = 'inline-block';
-        if (medicalMenu && canAccessPage(role, 'medical')) medicalMenu.style.display = 'inline-block';
-        if (staffMenu && canAccessPage(role, 'staff')) staffMenu.style.display = 'inline-block';
-        if (staffMenu && !canAccessPage(role, 'staff')) staffMenu.style.display = 'none';
-        if (accidentsMenu && canAccessPage(role, 'accidents')) accidentsMenu.style.display = 'inline-block';
-        if (saasMenu) saasMenu.style.display = role === 'super_admin' ? 'inline-block' : 'none';
-    }
-
-    function setTenantBranding(tenant) {
-        const titleEl = document.getElementById('lbl_osgb_title');
-        if (titleEl) titleEl.innerText = (tenant && tenant.name) ? tenant.name : 'Eses Software';
-        const area = titleEl ? titleEl.closest('.logo-area') : null;
-        if (!area) return;
-        let img = area.querySelector('.tenant-logo-img');
-        const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
-        if (logoUrl) {
-            if (!img) { img = document.createElement('img'); img.className = 'tenant-logo-img'; img.alt = 'Logo'; area.insertBefore(img, titleEl); }
-            img.src = logoUrl;
-        } else if (img) { img.remove(); }
-    }
-
-    async function requireAuthAndRole(page) {
-        const auth = await getCurrentAuthContext();
-        if (!auth.session) { window.location.href = 'login.html'; return null; }
-        if (!auth.canLogin) {
-            await dbClient.auth.signOut();
-            alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
-            window.location.href = 'login.html';
-            return null;
-        }
-        const userInfo = document.getElementById('current_user_email');
-        if (userInfo) userInfo.innerText = `${auth.email} • ${roleLabel(auth.role)}`;
-        setTenantBranding(auth.tenant);
-        applyRoleBasedNavigation(auth.role);
-        if (page && !canAccessPage(auth.role, page)) { window.location.href = 'dashboard.html'; return null; }
-        return auth;
-    }
-
-    window.onload = async function() {
+      window.onload = async function () {
         const auth = await requireAuthAndRole('accidents');
         if (!auth) return;
         CURRENT_AUTH = auth;
         if (!CURRENT_AUTH.tenant_id) {
-            alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
-            await dbClient.auth.signOut();
-            window.location.href = 'login.html';
-            return;
+          alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
+          await dbClient.auth.signOut();
+          window.location.href = 'login.html';
+          return;
         }
         document.body.style.display = 'block';
         setDefaultDates();
         await fetchCompaniesToSelect();
         await fetchAccidents();
-    };
+      };
 
-    function escapeHtml(value) {
-        return (value || '').toString().replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-    }
+      function escapeHtml(value) {
+        return (value || '')
+          .toString()
+          .replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[c]);
+      }
 
-    function todayString() {
+      function todayString() {
         const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
 
-    function setDefaultDates() {
+      function setDefaultDates() {
         const today = todayString();
         const dateEl = document.getElementById('accident_date');
         if (dateEl && !dateEl.value) dateEl.value = today;
         previewSgkDeadline();
-    }
+      }
 
-    function addBusinessDays(dateString, days) {
+      function addBusinessDays(dateString, days) {
         if (!dateString) return '';
         const d = new Date(dateString + 'T00:00:00');
         if (Number.isNaN(d.getTime())) return '';
         let added = 0;
         while (added < days) {
-            d.setDate(d.getDate() + 1);
-            const day = d.getDay();
-            if (day !== 0 && day !== 6) added += 1;
+          d.setDate(d.getDate() + 1);
+          const day = d.getDay();
+          if (day !== 0 && day !== 6) added += 1;
         }
-        return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      }
 
-    function previewSgkDeadline() {
+      function previewSgkDeadline() {
         const date = document.getElementById('accident_date').value;
         const deadline = addBusinessDays(date, 3);
         document.getElementById('sgk_deadline_preview').value = deadline || '';
-    }
+      }
 
-    function businessDaysBetween(startString, endString) {
+      function businessDaysBetween(startString, endString) {
         const start = new Date(startString + 'T00:00:00');
         const end = new Date(endString + 'T00:00:00');
         if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
@@ -368,127 +312,173 @@
         let count = 0;
         const d = new Date(start);
         while (d < end) {
-            d.setDate(d.getDate() + 1);
-            const day = d.getDay();
-            if (day !== 0 && day !== 6) count += 1;
+          d.setDate(d.getDate() + 1);
+          const day = d.getDay();
+          if (day !== 0 && day !== 6) count += 1;
         }
         return count;
-    }
+      }
 
-    function deadlineBadge(deadline, notified) {
-        if (notified === true) return '<span class="badge badge-green">Bildirildi</span>';
+      function deadlineBadge(deadline, notified) {
+        if (notified === true) return '<span class="badge" style="background:#dcfce7; color:#15803d; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">Bildirildi</span>';
         const today = todayString();
-        if (!deadline) return '<span class="badge badge-gray">Tarih yok</span>';
+        if (!deadline) return '<span class="badge" style="background:#f1f5f9; color:#94a3b8; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">Tarih yok</span>';
         const diff = businessDaysBetween(today, deadline);
-        if (diff === null) return '<span class="badge badge-gray">-</span>';
-        if (diff < 0) return `<span class="badge badge-red">Gecikti</span><br><small>${escapeHtml(deadline)}</small>`;
-        if (diff === 0) return `<span class="badge badge-red">Son gün</span><br><small>${escapeHtml(deadline)}</small>`;
-        if (diff <= 1) return `<span class="badge badge-orange">${diff} iş günü kaldı</span><br><small>${escapeHtml(deadline)}</small>`;
-        return `<span class="badge badge-green">${diff} iş günü kaldı</span><br><small>${escapeHtml(deadline)}</small>`;
-    }
+        if (diff === null) return '<span class="badge" style="background:#f1f5f9; color:#94a3b8; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">-</span>';
+        if (diff < 0) return `<span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">Gecikti</span><br><small style="color:var(--uc-text-muted); font-size:11px;">${escapeHtml(deadline)}</small>`;
+        if (diff === 0) return `<span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">Son gün</span><br><small style="color:var(--uc-text-muted); font-size:11px;">${escapeHtml(deadline)}</small>`;
+        if (diff <= 1)
+          return `<span class="badge" style="background:#fef3c7; color:#d97706; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">${diff} iş günü kaldı</span><br><small style="color:var(--uc-text-muted); font-size:11px;">${escapeHtml(deadline)}</small>`;
+        return `<span class="badge" style="background:#dcfce7; color:#15803d; font-size:11px; padding:4px 8px; border-radius:999px; font-weight:700; display:inline-block;">${diff} iş günü kaldı</span><br><small style="color:var(--uc-text-muted); font-size:11px;">${escapeHtml(deadline)}</small>`;
+      }
 
-    function deadlineRowClass(deadline, notified) {
+      function deadlineRowClass(deadline, notified) {
         if (notified === true || !deadline) return '';
         const diff = businessDaysBetween(todayString(), deadline);
         if (diff === null) return '';
         if (diff <= 0) return 'countdown-critical';
         if (diff <= 1) return 'countdown-warning';
         return '';
-    }
+      }
 
-    async function fetchCompaniesToSelect() {
+      async function fetchCompaniesToSelect() {
         const select = document.getElementById('accident_company_select');
-        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) { select.innerHTML = '<option value="">Tenant bilgisi yok</option>'; return; }
-        const { data, error } = await dbClient.from('customer_companies').select('id, company_name').eq('tenant_id', CURRENT_AUTH.tenant_id).order('company_name');
-        if (error) { select.innerHTML = '<option value="">Firma listesi alınamadı</option>'; console.error(error); return; }
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
+          select.innerHTML = '<option value="">Tenant bilgisi yok</option>';
+          return;
+        }
+        const { data, error } = await dbClient
+          .from('customer_companies')
+          .select('id, company_name')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .order('company_name');
+        if (error) {
+          select.innerHTML = '<option value="">Firma listesi alınamadı</option>';
+          console.error(error);
+          return;
+        }
         select.innerHTML = '<option value="">-- Firma Seçin --</option>';
-        (data || []).forEach(c => { select.innerHTML += `<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`; });
-    }
+        (data || []).forEach((c) => {
+          select.innerHTML += `<option value="${escapeHtml(c.id)}">${escapeHtml(c.company_name)}</option>`;
+        });
+      }
 
-    async function fetchWorkersForSelect(companyId, selectId) {
+      async function fetchWorkersForSelect(companyId, selectId) {
         const select = document.getElementById(selectId);
         if (!select) return;
-        if (!companyId) { select.innerHTML = '<option value="">Önce firma seçin</option>'; return; }
+        if (!companyId) {
+          select.innerHTML = '<option value="">Önce firma seçin</option>';
+          return;
+        }
         select.innerHTML = '<option value="">Çalışanlar yükleniyor...</option>';
-        const { data, error } = await dbClient.from('workers').select('id, full_name, job_title').eq('tenant_id', CURRENT_AUTH.tenant_id).eq('company_id', companyId).order('full_name');
-        if (error) { select.innerHTML = '<option value="">Çalışan listesi alınamadı</option>'; console.error(error); return; }
+        const { data, error } = await dbClient
+          .from('workers')
+          .select('id, full_name, job_title')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('company_id', companyId)
+          .order('full_name');
+        if (error) {
+          select.innerHTML = '<option value="">Çalışan listesi alınamadı</option>';
+          console.error(error);
+          return;
+        }
         select.innerHTML = '<option value="">-- Çalışan Seçin --</option>';
-        (data || []).forEach(w => {
-            const label = `${w.full_name || 'İsimsiz'}${w.job_title ? ' • ' + w.job_title : ''}`;
-            select.innerHTML += `<option value="${escapeHtml(w.id)}" data-name="${escapeHtml(w.full_name || '')}">${escapeHtml(label)}</option>`;
+        (data || []).forEach((w) => {
+          const label = `${w.full_name || 'İsimsiz'}${w.job_title ? ' • ' + w.job_title : ''}`;
+          select.innerHTML += `<option value="${escapeHtml(w.id)}" data-name="${escapeHtml(w.full_name || '')}">${escapeHtml(label)}</option>`;
         });
-    }
+      }
 
-    function getSelectedWorkerName(selectId) {
+      function getSelectedWorkerName(selectId) {
         const select = document.getElementById(selectId);
         if (!select || !select.value) return '';
         const option = select.options[select.selectedIndex];
-        return option ? (option.dataset.name || option.textContent || '') : '';
-    }
+        return option ? option.dataset.name || option.textContent || '' : '';
+      }
 
-    function setStatus(message, ok) {
+      function setStatus(message, ok) {
         const el = document.getElementById('accident_status');
         el.className = 'status ' + (ok ? 'ok' : 'err');
         el.innerText = message || '';
-    }
+      }
 
-    function safeStorageName(value) {
-        return (value || 'dosya').toString().trim().replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ._-]/g, '_').substring(0, 90) || 'dosya';
-    }
+      function safeStorageName(value) {
+        return (
+          (value || 'dosya')
+            .toString()
+            .trim()
+            .replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ._-]/g, '_')
+            .substring(0, 90) || 'dosya'
+        );
+      }
 
-    async function uploadAccidentFile(file, companyId, workerId) {
+      async function uploadAccidentFile(file, companyId, workerId) {
         if (!file) return { url: null, path: null };
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) throw new Error('Tenant bilgisi bulunamadı.');
         if (file.size > 10 * 1024 * 1024) throw new Error('Dosya en fazla 10 MB olabilir.');
         const path = `${CURRENT_AUTH.tenant_id}/${companyId || 'company'}/${workerId || 'worker'}/${Date.now()}_${safeStorageName(file.name)}`;
-        const { error } = await dbClient.storage.from(ACCIDENT_FILE_BUCKET).upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
-        if (error) throw new Error('Dosya yüklenemedi. accident-files bucket ve Storage izinlerini kontrol edin. Detay: ' + error.message);
+        const { error } = await dbClient.storage
+          .from(ACCIDENT_FILE_BUCKET)
+          .upload(path, file, { contentType: file.type || 'application/octet-stream', upsert: false });
+        if (error)
+          throw new Error(
+            'Dosya yüklenemedi. accident-files bucket ve Storage izinlerini kontrol edin. Detay: ' + error.message
+          );
         const { data } = dbClient.storage.from(ACCIDENT_FILE_BUCKET).getPublicUrl(path);
         return { url: data && data.publicUrl ? data.publicUrl : null, path };
-    }
+      }
 
-    function severityRiskValues(severity) {
+      function severityRiskValues(severity) {
         if (severity === 'Kritik') return { probability_o: 5, frequency_f: 1, severity_s: 5, risk_score: 25 };
         if (severity === 'Yüksek') return { probability_o: 3, frequency_f: 2, severity_s: 3, risk_score: 18 };
         if (severity === 'Orta') return { probability_o: 2, frequency_f: 2, severity_s: 3, risk_score: 12 };
         return { probability_o: 1, frequency_f: 1, severity_s: 6, risk_score: 6 };
-    }
+      }
 
-    function severityScore(severity) {
+      function severityScore(severity) {
         return severityRiskValues(severity).risk_score;
-    }
+      }
 
-    async function saveAccident() {
+      async function saveAccident() {
         try {
-            setStatus('', true);
-            if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) throw new Error('Tenant bilgisi bulunamadı.');
-            const companyId = document.getElementById('accident_company_select').value;
-            const workerId = document.getElementById('accident_worker_select').value;
-            const workerName = getSelectedWorkerName('accident_worker_select');
-            const accidentDate = document.getElementById('accident_date').value;
-            const accidentTime = document.getElementById('accident_time').value || null;
-            const accidentType = document.getElementById('accident_type').value;
-            const accidentLocation = document.getElementById('accident_location').value.trim();
-            const injuryStatus = document.getElementById('injury_status').value;
-            const severity = document.getElementById('severity').value;
-            const description = document.getElementById('accident_description').value.trim();
-            const immediateAction = document.getElementById('immediate_action').value.trim() || null;
-            const sgkDeadline = addBusinessDays(accidentDate, 3);
-            const rootSummary = document.getElementById('root_cause_summary').value.trim() || null;
-            const correctiveAction = document.getElementById('corrective_action').value.trim() || null;
-            const responsiblePerson = document.getElementById('responsible_person').value.trim() || null;
-            const correctiveTargetDate = document.getElementById('corrective_target_date').value || null;
-            const witnessName = document.getElementById('witness_name').value.trim();
-            const witnessContact = document.getElementById('witness_contact').value.trim() || null;
-            const witnessStatement = document.getElementById('witness_statement').value.trim();
-            const file = document.getElementById('accident_file').files[0] || null;
-            if (!companyId || !workerId || !accidentDate || !accidentLocation || !description) throw new Error('Firma, çalışan, kaza tarihi, kaza yeri ve olay açıklaması zorunlu.');
+          setStatus('', true);
+          if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) throw new Error('Tenant bilgisi bulunamadı.');
+          const companyId = document.getElementById('accident_company_select').value;
+          const workerId = document.getElementById('accident_worker_select').value;
+          const workerName = getSelectedWorkerName('accident_worker_select');
+          const accidentDate = document.getElementById('accident_date').value;
+          const accidentTime = document.getElementById('accident_time').value || null;
+          const accidentType = document.getElementById('accident_type').value;
+          const accidentLocation = document.getElementById('accident_location').value.trim();
+          const injuryStatus = document.getElementById('injury_status').value;
+          const severity = document.getElementById('severity').value;
+          const description = document.getElementById('accident_description').value.trim();
+          const immediateAction = document.getElementById('immediate_action').value.trim() || null;
+          const sgkDeadline = addBusinessDays(accidentDate, 3);
+          const rootSummary = document.getElementById('root_cause_summary').value.trim() || null;
+          const correctiveAction = document.getElementById('corrective_action').value.trim() || null;
+          const responsiblePerson = document.getElementById('responsible_person').value.trim() || null;
+          const correctiveTargetDate = document.getElementById('corrective_target_date').value || null;
+          const witnessName = document.getElementById('witness_name').value.trim();
+          const witnessContact = document.getElementById('witness_contact').value.trim() || null;
+          const witnessStatement = document.getElementById('witness_statement').value.trim();
+          const file = document.getElementById('accident_file').files[0] || null;
+          if (!companyId || !workerId || !accidentDate || !accidentLocation || !description)
+            throw new Error('Firma, çalışan, kaza tarihi, kaza yeri ve olay açıklaması zorunlu.');
 
-            const { data: companyCheck, error: companyCheckError } = await dbClient.from('customer_companies').select('id').eq('id', companyId).eq('tenant_id', CURRENT_AUTH.tenant_id).maybeSingle();
-            if (companyCheckError || !companyCheck) throw new Error('Seçilen firma bu tenant altında bulunamadı.');
+          const { data: companyCheck, error: companyCheckError } = await dbClient
+            .from('customer_companies')
+            .select('id')
+            .eq('id', companyId)
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .maybeSingle();
+          if (companyCheckError || !companyCheck) throw new Error('Seçilen firma bu tenant altında bulunamadı.');
 
-            const fileInfo = await uploadAccidentFile(file, companyId, workerId);
-            const { data: accident, error } = await dbClient.from('work_accidents').insert([{
+          const fileInfo = await uploadAccidentFile(file, companyId, workerId);
+          const { data: accident, error } = await dbClient
+            .from('work_accidents')
+            .insert([
+              {
                 tenant_id: CURRENT_AUTH.tenant_id,
                 company_id: companyId,
                 worker_id: workerId,
@@ -510,97 +500,172 @@
                 file_url: fileInfo.url,
                 file_path: fileInfo.path,
                 created_by_email: CURRENT_AUTH.email || null
-            }]).select('id').single();
-            if (error) throw error;
+              }
+            ])
+            .select('id')
+            .single();
+          if (error) throw error;
 
-            const causes = [
-                ['İnsan', document.getElementById('cause_human').value.trim()],
-                ['Makine/Ekipman', document.getElementById('cause_machine').value.trim()],
-                ['Yöntem/Prosedür', document.getElementById('cause_method').value.trim()],
-                ['Malzeme', document.getElementById('cause_material').value.trim()],
-                ['Ortam', document.getElementById('cause_environment').value.trim()],
-                ['Yönetim', document.getElementById('cause_management').value.trim()]
-            ].filter(item => item[1]);
-            if (causes.length > 0) {
-                const rootRows = causes.map(([category, cause_text]) => ({ tenant_id: CURRENT_AUTH.tenant_id, accident_id: accident.id, category, cause_text }));
-                const { error: causeErr } = await dbClient.from('accident_root_causes').insert(rootRows);
-                if (causeErr) throw causeErr;
-            }
-            if (witnessName || witnessStatement) {
-                const { error: witnessErr } = await dbClient.from('accident_witness_statements').insert([{
-                    tenant_id: CURRENT_AUTH.tenant_id,
-                    accident_id: accident.id,
-                    witness_name: witnessName || 'Belirtilmedi',
-                    witness_contact: witnessContact,
-                    statement_text: witnessStatement || null
-                }]);
-                if (witnessErr) throw witnessErr;
-            }
+          const causes = [
+            ['İnsan', document.getElementById('cause_human').value.trim()],
+            ['Makine/Ekipman', document.getElementById('cause_machine').value.trim()],
+            ['Yöntem/Prosedür', document.getElementById('cause_method').value.trim()],
+            ['Malzeme', document.getElementById('cause_material').value.trim()],
+            ['Ortam', document.getElementById('cause_environment').value.trim()],
+            ['Yönetim', document.getElementById('cause_management').value.trim()]
+          ].filter((item) => item[1]);
+          if (causes.length > 0) {
+            const rootRows = causes.map(([category, cause_text]) => ({
+              tenant_id: CURRENT_AUTH.tenant_id,
+              accident_id: accident.id,
+              category,
+              cause_text
+            }));
+            const { error: causeErr } = await dbClient.from('accident_root_causes').insert(rootRows);
+            if (causeErr) throw causeErr;
+          }
+          if (witnessName || witnessStatement) {
+            const { error: witnessErr } = await dbClient.from('accident_witness_statements').insert([
+              {
+                tenant_id: CURRENT_AUTH.tenant_id,
+                accident_id: accident.id,
+                witness_name: witnessName || 'Belirtilmedi',
+                witness_contact: witnessContact,
+                statement_text: witnessStatement || null
+              }
+            ]);
+            if (witnessErr) throw witnessErr;
+          }
 
-            clearAccidentForm();
-            setStatus('İş kazası kaydı oluşturuldu.', true);
-            await fetchAccidents();
+          clearAccidentForm();
+          setStatus('İş kazası kaydı oluşturuldu.', true);
+          await fetchAccidents();
         } catch (err) {
-            setStatus('Hata: ' + (err.message || err), false);
+          setStatus('Hata: ' + (err.message || err), false);
         }
-    }
+      }
 
-    function clearAccidentForm() {
-        ['accident_location','accident_description','immediate_action','root_cause_summary','corrective_action','responsible_person','witness_name','witness_contact','witness_statement','cause_human','cause_machine','cause_method','cause_material','cause_environment','cause_management'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-        const fileEl = document.getElementById('accident_file'); if (fileEl) fileEl.value = '';
+      function clearAccidentForm() {
+        [
+          'accident_location',
+          'accident_description',
+          'immediate_action',
+          'root_cause_summary',
+          'corrective_action',
+          'responsible_person',
+          'witness_name',
+          'witness_contact',
+          'witness_statement',
+          'cause_human',
+          'cause_machine',
+          'cause_method',
+          'cause_material',
+          'cause_environment',
+          'cause_management'
+        ].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        const fileEl = document.getElementById('accident_file');
+        if (fileEl) fileEl.value = '';
         document.getElementById('corrective_target_date').value = '';
         setDefaultDates();
-    }
+      }
 
-    async function fetchAccidents() {
+      async function fetchAccidents() {
         const tbody = document.getElementById('accidents_tbody');
         if (!tbody) return;
-        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>'; return; }
-        const { data, error } = await dbClient.from('work_accidents')
-            .select('*, customer_companies!inner(company_name, tenant_id)')
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
-            .order('accident_date', { ascending: false })
-            .limit(25);
-        if (error) { tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">İş kazası kayıtları yüklenemedi: ${escapeHtml(error.message)}</td></tr>`; return; }
+        if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">Tenant bilgisi bulunamadı.</td></tr>';
+          return;
+        }
+        const { data, error } = await dbClient
+          .from('work_accidents')
+          .select('*, customer_companies!inner(company_name, tenant_id)')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('customer_companies.tenant_id', CURRENT_AUTH.tenant_id)
+          .order('accident_date', { ascending: false })
+          .limit(25);
+        if (error) {
+          tbody.innerHTML = `<tr><td colspan="5" class="empty-state" style="color:#b91c1c;">İş kazası kayıtları yüklenemedi: ${escapeHtml(error.message)}</td></tr>`;
+          return;
+        }
         accidentRows = data || [];
-        if (accidentRows.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Henüz iş kazası kaydı yok.</td></tr>'; return; }
+        if (accidentRows.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Henüz iş kazası kaydı yok.</td></tr>';
+          return;
+        }
         tbody.innerHTML = '';
-        accidentRows.forEach(a => {
-            const comp = a.customer_companies ? a.customer_companies.company_name : 'Bilinmeyen Firma';
-            const fileHtml = a.file_url ? `<br><a class="file-link" href="${escapeHtml(a.file_url)}" target="_blank">Dosya</a>` : '';
-            const rowClass = deadlineRowClass(a.sgk_deadline, a.sgk_notified);
-            tbody.innerHTML += `<tr class="${rowClass}">
-                <td><strong>${escapeHtml(comp)}</strong><br><small>${escapeHtml(a.worker_name || '-')}</small>${fileHtml}</td>
-                <td><strong>${escapeHtml(a.accident_type || '-')}</strong><br><small>${escapeHtml(a.accident_date || '-')} ${escapeHtml(a.accident_time || '')}</small><br>${escapeHtml(a.accident_location || '-')}<br><span class="badge ${a.severity === 'Kritik' || a.severity === 'Yüksek' ? 'badge-red' : a.severity === 'Orta' ? 'badge-orange' : 'badge-blue'}">${escapeHtml(a.severity || '-')}</span></td>
-                <td>${deadlineBadge(a.sgk_deadline, a.sgk_notified)}<br><button class="btn btn-secondary btn-small" onclick="markSgkNotified('${escapeHtml(a.id)}')">Bildirildi İşaretle</button></td>
-                <td>${escapeHtml(shortText(a.root_cause_summary || a.description || '-', 120))}<br><small>Sorumlu: ${escapeHtml(a.responsible_person || '-')}</small></td>
-                <td><button class="btn btn-blue btn-small" onclick="convertAccidentToDof('${escapeHtml(a.id)}')">DÖF'e Dönüştür</button></td>
-            </tr>`;
+        accidentRows.forEach((a) => {
+          const comp = a.customer_companies ? a.customer_companies.company_name : 'Bilinmeyen Firma';
+          const fileHtml = a.file_url
+            ? `<br><a href="${escapeHtml(a.file_url)}" target="_blank" style="color: var(--uc-primary); font-weight: 700; text-decoration: none; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; margin-top: 4px;">📂 Dosya Gör</a>`
+            : '';
+          const rowClass = deadlineRowClass(a.sgk_deadline, a.sgk_notified);
+          
+          tbody.innerHTML += `
+            <tr class="${rowClass}" style="border-bottom: 1px solid var(--uc-line);">
+              <td style="padding: 12px 16px; font-size: 13px;"><strong>${escapeHtml(comp)}</strong><br><small style="color: var(--uc-text-muted);">${escapeHtml(a.worker_name || '-')}</small>${fileHtml}</td>
+              <td style="padding: 12px 16px; font-size: 13px;"><strong>${escapeHtml(a.accident_type || '-')}</strong><br><small style="color: var(--uc-text-muted);">${escapeHtml(a.accident_date || '-')} ${escapeHtml(a.accident_time || '')}</small><br><span style="font-size: 12px; color: var(--uc-text-muted);">📍 ${escapeHtml(a.accident_location || '-')}</span><br><span class="badge ${severityBadgeClass(a.severity)}" style="${severityBadgeStyle(a.severity)}">${escapeHtml(a.severity || '-')}</span></td>
+              <td style="padding: 12px 16px; font-size: 13px;">
+                ${deadlineBadge(a.sgk_deadline, a.sgk_notified)}
+                <br><button onclick="markSgkNotified('${escapeHtml(a.id)}')" style="background:#f1f5f9; border:1px solid var(--uc-line); border-radius:6px; padding:4px 8px; font-size:11px; cursor:pointer; font-weight:700; margin-top:6px; color:#475569;">Bildirildi İşaretle</button>
+              </td>
+              <td style="padding: 12px 16px; font-size: 13px;">${escapeHtml(shortText(a.root_cause_summary || a.description || '-', 120))}<br><small style="color: var(--uc-text-muted);">Sorumlu: ${escapeHtml(a.responsible_person || '-')}</small></td>
+              <td style="padding: 12px 16px; font-size: 13px;">
+                <button onclick="convertAccidentToDof('${escapeHtml(a.id)}')" style="background:#e0f2fe; color:#0369a1; border:none; border-radius:6px; padding:6px 12px; font-size:11px; cursor:pointer; font-weight:700; transition: opacity 0.15s ease;">DÖF'e Dönüştür</button>
+              </td>
+            </tr>
+          `;
         });
-    }
+      }
 
-    function shortText(text, limit) {
+      function severityBadgeClass(sev) {
+        return (sev === 'Kritik' || sev === 'Yüksek') ? 'badge-red' : sev === 'Orta' ? 'badge-orange' : 'badge-blue';
+      }
+      function severityBadgeStyle(sev) {
+        if (sev === 'Kritik' || sev === 'Yüksek') return 'background:#fee2e2; color:#b91c1c; font-size:11px; padding:3px 8px; border-radius:999px; font-weight:700; display:inline-block; margin-top:4px;';
+        if (sev === 'Orta') return 'background:#fef3c7; color:#d97706; font-size:11px; padding:3px 8px; border-radius:999px; font-weight:700; display:inline-block; margin-top:4px;';
+        return 'background:#e0f2fe; color:#0369a1; font-size:11px; padding:3px 8px; border-radius:999px; font-weight:700; display:inline-block; margin-top:4px;';
+      }
+
+      function shortText(text, limit) {
         if (!text) return '-';
         return text.length > limit ? text.substring(0, limit) + '...' : text;
-    }
+      }
 
-    async function markSgkNotified(id) {
+      async function markSgkNotified(id) {
         if (!confirm('Bu iş kazası için SGK bildirimi yapıldı olarak işaretlensin mi?')) return;
-        const { error } = await dbClient.from('work_accidents').update({ sgk_notified: true, sgk_notified_at: new Date().toISOString() }).eq('id', id).eq('tenant_id', CURRENT_AUTH.tenant_id);
-        if (error) { alert('Güncellenemedi: ' + error.message); return; }
+        const { error } = await dbClient
+          .from('work_accidents')
+          .update({ sgk_notified: true, sgk_notified_at: new Date().toISOString() })
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id);
+        if (error) {
+          alert('Güncellenemedi: ' + error.message);
+          return;
+        }
         await fetchAccidents();
-    }
+      }
 
-    async function convertAccidentToDof(id) {
-        const a = accidentRows.find(row => String(row.id) === String(id));
-        if (!a) { alert('Kaza kaydı bulunamadı.'); return; }
+      async function convertAccidentToDof(id) {
+        const a = accidentRows.find((row) => String(row.id) === String(id));
+        if (!a) {
+          alert('Kaza kaydı bulunamadı.');
+          return;
+        }
         if (!confirm('Bu iş kazası kaydından Aksiyon Havuzu için DÖF oluşturulsun mu?')) return;
         const hazard = `İş kazası: ${a.accident_type || ''} - ${a.worker_name || ''}`.trim();
-        const action = a.corrective_action || a.immediate_action || a.root_cause_summary || 'İş kazası kök neden analizi sonucunda düzeltici/önleyici faaliyet planlanmalıdır.';
+        const action =
+          a.corrective_action ||
+          a.immediate_action ||
+          a.root_cause_summary ||
+          'İş kazası kök neden analizi sonucunda düzeltici/önleyici faaliyet planlanmalıdır.';
         const targetDate = a.corrective_target_date || a.sgk_deadline || todayString();
         const riskValues = severityRiskValues(a.severity);
-        const { error } = await dbClient.from('risk_assessments').insert([{
+        const { error } = await dbClient.from('risk_assessments').insert([
+          {
             tenant_id: CURRENT_AUTH.tenant_id,
             company_id: a.company_id,
             hazard_title: hazard,
@@ -614,14 +679,20 @@
             status: 'Açık',
             image_url: a.file_url || null,
             image_path: a.file_path || null
-        }]);
-        if (error) { alert('DÖF oluşturulamadı: ' + error.message); return; }
-        await dbClient.from('work_accidents').update({ dof_created: true }).eq('id', id).eq('tenant_id', CURRENT_AUTH.tenant_id);
+          }
+        ]);
+        if (error) {
+          alert('DÖF oluşturulamadı: ' + error.message);
+          return;
+        }
+        await dbClient
+          .from('work_accidents')
+          .update({ dof_created: true })
+          .eq('id', id)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id);
         alert('DÖF oluşturuldu. Aksiyon Havuzu üzerinden takip edebilirsiniz.');
         await fetchAccidents();
-    }
-
-    async function handleLogout() { await dbClient.auth.signOut(); window.location.href = 'login.html'; }
-</script>
-</body>
+      }
+    </script>
+  </body>
 </html>
