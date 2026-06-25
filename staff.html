@@ -205,12 +205,7 @@
           <div class="form-group span-4">
             <label>Sistem Erişim Yetkisi</label>
             <select id="access_role">
-              <option value="super_admin">Super Admin / SaaS Sahibi</option>
-              <option value="uzman">İSG Uzmanı</option>
-              <option value="hekim">İşyeri Hekimi</option>
-              <option value="dsp">DSP</option>
-              <option value="admin">Admin / Yönetici</option>
-              <option value="firma_yetkilisi">Firma Yetkilisi</option>
+              <option value="">Yükleniyor...</option>
             </select>
           </div>
           <div class="form-group span-4">
@@ -289,12 +284,7 @@
             <div class="form-group">
               <label>Sistem Erişim Yetkisi</label>
               <select id="modal_access_role">
-                <option value="super_admin">Super Admin / SaaS Sahibi</option>
-                <option value="uzman">İSG Uzmanı</option>
-                <option value="hekim">İşyeri Hekimi</option>
-                <option value="dsp">DSP</option>
-                <option value="admin">Admin / Yönetici</option>
-                <option value="firma_yetkilisi">Firma Yetkilisi</option>
+                <option value="">Yükleniyor...</option>
               </select>
             </div>
             <div class="form-group">
@@ -344,6 +334,7 @@
         }
         document.body.style.display = 'block';
         document.getElementById('hire_date').value = new Date().toISOString().slice(0, 10);
+        renderAccessRoleDropdowns();
         prepareStaffPermissionUi();
         await loadTenantOptionsForStaffPage();
         toggleCertClass('staff_role', 'certificate_class');
@@ -351,6 +342,39 @@
         setNewStaffFormOpen(false);
         fetchStaff();
       };
+
+      function renderAccessRoleDropdowns() {
+        const accessSelect = document.getElementById('access_role');
+        const modalAccessSelect = document.getElementById('modal_access_role');
+        if (!accessSelect || !modalAccessSelect) return;
+
+        const defaultRoles = [
+          { key: 'admin', label: 'Admin / Yönetici' },
+          { key: 'uzman', label: 'İSG Uzmanı' },
+          { key: 'hekim', label: 'İşyeri Hekimi' },
+          { key: 'dsp', label: 'DSP' },
+          { key: 'sales', label: 'CRM Uzmanı' },
+          { key: 'firma_yetkilisi', label: 'Firma Yetkilisi' }
+        ];
+
+        if (isSuperAdmin()) {
+          defaultRoles.unshift({ key: 'super_admin', label: 'Super Admin / SaaS Sahibi' });
+        }
+
+        let html = '';
+        defaultRoles.forEach(r => {
+          html += `<option value="${escapeAttr(r.key)}">${escapeHtml(r.label)}</option>`;
+        });
+
+        if (window.CUSTOM_ROLES) {
+          Object.keys(window.CUSTOM_ROLES).forEach(key => {
+            html += `<option value="${escapeAttr(key)}">${escapeHtml(window.CUSTOM_ROLES[key])}</option>`;
+          });
+        }
+
+        accessSelect.innerHTML = html;
+        modalAccessSelect.innerHTML = html;
+      }
 
       function setNewStaffFormOpen(isOpen) {
         const panel = document.getElementById('staff_form_panel');

@@ -1,16 +1,49 @@
 // OSGB SaaS Global Yetkilendirme ve Navigasyon Yönetimi
 // Gerçek Supabase auth - mock değil!
 
+window.CUSTOM_ROLES = {}; // key: role_key, value: role_name
+window.ROLE_PERMISSIONS = []; // array of { role, page, can_view, can_action }
+
+window.loadTenantCustomRolesAndPermissions = async function (tenantId) {
+  if (!window.dbClient || !tenantId) return;
+  try {
+    const { data: rolesData, error: rolesError } = await window.dbClient
+      .from('tenant_roles')
+      .select('role_key, role_name')
+      .eq('tenant_id', tenantId);
+    
+    if (!rolesError && rolesData) {
+      window.CUSTOM_ROLES = {};
+      rolesData.forEach(r => {
+        window.CUSTOM_ROLES[r.role_key.toLowerCase()] = r.role_name;
+      });
+    }
+
+    const { data: permsData, error: permsError } = await window.dbClient
+      .from('role_permissions')
+      .select('role, page, can_view, can_action')
+      .eq('tenant_id', tenantId);
+      
+    if (!permsError && permsData) {
+      window.ROLE_PERMISSIONS = permsData;
+    }
+  } catch (err) {
+    console.warn('Custom roller ve izinler yüklenirken hata:', err);
+  }
+};
+
 window.normalizeAccessRole = function (value) {
   const v = (value || '').toString().trim().toLowerCase();
   if (['super_admin', 'super admin', 'saas_admin', 'sistem sahibi'].includes(v)) return 'super_admin';
   if (['admin', 'yonetici', 'yönetici'].includes(v)) return 'admin';
-  if (['sales', 'satis', 'satış', 'crm'].includes(v)) return 'sales';
+  if (['sales', 'satis', 'satış', 'crm', 'crm uzmanı', 'crm uzmani', 'crm_uzmani'].includes(v)) return 'sales';
   if (['uzman', 'isg_uzmani', 'isg uzmanı', 'iş güvenliği uzmanı'].includes(v)) return 'uzman';
   if (['hekim', 'isyeri hekimi', 'işyeri hekimi'].includes(v)) return 'hekim';
   if (['dsp', 'diğer sağlık personeli', 'diger saglik personeli'].includes(v)) return 'dsp';
   if (['firma_yetkilisi', 'firma yetkilisi', 'musteri', 'müşteri'].includes(v)) return 'firma_yetkilisi';
-  return '';
+  
+  if (window.CUSTOM_ROLES && window.CUSTOM_ROLES[v]) return v;
+  return v;
 };
 
 window.inferAccessRoleFromEmail = function (email) {
@@ -19,6 +52,7 @@ window.inferAccessRoleFromEmail = function (email) {
   if (e.includes('admin')) return 'admin';
   if (e.includes('hekim')) return 'hekim';
   if (e.includes('dsp')) return 'dsp';
+  if (e.includes('crm') || e.includes('sales')) return 'sales';
   if (e.includes('firma') || e.includes('musteri') || e.includes('müşteri')) return 'firma_yetkilisi';
   if (e.includes('uzman')) return 'uzman';
   return 'uzman';
@@ -54,6 +88,11 @@ window.getCurrentAuthContext = async function () {
       window.normalizeAccessRole(staff && staff.staff_role) ||
       window.inferAccessRoleFromEmail(email);
     const canLogin = window.isStaffAccessActive(staff);
+
+    if (staff && staff.tenant_id) {
+      await window.loadTenantCustomRolesAndPermissions(staff.tenant_id);
+    }
+
     return {
       session,
       email,
@@ -70,9 +109,21 @@ window.getCurrentAuthContext = async function () {
 };
 
 window.canAccessPage = function (role, page) {
-  if (role === 'super_admin' || role === 'admin') return true;
-  if (page === 'crm' || page === 'crm-reports') return true; // Tüm roller CRM ve Raporlarına erişebilir
-  if (role === 'sales') return page === 'crm' || page === 'crm-reports'; // Sales sadece CRM ve Raporları
+  if (role === 'super_admin') return true;
+  if (page === 'permissions') return role === 'admin';
+
+  if (window.ROLE_PERMISSIONS && window.ROLE_PERMISSIONS.length > 0) {
+    const perm = window.ROLE_PERMISSIONS.find(
+      p => p.role.toLowerCase() === role.toLowerCase() && p.page.toLowerCase() === page.toLowerCase()
+    );
+    if (perm) {
+      return perm.can_view;
+    }
+  }
+
+  if (role === 'admin') return true;
+  if (page === 'crm' || page === 'crm-reports') return true;
+  if (role === 'sales') return page === 'crm' || page === 'crm-reports';
   if (['risk', 'accidents', 'near_miss', 'training', 'ppe', 'periodic', 'actions'].includes(page)) return role === 'uzman';
   if (page === 'medical') return role === 'hekim';
   if (page === 'staff') return false;
@@ -81,19 +132,22 @@ window.canAccessPage = function (role, page) {
 };
 
 window.roleLabel = function (role) {
-  return (
-    {
-      super_admin: 'Super Admin',
-      admin: 'Admin',
-      sales: 'Satış Temsilcisi',
-      uzman: 'İSG Uzmanı',
-      hekim: 'İşyeri Hekimi',
-      dsp: 'DSP',
-      firma_yetkilisi: 'Firma Yetkilisi'
-    }[role] ||
-    role ||
-    'Rol yok'
-  );
+  const normRole = (role || '').toString().trim().toLowerCase();
+  const defaultLabels = {
+    super_admin: 'Super Admin',
+    admin: 'Admin',
+    sales: 'CRM Uzmanı',
+    uzman: 'İSG Uzmanı',
+    hekim: 'İşyeri Hekimi',
+    dsp: 'DSP',
+    firma_yetkilisi: 'Firma Yetkilisi'
+  };
+  
+  if (defaultLabels[normRole]) return defaultLabels[normRole];
+  if (window.CUSTOM_ROLES && window.CUSTOM_ROLES[normRole]) {
+    return window.CUSTOM_ROLES[normRole];
+  }
+  return role || 'Rol yok';
 };
 
 window.applyRoleBasedNavigation = function (role) {
@@ -104,6 +158,7 @@ window.applyRoleBasedNavigation = function (role) {
     { id: 'dashboard', href: 'dashboard.html', text: 'Ana Sayfa', icon: '🏠' },
     { id: 'saas', href: 'saas-admin.html', text: 'SaaS Yönetimi', icon: '🧩' },
     { id: 'staff', href: 'staff.html', text: 'Personel Yönetimi', icon: '🔑' },
+    { id: 'permissions', href: 'permissions.html', text: 'Erişim Yetkileri', icon: '🔐' },
     { id: 'crm', href: 'crm.html', text: 'CRM', icon: '📊' },
     { id: 'crm-reports', href: 'crm-reports.html', text: 'CRM Raporları', icon: '📈' },
     { id: 'schedule', href: 'schedule.html', text: 'Ziyaret Takibi', icon: '📅' },
@@ -128,13 +183,14 @@ window.applyRoleBasedNavigation = function (role) {
     let visible = false;
     if (role === 'super_admin') {
       visible = true;
-    } else if (role === 'sales') {
-      // Sales rolü sadece CRM sayfalarını görür
-      visible = ['crm', 'crm-reports'].includes(item.id);
+    } else if (item.id === 'permissions') {
+      visible = (role === 'admin');
     } else {
       if (item.id === 'dashboard') visible = true;
       else if (item.id === 'saas') visible = false;
-      else if (item.id === 'crm' || item.id === 'crm-reports') visible = true; // Tüm roller CRM'e erişebilir
+      else if (item.id === 'crm' || item.id === 'crm-reports') {
+        visible = window.canAccessPage(role, item.id);
+      }
       else if (item.id === 'company') visible = window.canAccessPage(role, 'company');
       else if (item.id === 'workers') visible = window.canAccessPage(role, 'workers');
       else if (item.id === 'schedule') visible = window.canAccessPage(role, 'schedule');

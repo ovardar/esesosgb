@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OSGB SaaS - Erişim Yetkileri</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/permissions-logic.js"></script>
+    <style>
+      .permissions-shell {
+        padding: 8px 4px;
+      }
+      .setup-header {
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .role-add-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 300px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+      }
+      .role-input-group {
+        display: flex;
+        gap: 8px;
+      }
+      .role-input-group input {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 14px;
+      }
+      .matris-container {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        background: var(--bg-card);
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+        margin-bottom: 24px;
+      }
+      .matris-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        min-width: 800px;
+      }
+      .matris-table th, 
+      .matris-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+      }
+      .matris-table th {
+        background: #f8fafc;
+        font-weight: 600;
+        color: var(--text-main);
+        white-space: nowrap;
+      }
+      .matris-table th.role-col {
+        text-align: center;
+        border-left: 1px solid var(--border-color);
+        width: 160px;
+      }
+      .matris-table td.role-cell {
+        border-left: 1px solid var(--border-color);
+        text-align: center;
+      }
+      .perm-checkbox-group {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+      }
+      .perm-checkbox {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: var(--text-muted);
+        cursor: pointer;
+        user-select: none;
+      }
+      .perm-checkbox input {
+        cursor: pointer;
+        width: 16px;
+        height: 16px;
+        accent-color: #2563eb;
+      }
+      .action-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .module-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .module-title {
+        font-weight: 600;
+        color: var(--text-main);
+      }
+      .module-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+      .badge-custom {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: bold;
+        background: #e2e8f0;
+        color: #475569;
+        margin-top: 4px;
+        text-transform: uppercase;
+      }
+      @media (max-width: 600px) {
+        .setup-header {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .role-add-card {
+          min-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body class="theme-ultra-clean" style="display: none;">
+    <div class="card">
+      <!-- 🏛️ GLOBAL STANDART ÜST BAR -->
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">Eses Software</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
+        </div>
+
+        <div class="nav-container">
+          <!-- Dinamik navigasyon yüklenecektir -->
+        </div>
+      </div>
+
+      <div class="permissions-shell">
+        <div class="setup-header">
+          <div>
+            <h2>🔐 Rol Bazlı Erişim Yetkileri</h2>
+            <p class="page-desc">
+              Sistemdeki rollere göre modüllerin görüntülenme ve işlem yapma (yazma/aksiyon) yetkilerini bu ekrandan yönetebilirsiniz.
+            </p>
+          </div>
+          
+          <div class="role-add-card">
+            <h4>➕ Yeni Özel Rol Tanımla</h4>
+            <div class="role-input-group">
+              <input type="text" id="new_role_name" placeholder="Örn: Muhasebe Sorumlusu" />
+              <button class="btn btn-primary" onclick="addNewRole()">Rol Ekle</button>
+            </div>
+            <small style="color: var(--text-muted); font-size: 11px;">
+              * Eklenen rol sadece sizin firmanız (tenant) için geçerli olacaktır.
+            </small>
+          </div>
+        </div>
+
+        <div class="matris-container">
+          <table class="matris-table">
+            <thead>
+              <tr id="matris_header_row">
+                <th>Modül / Sayfa Tanımı</th>
+                <!-- Dinamik rol başlıkları buraya gelecek -->
+              </tr>
+            </thead>
+            <tbody id="matris_body">
+              <tr>
+                <td colspan="10" style="text-align: center; color: var(--text-muted)">Yükleniyor...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="action-footer">
+          <button class="btn btn-primary" onclick="savePermissions()">Değişiklikleri Kaydet</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -261,6 +261,27 @@ body.theme-ultra-clean .crm-offer-page-shell {
 .btn-save:hover {
   opacity: 0.9;
 }
+.btn-revision {
+  background: #f97316;
+  color: #fff;
+  border: none;
+  padding: 11px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  width: 100%;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: opacity 0.15s;
+  font-family: 'Manrope', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-revision:hover {
+  opacity: 0.9;
+}
 .btn-pdf {
   background: #1d4ed8;
   color: #fff;

@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="tr">
   <head>
     <meta charset="UTF-8" />
@@ -39,6 +39,10 @@
           <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Alıcı Firma</span>
           <strong id="p_company_name">—</strong>
           <span id="p_company_meta" style="color:#6b7280;font-size:11px;"></span>
+        </div>
+        <div class="client-block" id="p_recipients_block" style="display:none;">
+          <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">İlgili Kişiler / Alıcı</span>
+          <strong id="p_recipients_names" style="display:block;font-size:12px;font-weight:700;">—</strong>
         </div>
         <div class="client-block">
           <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Çalışan Sayısı</span>
@@ -160,6 +164,12 @@
                   <label>Notlar / Özel Koşullar</label>
                   <textarea id="offer_notes" rows="2" placeholder="Teklif notları, özel koşullar, geçerlilik şartları..."></textarea>
                 </div>
+                <div class="form-group full" id="recipients_form_group">
+                  <label>Teklifin Gönderileceği İlgili Kişiler (Alıcılar)</label>
+                  <div id="recipients_checkboxes" style="display:flex; flex-wrap:wrap; gap:12px; padding:12px; background:var(--bg-main); border:1px solid var(--border-color); border-radius:10px; min-height:42px; align-items:center;">
+                    <span style="font-size:12px; color:var(--text-muted)">Yükleniyor veya kişi bulunamadı...</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -238,10 +248,6 @@
             <div class="form-section" id="version_history_section" style="display:none;">
               <h4>🕐 Teklif Versiyonları</h4>
               <div id="version_list">Yükleniyor...</div>
-              <button
-                onclick="createNewVersion()"
-                style="margin-top:10px;background:var(--bg-main);border:1.5px solid var(--primary);color:var(--primary);padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;width:100%;font-family:Inter,sans-serif;"
-              >+ Yeni Revizyon Oluştur</button>
             </div>
 
           </div><!-- /left -->
@@ -300,6 +306,10 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>
                 Kaydet
               </button>
+              <button id="btn_new_revision" class="btn-revision" onclick="createNewVersion()" style="display:none;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"/></svg>
+                + Yeni Revizyon Kaydet
+              </button>
               <button class="btn-pdf" onclick="exportPDF()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                 PDF / Yazdır
@@ -331,6 +341,7 @@
       let serviceRowData  = [];   // { name, qty, price }[]
       let allVersions     = [];   // other versions of same offer_no
       let priceMatrixRows = [];
+      let selectedRecipients = [];
 
       /* ═══════════════════════════════════════
          INIT
@@ -388,6 +399,9 @@
         document.getElementById('p_emp_count').textContent =
           data.employee_count ? data.employee_count + ' kişi' : '—';
         document.getElementById('p_danger_class').textContent = data.danger_class || '—';
+
+        // İlgili kişileri yükle
+        await fetchLeadContacts(id);
       }
 
       /* ═══════════════════════════════════════
@@ -401,6 +415,10 @@
         currentOfferNo = data.offer_no;
         currentVersion = data.version;
 
+        // Alıcıları notlar alanından parse edelim
+        const parsed = parseNotes(data.notes);
+        selectedRecipients = parsed.recipients;
+
         await loadLead(LEAD_ID);
 
         // Page title
@@ -412,9 +430,12 @@
         document.getElementById('valid_until').value     = data.valid_until  || '';
         document.getElementById('employee_count').value  = data.employee_count || '';
         document.getElementById('offer_status').value    = data.status       || 'Hazırlandı';
-        document.getElementById('offer_notes').value     = data.notes        || '';
+        document.getElementById('offer_notes').value     = parsed.cleanNotes;
         document.getElementById('discount').value        = data.discount      != null ? data.discount : 0;
         document.getElementById('kdv_rate').value        = data.kdv_rate     != null ? data.kdv_rate  : 20;
+
+        // Revizyon butonunu göster
+        document.getElementById('btn_new_revision').style.display = 'flex';
 
         // Services
         serviceRowData = [];
@@ -506,7 +527,7 @@
           valid_until: document.getElementById('valid_until').value || null,
           employee_count: parseInt(document.getElementById('employee_count').value) || null,
           status: 'Revize',
-          notes: document.getElementById('offer_notes').value.trim() || null,
+          notes: getNotesWithRecipients(),
           extra_services: services,
           discount: disc,
           kdv_rate: kdvR,
@@ -818,7 +839,7 @@
           valid_until:    document.getElementById('valid_until').value    || null,
           employee_count: parseInt(document.getElementById('employee_count').value) || null,
           status:         document.getElementById('offer_status').value,
-          notes:          document.getElementById('offer_notes').value.trim() || null,
+          notes:          getNotesWithRecipients(),
           extra_services: services,
           discount:       disc,
           kdv_rate:       kdvR,
@@ -840,6 +861,7 @@
             // Update URL without reload
             history.replaceState(null, '', 'crm-offer.html?id=' + OFFER_ID);
             document.getElementById('version_history_section').style.display = 'block';
+            document.getElementById('btn_new_revision').style.display = 'flex';
             await loadVersionHistory(currentOfferNo);
           }
         }
@@ -939,6 +961,75 @@
       function fmtDateTime(iso) {
         if (!iso) return '—';
         return new Date(iso).toLocaleString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      }
+
+      function parseNotes(notesStr) {
+        if (!notesStr) return { cleanNotes: '', recipients: [] };
+        const regex = /\[recipients:\s*([^\]]+)\]/;
+        const match = notesStr.match(regex);
+        if (match) {
+          const recs = match[1].split(',').map(s => s.trim());
+          const clean = notesStr.replace(regex, '').trim();
+          return { cleanNotes: clean, recipients: recs };
+        }
+        return { cleanNotes: notesStr, recipients: [] };
+      }
+
+      function getNotesWithRecipients() {
+        const rawNotes = document.getElementById('offer_notes').value.trim();
+        const checkedBoxes = document.querySelectorAll('.recipient-checkbox:checked');
+        const names = Array.from(checkedBoxes).map(cb => cb.value);
+        if (names.length === 0) return rawNotes || null;
+        return (rawNotes ? rawNotes + '\n' : '') + '[recipients: ' + names.join(', ') + ']';
+      }
+
+      async function fetchLeadContacts(leadId) {
+        const container = document.getElementById('recipients_checkboxes');
+        if (!container) return;
+
+        const { data, error } = await dbClient
+          .from('crm_contacts')
+          .select('full_name, title')
+          .eq('lead_id', leadId);
+
+        if (error) {
+          console.error("Kişiler çekilemedi:", error);
+          container.innerHTML = `<span style="font-size:12px; color:#dc2626">Kişiler yüklenirken hata oluştu.</span>`;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          container.innerHTML = `<span style="font-size:12px; color:var(--text-muted)">Bu fırsata ait tanımlı ilgili kişi bulunamadı.</span>`;
+          return;
+        }
+
+        container.innerHTML = data.map((c, i) => {
+          const isChecked = selectedRecipients.includes(c.full_name) ? 'checked' : '';
+          const titleStr = c.title ? ` (${esc(c.title)})` : '';
+          return `
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:500; cursor:pointer; color:var(--text-main); margin-right:15px; user-select:none;">
+              <input type="checkbox" class="recipient-checkbox" value="${esc(c.full_name)}" ${isChecked} onchange="updatePDFRecipients()" style="cursor:pointer;" />
+              <span>${esc(c.full_name)}${titleStr}</span>
+            </label>
+          `;
+        }).join('');
+
+        updatePDFRecipients();
+      }
+
+      function updatePDFRecipients() {
+        const checkedBoxes = document.querySelectorAll('.recipient-checkbox:checked');
+        const names = Array.from(checkedBoxes).map(cb => cb.value);
+        const block = document.getElementById('p_recipients_block');
+        const textEl = document.getElementById('p_recipients_names');
+        if (!block || !textEl) return;
+
+        if (names.length > 0) {
+          textEl.textContent = names.join(', ');
+          block.style.display = 'block';
+        } else {
+          block.style.display = 'none';
+        }
       }
     </script>
   </body>
