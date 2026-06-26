@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="tr">
   <head>
     <link rel="icon" type="image/svg+xml" href="brand/mark.svg" />
@@ -269,29 +269,15 @@
         }
       }
 
-      // Drag & Drop
-      const dropZone = document.getElementById('drop_zone');
-      dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-      dropZone.addEventListener('drop', e => {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        const dt = e.dataTransfer;
-        if (dt.files && dt.files.length) {
-          const fileInput = document.getElementById('import_csv_file');
-          fileInput.files = dt.files;
-          onFileSelected(fileInput);
-        }
-      });
 
       async function loadLeadCount() {
-        if (!CURRENT_AUTH || !window.dbClient) return;
-        const { count } = await window.dbClient
+        if (!CURRENT_AUTH || !dbClient) return;
+        const { count } = await dbClient
           .from('crm_leads')
           .select('id', { count: 'exact', head: true })
           .eq('tenant_id', CURRENT_AUTH.tenant_id);
         allLeads = [];
-        const { data } = await window.dbClient
+        const { data } = await dbClient
           .from('crm_leads')
           .select('company_name,city,district,sector,nace_code,danger_class,employee_count,stage,lead_status,lead_source,notes,created_at')
           .eq('tenant_id', CURRENT_AUTH.tenant_id)
@@ -401,7 +387,7 @@
             if (rows.length === 0) { showStatus('Geçerli veri satırı bulunamadı.', 'error'); return; }
             showStatus(rows.length + ' kayıt veritabanına yükleniyor...', '');
 
-            const { error } = await window.dbClient.from('crm_leads').insert(rows);
+            const { error } = await dbClient.from('crm_leads').insert(rows);
             if (error) throw error;
 
             showStatus('✓ ' + rows.length + ' firma başarıyla içeri aktarıldı!', 'success');
@@ -419,18 +405,29 @@
         reader.readAsText(file);
       };
 
-      document.addEventListener('DOMContentLoaded', async () => {
-        const checkAuth = setInterval(async () => {
-          if (window.requireAuthAndRole) {
-            clearInterval(checkAuth);
-            const auth = await window.requireAuthAndRole('crm-transfer');
-            if (auth) {
-              CURRENT_AUTH = auth;
-              document.body.style.display = 'block';
-              await loadLeadCount();
+      window.addEventListener('load', async () => {
+        // Drag & Drop
+        const dropZone = document.getElementById('drop_zone');
+        if (dropZone) {
+          dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+          dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+          dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const dt = e.dataTransfer;
+            if (dt.files && dt.files.length) {
+              const fileInput = document.getElementById('import_csv_file');
+              fileInput.files = dt.files;
+              onFileSelected(fileInput);
             }
-          }
-        }, 100);
+          });
+        }
+
+        const auth = await requireAuthAndRole('crm');
+        if (!auth) return;
+        CURRENT_AUTH = auth;
+        document.body.style.display = 'block';
+        await loadLeadCount();
       });
     </script>
   </body>
