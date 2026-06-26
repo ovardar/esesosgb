@@ -134,6 +134,19 @@
         </div>
       </div>
 
+      <!-- ── Kayıp Nedenleri Analizi ── -->
+      <div class="report-full" style="margin-top: 24px; margin-bottom: 24px;">
+        <div class="rpt-panel">
+          <div class="section-header">
+            <h3>📉 Fırsat Kayıp Nedenleri Analizi</h3>
+          </div>
+          <p class="rpt-desc">Kaybedilen fırsatların nedenlerine göre dağılımı (Adet bazlı sıralama).</p>
+          <div id="lost_reasons_container">
+            <p style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">Yükleniyor...</p>
+          </div>
+        </div>
+      </div>
+
       <!-- ── Son Aktiviteler + Lead Kaynağı ── -->
       <div class="report-content">
         <!-- Son Aktiviteler -->
@@ -275,7 +288,7 @@
       async function loadAllData() {
         const tid = CURRENT_AUTH.tenant_id;
         const [leadsRes, offersRes, actsRes, tasksRes] = await Promise.all([
-          dbClient.from('crm_leads').select('id, company_name, stage, lead_status, danger_class, assigned_to, created_at').eq('tenant_id', tid),
+          dbClient.from('crm_leads').select('id, company_name, stage, lead_status, danger_class, assigned_to, lost_reason, created_at').eq('tenant_id', tid),
           dbClient.from('crm_offers').select('id, offer_number, lead_id, subtotal, status, created_at, crm_leads(company_name)').eq('tenant_id', tid).order('created_at', { ascending: false }),
           dbClient.from('crm_activities').select('id, activity_type, summary, activity_date, created_by, lead_id, crm_leads(company_name)').eq('tenant_id', tid).order('activity_date', { ascending: false }),
           dbClient.from('crm_tasks').select('id, title, priority, status, due_date, lead_id, crm_leads(company_name)').eq('tenant_id', tid).order('due_date', { ascending: true })
@@ -348,6 +361,7 @@
         renderKpis(leads, offers, activities, tasks);
         renderFunnel(leads);
         renderWinLoss(leads);
+        renderLostReasons(leads);
         renderActivitySummary(activities);
         renderDangerDist(leads);
         renderOffersTable(offers);
@@ -448,6 +462,39 @@
             <div style="display:flex;justify-content:space-between;font-size:13px;"><span>❌ Kaybedilen</span><strong style="color:#ef4444;">${lost}</strong></div>
             <div style="display:flex;justify-content:space-between;font-size:13px;"><span>⏸ Askıda</span><strong style="color:#94a3b8;">${askida}</strong></div>
           </div>`;
+      }
+
+      /* ── Lost Reasons Chart ── */
+      function renderLostReasons(leads) {
+        const container = document.getElementById('lost_reasons_container');
+        if (!container) return;
+
+        const lostLeads = leads.filter(l => l.lead_status === 'Kaybedildi');
+        
+        if (!lostLeads.length) {
+          container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:20px;font-size:13px;">Dönem içinde kaydedilmiş kayıp fırsat bulunmamaktadır.</p>';
+          return;
+        }
+
+        const counts = {};
+        lostLeads.forEach(l => {
+          const reason = l.lost_reason || 'Belirtilmemiş';
+          counts[reason] = (counts[reason] || 0) + 1;
+        });
+
+        const sortedReasons = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+        const max = Math.max(...Object.values(counts), 1);
+
+        container.innerHTML = sortedReasons.map(reason => {
+          const n = counts[reason];
+          const pct = Math.round(n / max * 100);
+          const color = '#ef4444'; // Red for lost
+          return `<div class="funnel-row" style="margin-bottom:12px; display:flex; align-items:center;">
+            <span class="funnel-label" style="width:240px; text-align:left; white-space:normal; font-size:13px; line-height:1.2; word-break:break-word;">${esc(reason)}</span>
+            <div class="funnel-bar-wrap" style="flex:1; margin:0 12px; height:16px; background:#f1f5f9; border-radius:4px;"><div class="funnel-bar" style="width:${pct}%;background:${color};height:100%;border-radius:4px;"></div></div>
+            <span class="funnel-count" style="width:60px; font-weight:700; text-align:right; font-size:13px;">${n} adet</span>
+          </div>`;
+        }).join('');
       }
 
       /* ── Activity Summary ── */
