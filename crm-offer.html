@@ -309,6 +309,9 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                 PDF / Yazdır
               </button>
+              <button class="btn-email" onclick="emailOffer()" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px; padding:12px; background:#fff7ed; border:1px solid #fed7aa; color:#c2410c; font-weight:600; font-size:14px; border-radius:10px; cursor:pointer; margin-bottom:10px; transition:0.2s;">
+                📧 E-posta Gönder
+              </button>
               <button class="btn-send" onclick="markAsSent()" id="btn_mark_sent">
                 <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 Müşteriye Gönderildi
@@ -929,6 +932,17 @@
         renderStatusBadge('Gönderildi');
         setStatus('✅ "Gönderildi" olarak işaretlendi.', 'ok');
         setTimeout(() => setStatus('', ''), 2800);
+      }
+
+      function emailOffer() {
+        let companyName = 'Firma';
+        const el = document.getElementById('sum_company');
+        if (el && el.textContent !== '—') companyName = el.textContent.trim();
+        const offerNo = currentOfferNo || 'Yeni Teklif';
+        
+        const subject = encodeURIComponent(companyName + ' - İSG Hizmetleri Teklifi (' + offerNo + ')');
+        const body = encodeURIComponent('Sayın İlgili,\n\nİSG hizmetleri teklifimiz (No: ' + offerNo + ') değerlendirmeniz için tarafınıza sunulmuştur.\n\nİyi çalışmalar dileriz.');
+        window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
       }
 
       /* ═══════════════════════════════════════

@@ -955,6 +955,15 @@
         alert("PDF / Yazdır (özel antetli teklif formatı) modülü şu anda geliştirme aşamasındadır.");
       }
 
+      function emailDrawerOffer() {
+        if (!drawerCurrentOffer) return;
+        const offerNo = drawerCurrentOffer.offer_no || 'Yeni Teklif';
+        const companyName = (drawerCurrentOffer.crm_leads && drawerCurrentOffer.crm_leads.company_name) || 'Firma';
+        const subject = encodeURIComponent(companyName + ' - İSG Hizmetleri Teklifi (' + offerNo + ')');
+        const body = encodeURIComponent('Sayın İlgili,\n\nİSG hizmetleri teklifimiz (No: ' + offerNo + ') değerlendirmeniz için tarafınıza sunulmuştur.\n\nİyi çalışmalar dileriz.');
+        window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+      }
+
       function closeDrawer() {
         const backdrop = document.getElementById('offer_drawer');
         backdrop.classList.remove('active');
