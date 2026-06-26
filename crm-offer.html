@@ -1039,10 +1039,10 @@
         await new Promise(resolve => setTimeout(resolve, 300));
 
         const opt = {
-          margin:       0,
+          margin:       10,
           filename:     offerNo + '.pdf',
           image:        { type: 'jpeg', quality: 1 },
-          html2canvas:  { scale: 2, useCORS: true, windowWidth: 800 },
+          html2canvas:  { scale: 2, useCORS: true, windowWidth: 800, scrollX: 0, scrollY: 0 },
           jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
