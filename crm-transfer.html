@@ -116,7 +116,7 @@
       @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
     </style>
   </head>
-  <body class="theme-ultra-clean">
+  <body class="theme-ultra-clean" style="display:block;">
     <div class="card">
       <div class="global-header">
         <div class="top-row">
@@ -241,7 +241,7 @@
       function showToast(msg, type = 'success') {
         const c = document.getElementById('toast_container');
         const t = document.createElement('div');
-        t.className = 	oast ;
+        t.className = `toast ${type}`;
         t.innerText = msg;
         c.appendChild(t);
         setTimeout(() => t.remove(), 4000);
@@ -250,7 +250,7 @@
       function showStatus(msg, type = '') {
         const el = document.getElementById('import_status');
         el.innerText = msg;
-        el.className = import-status-bar ;
+        el.className = `import-status-bar ${type}`;
         el.style.display = 'flex';
       }
 
@@ -284,7 +284,7 @@
           .order('created_at', { ascending: false });
         allLeads = data || [];
         const badge = document.getElementById('export_count_area');
-        badge.innerHTML = <span class="export-count-badge">📊  müşteri kaydı mevcut</span>;
+        badge.innerHTML = '<span class="export-count-badge">📊 ' + allLeads.length + ' müşteri kaydı mevcut</span>';
       }
 
       window.downloadSampleCSV = function() {
@@ -426,7 +426,6 @@
         const auth = await requireAuthAndRole('crm');
         if (!auth) return;
         CURRENT_AUTH = auth;
-        document.body.style.display = 'block';
         await loadLeadCount();
       });
     </script>
