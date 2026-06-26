@@ -1015,6 +1015,7 @@
 
         // Geçici Loading Ekranı (Kullanıcının pdf-rendering'i görmemesi için)
         const overlay = document.createElement('div');
+        overlay.setAttribute('data-html2canvas-ignore', 'true');
         overlay.style.position = 'fixed';
         overlay.style.top = '0';
         overlay.style.left = '0';
