@@ -2,15 +2,119 @@
 <html lang="tr">
   <head>
     <link rel="icon" type="image/svg+xml" href="brand/mark.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="brand/assets/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="brand/assets/apple-touch-icon.png" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>isgnova – CRM Aktarim</title>
+    <title>isgnova – CRM Aktarım</title>
+    <meta name="description" content="isgnova CRM – Müşteri verileri içe ve dışa aktarım" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="css/style.css" />
     <script defer src="js/supabase-config.js"></script>
     <script defer src="js/navigation.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <style>
+      :root {
+        --transfer-bg: #f8fafc;
+        --transfer-card: #fff;
+        --transfer-border: #e2e8f0;
+        --transfer-indigo: #4338ca;
+        --transfer-green: #059669;
+        --transfer-amber: #d97706;
+      }
+      .transfer-shell {
+        padding: 28px 32px 40px;
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      .transfer-page-title { margin: 0 0 6px; font-size: 24px; font-weight: 800; color: var(--text-color, #1e293b); }
+      .transfer-page-desc { margin: 0 0 28px; font-size: 13px; color: var(--text-muted, #64748b); }
+      .transfer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+      @media(max-width:700px){ .transfer-grid{grid-template-columns:1fr;} }
+      .transfer-card {
+        background: var(--transfer-card);
+        border: 1.5px solid var(--transfer-border);
+        border-radius: 16px;
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        box-shadow: 0 2px 12px rgba(15,23,42,0.06);
+      }
+      .transfer-card-header { display: flex; align-items: center; gap: 12px; }
+      .transfer-icon-wrap {
+        width: 48px; height: 48px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; flex-shrink: 0;
+      }
+      .icon-export { background: #e0f2fe; }
+      .icon-import { background: #d1fae5; }
+      .transfer-card-title { font-size: 17px; font-weight: 800; color: var(--text-color, #1e293b); margin: 0 0 2px; }
+      .transfer-card-sub { font-size: 12px; color: var(--text-muted, #64748b); margin: 0; }
+      .transfer-divider { border: none; border-top: 1px solid var(--transfer-border); margin: 0; }
+      .transfer-info-box {
+        background: #f8fafc; border: 1px solid var(--transfer-border);
+        border-radius: 10px; padding: 14px 16px; font-size: 12.5px;
+        color: var(--text-muted, #64748b); line-height: 1.6;
+      }
+      .transfer-info-box strong { color: var(--text-color, #1e293b); display: block; margin-bottom: 6px; }
+      .col-list { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 3px; }
+      .col-list li::before { content: "· "; color: var(--transfer-indigo); font-weight: 700; }
+      .btn-transfer-export {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        background: #0369a1; color: white; border: none; border-radius: 10px;
+        padding: 11px 18px; font-size: 13px; font-weight: 800; cursor: pointer;
+        width: 100%; transition: background 0.15s;
+      }
+      .btn-transfer-export:hover { background: #0284c7; }
+      .btn-transfer-sample {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        background: transparent; color: var(--transfer-indigo);
+        border: 1.5px dashed #c7d2fe; border-radius: 10px;
+        padding: 9px 14px; font-size: 12px; font-weight: 700; cursor: pointer;
+        width: 100%; transition: background 0.15s;
+      }
+      .btn-transfer-sample:hover { background: #eef2ff; }
+      .btn-transfer-import {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        background: #059669; color: white; border: none; border-radius: 10px;
+        padding: 11px 18px; font-size: 13px; font-weight: 800; cursor: pointer;
+        width: 100%; transition: background 0.15s;
+      }
+      .btn-transfer-import:hover { background: #047857; }
+      .file-drop-zone {
+        border: 2px dashed #a5f3fc; border-radius: 12px; padding: 22px 16px;
+        text-align: center; color: #64748b; font-size: 13px;
+        background: #f0fdff; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+        position: relative;
+      }
+      .file-drop-zone:hover, .file-drop-zone.drag-over { border-color: #06b6d4; background: #e0f9ff; }
+      .file-drop-zone input[type="file"] {
+        position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+      }
+      .file-drop-zone .drop-icon { font-size: 28px; display: block; margin-bottom: 8px; }
+      .file-drop-zone .drop-name { font-weight: 700; color: #0e7490; font-size: 13px; margin-top: 8px; }
+      .import-status-bar {
+        border-radius: 10px; padding: 10px 14px; font-size: 12.5px;
+        font-weight: 600; display: none; align-items: center; gap: 8px;
+        background: #fefce8; border: 1px solid #fde68a; color: #92400e;
+      }
+      .import-status-bar.success { background: #d1fae5; border-color: #6ee7b7; color: #064e3b; }
+      .import-status-bar.error { background: #fee2e2; border-color: #fca5a5; color: #7f1d1d; }
+      .export-count-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: #dbeafe; color: #1e40af;
+        border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 700;
+      }
+      .toast-container { position: fixed; bottom: 28px; right: 28px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+      .toast { padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; min-width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); animation: slideUp .3s ease; }
+      .toast.success { background: #d1fae5; border: 1px solid #6ee7b7; color: #064e3b; }
+      .toast.error { background: #fee2e2; border: 1px solid #fca5a5; color: #7f1d1d; }
+      @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+    </style>
   </head>
   <body class="theme-ultra-clean">
     <div class="card">
@@ -18,37 +122,313 @@
         <div class="top-row">
           <div class="logo-area"><span id="lbl_osgb_title">isgnova</span> <span class="logo-badge">SaaS</span></div>
           <div class="controls-group">
-            <div class="user-info">&#x1F464; <span id="current_user_email">...</span></div>
-            <button class="logout-btn" onclick="handleLogout()">Guvenli Cikis</button>
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
           </div>
         </div>
         <div class="nav-container"></div>
       </div>
+
       <div class="crm-sub-nav">
-        <a href="crm.html" class="crm-sub-nav-btn">&#x1F465; Musteri Yonetimi</a>
-        <a href="crm-prices.html" class="crm-sub-nav-btn">&#x1F4B0; Fiyat Listesi</a>
-        <a href="crm-offers.html" class="crm-sub-nav-btn">&#x1F4DD; Teklif Yonetimi</a>
-        <a href="crm-contracts.html" class="crm-sub-nav-btn">&#x1F4C4; Sozlesme Yonetimi</a>
-        <a href="crm-transfer.html" class="crm-sub-nav-btn crm-sub-active">&#x1F504; Aktarim</a>
-        <a href="crm-reports.html" class="crm-sub-nav-btn">&#x1F4C8; CRM Raporlari</a>
+        <a href="crm.html" class="crm-sub-nav-btn">👥 Müşteri Yönetimi</a>
+        <a href="crm-prices.html" class="crm-sub-nav-btn">💰 Fiyat Listesi</a>
+        <a href="crm-offers.html" class="crm-sub-nav-btn">📝 Teklif Yönetimi</a>
+        <a href="crm-contracts.html" class="crm-sub-nav-btn">📄 Sözleşme Yönetimi</a>
+        <a href="crm-transfer.html" class="crm-sub-nav-btn crm-sub-active">🔄 Aktarım</a>
+        <a href="crm-reports.html" class="crm-sub-nav-btn">📈 CRM Raporları</a>
       </div>
-      <div style="padding:60px 40px;text-align:center;">
-        <div style="max-width:540px;margin:0 auto;">
-          <div style="font-size:64px;margin-bottom:20px;">&#x1F504;</div>
-          <h1 style="font-size:26px;font-weight:800;margin-bottom:12px;">Aktarim (Ice Aktar / Disa Aktar)</h1>
-          <p style="font-size:15px;color:var(--text-muted);line-height:1.7;margin-bottom:32px;">Bu modul yakin zamanda aktif olacaktir. Musteri listesini, teklifleri ve sozlesmeleri Excel / CSV formatinda icerisinden aktarabilir veya disari aktarabilirsiniz.</p>
-          <div style="display:inline-flex;align-items:center;gap:8px;background:#e0f2fe;color:#0369a1;padding:10px 20px;border-radius:10px;font-weight:700;font-size:13px;border:1px solid #bae6fd;">&#x1F6A7; Gelistirme Asamasinda</div>
-          <div style="margin-top:32px;"><a href="crm.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:#312e81;color:white;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;">← Musteri Yonetimine Don</a></div>
+
+      <div class="transfer-shell">
+        <h1 class="transfer-page-title">🔄 Veri Aktarımı</h1>
+        <p class="transfer-page-desc">Müşteri kayıtlarını CSV formatında toplu olarak içe veya dışa aktarın. Excel ile tam uyumlu UTF-8 BOM formatı kullanılır.</p>
+
+        <div id="status_banner" class="import-status-bar" style="display:none; margin-bottom: 20px;"></div>
+
+        <div class="transfer-grid">
+
+          <!-- DIŞA AKTAR KARTI -->
+          <div class="transfer-card">
+            <div class="transfer-card-header">
+              <div class="transfer-icon-wrap icon-export">📤</div>
+              <div>
+                <p class="transfer-card-title">Dışa Aktar</p>
+                <p class="transfer-card-sub">Tüm müşteri kayıtlarını CSV olarak indir</p>
+              </div>
+            </div>
+            <hr class="transfer-divider" />
+            <div class="transfer-info-box">
+              <strong>Dışa aktarılacak sütunlar:</strong>
+              <ul class="col-list">
+                <li>Firma Adı, Şehir, İlçe, Sektör</li>
+                <li>Nace Kodu, Tehlike Sınıfı, Çalışan Sayısı</li>
+                <li>Aşama, Durum, Kaynak, Notlar</li>
+                <li>Oluşturulma Tarihi</li>
+              </ul>
+            </div>
+            <div id="export_count_area" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-height:28px;">
+              <span class="export-count-badge">⏳ Veriler yükleniyor...</span>
+            </div>
+            <button class="btn-transfer-export" onclick="exportLeadsToCSV()">
+              📤 Müşteri Listesini İndir (.csv)
+            </button>
+          </div>
+
+          <!-- İÇERİ AKTAR KARTI -->
+          <div class="transfer-card">
+            <div class="transfer-card-header">
+              <div class="transfer-icon-wrap icon-import">📥</div>
+              <div>
+                <p class="transfer-card-title">İçeri Aktar</p>
+                <p class="transfer-card-sub">CSV dosyasından toplu müşteri yükle</p>
+              </div>
+            </div>
+            <hr class="transfer-divider" />
+            <div class="transfer-info-box">
+              <strong>Gerekli CSV sütun sırası (Noktalı Virgül ";" ayracı):</strong>
+              <code style="display:block; background:#e0f2fe; color:#0369a1; border-radius:6px; padding:7px 10px; margin-top:8px; font-size:11.5px; word-break:break-all; font-family:monospace; border:1px solid #bae6fd;">
+                Firma Adı; Şehir; İlçe; Sektör; Nace Kodu; Tehlike Sınıfı; Çalışan Sayısı; Aşama; Durum; Kaynak; Notlar
+              </code>
+            </div>
+            <button class="btn-transfer-sample" onclick="downloadSampleCSV()">
+              📋 Örnek Şablon CSV İndir
+            </button>
+            <div class="file-drop-zone" id="drop_zone">
+              <input type="file" id="import_csv_file" accept=".csv" onchange="onFileSelected(this)" />
+              <span class="drop-icon">📁</span>
+              <div>CSV dosyasını buraya sürükleyin veya tıklayın</div>
+              <div id="selected_file_name" class="drop-name" style="display:none;"></div>
+            </div>
+            <div id="import_status" class="import-status-bar"></div>
+            <button class="btn-transfer-import" id="btn_import" onclick="processCSVImport()" style="display:none;">
+              📥 Seçili Dosyayı Yükle
+            </button>
+          </div>
+
         </div>
       </div>
     </div>
+
+    <div class="toast-container" id="toast_container"></div>
+
     <script>
-      document.addEventListener("DOMContentLoaded", async () => {
+      let CURRENT_AUTH = null;
+      let allLeads = [];
+
+      const LEAD_STATUSES = ['Firsat','Islemde','Kazanildi','Kaybedildi','Askida','Fırsat','İşlemde','Kazanıldı','Kaybedildi','Askıda'];
+
+      const STAGE_MAP = {
+        'Yeni Kayit': 'Yeni Kayıt', 'Yeni Kayıt': 'Yeni Kayıt',
+        'Gorusme': 'Görüşme', 'Görüşme': 'Görüşme',
+        'Teklif': 'Teklif',
+        'Sozlesme': 'Sözleşme', 'Sözleşme': 'Sözleşme'
+      };
+
+      function normalizeStage(s) {
+        const t = (s||'').trim();
+        return STAGE_MAP[t] || 'Yeni Kayıt';
+      }
+
+      function stageToDbValue(s) {
+        const map = {
+          'Yeni Kayıt': 'Yeni Kayıt',
+          'Görüşme': 'İlk Görüşme Yapılacak',
+          'Teklif': 'Teklif Hazırlanacak',
+          'Sözleşme': 'Sözleşme Bekleniyor'
+        };
+        return map[s] || s;
+      }
+
+      function showToast(msg, type = 'success') {
+        const c = document.getElementById('toast_container');
+        const t = document.createElement('div');
+        t.className = 	oast ;
+        t.innerText = msg;
+        c.appendChild(t);
+        setTimeout(() => t.remove(), 4000);
+      }
+
+      function showStatus(msg, type = '') {
+        const el = document.getElementById('import_status');
+        el.innerText = msg;
+        el.className = import-status-bar ;
+        el.style.display = 'flex';
+      }
+
+      function onFileSelected(input) {
+        const file = input.files && input.files[0];
+        const nameEl = document.getElementById('selected_file_name');
+        const btn = document.getElementById('btn_import');
+        if (file) {
+          nameEl.innerText = '✓ ' + file.name;
+          nameEl.style.display = 'block';
+          btn.style.display = 'flex';
+          showStatus('Dosya seçildi: ' + file.name + ' · Yüklemek için butona basın.', '');
+        } else {
+          nameEl.style.display = 'none';
+          btn.style.display = 'none';
+        }
+      }
+
+      // Drag & Drop
+      const dropZone = document.getElementById('drop_zone');
+      dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+      dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const dt = e.dataTransfer;
+        if (dt.files && dt.files.length) {
+          const fileInput = document.getElementById('import_csv_file');
+          fileInput.files = dt.files;
+          onFileSelected(fileInput);
+        }
+      });
+
+      async function loadLeadCount() {
+        if (!CURRENT_AUTH || !window.dbClient) return;
+        const { count } = await window.dbClient
+          .from('crm_leads')
+          .select('id', { count: 'exact', head: true })
+          .eq('tenant_id', CURRENT_AUTH.tenant_id);
+        allLeads = [];
+        const { data } = await window.dbClient
+          .from('crm_leads')
+          .select('company_name,city,district,sector,nace_code,danger_class,employee_count,stage,lead_status,lead_source,notes,created_at')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .order('created_at', { ascending: false });
+        allLeads = data || [];
+        const badge = document.getElementById('export_count_area');
+        badge.innerHTML = <span class="export-count-badge">📊  müşteri kaydı mevcut</span>;
+      }
+
+      window.downloadSampleCSV = function() {
+        const headers = ["Firma Adı","Şehir","İlçe","Sektör","Nace Kodu","Tehlike Sınıfı","Çalışan Sayısı","Aşama","Durum","Kaynak","Notlar"];
+        const sampleRow = ["Örnek Metal Sanayi A.Ş.","Eskişehir","Odunpazarı","Metal İşleme","25.50.01","Çok Tehlikeli","45","Yeni Kayıt","Fırsat","Telefon","İlk görüşme yapıldı ilgi yüksek."];
+        const csv = "\uFEFF" + [headers.join(";"), sampleRow.join(";")].join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = "crm_lead_sablon.csv";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        showToast("Örnek şablon indirildi.", "success");
+      };
+
+      window.exportLeadsToCSV = function() {
+        if (allLeads.length === 0) {
+          showToast('Dışa aktarılacak kayıt bulunamadı.', 'error');
+          return;
+        }
+        const headers = ["Firma Adı","Şehir","İlçe","Sektör","Nace Kodu","Tehlike Sınıfı","Çalışan Sayısı","Aşama","Durum","Kaynak","Notlar","Oluşturulma Tarihi"];
+        const rows = allLeads.map(l => [
+          '"' + (l.company_name||'').replace(/"/g,'""') + '"',
+          '"' + (l.city||'').replace(/"/g,'""') + '"',
+          '"' + (l.district||'').replace(/"/g,'""') + '"',
+          '"' + (l.sector||'').replace(/"/g,'""') + '"',
+          '"' + (l.nace_code||'').replace(/"/g,'""') + '"',
+          '"' + (l.danger_class||'').replace(/"/g,'""') + '"',
+          l.employee_count || '',
+          '"' + (l.stage||'').replace(/"/g,'""') + '"',
+          '"' + (l.lead_status||'').replace(/"/g,'""') + '"',
+          '"' + (l.lead_source||'').replace(/"/g,'""') + '"',
+          '"' + (l.notes||'').replace(/"/g,'""') + '"',
+          l.created_at || ''
+        ]);
+        const csv = "\uFEFF" + [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "crm_lead_ihracat_" + new Date().toISOString().slice(0,10) + ".csv";
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        showToast(allLeads.length + " kayıt başarıyla dışa aktarıldı.", "success");
+      };
+
+      function parseCSVText(text) {
+        const lines = []; let row = [""]; let inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+          const c = text[i], n = text[i+1];
+          if (c === '"') {
+            if (inQuotes && n === '"') { row[row.length-1] += '"'; i++; }
+            else inQuotes = !inQuotes;
+          } else if ((c === ',' || c === ';') && !inQuotes) {
+            row.push("");
+          } else if ((c === '\r' || c === '\n') && !inQuotes) {
+            if (c === '\r' && n === '\n') i++;
+            lines.push(row); row = [""];
+          } else { row[row.length-1] += c; }
+        }
+        if (row.length > 1 || row[0] !== "") lines.push(row);
+        return lines;
+      }
+
+      window.processCSVImport = async function() {
+        const fileInput = document.getElementById('import_csv_file');
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) { showToast('Lütfen önce bir CSV dosyası seçin.', 'error'); return; }
+
+        showStatus('Dosya okunuyor...', '');
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+          try {
+            const parsed = parseCSVText(e.target.result);
+            if (parsed.length < 2) {
+              showStatus('CSV dosyasında veri satırı bulunamadı.', 'error');
+              return;
+            }
+            const rows = [];
+            for (let i = 1; i < parsed.length; i++) {
+              const r = parsed[i];
+              if (!r[0] || !r[0].trim()) continue;
+              const stageRaw = r[7] ? r[7].trim() : 'Yeni Kayıt';
+              const statusRaw = r[8] ? r[8].trim() : 'Fırsat';
+              const validStatuses = ['Fırsat','İşlemde','Kazanıldı','Kaybedildi','Askıda'];
+              rows.push({
+                tenant_id: CURRENT_AUTH.tenant_id,
+                company_name: r[0].trim(),
+                city: r[1]?r[1].trim():null,
+                district: r[2]?r[2].trim():null,
+                sector: r[3]?r[3].trim():null,
+                nace_code: r[4]?r[4].trim():null,
+                danger_class: r[5]?r[5].trim():null,
+                employee_count: r[6]?parseInt(r[6].trim())||null:null,
+                stage: stageToDbValue(normalizeStage(stageRaw)),
+                lead_status: validStatuses.includes(statusRaw) ? statusRaw : 'Fırsat',
+                lead_source: r[9]?r[9].trim():'Telefon',
+                notes: r[10]?r[10].trim():null,
+                created_by: CURRENT_AUTH.email
+              });
+            }
+            if (rows.length === 0) { showStatus('Geçerli veri satırı bulunamadı.', 'error'); return; }
+            showStatus(rows.length + ' kayıt veritabanına yükleniyor...', '');
+
+            const { error } = await window.dbClient.from('crm_leads').insert(rows);
+            if (error) throw error;
+
+            showStatus('✓ ' + rows.length + ' firma başarıyla içeri aktarıldı!', 'success');
+            showToast(rows.length + ' potansiyel firma başarıyla içeri aktarıldı.', 'success');
+            fileInput.value = '';
+            document.getElementById('selected_file_name').style.display = 'none';
+            document.getElementById('btn_import').style.display = 'none';
+            await loadLeadCount();
+          } catch(err) {
+            console.error('Import hatası:', err);
+            showStatus('Hata: ' + err.message, 'error');
+            showToast('Aktarım sırasında bir hata oluştu: ' + err.message, 'error');
+          }
+        };
+        reader.readAsText(file);
+      };
+
+      document.addEventListener('DOMContentLoaded', async () => {
         const checkAuth = setInterval(async () => {
           if (window.requireAuthAndRole) {
             clearInterval(checkAuth);
-            const auth = await window.requireAuthAndRole("crm-transfer");
-            if (auth) document.body.style.display = "block";
+            const auth = await window.requireAuthAndRole('crm-transfer');
+            if (auth) {
+              CURRENT_AUTH = auth;
+              document.body.style.display = 'block';
+              await loadLeadCount();
+            }
           }
         }, 100);
       });
