@@ -122,8 +122,8 @@ window.canAccessPage = function (role, page) {
   }
 
   if (role === 'admin') return true;
-  if (page === 'crm' || page === 'crm-reports') return true;
-  if (role === 'sales') return page === 'crm' || page === 'crm-reports';
+  if (page === 'crm' || page === 'crm-reports' || page === 'crm-prices') return true;
+  if (role === 'sales') return page === 'crm' || page === 'crm-reports' || page === 'crm-prices';
   if (['risk', 'accidents', 'near_miss', 'training', 'ppe', 'periodic', 'actions'].includes(page)) return role === 'uzman';
   if (page === 'medical') return role === 'hekim';
   if (page === 'staff') return false;
@@ -161,6 +161,7 @@ window.applyRoleBasedNavigation = function (role) {
     { id: 'permissions', href: 'permissions.html', text: 'Erişim Yetkileri', icon: '🔐' },
     { id: 'crm', href: 'crm.html', text: 'CRM', icon: '📊' },
     { id: 'crm-reports', href: 'crm-reports.html', text: 'CRM Raporları', icon: '📈' },
+    { id: 'crm-prices', href: 'crm-prices.html', text: 'Fiyat Listesi', icon: '💰' },
     { id: 'schedule', href: 'schedule.html', text: 'Ziyaret Takibi', icon: '📅' },
     { id: 'company', href: 'index.html', text: 'Firma Yönetimi', icon: '🏢' },
     { id: 'workers', href: 'workers.html', text: 'Kadro Yönetimi', icon: '👥' },
@@ -188,7 +189,7 @@ window.applyRoleBasedNavigation = function (role) {
     } else {
       if (item.id === 'dashboard') visible = true;
       else if (item.id === 'saas') visible = false;
-      else if (item.id === 'crm' || item.id === 'crm-reports') {
+      else if (item.id === 'crm' || item.id === 'crm-reports' || item.id === 'crm-prices') {
         visible = window.canAccessPage(role, item.id);
       }
       else if (item.id === 'company') visible = window.canAccessPage(role, 'company');

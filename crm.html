@@ -554,7 +554,6 @@
             .from('crm_leads')
             .select('*')
             .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .eq('is_converted', false)
             .order('updated_at', { ascending: false });
 
           if (error) throw error;
@@ -820,6 +819,7 @@
                   ${l.danger_class ? `<span class="card-badge ${dangerBadgeClass}">${esc(l.danger_class)}</span>` : ''}
                   ${l.lead_source ? `<span class="card-badge badge-source">${esc(l.lead_source)}</span>` : ''}
                   <span class="status-pill ${statusClass}">${esc(statusLabel)}</span>
+                  ${l.is_converted ? `<span class="status-pill st-kazanildi" style="background:#dcfce7;color:#166534;border:1px solid #bbf7d0;">👤 Aktif Müşteri</span>` : ''}
                 </div>
                 <div class="kanban-card-footer">
                   <div class="assigned-avatar" title="${esc(staffName)}">👤 ${esc(staffName)}</div>
@@ -878,6 +878,7 @@
               </td>
               <td>
                 <span class="status-pill ${statusClass}">${esc(statusLabel)}</span>
+                ${l.is_converted ? `<div style="font-size:10px;color:#166534;font-weight:700;margin-top:4px;">👤 Aktif Müşteri</div>` : ''}
               </td>
               <td>
                 <span class="badge badge-gray">${esc(l.lead_source)}</span>

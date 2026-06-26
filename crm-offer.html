@@ -197,39 +197,13 @@
                 <button class="quick-pill" style="background:#e0f2fe;color:#0369a1"   onclick="quickAddByRole('uzman')">İSG Uzmanı</button>
                 <button class="quick-pill" style="background:#fef3c7;color:#b45309"   onclick="quickAddByRole('hekim')">Hekim</button>
                 <button class="quick-pill" style="background:#d1fae5;color:#065f46"   onclick="quickAddByRole('dsp')">DSP</button>
-                <button class="quick-pill" style="background:#ede9fe;color:#5b21b6"   onclick="quickAdd('Eğitim Hizmetleri (Yıllık Paket)',1,0)">Eğitim</button>
-                <button class="quick-pill" style="background:#fee2e2;color:#991b1b"   onclick="quickAdd('Risk Analizi ve Değerlendirme',1,0)">Risk Analizi</button>
-                <button class="quick-pill" style="background:#f0fdf4;color:#14532d"   onclick="quickAdd('Periyodik Sağlık Muayenesi',1,0)">Pery. Muayene</button>
-                <button class="quick-pill" style="background:#f8fafc;color:#475569"   onclick="quickAdd('Ortam Ölçümü ve Analiz',1,0)">Ortam Ölçümü</button>
-                <button class="quick-pill" style="background:#fdf4ff;color:#7e22ce"   onclick="quickAdd('Acil Durum Planı Hazırlama',1,0)">Acil Plan</button>
-                <button class="quick-pill" style="background:#ffe4e6;color:#9f1239"   onclick="quickAdd('Hastane Tarama',1,0)">Hastane Tarama</button>
-                <button class="quick-pill" style="background:#ecfccb;color:#365314"   onclick="quickAdd('Mobil Tarama',1,0)">Mobil Tarama</button>
-              </div>
-            </div>
-
-            <div class="form-section">
-              <h4>📐 Birim Fiyat Matrisi</h4>
-              <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
-                Matris, çalışan sayısı ve tehlike sınıfına göre Uzman/Hekim/DSP birim fiyatlarını otomatik önerir.
-              </div>
-              <div style="overflow:auto;">
-                <table style="width:100%;border-collapse:collapse;font-size:12px;">
-                  <thead>
-                    <tr>
-                      <th style="text-align:left;border-bottom:1px solid var(--border-color);padding:6px;">Tehlike</th>
-                      <th style="text-align:left;border-bottom:1px solid var(--border-color);padding:6px;">Min</th>
-                      <th style="text-align:left;border-bottom:1px solid var(--border-color);padding:6px;">Max</th>
-                      <th style="text-align:left;border-bottom:1px solid var(--border-color);padding:6px;">Uzman</th>
-                      <th style="text-align:left;border-bottom:1px solid var(--border-color);padding:6px;">Hekim</th>
-                      <th style="text-align:left;border-bottom:1px solid var(--border-color);padding:6px;">DSP</th>
-                    </tr>
-                  </thead>
-                  <tbody id="price_matrix_body"></tbody>
-                </table>
-              </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
-                <button class="btn-add-svc" style="margin:0;max-width:230px;" onclick="savePriceMatrix()">Matrisi Kaydet</button>
-                <button class="btn-add-svc" style="margin:0;max-width:230px;" onclick="applyMatrixToExistingRows()">Matrisi Hizmet Satırlarına Uygula</button>
+                <button class="quick-pill" style="background:#ede9fe;color:#5b21b6"   onclick="quickAdd('Eğitim Hizmetleri (Yıllık Paket)',1,getCustomPrice('Eğitim Hizmetleri (Yıllık Paket)'))">Eğitim</button>
+                <button class="quick-pill" style="background:#fee2e2;color:#991b1b"   onclick="quickAdd('Risk Analizi ve Değerlendirme',1,getCustomPrice('Risk Analizi ve Değerlendirme'))">Risk Analizi</button>
+                <button class="quick-pill" style="background:#f0fdf4;color:#14532d"   onclick="quickAdd('Periyodik Sağlık Muayenesi',1,getCustomPrice('Periyodik Sağlık Muayenesi'))">Pery. Muayene</button>
+                <button class="quick-pill" style="background:#f8fafc;color:#475569"   onclick="quickAdd('Ortam Ölçümü ve Analiz',1,getCustomPrice('Ortam Ölçümü ve Analiz'))">Ortam Ölçümü</button>
+                <button class="quick-pill" style="background:#fdf4ff;color:#7e22ce"   onclick="quickAdd('Acil Durum Planı Hazırlama',1,getCustomPrice('Acil Durum Planı Hazırlama'))">Acil Plan</button>
+                <button class="quick-pill" style="background:#ffe4e6;color:#9f1239"   onclick="quickAdd('Hastane Tarama',1,getCustomPrice('Hastane Tarama'))">Hastane Tarama</button>
+                <button class="quick-pill" style="background:#ecfccb;color:#365314"   onclick="quickAdd('Mobil Tarama',1,getCustomPrice('Mobil Tarama'))">Mobil Tarama</button>
               </div>
             </div>
 
@@ -344,7 +318,7 @@
       let currentVersion  = 1;
       let serviceRowData  = [];   // { name, qty, price }[]
       let allVersions     = [];   // other versions of same offer_no
-      let priceMatrixRows = [];
+      let priceRules = [];
       let selectedRecipients = [];
 
       /* ═══════════════════════════════════════
@@ -375,7 +349,7 @@
           addServiceRow();
         }
 
-        await loadPriceMatrix();
+        await loadPriceList();
 
         recalc();
       };
@@ -478,7 +452,7 @@
       async function loadVersionHistory(offerNo) {
         const { data } = await dbClient
           .from('crm_offers')
-          .select('id,offer_no,version,status,total_amount,offer_date')
+          .select('id,offer_no,version,status,total_amount,offer_date,notes')
           .eq('lead_id', LEAD_ID)
           .eq('offer_no', offerNo)
           .order('version', { ascending: false });
@@ -490,12 +464,14 @@
         list.innerHTML = allVersions.map(v => {
           const isActive = v.id === OFFER_ID;
           const sClass = v.status.replace(/\s/g,'');
+          const isRevision = v.notes && v.notes.includes('[Fiyat revizyon teklifi]');
+          const revLabel = isRevision ? ' <span style="background:#e0f2fe;color:#0369a1;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:6px;">Fiyat Revizyonu</span>' : '';
           return `
             <div class="version-item ${isActive ? 'active' : ''}"
                  style="${isActive ? 'border-color:var(--primary);background:rgba(15,118,110,.06);' : ''}"
                  onclick="navigateToVersion('${v.id}')">
               <div>
-                <span class="vno">v${v.version}</span>
+                <span class="vno">v${v.version}${revLabel}</span>
                 <span style="font-size:11px;color:var(--text-muted);margin-left:8px;">${fmtDate(v.offer_date)}</span>
                 ${isActive ? '<span style="font-size:10px;color:var(--primary);font-weight:700;margin-left:6px;">▶ Aktif</span>' : ''}
               </div>
@@ -618,9 +594,62 @@
 
       function quickAdd(name, qty, price) { addServiceRow(name, qty, price); }
 
-      function getMatrixUnitPrice(roleKey) {
+      const defaultPriceRules = [
+        // Az Tehlikeli
+        { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İSG Uzmanı', price: 120 },
+        { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İşyeri Hekimi', price: 150 },
+        { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'DSP', price: 80 },
+        
+        { danger_class: 'Az Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İSG Uzmanı', price: 100 },
+        { danger_class: 'Az Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İşyeri Hekimi', price: 130 },
+        { danger_class: 'Az Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'DSP', price: 70 },
+
+        { danger_class: 'Az Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İSG Uzmanı', price: 80 },
+        { danger_class: 'Az Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İşyeri Hekimi', price: 110 },
+        { danger_class: 'Az Tehlikeli', min_emp: 100, max_emp: null, service_name: 'DSP', price: 60 },
+
+        // Tehlikeli
+        { danger_class: 'Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İSG Uzmanı', price: 160 },
+        { danger_class: 'Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İşyeri Hekimi', price: 200 },
+        { danger_class: 'Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'DSP', price: 100 },
+        
+        { danger_class: 'Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İSG Uzmanı', price: 140 },
+        { danger_class: 'Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İşyeri Hekimi', price: 180 },
+        { danger_class: 'Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'DSP', price: 90 },
+
+        { danger_class: 'Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İSG Uzmanı', price: 120 },
+        { danger_class: 'Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İşyeri Hekimi', price: 160 },
+        { danger_class: 'Tehlikeli', min_emp: 100, max_emp: null, service_name: 'DSP', price: 80 },
+
+        // Çok Tehlikeli
+        { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İSG Uzmanı', price: 220 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İşyeri Hekimi', price: 280 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'DSP', price: 120 },
+        
+        { danger_class: 'Çok Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İSG Uzmanı', price: 200 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İşyeri Hekimi', price: 250 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'DSP', price: 110 },
+
+        { danger_class: 'Çok Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İSG Uzmanı', price: 180 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İşyeri Hekimi', price: 220 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 100, max_emp: null, service_name: 'DSP', price: 100 },
+
+        // Diğer Genel Hizmetler
+        { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Eğitim Hizmetleri (Yıllık Paket)', price: 3500 },
+        { danger_class: 'Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Eğitim Hizmetleri (Yıllık Paket)', price: 4500 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Eğitim Hizmetleri (Yıllık Paket)', price: 6000 },
+
+        { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Risk Analizi ve Değerlendirme', price: 5000 },
+        { danger_class: 'Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Risk Analizi ve Değerlendirme', price: 7000 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Risk Analizi ve Değerlendirme', price: 9500 }
+      ];
+
+      function getCustomPrice(serviceName) {
+        if (!serviceName) return 0;
         const emp = parseInt(document.getElementById('employee_count').value) || (currentLead?.employee_count || 0);
-        const normalizeDanger = (v) => (v || '')
+        const danger = (currentLead?.danger_class || '').trim();
+
+        const normalizeText = (v) => (v || '')
           .toString()
           .toLocaleLowerCase('tr-TR')
           .replaceAll('ı', 'i')
@@ -630,132 +659,77 @@
           .replaceAll('ü', 'u')
           .replaceAll('ç', 'c')
           .trim();
-        const danger = normalizeDanger(currentLead?.danger_class || '');
-        const row = priceMatrixRows.find(r => {
+
+        const dangerNorm = normalizeText(danger);
+        const nameNorm = normalizeText(serviceName);
+
+        // Önce DB/Local'den yüklenen kurallarda ara
+        let matchedRule = priceRules.find(r => {
           const min = Number(r.min_emp || 0);
           const max = r.max_emp == null ? null : Number(r.max_emp);
           const inRange = emp >= min && (max == null || emp <= max);
-          return normalizeDanger(r.danger_class) === danger && inRange;
+          return normalizeText(r.danger_class) === dangerNorm && 
+                 normalizeText(r.service_name) === nameNorm && 
+                 inRange;
         });
-        if (!row) return 0;
-        if (roleKey === 'uzman') return Number(row.uzman_unit || 0);
-        if (roleKey === 'hekim') return Number(row.hekim_unit || 0);
-        if (roleKey === 'dsp') return Number(row.dsp_unit || 0);
-        return 0;
-      }
 
-      function syncPriceMatrixRowsFromForm() {
-        const body = document.getElementById('price_matrix_body');
-        if (!body || !priceMatrixRows.length) return;
-        const synced = [];
-        for (let i = 0; i < priceMatrixRows.length; i++) {
-          const dangerEl = document.getElementById(`pm_danger_${i}`);
-          const minEl = document.getElementById(`pm_min_${i}`);
-          const maxEl = document.getElementById(`pm_max_${i}`);
-          const uzmanEl = document.getElementById(`pm_uzman_${i}`);
-          const hekimEl = document.getElementById(`pm_hekim_${i}`);
-          const dspEl = document.getElementById(`pm_dsp_${i}`);
-          if (!dangerEl || !minEl || !maxEl || !uzmanEl || !hekimEl || !dspEl) continue;
-          synced.push({
-            ...priceMatrixRows[i],
-            danger_class: dangerEl.value,
-            min_emp: parseInt(minEl.value) || 1,
-            max_emp: maxEl.value ? parseInt(maxEl.value) : null,
-            uzman_unit: parseFloat(uzmanEl.value) || 0,
-            hekim_unit: parseFloat(hekimEl.value) || 0,
-            dsp_unit: parseFloat(dspEl.value) || 0
+        // Bulunamazsa varsayılanlarda ara
+        if (!matchedRule) {
+          matchedRule = defaultPriceRules.find(r => {
+            const min = Number(r.min_emp || 0);
+            const max = r.max_emp == null ? null : Number(r.max_emp);
+            const inRange = emp >= min && (max == null || emp <= max);
+            return normalizeText(r.danger_class) === dangerNorm && 
+                   normalizeText(r.service_name) === nameNorm && 
+                   inRange;
           });
         }
-        if (synced.length) priceMatrixRows = synced;
+
+        return matchedRule ? Number(matchedRule.price || 0) : 0;
       }
 
       function quickAddByRole(roleKey) {
-        if (roleKey === 'uzman') quickAdd('İSG Uzman Hizmet Ücreti', 1, getMatrixUnitPrice('uzman'));
-        if (roleKey === 'hekim') quickAdd('İşyeri Hekimi Hizmet Ücreti', 1, getMatrixUnitPrice('hekim'));
-        if (roleKey === 'dsp') quickAdd('DSP Hizmet Ücreti', 1, getMatrixUnitPrice('dsp'));
+        if (roleKey === 'uzman') quickAdd('İSG Uzmanı', 1, getCustomPrice('İSG Uzmanı'));
+        if (roleKey === 'hekim') quickAdd('İşyeri Hekimi', 1, getCustomPrice('İşyeri Hekimi'));
+        if (roleKey === 'dsp') quickAdd('DSP', 1, getCustomPrice('DSP'));
       }
 
-      async function loadPriceMatrix() {
-        const body = document.getElementById('price_matrix_body');
-        if (!body) return;
-        const { data } = await dbClient
-          .from('crm_price_matrix')
-          .select('*')
-          .eq('tenant_id', CURRENT_AUTH.tenant_id)
-          .order('danger_class', { ascending: true })
-          .order('min_emp', { ascending: true });
+      async function loadPriceList() {
+        try {
+          const { data, error } = await dbClient
+            .from('crm_price_list')
+            .select('*')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id);
 
-        priceMatrixRows = (data && data.length) ? data : [
-          { danger_class:'Az Tehlikeli', min_emp:1, max_emp:49, uzman_unit:0, hekim_unit:0, dsp_unit:0 },
-          { danger_class:'Az Tehlikeli', min_emp:50, max_emp:99, uzman_unit:0, hekim_unit:0, dsp_unit:0 },
-          { danger_class:'Tehlikeli', min_emp:1, max_emp:49, uzman_unit:0, hekim_unit:0, dsp_unit:0 },
-          { danger_class:'Tehlikeli', min_emp:50, max_emp:99, uzman_unit:0, hekim_unit:0, dsp_unit:0 },
-          { danger_class:'Çok Tehlikeli', min_emp:1, max_emp:49, uzman_unit:0, hekim_unit:0, dsp_unit:0 },
-          { danger_class:'Çok Tehlikeli', min_emp:50, max_emp:99, uzman_unit:0, hekim_unit:0, dsp_unit:0 }
-        ];
-
-        body.innerHTML = priceMatrixRows.map((r, idx) => `
-          <tr>
-            <td style="padding:6px;">
-              <select id="pm_danger_${idx}">
-                <option ${r.danger_class === 'Az Tehlikeli' ? 'selected' : ''}>Az Tehlikeli</option>
-                <option ${r.danger_class === 'Tehlikeli' ? 'selected' : ''}>Tehlikeli</option>
-                <option ${r.danger_class === 'Çok Tehlikeli' ? 'selected' : ''}>Çok Tehlikeli</option>
-              </select>
-            </td>
-            <td style="padding:6px;"><input id="pm_min_${idx}" type="number" min="1" value="${r.min_emp ?? 1}" /></td>
-            <td style="padding:6px;"><input id="pm_max_${idx}" type="number" min="1" value="${r.max_emp ?? ''}" placeholder="Boş=sonsuz" /></td>
-            <td style="padding:6px;"><input id="pm_uzman_${idx}" type="number" min="0" step="0.01" value="${r.uzman_unit ?? 0}" /></td>
-            <td style="padding:6px;"><input id="pm_hekim_${idx}" type="number" min="0" step="0.01" value="${r.hekim_unit ?? 0}" /></td>
-            <td style="padding:6px;"><input id="pm_dsp_${idx}" type="number" min="0" step="0.01" value="${r.dsp_unit ?? 0}" /></td>
-          </tr>
-        `).join('');
-      }
-
-      async function savePriceMatrix() {
-        const rows = [];
-        for (let i = 0; i < priceMatrixRows.length; i++) {
-          rows.push({
-            tenant_id: CURRENT_AUTH.tenant_id,
-            danger_class: document.getElementById(`pm_danger_${i}`).value,
-            min_emp: parseInt(document.getElementById(`pm_min_${i}`).value) || 1,
-            max_emp: document.getElementById(`pm_max_${i}`).value ? parseInt(document.getElementById(`pm_max_${i}`).value) : null,
-            uzman_unit: parseFloat(document.getElementById(`pm_uzman_${i}`).value) || 0,
-            hekim_unit: parseFloat(document.getElementById(`pm_hekim_${i}`).value) || 0,
-            dsp_unit: parseFloat(document.getElementById(`pm_dsp_${i}`).value) || 0,
-            is_active: true
-          });
+          if (!error && data && data.length) {
+            priceRules = data;
+          } else {
+            const stored = localStorage.getItem('crm_price_list_v1');
+            if (stored) priceRules = JSON.parse(stored);
+          }
+        } catch (err) {
+          console.warn('Fiyat listesi yüklenemedi:', err);
+          const stored = localStorage.getItem('crm_price_list_v1');
+          if (stored) priceRules = JSON.parse(stored);
         }
-
-        await dbClient.from('crm_price_matrix').delete().eq('tenant_id', CURRENT_AUTH.tenant_id);
-        const { error } = await dbClient.from('crm_price_matrix').insert(rows);
-        if (error) {
-          setStatus('❌ Matris kaydedilemedi: ' + error.message, 'error');
-          return;
-        }
-        priceMatrixRows = rows;
-        setStatus('✅ Birim fiyat matrisi kaydedildi.', 'ok');
-      }
-
-      function applyMatrixToExistingRows() {
-        syncPriceMatrixRowsFromForm();
-        document.querySelectorAll('.service-row').forEach((row) => {
-          const inputs = row.querySelectorAll('input');
-          const name = (inputs[0]?.value || '').toLowerCase();
-          const priceInput = inputs[2];
-          if (!priceInput) return;
-          if (name.includes('uzman')) priceInput.value = getMatrixUnitPrice('uzman');
-          if (name.includes('hekim')) priceInput.value = getMatrixUnitPrice('hekim');
-          if (name.includes('dsp')) priceInput.value = getMatrixUnitPrice('dsp');
-        });
-        recalc();
       }
 
       function updateRow(idx, field, value) {
         if (!serviceRowData[idx]) return;
         if      (field === 'qty')   serviceRowData[idx].qty   = parseFloat(value) || 0;
         else if (field === 'price') serviceRowData[idx].price = parseFloat(value) || 0;
-        else                        serviceRowData[idx].name  = value;
+        else {
+          serviceRowData[idx].name  = value;
+          // Eşleşen bir fiyat varsa birim fiyat alanını otomatik güncelle
+          const autoPrice = getCustomPrice(value);
+          if (autoPrice > 0) {
+            serviceRowData[idx].price = autoPrice;
+            const priceInput = document.querySelector(`#svc_row_${idx} .price`);
+            if (priceInput) {
+              priceInput.value = autoPrice;
+            }
+          }
+        }
         recalc();
       }
 

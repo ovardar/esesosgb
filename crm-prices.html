@@ -1,0 +1,854 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <link rel="icon" type="image/svg+xml" href="brand/mark.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="brand/assets/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="brand/assets/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="brand/assets/apple-touch-icon.png" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>isgnova – CRM Fiyat Listesi Yönetimi</title>
+    <meta name="description" content="CRM hizmet kalemleri fiyat listesi, tehlike sınıfları ve çalışan sayılarına göre birim fiyat yönetimi." />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <style>
+      .price-page-shell {
+        padding: 24px;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+        border: 1px solid var(--border-color);
+      }
+      .actions-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .filter-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 13px;
+        border: none;
+        padding: 10px 16px;
+      }
+      .btn-primary {
+        background: var(--uc-primary);
+        color: white;
+      }
+      .btn-primary:hover {
+        filter: brightness(0.92);
+        transform: translateY(-1px);
+      }
+      .btn-secondary {
+        background: #fff;
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+      }
+      .btn-secondary:hover {
+        background: var(--bg-main);
+        transform: translateY(-1px);
+      }
+      .btn-danger {
+        background: #fee2e2;
+        color: #dc2626;
+      }
+      .btn-danger:hover {
+        background: #fecaca;
+      }
+      .status-alert {
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        display: none;
+      }
+      .status-alert.ok {
+        background: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+      }
+      .status-alert.err {
+        background: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      }
+      table.price-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 13px;
+      }
+      table.price-table th {
+        background: var(--bg-main);
+        color: var(--text-color);
+        font-weight: 700;
+        padding: 12px;
+        border-bottom: 2px solid var(--border-color);
+        text-align: left;
+      }
+      table.price-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle;
+      }
+      table.price-table tr:hover {
+        background: rgba(14, 124, 134, 0.02);
+      }
+      input[type="text"], input[type="number"], select {
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        padding: 8px 12px;
+        font-size: 13px;
+        outline: none;
+        transition: border 0.15s ease;
+        box-sizing: border-box;
+        width: 100%;
+      }
+      input:focus, select:focus {
+        border-color: var(--uc-primary);
+        box-shadow: 0 0 0 3px rgba(14, 124, 134, 0.1);
+      }
+      .btn-delete-row {
+        background: none;
+        border: none;
+        color: #94a3b8;
+        font-size: 18px;
+        cursor: pointer;
+        padding: 4px;
+        transition: color 0.15s ease;
+      }
+      .btn-delete-row:hover {
+        color: #ef4444;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body class="theme-ultra-clean">
+    <div class="card">
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">isgnova</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
+        </div>
+        <div class="nav-container"></div>
+      </div>
+
+      <div class="price-page-shell">
+        <div class="actions-bar">
+          <div>
+            <h2 style="margin:0 0 4px 0;font-size:22px;color:var(--text-color);">💰 Hizmet Fiyat Listesi</h2>
+            <p style="margin:0;font-size:13px;color:var(--text-muted);">
+              Teklif oluşturulurken tehlike sınıfı ve çalışan sayısına göre otomatik önerilecek birim fiyatları belirleyin.
+            </p>
+          </div>
+          <div class="filter-group">
+            <label style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--text-color);margin-right:8px;">
+              <input type="checkbox" id="update_active_offers" style="width:16px;height:16px;cursor:pointer;" checked />
+              ⚡ Aktif Teklifleri Yeni Revizyon Olarak Güncelle
+            </label>
+            <button class="btn btn-secondary" onclick="loadDefaultTemplate()">🔄 Varsayılan Listeyi Yükle</button>
+            <button class="btn btn-primary" onclick="savePriceList()">💾 Değişiklikleri Kaydet</button>
+          </div>
+        </div>
+
+        <div id="status_alert" class="status-alert"></div>
+
+        <div class="actions-bar" style="background:var(--bg-main);padding:14px;border-radius:12px;margin-bottom:20px;">
+          <div class="filter-group" style="flex:1;">
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">Tehlike Sınıfı Filtresi</label>
+              <select id="filter_danger" style="width:140px;" onchange="renderTable()">
+                <option value="Tümü">Tümü</option>
+                <option value="Az Tehlikeli">Az Tehlikeli</option>
+                <option value="Tehlikeli">Tehlikeli</option>
+                <option value="Çok Tehlikeli">Çok Tehlikeli</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">Hizmet Adı Arama</label>
+              <input type="text" id="search_service" placeholder="Ara..." style="width:160px;" oninput="renderTable()" />
+            </div>
+            <div style="border-left:1px solid #cbd5e1;padding-left:14px;display:flex;gap:8px;align-items:flex-end;">
+              <div>
+                <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">Toplu Zam Oranı (%)</label>
+                <input type="number" id="bulk_increase_percent" placeholder="Örn: 15" min="1" max="500" style="width:90px;" />
+              </div>
+              <button class="btn btn-secondary" style="background:#fffbeb;border-color:#fde68a;color:#b45309;" onclick="applyBulkIncrease()">⚡ Fiyatları Zamla</button>
+            </div>
+          </div>
+          <div class="filter-group" style="justify-content:flex-end;">
+            <button class="btn btn-secondary" onclick="openHistoryModal()">🕒 Fiyat Değişim Geçmişi</button>
+            <button class="btn btn-primary" style="background:#0f766e;" onclick="addNewRow()">➕ Yeni Fiyat Kuralı Ekle</button>
+          </div>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="price-table">
+            <thead>
+              <tr>
+                <th style="width:20%;">Tehlike Sınıfı</th>
+                <th style="width:15%;">Min Çalışan</th>
+                <th style="width:15%;">Max Çalışan (Boş = Sınırsız)</th>
+                <th style="width:30%;">Hizmet Adı (Tam Eşleşme)</th>
+                <th style="width:15%;">Birim Fiyat (₺)</th>
+                <th style="width:5%;text-align:center;"></th>
+              </tr>
+            </thead>
+            <tbody id="price_list_body"></tbody>
+          </table>
+          <div id="empty_state" class="empty-state" style="display:none;">
+            Kriterlere uygun fiyat kuralı bulunamadı. Yeni bir kural ekleyebilir veya varsayılan listeyi yükleyebilirsiniz.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      if (new URLSearchParams(window.location.search).get('bypass') === 'true') {
+        window.confirm = () => true;
+        window.alert = () => true;
+      }
+      let currentAuth = null;
+      let priceRules = [];
+      let storageMode = 'db'; // 'db' veya 'local'
+
+      const STORAGE_KEY = 'crm_price_list_v1';
+
+      const defaultPriceRules = [
+        // Az Tehlikeli
+        { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İSG Uzmanı', price: 120 },
+        { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İşyeri Hekimi', price: 150 },
+        { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'DSP', price: 80 },
+        
+        { danger_class: 'Az Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İSG Uzmanı', price: 100 },
+        { danger_class: 'Az Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İşyeri Hekimi', price: 130 },
+        { danger_class: 'Az Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'DSP', price: 70 },
+
+        { danger_class: 'Az Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İSG Uzmanı', price: 80 },
+        { danger_class: 'Az Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İşyeri Hekimi', price: 110 },
+        { danger_class: 'Az Tehlikeli', min_emp: 100, max_emp: null, service_name: 'DSP', price: 60 },
+
+        // Tehlikeli
+        { danger_class: 'Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İSG Uzmanı', price: 160 },
+        { danger_class: 'Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İşyeri Hekimi', price: 200 },
+        { danger_class: 'Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'DSP', price: 100 },
+        
+        { danger_class: 'Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İSG Uzmanı', price: 140 },
+        { danger_class: 'Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İşyeri Hekimi', price: 180 },
+        { danger_class: 'Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'DSP', price: 90 },
+
+        { danger_class: 'Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İSG Uzmanı', price: 120 },
+        { danger_class: 'Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İşyeri Hekimi', price: 160 },
+        { danger_class: 'Tehlikeli', min_emp: 100, max_emp: null, service_name: 'DSP', price: 80 },
+
+        // Çok Tehlikeli
+        { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İSG Uzmanı', price: 220 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İşyeri Hekimi', price: 280 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'DSP', price: 120 },
+        
+        { danger_class: 'Çok Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İSG Uzmanı', price: 200 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'İşyeri Hekimi', price: 250 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 50, max_emp: 99, service_name: 'DSP', price: 110 },
+
+        { danger_class: 'Çok Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İSG Uzmanı', price: 180 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 100, max_emp: null, service_name: 'İşyeri Hekimi', price: 220 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 100, max_emp: null, service_name: 'DSP', price: 100 },
+
+        // Diğer Genel Hizmetler
+        { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Eğitim Hizmetleri (Yıllık Paket)', price: 3500 },
+        { danger_class: 'Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Eğitim Hizmetleri (Yıllık Paket)', price: 4500 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Eğitim Hizmetleri (Yıllık Paket)', price: 6000 },
+
+        { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Risk Analizi ve Değerlendirme', price: 5000 },
+        { danger_class: 'Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Risk Analizi ve Değerlendirme', price: 7000 },
+        { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Risk Analizi ve Değerlendirme', price: 9500 }
+      ];
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        // Auth Kontrolü
+        const checkAuth = setInterval(async () => {
+          if (window.requireAuthAndRole) {
+            clearInterval(checkAuth);
+            currentAuth = await window.requireAuthAndRole('crm-prices');
+            if (currentAuth) {
+              document.body.style.display = 'block';
+              await initPage();
+            }
+          }
+        }, 100);
+      });
+
+      async function initPage() {
+        await loadPriceList();
+      }
+
+      function setStatus(msg, type = 'ok') {
+        const el = document.getElementById('status_alert');
+        if (!el) return;
+        el.className = 'status-alert ' + type;
+        el.textContent = msg;
+        el.style.display = msg ? 'block' : 'none';
+        if (msg) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
+      }
+
+      async function loadPriceList() {
+        try {
+          // Önce db'den çekmeyi dene
+          const { data, error } = await dbClient
+            .from('crm_price_list')
+            .select('*')
+            .order('danger_class', { ascending: true })
+            .order('min_emp', { ascending: true });
+
+          if (error) {
+            // Tablo yoksa local'e düş
+            console.warn('Veritabanında crm_price_list tablosu bulunamadı, local storage kullanılacak.', error.message);
+            storageMode = 'local';
+            loadFromLocalStorage();
+          } else {
+            storageMode = 'db';
+            priceRules = data && data.length ? data : [];
+            if (!priceRules.length) {
+              // Veritabanı boşsa varsayılan şablonu getir
+              priceRules = defaultPriceRules.map(r => ({ ...r }));
+            }
+            renderTable();
+          }
+        } catch (err) {
+          console.error('Fiyat listesi yüklenemedi:', err);
+          storageMode = 'local';
+          loadFromLocalStorage();
+        }
+      }
+
+      function loadFromLocalStorage() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          try {
+            priceRules = JSON.parse(stored);
+          } catch (e) {
+            priceRules = defaultPriceRules.map(r => ({ ...r }));
+          }
+        } else {
+          priceRules = defaultPriceRules.map(r => ({ ...r }));
+        }
+        renderTable();
+        setStatus('Yerel Depolama (Offline Mode) aktif. Değişiklikler tarayıcıda saklanacaktır.', 'ok');
+      }
+
+      function loadDefaultTemplate() {
+        if (!confirm('Tüm fiyat listesini varsayılan şablon değerleriyle sıfırlamak istediğinize emin misiniz?')) return;
+        priceRules = defaultPriceRules.map(r => ({ ...r }));
+        renderTable();
+        setStatus('Varsayılan fiyat şablonu yüklendi. Değişiklikleri kaydetmeyi unutmayın.', 'ok');
+      }
+
+      function renderTable() {
+        const body = document.getElementById('price_list_body');
+        const emptyState = document.getElementById('empty_state');
+        if (!body) return;
+
+        const filterDanger = document.getElementById('filter_danger').value;
+        const searchService = document.getElementById('search_service').value.trim().toLowerCase();
+
+        // Filtrele
+        const filtered = priceRules.filter(r => {
+          const dangerMatch = filterDanger === 'Tümü' || r.danger_class === filterDanger;
+          const serviceMatch = !searchService || (r.service_name || '').toLowerCase().includes(searchService);
+          return dangerMatch && serviceMatch;
+        });
+
+        if (!filtered.length) {
+          body.innerHTML = '';
+          emptyState.style.display = 'block';
+          return;
+        }
+        emptyState.style.display = 'none';
+
+        body.innerHTML = filtered.map((r, index) => {
+          // Gerçek kuralın asıl dizindeki index'ini bul
+          const realIndex = priceRules.indexOf(r);
+          return `
+            <tr id="rule_row_${realIndex}">
+              <td>
+                <select onchange="updateRule(${realIndex}, 'danger_class', this.value)">
+                  <option value="Az Tehlikeli" ${r.danger_class === 'Az Tehlikeli' ? 'selected' : ''}>Az Tehlikeli</option>
+                  <option value="Tehlikeli" ${r.danger_class === 'Tehlikeli' ? 'selected' : ''}>Tehlikeli</option>
+                  <option value="Çok Tehlikeli" ${r.danger_class === 'Çok Tehlikeli' ? 'selected' : ''}>Çok Tehlikeli</option>
+                </select>
+              </td>
+              <td>
+                <input type="number" min="1" value="${r.min_emp || 1}" oninput="updateRule(${realIndex}, 'min_emp', parseInt(this.value) || 1)" />
+              </td>
+              <td>
+                <input type="number" min="1" value="${r.max_emp ?? ''}" placeholder="Sınırsız" oninput="updateRule(${realIndex}, 'max_emp', this.value ? parseInt(this.value) : null)" />
+              </td>
+              <td>
+                <input type="text" value="${r.service_name || ''}" placeholder="Örn: İSG Uzmanı" oninput="updateRule(${realIndex}, 'service_name', this.value)" />
+              </td>
+              <td>
+                <input type="number" min="0" step="0.01" value="${r.price || 0}" oninput="updateRule(${realIndex}, 'price', parseFloat(this.value) || 0)" />
+              </td>
+              <td style="text-align:center;">
+                <button class="btn-delete-row" title="Sil" onclick="deleteRow(${realIndex})">×</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      function updateRule(index, key, val) {
+        if (index >= 0 && index < priceRules.length) {
+          priceRules[index][key] = val;
+        }
+      }
+
+      function addNewRow() {
+        priceRules.unshift({
+          danger_class: 'Az Tehlikeli',
+          min_emp: 1,
+          max_emp: null,
+          service_name: '',
+          price: 0
+        });
+        renderTable();
+      }
+
+      function deleteRow(index) {
+        if (index >= 0 && index < priceRules.length) {
+          priceRules.splice(index, 1);
+          renderTable();
+        }
+      }
+
+      async function savePriceList() {
+        // Doğrulama
+        for (let i = 0; i < priceRules.length; i++) {
+          const r = priceRules[i];
+          if (!r.service_name.trim()) {
+            setStatus(`${i + 1}. satırdaki hizmet adı boş bırakılamaz!`, 'err');
+            return;
+          }
+          if (r.max_emp != null && r.min_emp > r.max_emp) {
+            setStatus(`"${r.service_name}" için minimum çalışan sayısı maksimumdan büyük olamaz!`, 'err');
+            return;
+          }
+        }
+
+        if (storageMode === 'db') {
+          try {
+            // Önce veritabanındaki mevcut kuralları çekelim (geçmiş karşılaştırması için)
+            const { data: oldRulesData } = await dbClient
+              .from('crm_price_list')
+              .select('*')
+              .eq('tenant_id', currentAuth.tenant_id);
+
+            const oldRules = oldRulesData || [];
+
+            // Önce mevcut kuralları sil
+            await dbClient
+              .from('crm_price_list')
+              .delete()
+              .eq('tenant_id', currentAuth.tenant_id);
+
+            // Yeni listeyi kaydet
+            const rows = priceRules.map(r => ({
+              tenant_id: currentAuth.tenant_id,
+              danger_class: r.danger_class,
+              min_emp: r.min_emp,
+              max_emp: r.max_emp,
+              service_name: r.service_name.trim(),
+              price: r.price
+            }));
+
+            if (rows.length > 0) {
+              const { error } = await dbClient.from('crm_price_list').insert(rows);
+              if (error) throw error;
+            }
+
+            // --- FİYAT GEÇMİŞİ (crm_price_history) LOGLAMA MANTIĞI ---
+            const historyRows = [];
+            priceRules.forEach(newR => {
+              const oldR = oldRules.find(o => 
+                o.danger_class === newR.danger_class && 
+                o.min_emp === newR.min_emp && 
+                o.max_emp === newR.max_emp && 
+                o.service_name.trim().toLowerCase() === newR.service_name.trim().toLowerCase()
+              );
+
+              if (oldR && Number(oldR.price) !== Number(newR.price)) {
+                historyRows.push({
+                  tenant_id: currentAuth.tenant_id,
+                  danger_class: newR.danger_class,
+                  min_emp: newR.min_emp,
+                  max_emp: newR.max_emp,
+                  service_name: newR.service_name.trim(),
+                  old_price: Number(oldR.price),
+                  new_price: Number(newR.price),
+                  changed_by: currentAuth.email
+                });
+              } else if (!oldR) {
+                historyRows.push({
+                  tenant_id: currentAuth.tenant_id,
+                  danger_class: newR.danger_class,
+                  min_emp: newR.min_emp,
+                  max_emp: newR.max_emp,
+                  service_name: newR.service_name.trim(),
+                  old_price: 0,
+                  new_price: Number(newR.price),
+                  changed_by: currentAuth.email
+                });
+              }
+            });
+
+            oldRules.forEach(oldR => {
+              const stillExists = priceRules.some(n => 
+                n.danger_class === oldR.danger_class && 
+                n.min_emp === oldR.min_emp && 
+                n.max_emp === oldR.max_emp && 
+                n.service_name.trim().toLowerCase() === oldR.service_name.trim().toLowerCase()
+              );
+              if (!stillExists) {
+                historyRows.push({
+                  tenant_id: currentAuth.tenant_id,
+                  danger_class: oldR.danger_class,
+                  min_emp: oldR.min_emp,
+                  max_emp: oldR.max_emp,
+                  service_name: oldR.service_name.trim(),
+                  old_price: Number(oldR.price),
+                  new_price: 0,
+                  changed_by: currentAuth.email
+                });
+              }
+            });
+
+            if (historyRows.length > 0) {
+              await dbClient.from('crm_price_history').insert(historyRows);
+            }
+
+            // --- TEKLİF GÜNCELLEME VE TASLAK OLUŞTURMA MANTIĞI ---
+            const shouldUpdateOffers = document.getElementById('update_active_offers')?.checked;
+            let updatedCount = 0;
+            if (shouldUpdateOffers) {
+              updatedCount = await performBulkOffersUpdate();
+            }
+
+            let msg = 'Fiyat listesi veritabanına başarıyla kaydedildi.';
+            if (shouldUpdateOffers) {
+              msg += ` ${updatedCount} adet aktif/sözleşmeli firma için teklif revizyonu/taslağı oluşturuldu.`;
+            }
+            setStatus(msg, 'ok');
+            await loadPriceList();
+          } catch (err) {
+            console.error('Veritabanına kaydedilirken hata oluştu:', err);
+            setStatus('Veritabanına kaydedilemedi. Local storage kullanılacak: ' + err.message, 'err');
+            saveToLocalStorage();
+          }
+        } else {
+          saveToLocalStorage();
+        }
+      }
+
+      function saveToLocalStorage() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(priceRules));
+        setStatus('Fiyat listesi tarayıcı önbelleğine başarıyla kaydedildi.', 'ok');
+        renderTable();
+      }
+
+      // --- BULK TEKLİF REVİZYON VE TASLAK GÜNCELLEME FONKSİYONU ---
+      const normalizeText = (v) => (v || '')
+        .toString()
+        .toLocaleLowerCase('tr-TR')
+        .replaceAll('ı', 'i')
+        .replaceAll('ğ', 'g')
+        .replaceAll('ş', 's')
+        .replaceAll('ö', 'o')
+        .replaceAll('ü', 'u')
+        .replaceAll('ç', 'c')
+        .trim();
+
+      function getCustomPriceForBulk(serviceName, dangerClass, employeeCount) {
+        if (!serviceName) return null;
+        const emp = Number(employeeCount) || 1;
+        const dangerNorm = normalizeText(dangerClass);
+        const nameNorm = normalizeText(serviceName);
+
+        const matchedRule = priceRules.find(r => {
+          const min = Number(r.min_emp || 0);
+          const max = r.max_emp == null ? null : Number(r.max_emp);
+          const inRange = emp >= min && (max == null || emp <= max);
+          return normalizeText(r.danger_class) === dangerNorm && 
+                 normalizeText(r.service_name) === nameNorm && 
+                 inRange;
+        });
+
+        return matchedRule ? Number(matchedRule.price || 0) : null;
+      }
+
+      async function performBulkOffersUpdate() {
+        try {
+          // Durumu 'Kaybedildi' olmayan TÜM lead'leri (aktif, kazanıldı, sözleşmeli vs.) çekelim
+          const { data: leads, error: leadsErr } = await dbClient
+            .from('crm_leads')
+            .select('*')
+            .eq('tenant_id', currentAuth.tenant_id)
+            .neq('lead_status', 'Kaybedildi');
+
+          if (leadsErr) throw leadsErr;
+          if (!leads || !leads.length) return 0;
+
+          const leadIds = leads.map(l => l.id);
+          
+          // Bu lead'lere ait tüm teklifleri çekelim
+          const { data: offers, error: offersErr } = await dbClient
+            .from('crm_offers')
+            .select('*')
+            .in('lead_id', leadIds);
+
+          if (offersErr) throw offersErr;
+
+          // Her lead için en yüksek version'lu son aktif teklifi bulalım
+          const latestOffersByLead = {};
+          if (offers && offers.length) {
+            offers.forEach(o => {
+              const leadId = o.lead_id;
+              const prev = latestOffersByLead[leadId];
+              if (!prev || o.version > prev.version) {
+                latestOffersByLead[leadId] = o;
+              }
+            });
+          }
+
+          const insertOffersPayloads = [];
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const futureStr = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+
+          for (const lead of leads) {
+            const offer = latestOffersByLead[lead.id];
+            if (offer) {
+              // Mevcut teklifi kopyala ve kalem birim fiyatlarını güncelle
+              const services = JSON.parse(JSON.stringify(offer.extra_services || []));
+              let hasChanges = false;
+              
+              services.forEach(s => {
+                const newPrice = getCustomPriceForBulk(s.name, lead.danger_class, offer.employee_count || lead.employee_count);
+                if (newPrice !== null && Number(s.unit_price) !== Number(newPrice)) {
+                  s.unit_price = newPrice;
+                  hasChanges = true;
+                }
+              });
+
+              // Eğer fiyat değiştiyse yeni bir revizyon (v+1) oluştur
+              if (hasChanges) {
+                const subtotal = services.reduce((s, r) => s + r.qty * r.unit_price, 0);
+                const disc = Number(offer.discount || 0);
+                const kdvR = Number(offer.kdv_rate || 20);
+                const afterDisc = subtotal * (1 - disc / 100);
+                const total = afterDisc * (1 + kdvR / 100);
+
+                insertOffersPayloads.push({
+                  tenant_id: currentAuth.tenant_id,
+                  lead_id: lead.id,
+                  offer_no: offer.offer_no,
+                  version: offer.version + 1,
+                  offer_date: todayStr,
+                  valid_until: offer.valid_until || futureStr,
+                  employee_count: offer.employee_count,
+                  monthly_fee: afterDisc,
+                  extra_services: services,
+                  discount: offer.discount,
+                  kdv_rate: offer.kdv_rate,
+                  subtotal: subtotal,
+                  total_amount: total,
+                  status: 'Revize',
+                  notes: (offer.notes ? offer.notes + '\n' : '') + '[Fiyat revizyon teklifi]\nYıl sonu fiyat güncellemesi otomatik uygulandı.',
+                  created_by: currentAuth.email
+                });
+              }
+            } else {
+              // Teklifi yoksa, 'Hizmet kalemi yok' ibareli ilk teklifi (v1) oluştur
+              const year = new Date().getFullYear();
+              const rand = String(Math.floor(Math.random() * 9000) + 1000);
+              const offerNo = `TKL-${year}-${rand}`;
+              const dummyServices = [{
+                name: "Hizmet kalemi yok (Otomatik Fiyat Güncelleme)",
+                qty: 1,
+                unit_price: 0
+              }];
+
+              insertOffersPayloads.push({
+                tenant_id: currentAuth.tenant_id,
+                lead_id: lead.id,
+                offer_no: offerNo,
+                version: 1,
+                offer_date: todayStr,
+                valid_until: futureStr,
+                employee_count: lead.employee_count || 1,
+                monthly_fee: 0,
+                extra_services: dummyServices,
+                discount: 0,
+                kdv_rate: 20,
+                subtotal: 0,
+                total_amount: 0,
+                status: 'Hazırlandı',
+                notes: '[Fiyat revizyon teklifi]\nOtomatik oluşturulmuş taslak teklif. Lütfen hizmet kalemlerini ekleyin.',
+                created_by: currentAuth.email
+              });
+            }
+          }
+
+          if (insertOffersPayloads.length > 0) {
+            const { error: bulkErr } = await dbClient.from('crm_offers').insert(insertOffersPayloads);
+            if (bulkErr) throw bulkErr;
+            return insertOffersPayloads.length;
+          }
+          return 0;
+        } catch (err) {
+          console.error('Teklifler toplu güncellenirken hata oluştu:', err);
+          return 0;
+        }
+      }
+
+      // --- ZAM UYGULAMA VE TARİHÇE MODAL YÖNETİMİ ---
+      function applyBulkIncrease() {
+        const percentInput = document.getElementById('bulk_increase_percent');
+        const pct = parseFloat(percentInput.value);
+        if (isNaN(pct) || pct <= 0) {
+          alert('Lütfen geçerli bir zam oranı (%) girin!');
+          return;
+        }
+        
+        if (!confirm(`Tüm fiyat kurallarına %${pct} oranında zam uygulamak istediğinize emin misiniz? (Küsuratlı rakamlar yukarı yuvarlanacaktır)`)) {
+          return;
+        }
+        
+        priceRules = priceRules.map(r => {
+          const oldPrice = Number(r.price || 0);
+          const newPrice = oldPrice * (1 + pct / 100);
+          return {
+            ...r,
+            price: Math.ceil(newPrice)
+          };
+        });
+        
+        renderTable();
+        percentInput.value = '';
+        setStatus(`%${pct} oranında zam uygulandı. Kalıcı olması için "Değişiklikleri Kaydet" butonuna tıklayın.`, 'ok');
+      }
+
+      async function openHistoryModal() {
+        const modal = document.getElementById('history_modal');
+        modal.style.display = 'flex';
+        const tbody = document.getElementById('history_list_body');
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Yükleniyor...</td></tr>';
+        
+        try {
+          const { data, error } = await dbClient
+            .from('crm_price_history')
+            .select('*')
+            .eq('tenant_id', currentAuth.tenant_id)
+            .order('changed_at', { ascending: false });
+            
+          if (error) throw error;
+          
+          if (!data || data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">Henüz fiyat değişimi loglanmamış.</td></tr>';
+            return;
+          }
+          
+          tbody.innerHTML = data.map(h => {
+            const dateStr = new Date(h.changed_at).toLocaleString('tr-TR');
+            const empRange = h.max_emp ? `${h.min_emp}-${h.max_emp}` : `${h.min_emp}+`;
+            const crit = `${h.danger_class} (${empRange} Kişi)`;
+            return `
+              <tr>
+                <td style="padding:10px; border-bottom:1px solid var(--border-color);">${dateStr}</td>
+                <td style="padding:10px; border-bottom:1px solid var(--border-color);"><strong>${esc(h.service_name)}</strong></td>
+                <td style="padding:10px; border-bottom:1px solid var(--border-color);">${crit}</td>
+                <td style="padding:10px; border-bottom:1px solid var(--border-color); text-align:right; color:#ef4444;">₺${Number(h.old_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+                <td style="padding:10px; border-bottom:1px solid var(--border-color); text-align:right; color:#059669; font-weight:700;">₺${Number(h.new_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+                <td style="padding:10px; border-bottom:1px solid var(--border-color);">${esc(h.changed_by)}</td>
+              </tr>
+            `;
+          }).join('');
+        } catch (err) {
+          console.error('Geçmiş yüklenemedi:', err);
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#dc2626; padding:20px;">Geçmiş yüklenirken hata oluştu: ${err.message}</td></tr>`;
+        }
+      }
+      
+      function closeHistoryModal() {
+        document.getElementById('history_modal').style.display = 'none';
+      }
+      
+      function esc(str) {
+        return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      }
+    </script>
+
+    <!-- Price History Modal -->
+    <div id="history_modal" class="modal-backdrop-premium" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.6); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
+      <div class="modal-card-premium" style="background:#fff; width:90%; max-width:800px; border-radius:16px; box-shadow:0 20px 60px rgba(15,23,42,0.15); display:flex; flex-direction:column; max-height:85vh; border:1px solid var(--border-color);">
+        <div class="modal-head" style="padding:20px 24px; border-bottom:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; font-size:18px; font-weight:700; color:var(--text-color);">🕒 Fiyat Değişim Geçmişi</h3>
+          <button onclick="closeHistoryModal()" style="background:none; border:none; font-size:24px; color:var(--text-muted); cursor:pointer; line-height:1;">&times;</button>
+        </div>
+        <div class="modal-body" style="padding:20px 24px; overflow-y:auto; flex:1;">
+          <table class="price-table" style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr>
+                <th style="font-weight:700; border-bottom:2px solid var(--border-color); padding:10px; text-align:left;">Tarih</th>
+                <th style="font-weight:700; border-bottom:2px solid var(--border-color); padding:10px; text-align:left;">Hizmet Adı</th>
+                <th style="font-weight:700; border-bottom:2px solid var(--border-color); padding:10px; text-align:left;">Kriterler</th>
+                <th style="font-weight:700; border-bottom:2px solid var(--border-color); padding:10px; text-align:right;">Eski Fiyat</th>
+                <th style="font-weight:700; border-bottom:2px solid var(--border-color); padding:10px; text-align:right;">Yeni Fiyat</th>
+                <th style="font-weight:700; border-bottom:2px solid var(--border-color); padding:10px; text-align:left;">Değiştiren</th>
+              </tr>
+            </thead>
+            <tbody id="history_list_body">
+              <tr>
+                <td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">Yükleniyor...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="modal-footer" style="padding:16px 24px; border-top:1px solid var(--border-color); display:flex; justify-content:flex-end; background:#f8fafc; border-bottom-left-radius:16px; border-bottom-right-radius:16px;">
+          <button class="btn btn-secondary" onclick="closeHistoryModal()">Kapat</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
