@@ -431,14 +431,9 @@ body.theme-ultra-clean .crm-offer-page-shell {
   .btn-add-svc,
   .quick-pills,
   .form-section:last-of-type,
-  .save-row {
-    display: none !important;
-  }
-
+  .save-row,
   .card {
-    box-shadow: none !important;
-    border: none !important;
-    border-radius: 0 !important;
+    display: none !important;
   }
   .offer-layout {
     grid-template-columns: 1fr !important;
@@ -505,14 +500,9 @@ body.pdf-rendering .btn-del,
 body.pdf-rendering .btn-add-svc,
 body.pdf-rendering .quick-pills,
 body.pdf-rendering .form-section:last-of-type,
-body.pdf-rendering .save-row {
-  display: none !important;
-}
-
+body.pdf-rendering .save-row,
 body.pdf-rendering .card {
-  box-shadow: none !important;
-  border: none !important;
-  border-radius: 0 !important;
+  display: none !important;
 }
 body.pdf-rendering .offer-layout {
   grid-template-columns: 1fr !important;
@@ -640,10 +630,12 @@ body.pdf-rendering #services_list {
   border-top: 2px solid #074e53;
 }
 #print_services_table .tfoot-total td {
-  background: #074e53;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 800;
+  background-color: #d1fae5 !important;
+  color: #064e3b !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  border-top: 1px solid #064e3b !important;
+  border-bottom: 3px double #064e3b !important;
 }
 
 /* Print footer */
