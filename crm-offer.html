@@ -10,6 +10,7 @@
     <title>isgnova – Teklif Oluştur / Düzenle</title>
     <meta name="description" content="isgnova CRM – ISG hizmetleri teklif hazırlama ve PDF export modülü" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -934,7 +935,12 @@
         setTimeout(() => setStatus('', ''), 2800);
       }
 
-      function emailOffer() {
+      async function emailOffer() {
+        if (!OFFER_ID) {
+          alert('PDF bağlantısının oluşturulabilmesi için lütfen önce teklifi kaydedin (Değişiklikleri Kaydet butonuna basın).');
+          return;
+        }
+
         let companyName = 'Firma';
         const el = document.getElementById('sum_company');
         if (el && el.textContent !== '—') companyName = el.textContent.trim();
@@ -947,8 +953,19 @@
                             .filter(em => em && em.trim() !== '');
         const toList = emails.join(',');
         
+        setStatus('PDF bulutta oluşturuluyor, lütfen bekleyin...', 'warn');
+        const publicUrl = await generateCloudPDF(OFFER_ID, offerNo);
+        setStatus('PDF oluşturuldu, e-posta açılıyor...', 'ok');
+        setTimeout(() => setStatus('', ''), 2000);
+
+        let bodyText = 'Sayın İlgili,\n\nİSG hizmetleri teklifimiz (No: ' + offerNo + ') değerlendirmeniz için tarafınıza sunulmuştur.\n\n';
+        if (publicUrl) {
+          bodyText += 'Teklif PDF dosyasını görüntülemek veya indirmek için lütfen aşağıdaki bağlantıya tıklayın:\n' + publicUrl + '\n\n';
+        }
+        bodyText += 'İyi çalışmalar dileriz.';
+
         const subject = encodeURIComponent(companyName + ' - İSG Hizmetleri Teklifi (' + offerNo + ')');
-        const body = encodeURIComponent('Sayın İlgili,\n\nİSG hizmetleri teklifimiz (No: ' + offerNo + ') değerlendirmeniz için tarafınıza sunulmuştur.\n\nİyi çalışmalar dileriz.');
+        const body = encodeURIComponent(bodyText);
         window.location.href = 'mailto:' + toList + '?subject=' + subject + '&body=' + body;
       }
 
@@ -980,6 +997,94 @@
 
           document.getElementById('sum_pdf_row').style.display = 'flex';
           document.getElementById('sum_pdf_date').textContent = fmtDateTime(ts);
+        }
+      }
+
+      /* ═══════════════════════════════════════
+         BULUT PDF (STORAGE YÜKLEME)
+      ═══════════════════════════════════════ */
+      async function generateCloudPDF(offerId, offerNo) {
+        if (!offerId) return null;
+        recalc();
+        updateOfferNoDisplay();
+        
+        // Footer update
+        const now = new Date().toLocaleDateString('tr-TR', { year:'numeric', month:'long', day:'numeric' });
+        document.getElementById('p_footer_left').textContent = 'Bu teklif ' + (CURRENT_AUTH?.tenant?.name || 'OSGB') + ' tarafından hazırlanmıştır.';
+        document.getElementById('p_footer_right').textContent = 'Teklif No: ' + offerNo + ' · Tarih: ' + now;
+
+        // Create a temporary container for PDF generation
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        container.style.width = '800px';
+        container.style.backgroundColor = '#fff';
+        container.style.padding = '20px';
+        document.body.appendChild(container);
+
+        const headerNode = document.getElementById('pdf-header').cloneNode(true);
+        const tableNode = document.getElementById('print_services_table').parentNode.cloneNode(true);
+        const footerNode = document.getElementById('pdf-footer').cloneNode(true);
+        
+        // Remove .print-only classes to make them visible to html2pdf
+        headerNode.classList.remove('print-only');
+        tableNode.classList.remove('print-only');
+        footerNode.classList.remove('print-only');
+        
+        // Ensure table itself is visible if it has inline none
+        const tbl = tableNode.querySelector('table');
+        if (tbl) tbl.style.display = 'table';
+
+        container.appendChild(headerNode);
+        container.appendChild(tableNode);
+        container.appendChild(footerNode);
+
+        const opt = {
+          margin:       10,
+          filename:     offerNo + '.pdf',
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2 },
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        try {
+          const pdfBlob = await html2pdf().set(opt).from(container).output('blob');
+          
+          const fileName = offerNo.replace(/[^a-zA-Z0-9_-]/g, '') + '_' + Date.now() + '.pdf';
+          
+          const { data: uploadData, error: uploadError } = await dbClient.storage
+            .from('offers')
+            .upload(fileName, pdfBlob, {
+              cacheControl: '3600',
+              upsert: false,
+              contentType: 'application/pdf'
+            });
+
+          if (uploadError) {
+            console.error("PDF buluta yüklenemedi:", uploadError);
+            throw uploadError;
+          }
+
+          const { data: publicUrlData } = dbClient.storage
+            .from('offers')
+            .getPublicUrl(fileName);
+            
+          const publicUrl = publicUrlData.publicUrl;
+
+          // Veritabanını güncelle
+          await dbClient.from('crm_offers').update({
+            pdf_url: publicUrl,
+            pdf_generated_at: new Date().toISOString(),
+            pdf_generated_by: CURRENT_AUTH.email
+          }).eq('id', offerId);
+
+          return publicUrl;
+        } catch (e) {
+          console.error("Bulut PDF Hatası:", e);
+          return null;
+        } finally {
+          document.body.removeChild(container);
         }
       }
 
