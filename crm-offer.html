@@ -1016,18 +1016,39 @@
         document.getElementById('p_footer_left').textContent = 'Bu teklif ' + (CURRENT_AUTH?.tenant?.name || 'OSGB') + ' tarafından hazırlanmıştır.';
         document.getElementById('p_footer_right').textContent = 'Teklif No: ' + offerNo + ' · Tarih: ' + now;
 
-        // Sayfayı en başa kaydır (html2canvas'ın scroll kaymalarını önlemek için)
-        window.scrollTo(0, 0);
+        // html2canvas'ın sayfayı ortalayıp sol tarafı kesmesini %100 önlemek için,
+        // hedef elementi geçici olarak ekranın tam sol üst (0,0) köşesine sabitliyoruz.
+        const printContent = document.getElementById('pdf-print-content');
+        
+        const tempContainer = document.createElement('div');
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.top = '0';
+        tempContainer.style.left = '0';
+        tempContainer.style.width = '800px';
+        tempContainer.style.backgroundColor = '#fff';
+        tempContainer.style.zIndex = '999999'; // Aynı zamanda yükleniyor ekranı görevi görecek
+        
+        const loadingMsg = document.createElement('div');
+        loadingMsg.innerHTML = 'PDF Hazırlanıyor... Lütfen Bekleyin.';
+        loadingMsg.style.textAlign = 'center';
+        loadingMsg.style.padding = '40px';
+        loadingMsg.style.fontSize = '18px';
+        loadingMsg.style.fontWeight = 'bold';
+        loadingMsg.style.color = 'var(--primary)';
+        
+        tempContainer.appendChild(loadingMsg);
+        tempContainer.appendChild(printContent); // DOM'dan söküp tempContainer'a alıyoruz
+        document.body.appendChild(tempContainer);
 
-        // Body'ye pdf-rendering class'ını ekle ki .print-only (pdf içeriği) görünür olsun, screen UI gizlensin
-        // Bu sayede body'de SADECE pdf-print-content görünür olacak.
+        window.scrollTo(0, 0);
         document.body.classList.add('pdf-rendering');
 
-        // Tarayıcının yeni CSS kurallarını uygulayıp DOM'u çizmesi için biraz bekle
+        // Tarayıcının DOM'u çizmesi için bekle
         await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Fotoğrafı çekmeden hemen önce yükleniyor yazısını gizle
+        loadingMsg.style.display = 'none';
 
-        // PDF ayarları
-        // windowWidth: 800 sayfanın sanki 800px bir ekrandaymış gibi render edilmesini sağlar.
         const opt = {
           margin:       10,
           filename:     offerNo + '.pdf',
@@ -1037,8 +1058,8 @@
         };
 
         try {
-          // Doğrudan document.body'yi render ediyoruz. (TargetElement verince yaşanan crop/blank hatalarını önler)
-          const pdfBlob = await html2pdf().set(opt).from(document.body).output('blob');
+          // Artık printContent 0,0 noktasında sabit.
+          const pdfBlob = await html2pdf().set(opt).from(printContent).output('blob');
           
           const fileName = offerNo.replace(/[^a-zA-Z0-9_-]/g, '') + '_' + Date.now() + '.pdf';
           
@@ -1061,7 +1082,6 @@
             
           const publicUrl = publicUrlData.publicUrl;
 
-          // Veritabanını güncelle
           await dbClient.from('crm_offers').update({
             pdf_url: publicUrl,
             pdf_generated_at: new Date().toISOString(),
@@ -1073,7 +1093,9 @@
           console.error("Bulut PDF Hatası:", e);
           return null;
         } finally {
-          // PDF oluşturma bitince her şeyi eski haline çevir
+          // Her şeyi eski haline çevir
+          document.body.appendChild(printContent); // Geri yerine koy
+          document.body.removeChild(tempContainer);
           document.body.classList.remove('pdf-rendering');
         }
       }
