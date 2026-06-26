@@ -638,7 +638,6 @@ body.pdf-rendering #services_list {
   border-bottom: 3px double #064e3b !important;
 }
 
-/* Print footer */
 #pdf-footer {
   font-size: 10px;
   color: #6b7280;
@@ -647,4 +646,33 @@ body.pdf-rendering #services_list {
   margin-top: 20px;
   display: flex;
   justify-content: space-between;
+}
+
+/* ── PDF GENERATOR WRAPPER STYLES ── */
+#pdf-print-content {
+  display: none;
+  width: 800px;
+  background: #ffffff;
+  padding: 30px;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+#pdf-print-content.pdf-active {
+  display: block !important;
+}
+
+#pdf-print-content.pdf-active #print_services_table {
+  display: table !important;
+}
+
+@media print {
+  #pdf-print-content {
+    display: block !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+  #pdf-print-content #print_services_table {
+    display: table !important;
+  }
 }

@@ -23,80 +23,83 @@
   <body class="theme-ultra-clean">
 
     <!-- ═══════════════════════════════════════════
-         PDF / PRINT ONLY — Sayfa başlığı
+         PDF / PRINT Wrapper (Görünüm Kaymalarını Engellemek İçin Kapsayıcı)
     ════════════════════════════════════════════ -->
-    <div class="print-only" id="pdf-header">
-      <div class="top-band">
-        <div>
-          <p class="osgb-name" id="p_osgb_name">OSGB Adı</p>
-          <p class="osgb-sub">İSG Hizmetleri — Hizmet Teklifi</p>
+    <div id="pdf-print-content" class="print-only">
+      <!-- PDF / PRINT ONLY — Sayfa başlığı -->
+      <div id="pdf-header">
+        <div class="top-band">
+          <div>
+            <p class="osgb-name" id="p_osgb_name">OSGB Adı</p>
+            <p class="osgb-sub">İSG Hizmetleri — Hizmet Teklifi</p>
+          </div>
+          <div class="offer-ref">
+            <div class="ref-no" id="p_offer_ref">TKL-2026-0000 · v1</div>
+            <div class="ref-dates">
+              <div id="p_offer_date"></div>
+              <div id="p_valid_until"></div>
+            </div>
+          </div>
         </div>
-        <div class="offer-ref">
-          <div class="ref-no" id="p_offer_ref">TKL-2026-0000 · v1</div>
-          <div class="ref-dates">
-            <div id="p_offer_date"></div>
-            <div id="p_valid_until"></div>
+        <div class="bottom-band">
+          <div class="client-block">
+            <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Alıcı Firma</span>
+            <strong id="p_company_name">—</strong>
+            <span id="p_company_meta" style="color:#6b7280;font-size:11px;"></span>
+          </div>
+          <div class="client-block" id="p_recipients_block" style="display:none;">
+            <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">İlgili Kişiler / Alıcı</span>
+            <strong id="p_recipients_names" style="display:block;font-size:12px;font-weight:700;">—</strong>
+          </div>
+          <div class="client-block">
+            <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Çalışan Sayısı</span>
+            <strong id="p_emp_count" style="display:block;font-size:14px;">—</strong>
+          </div>
+          <div class="client-block">
+            <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Tehlike Sınıfı</span>
+            <strong id="p_danger_class" style="display:block;font-size:14px;">—</strong>
           </div>
         </div>
       </div>
-      <div class="bottom-band">
-        <div class="client-block">
-          <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Alıcı Firma</span>
-          <strong id="p_company_name">—</strong>
-          <span id="p_company_meta" style="color:#6b7280;font-size:11px;"></span>
-        </div>
-        <div class="client-block" id="p_recipients_block" style="display:none;">
-          <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">İlgili Kişiler / Alıcı</span>
-          <strong id="p_recipients_names" style="display:block;font-size:12px;font-weight:700;">—</strong>
-        </div>
-        <div class="client-block">
-          <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Çalışan Sayısı</span>
-          <strong id="p_emp_count" style="display:block;font-size:14px;">—</strong>
-        </div>
-        <div class="client-block">
-          <span style="font-size:10px;color:#6b7280;text-transform:uppercase;font-weight:700;">Tehlike Sınıfı</span>
-          <strong id="p_danger_class" style="display:block;font-size:14px;">—</strong>
-        </div>
+
+      <!-- PDF Hizmet Tablosu -->
+      <div>
+        <table id="print_services_table">
+          <thead>
+            <tr>
+              <th style="width:50%">Hizmet Kalemi</th>
+              <th style="width:10%;text-align:center">Adet</th>
+              <th style="width:20%;text-align:right">Birim Fiyat</th>
+              <th style="width:20%;text-align:right">Toplam</th>
+            </tr>
+          </thead>
+          <tbody id="print_services_body"></tbody>
+          <tfoot>
+            <tr class="tfoot">
+              <td colspan="3">Ara Toplam</td>
+              <td id="p_subtotal">₺0</td>
+            </tr>
+            <tr class="tfoot" id="p_disc_row">
+              <td colspan="3">İskonto (<span id="p_disc_pct">0</span>%)</td>
+              <td id="p_disc_amt" style="color:#dc2626;">-₺0</td>
+            </tr>
+            <tr class="tfoot">
+              <td colspan="3">KDV (<span id="p_kdv_pct">20</span>%)</td>
+              <td id="p_kdv_amt">₺0</td>
+            </tr>
+            <tr class="tfoot-total">
+              <td colspan="3" style="font-weight:800;">GENEL TOPLAM (KDV Dahil)</td>
+              <td id="p_total">₺0</td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
-    </div>
 
-    <!-- PDF Hizmet Tablosu -->
-    <div class="print-only">
-      <table id="print_services_table">
-        <thead>
-          <tr>
-            <th style="width:50%">Hizmet Kalemi</th>
-            <th style="width:10%;text-align:center">Adet</th>
-            <th style="width:20%;text-align:right">Birim Fiyat</th>
-            <th style="width:20%;text-align:right">Toplam</th>
-          </tr>
-        </thead>
-        <tbody id="print_services_body"></tbody>
-        <tfoot>
-          <tr class="tfoot">
-            <td colspan="3">Ara Toplam</td>
-            <td id="p_subtotal">₺0</td>
-          </tr>
-          <tr class="tfoot" id="p_disc_row">
-            <td colspan="3">İskonto (<span id="p_disc_pct">0</span>%)</td>
-            <td id="p_disc_amt" style="color:#dc2626;">-₺0</td>
-          </tr>
-          <tr class="tfoot">
-            <td colspan="3">KDV (<span id="p_kdv_pct">20</span>%)</td>
-            <td id="p_kdv_amt">₺0</td>
-          </tr>
-          <tr class="tfoot-total">
-            <td colspan="3" style="font-weight:800;">GENEL TOPLAM (KDV Dahil)</td>
-            <td id="p_total">₺0</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-
-    <!-- PDF Footer -->
-    <div class="print-only" id="pdf-footer">
-      <span id="p_footer_left">Bu teklif tarafımızca hazırlanmıştır.</span>
-      <span id="p_footer_right"></span>
+      <!-- PDF Footer -->
+      <div id="pdf-footer">
+        <span id="p_footer_left">Bu teklif tarafımızca hazırlanmıştır.</span>
+        <span id="p_footer_right"></span>
+      </div>
     </div>
 
     <!-- ═══════════════════════════════════════════
@@ -1032,8 +1035,8 @@
         overlay.innerHTML = 'PDF Hazırlanıyor... Lütfen Bekleyin.';
         document.body.appendChild(overlay);
 
-        // Print css kurallarını JS olmadan tetiklemek için class ekle
-        document.body.classList.add('pdf-rendering');
+        const wrapper = document.getElementById('pdf-print-content');
+        wrapper.classList.add('pdf-active');
 
         // Tarayıcının yeni CSS kurallarını uygulayıp sayfayı çizmesine (layout reflow) zaman tanıyalım
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -1047,9 +1050,7 @@
         };
 
         try {
-          const pdfBlob = await html2pdf().set(opt).from(document.body).output('blob');
-          
-          document.body.classList.remove('pdf-rendering');
+          const pdfBlob = await html2pdf().set(opt).from(wrapper).output('blob');
           
           const fileName = offerNo.replace(/[^a-zA-Z0-9_-]/g, '') + '_' + Date.now() + '.pdf';
           
@@ -1082,9 +1083,9 @@
           return publicUrl;
         } catch (e) {
           console.error("Bulut PDF Hatası:", e);
-          document.body.classList.remove('pdf-rendering');
           return null;
         } finally {
+          wrapper.classList.remove('pdf-active');
           document.body.removeChild(overlay);
         }
       }
