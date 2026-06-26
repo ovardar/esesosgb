@@ -1016,30 +1016,31 @@
         document.getElementById('p_footer_left').textContent = 'Bu teklif ' + (CURRENT_AUTH?.tenant?.name || 'OSGB') + ' tarafından hazırlanmıştır.';
         document.getElementById('p_footer_right').textContent = 'Teklif No: ' + offerNo + ' · Tarih: ' + now;
 
-        // Klon oluştur (Ekranda görünmeyen, ama pdf için kullanılacak container)
-        const tempContainer = document.createElement('div');
-        tempContainer.style.position = 'absolute';
-        tempContainer.style.top = '-9999px';
-        tempContainer.style.left = '0';
-        tempContainer.style.width = '800px';
-        tempContainer.style.backgroundColor = '#fff';
-        
-        // Print edilecek içeriği al ve klonla
-        const clone = document.getElementById('pdf-print-content').cloneNode(true);
-        // Print-only class'ını kaldır ki normal ekranda da görünsün (pdf oluşturucu için)
-        clone.classList.remove('print-only');
-        clone.style.display = 'block';
-        
-        // Gizli olan pdf tablosunu görünür yap
-        const printTable = clone.querySelector('#print_services_table');
-        if (printTable) printTable.style.setProperty('display', 'table', 'important');
-        
-        tempContainer.appendChild(clone);
-        document.body.appendChild(tempContainer);
+        // Ekrana tam ekran bir "Yükleniyor" kaplaması koy, böylece kullanıcı layout değişimini görmez
+        const overlay = document.createElement('div');
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = '#fff';
+        overlay.style.zIndex = '999999';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.fontSize = '18px';
+        overlay.style.fontWeight = 'bold';
+        overlay.style.color = 'var(--primary)';
+        overlay.innerHTML = 'PDF Hazırlanıyor... Lütfen Bekleyin.';
+        document.body.appendChild(overlay);
 
-        // Resimlerin ve fontların tam yüklenmesini beklemek için biraz süre tanıyalım
+        // Body'ye pdf-rendering class'ını ekle ki .print-only (pdf içeriği) görünür olsun, screen UI gizlensin
+        document.body.classList.add('pdf-rendering');
+
+        // Tarayıcının yeni CSS kurallarını uygulayıp DOM'u çizmesi için biraz bekle
         await new Promise(resolve => setTimeout(resolve, 500));
 
+        // PDF ayarları
         const opt = {
           margin:       10,
           filename:     offerNo + '.pdf',
@@ -1049,7 +1050,10 @@
         };
 
         try {
-          const pdfBlob = await html2pdf().set(opt).from(tempContainer).output('blob');
+          // html2pdf'e document.body yerine SADECE pdf-print-content elementini veriyoruz.
+          // Böylece overlay gibi ekranı kapatan harici elementler PDF'in içine girmez!
+          const targetElement = document.getElementById('pdf-print-content');
+          const pdfBlob = await html2pdf().set(opt).from(targetElement).output('blob');
           
           const fileName = offerNo.replace(/[^a-zA-Z0-9_-]/g, '') + '_' + Date.now() + '.pdf';
           
@@ -1084,7 +1088,9 @@
           console.error("Bulut PDF Hatası:", e);
           return null;
         } finally {
-          document.body.removeChild(tempContainer);
+          // PDF oluşturma bitince her şeyi eski haline çevir
+          document.body.classList.remove('pdf-rendering');
+          document.body.removeChild(overlay);
         }
       }
 
