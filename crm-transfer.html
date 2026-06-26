@@ -198,7 +198,7 @@
                     <a href="templates/2_Fiyat_Listesi_Sablonu.csv" download class="btn-transfer-sample" style="display:block; text-align:center; margin-bottom:16px; padding: 6px 12px; font-size: 12px;">📋 Fiyat Listesi Şablonu İndir</a>
                     
                     <div class="file-drop-zone" onclick="document.getElementById('import_stage1').click()">
-                      <input type="file" id="import_stage1" accept=".csv" style="display:none;" onchange="alert('Geliştirme aşamasındadır.')" />
+                      <input type="file" id="import_stage1" accept=".csv" style="display:none;" onchange="onFileSelectedStage(this, 1)" />
                       <span class="drop-icon" style="font-size: 20px; margin-bottom: 4px;">📁</span>
                       <div style="font-size: 11px;">1. Aşama CSV Yükle</div>
                     </div>
@@ -215,7 +215,7 @@
                     <a href="templates/3_Firma_Eslesme_Sablonu.csv" download class="btn-transfer-sample" style="display:block; text-align:center; margin-bottom:16px; padding: 6px 12px; font-size: 12px;">📋 Firma Eşleşme Şablonu İndir</a>
                     
                     <div class="file-drop-zone" onclick="document.getElementById('import_stage2').click()">
-                      <input type="file" id="import_stage2" accept=".csv" style="display:none;" onchange="alert('Geliştirme aşamasındadır.')" />
+                      <input type="file" id="import_stage2" accept=".csv" style="display:none;" onchange="onFileSelectedStage(this, 2)" />
                       <span class="drop-icon" style="font-size: 20px; margin-bottom: 4px;">📁</span>
                       <div style="font-size: 11px;">Eşleşme CSV Yükle</div>
                     </div>
@@ -232,7 +232,7 @@
                     <a href="templates/4_Sozlesmeler_Sablonu.csv" download class="btn-transfer-sample" style="display:block; text-align:center; margin-bottom:16px; padding: 6px 12px; font-size: 12px;">📋 Sözleşmeler Şablonu İndir</a>
                     
                     <div class="file-drop-zone" onclick="document.getElementById('import_stage3').click()">
-                      <input type="file" id="import_stage3" accept=".csv" style="display:none;" onchange="alert('Geliştirme aşamasındadır.')" />
+                      <input type="file" id="import_stage3" accept=".csv" style="display:none;" onchange="onFileSelectedStage(this, 3)" />
                       <span class="drop-icon" style="font-size: 20px; margin-bottom: 4px;">📁</span>
                       <div style="font-size: 11px;">Sözleşmeler CSV Yükle</div>
                     </div>
@@ -384,63 +384,178 @@
         return lines;
       }
 
-      window.processCSVImport = async function() {
-        const fileInput = document.getElementById('import_csv_file');
-        const file = fileInput.files && fileInput.files[0];
-        if (!file) { showToast('Lütfen önce bir CSV dosyası seçin.', 'error'); return; }
+      function parseDate(d) {
+        if (!d) return null;
+        // DD.MM.YYYY to YYYY-MM-DD
+        const parts = d.split('.');
+        if(parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        return d;
+      }
 
-        showStatus('Dosya okunuyor...', '');
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          try {
-            const parsed = parseCSVText(e.target.result);
-            if (parsed.length < 2) {
-              showStatus('CSV dosyasında veri satırı bulunamadı.', 'error');
-              return;
+      window.onFileSelectedStage = function(input, stage) {
+         const file = input.files && input.files[0];
+         if(!file) return;
+         showStatus('Aşama ' + stage + ' dosyası okunuyor: ' + file.name, '');
+         
+         const reader = new FileReader();
+         reader.onload = async function(e) {
+            try {
+               const parsed = parseCSVText(e.target.result);
+               if (parsed.length < 2) throw new Error("Dosyada veri bulunamadı.");
+               
+               if (stage === 1) {
+                  await processStage1(parsed);
+               } else if (stage === 2) {
+                  await processStage2(parsed);
+               } else if (stage === 3) {
+                  await processStage3(parsed);
+               }
+               
+               showStatus('✓ Aşama ' + stage + ' başarıyla içeri aktarıldı!', 'success');
+               showToast('Aktarım tamamlandı.', 'success');
+               input.value = ''; // Reset input
+            } catch(err) {
+               console.error(err);
+               showStatus('Hata: ' + err.message, 'error');
             }
-            const rows = [];
-            for (let i = 1; i < parsed.length; i++) {
-              const r = parsed[i];
-              if (!r[0] || !r[0].trim()) continue;
-              const stageRaw = r[7] ? r[7].trim() : 'Yeni Kayıt';
-              const statusRaw = r[8] ? r[8].trim() : 'Fırsat';
-              const validStatuses = ['Fırsat','İşlemde','Kazanıldı','Kaybedildi','Askıda'];
-              rows.push({
-                tenant_id: CURRENT_AUTH.tenant_id,
-                company_name: r[0].trim(),
-                city: r[1]?r[1].trim():null,
-                district: r[2]?r[2].trim():null,
-                sector: r[3]?r[3].trim():null,
-                nace_code: r[4]?r[4].trim():null,
-                danger_class: r[5]?r[5].trim():null,
-                employee_count: r[6]?parseInt(r[6].trim())||null:null,
-                stage: stageToDbValue(normalizeStage(stageRaw)),
-                lead_status: validStatuses.includes(statusRaw) ? statusRaw : 'Fırsat',
-                lead_source: r[9]?r[9].trim():'Telefon',
-                notes: r[10]?r[10].trim():null,
-                created_by: CURRENT_AUTH.email
-              });
-            }
-            if (rows.length === 0) { showStatus('Geçerli veri satırı bulunamadı.', 'error'); return; }
-            showStatus(rows.length + ' kayıt veritabanına yükleniyor...', '');
-
-            const { error } = await dbClient.from('crm_leads').insert(rows);
-            if (error) throw error;
-
-            showStatus('✓ ' + rows.length + ' firma başarıyla içeri aktarıldı!', 'success');
-            showToast(rows.length + ' potansiyel firma başarıyla içeri aktarıldı.', 'success');
-            fileInput.value = '';
-            document.getElementById('selected_file_name').style.display = 'none';
-            document.getElementById('btn_import').style.display = 'none';
-            await loadLeadCount();
-          } catch(err) {
-            console.error('Import hatası:', err);
-            showStatus('Hata: ' + err.message, 'error');
-            showToast('Aktarım sırasında bir hata oluştu: ' + err.message, 'error');
-          }
-        };
-        reader.readAsText(file);
+         };
+         reader.readAsText(file);
       };
+
+      async function processStage1(parsed) {
+        const header = parsed[0].join(';');
+        if (header.includes('TC Kimlik No')) {
+           // Personel import
+           const rows = [];
+           for(let i=1; i<parsed.length; i++) {
+              const r = parsed[i];
+              if(!r[0]) continue; // Skip empty rows
+              rows.push({
+                 tenant_id: CURRENT_AUTH.tenant_id,
+                 full_name: r[0].trim(),
+                 tc_kimlik_no: (r[1]||'').trim(),
+                 email: (r[2]||'').trim(),
+                 access_role: (r[3]||'').trim() === 'Satis' ? 'sales' : 'staff',
+                 status: 'active'
+              });
+           }
+           if (rows.length === 0) throw new Error("Yüklenecek veri yok.");
+           showStatus(rows.length + ' personel yükleniyor...', '');
+           
+           // E-posta üzerinden Conflict çözümü. 
+           const { error } = await dbClient.from('osgb_staff').upsert(rows, { onConflict: 'email' });
+           if(error) throw error;
+        } else if (header.includes('Birim Fiyat')) {
+           // Fiyat import
+           const rows = [];
+           for(let i=1; i<parsed.length; i++) {
+              const r = parsed[i];
+              if(!r[0]) continue;
+              rows.push({
+                 tenant_id: CURRENT_AUTH.tenant_id,
+                 service_category: r[0].trim(),
+                 service_name: r[1].trim(),
+                 unit_price: parseFloat(r[2]) || 0,
+                 tax_rate: parseFloat(r[3]) || 20
+              });
+           }
+           if (rows.length === 0) throw new Error("Yüklenecek veri yok.");
+           showStatus(rows.length + ' fiyat kalemi yükleniyor...', '');
+           
+           const { error } = await dbClient.from('crm_price_matrix').insert(rows);
+           if(error) throw error;
+        } else {
+           throw new Error("Lütfen Personel veya Fiyat Listesi şablonunu kullanın.");
+        }
+      }
+
+      async function processStage2(parsed) {
+         // Firma Eşleşme
+         const rows = [];
+         for(let i=1; i<parsed.length; i++) {
+            const r = parsed[i];
+            if(!r[0]) continue;
+            rows.push({
+               tenant_id: CURRENT_AUTH.tenant_id,
+               company_name: r[0].trim(),
+               tax_office: (r[1]||'').trim(),
+               tax_no: (r[2]||'').trim(),
+               isg_katip_firm_id: (r[3]||'').trim(),
+               sgk_sicil_no: (r[4]||'').trim(),
+               accounting_firm_id: (r[5]||'').trim(),
+               nace_code: (r[6]||'').trim(),
+               employee_count: parseInt(r[7]) || 0,
+               danger_class: (r[8]||'').trim(),
+               city: (r[9]||'').trim(),
+               district: (r[10]||'').trim(),
+               created_by: CURRENT_AUTH.email
+            });
+         }
+         if (rows.length === 0) throw new Error("Yüklenecek veri yok.");
+         showStatus(rows.length + ' cari/firma yükleniyor...', '');
+         
+         const { error } = await dbClient.from('customer_companies').insert(rows);
+         if(error) throw error;
+      }
+
+      async function processStage3(parsed) {
+         // Sözleşmeler
+         const tempRows = [];
+         for(let i=1; i<parsed.length; i++) {
+            const r = parsed[i];
+            if(!r[0]) continue;
+            
+            tempRows.push({
+               tenant_id: CURRENT_AUTH.tenant_id,
+               isg_katip_contract_id: (r[0]||'').trim(),
+               contract_type: (r[1]||'').trim(),
+               _temp_firm_id: (r[3]||'').trim(), // ISG Katip Firma ID
+               _temp_tc: (r[4]||'').trim(),      // Personel TC
+               start_date: parseDate(r[5]),
+               end_date: parseDate(r[6]),
+               status: (r[7]||'').trim() === 'Sözleşme Devam Ediyor' ? 'Aktif' : 'Pasif',
+               monthly_amount: parseFloat(r[8]) || 0
+            });
+         }
+         
+         if (tempRows.length === 0) throw new Error("Yüklenecek sözleşme verisi yok.");
+         showStatus(tempRows.length + ' sözleşme ID\'leri çözümleniyor...', '');
+         
+         // Toplu Firma Sorgusu (isg_katip_firm_id üzerinden)
+         const { data: firms } = await dbClient.from('customer_companies')
+           .select('id, isg_katip_firm_id')
+           .eq('tenant_id', CURRENT_AUTH.tenant_id);
+           
+         const firmMap = {};
+         if(firms) firms.forEach(f => firmMap[f.isg_katip_firm_id] = f.id);
+         
+         // Toplu Personel Sorgusu (tc_kimlik_no üzerinden)
+         const { data: staff } = await dbClient.from('osgb_staff')
+           .select('id, tc_kimlik_no')
+           .eq('tenant_id', CURRENT_AUTH.tenant_id);
+           
+         const staffMap = {};
+         if(staff) staff.forEach(s => staffMap[s.tc_kimlik_no] = s.id);
+         
+         const finalRows = tempRows.map(r => {
+            return {
+               tenant_id: r.tenant_id,
+               company_id: firmMap[r._temp_firm_id] || null,
+               assigned_staff_id: staffMap[r._temp_tc] || null,
+               isg_katip_contract_id: r.isg_katip_contract_id,
+               contract_type: r.contract_type,
+               start_date: r.start_date,
+               end_date: r.end_date,
+               status: r.status,
+               monthly_amount: r.monthly_amount,
+               contract_no: 'ISG-' + r.isg_katip_contract_id
+            };
+         });
+         
+         showStatus(finalRows.length + ' sözleşme içeri aktarılıyor...', '');
+         const { error } = await dbClient.from('crm_contracts').insert(finalRows);
+         if(error) throw error;
+      }
 
       window.addEventListener('load', async () => {
         // Drag & Drop
