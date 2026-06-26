@@ -1,0 +1,7 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="isgnova app icon">
+  <rect width="512" height="512" rx="112" fill="#0F1D2E"/>
+  <g transform="translate(256,256) scale(2.4) translate(-50,-50)">
+    <path d="M50,10 L63.6,36.4 L90,50 L63.6,63.6 L50,90 L36.4,63.6 L10,50 L36.4,36.4 Z" fill="#0E7C86"/>
+    <path d="M50,10 L63.6,36.4 L36.4,36.4 Z" fill="#F4A933"/>
+  </g>
+</svg>

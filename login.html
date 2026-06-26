@@ -1,9 +1,13 @@
 <!doctype html>
 <html lang="tr">
   <head>
+    <link rel="icon" type="image/svg+xml" href="brand/mark.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="brand/assets/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="brand/assets/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="brand/assets/apple-touch-icon.png" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OSGB SaaS - Giriş Paneli</title>
+    <title>isgnova - Giriş Paneli</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="js/supabase-config.js"></script>
     <style>
@@ -839,7 +843,7 @@
   <body>
     <div class="login-card">
       <img id="tenant_logo_img" class="tenant-login-logo" alt="Logo" />
-      <h2>🏢 <span id="tenant_title">OSGB SaaS</span> Giriş</h2>
+      <h2>🏢 <span id="tenant_title">isgnova</span> Giriş</h2>
       <div
         id="tenant_hint"
         style="text-align: center; color: #64748b; font-size: 13px; margin-top: -15px; margin-bottom: 20px"
@@ -912,12 +916,18 @@
             .eq('slug', slug)
             .maybeSingle();
           if (!error && data) {
-            document.getElementById('tenant_title').innerText = data.name || 'OSGB SaaS';
+            let tName = data.name || 'isgnova';
+            if (tName === 'Eses Software') tName = 'isgnova';
+            document.getElementById('tenant_title').innerText = tName;
             document.getElementById('tenant_hint').innerText =
               'Giriş adresi: ' + window.location.origin + '/login.html?tenant=' + data.slug;
             const logoImg = document.getElementById('tenant_logo_img');
-            if (data.logo_url) {
-              logoImg.src = data.logo_url;
+            let logoUrl = data.logo_url;
+            if (tName === 'isgnova') {
+              logoUrl = 'brand/mark.svg';
+            }
+            if (logoUrl) {
+              logoImg.src = logoUrl;
               logoImg.style.display = 'block';
             } else {
               logoImg.style.display = 'none';

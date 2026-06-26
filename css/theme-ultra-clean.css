@@ -1,15 +1,15 @@
 /* Ultra-Clean Enterprise pilot theme for crm.html */
 
 :root {
-  --uc-bg: #f5f7fa;
+  --uc-bg: #F6F8FA;
   --uc-surface: #ffffff;
-  --uc-surface-muted: #f8fafc;
-  --uc-line: #dde5ee;
-  --uc-text: #132031;
-  --uc-text-muted: #566579;
-  --uc-primary: #0f6f75;
-  --uc-primary-soft: #e6f4f5;
-  --uc-focus: #0e7490;
+  --uc-surface-muted: #F6F8FA;
+  --uc-line: #E2E8F0;
+  --uc-text: #0F1D2E;
+  --uc-text-muted: #64748b;
+  --uc-primary: #0E7C86;
+  --uc-primary-soft: #eef7f8;
+  --uc-focus: #0E7C86;
 }
 
 body.theme-ultra-clean {

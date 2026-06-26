@@ -1,6 +1,6 @@
 {
-  "name": "AKAD OSGB SaaS",
-  "short_name": "OSGB SaaS",
+  "name": "isgnova",
+  "short_name": "isgnova",
   "start_url": "risk.html",
   "display": "standalone",
   "background_color": "#f4f6f9",

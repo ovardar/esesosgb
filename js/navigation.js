@@ -1,4 +1,4 @@
-// OSGB SaaS Global Yetkilendirme ve Navigasyon Yönetimi
+// isgnova Global Yetkilendirme ve Navigasyon Yönetimi
 // Gerçek Supabase auth - mock değil!
 
 window.CUSTOM_ROLES = {}; // key: role_key, value: role_name
@@ -211,13 +211,18 @@ window.applyRoleBasedNavigation = function (role) {
 window.setTenantBranding = function (tenant) {
   const titleEl = document.getElementById('lbl_osgb_title');
   if (titleEl) {
-    titleEl.innerText = tenant && tenant.name ? tenant.name : 'Eses Software';
+    let name = tenant && tenant.name ? tenant.name : 'isgnova';
+    if (name === 'Eses Software' || name === 'Eses Test OSGB') name = 'isgnova';
+    titleEl.innerText = name;
   }
   const area = titleEl ? titleEl.closest('.logo-area') : null;
   if (!area) return;
 
   let img = area.querySelector('.tenant-logo-img');
-  const logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
+  let logoUrl = tenant && tenant.logo_url ? tenant.logo_url : '';
+  if (tenant && (tenant.name === 'Eses Software' || tenant.name === 'Eses Test OSGB')) {
+    logoUrl = 'brand/mark.svg';
+  }
   if (logoUrl) {
     if (!img) {
       img = document.createElement('img');
