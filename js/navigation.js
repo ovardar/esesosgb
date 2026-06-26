@@ -122,12 +122,13 @@ window.canAccessPage = function (role, page) {
   }
 
   if (role === 'admin') return true;
-  const crmPages = ['crm', 'crm-reports', 'crm-prices', 'crm-offers', 'crm-contracts', 'crm-transfer'];
+  const crmPages = ['crm', 'crm-reports', 'crm-prices', 'crm-offers', 'crm-contracts', 'settings'];
   if (crmPages.includes(page)) return true;
   if (role === 'sales') return crmPages.includes(page);
   if (['risk', 'accidents', 'near_miss', 'training', 'ppe', 'periodic', 'actions'].includes(page)) return role === 'uzman';
   if (page === 'medical') return role === 'hekim';
   if (page === 'staff') return false;
+  if (page === 'settings') return role === 'admin';
   if (['company', 'workers', 'schedule'].includes(page)) return ['uzman', 'hekim', 'dsp'].includes(role);
   return true;
 };
@@ -173,7 +174,8 @@ window.applyRoleBasedNavigation = function (role) {
     { id: 'ppe', href: 'ppe.html', text: 'KKD Zimmet', icon: '🧤' },
     { id: 'periodic', href: 'periodic.html', text: 'Periyodik Kontrol', icon: '🛠️' },
     { id: 'defter', href: 'defter.html', text: 'Dijital Onaylı Defter', icon: '📘' },
-    { id: 'kurul', href: 'kurul.html', text: 'İSG Kurul Toplantı Motoru', icon: '🪧' }
+    { id: 'kurul', href: 'kurul.html', text: 'İSG Kurul Toplantı Motoru', icon: '🪧' },
+    { id: 'settings', href: 'settings.html', text: 'Ayarlar', icon: '⚙️' }
   ];
 
   const currentPath = window.location.pathname.split('/').pop() || 'dashboard.html';

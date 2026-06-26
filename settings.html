@@ -129,18 +129,15 @@
         <div class="nav-container"></div>
       </div>
 
-      <div class="crm-sub-nav">
-        <a href="crm.html" class="crm-sub-nav-btn">👥 Müşteri Yönetimi</a>
-        <a href="crm-prices.html" class="crm-sub-nav-btn">💰 Fiyat Listesi</a>
-        <a href="crm-offers.html" class="crm-sub-nav-btn">📝 Teklif Yönetimi</a>
-        <a href="crm-contracts.html" class="crm-sub-nav-btn">📄 Sözleşme Yönetimi</a>
-        <a href="crm-transfer.html" class="crm-sub-nav-btn crm-sub-active">🔄 Aktarım</a>
-        <a href="crm-reports.html" class="crm-sub-nav-btn">📈 CRM Raporları</a>
-      </div>
-
       <div class="transfer-shell">
-        <h1 class="transfer-page-title">🔄 Veri Aktarımı</h1>
-        <p class="transfer-page-desc">Müşteri kayıtlarını CSV formatında toplu olarak içe veya dışa aktarın. Excel ile tam uyumlu UTF-8 BOM formatı kullanılır.</p>
+        <h1 class="transfer-page-title" style="margin-top: 10px;">⚙️ Genel Ayarlar</h1>
+        <p class="transfer-page-desc">Sistem ayarlarınızı, tema/dil tercihlerinizi ve veri aktarımı işlemlerini bu alandan yönetebilirsiniz.</p>
+
+        <div class="settings-tabs" style="display: flex; gap: 24px; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 0;">
+            <a href="#" style="text-decoration:none; color:var(--transfer-indigo); font-weight:600; border-bottom:2px solid var(--transfer-indigo); padding-bottom:12px; margin-bottom:-1px; font-size: 14.5px;">🔄 Veri Aktarımı</a>
+            <a href="#" style="text-decoration:none; color:#64748b; font-weight:500; padding-bottom:12px; cursor:pointer; font-size: 14.5px;" onclick="alert('Yakında eklenecek')">🎨 Görünüm & Tema</a>
+            <a href="#" style="text-decoration:none; color:#64748b; font-weight:500; padding-bottom:12px; cursor:pointer; font-size: 14.5px;" onclick="alert('Yakında eklenecek')">🌍 Dil & Bölge</a>
+        </div>
 
         <div id="status_banner" class="import-status-bar" style="display:none; margin-bottom: 20px;"></div>
 
