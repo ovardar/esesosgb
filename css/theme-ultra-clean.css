@@ -13,30 +13,35 @@
 }
 
 body.theme-palette-blue {
+  --primary: #2563EB;
   --uc-primary: #2563EB;
   --uc-primary-soft: #DBEAFE;
   --uc-focus: #1D4ED8;
 }
 
 body.theme-palette-emerald {
+  --primary: #059669;
   --uc-primary: #059669;
   --uc-primary-soft: #D1FAE5;
   --uc-focus: #047857;
 }
 
 body.theme-palette-purple {
+  --primary: #7C3AED;
   --uc-primary: #7C3AED;
   --uc-primary-soft: #EDE9FE;
   --uc-focus: #6D28D9;
 }
 
 body.theme-palette-rose {
+  --primary: #E11D48;
   --uc-primary: #E11D48;
   --uc-primary-soft: #FFE4E6;
   --uc-focus: #BE123C;
 }
 
 body.theme-palette-slate {
+  --primary: #475569;
   --uc-primary: #475569;
   --uc-primary-soft: #F1F5F9;
   --uc-focus: #334155;
