@@ -940,9 +940,16 @@
         if (el && el.textContent !== '—') companyName = el.textContent.trim();
         const offerNo = currentOfferNo || 'Yeni Teklif';
         
+        // Seçili kişilerin e-postalarını topla
+        const checkedBoxes = document.querySelectorAll('.recipient-checkbox:checked');
+        const emails = Array.from(checkedBoxes)
+                            .map(cb => cb.getAttribute('data-email'))
+                            .filter(em => em && em.trim() !== '');
+        const toList = emails.join(',');
+        
         const subject = encodeURIComponent(companyName + ' - İSG Hizmetleri Teklifi (' + offerNo + ')');
         const body = encodeURIComponent('Sayın İlgili,\n\nİSG hizmetleri teklifimiz (No: ' + offerNo + ') değerlendirmeniz için tarafınıza sunulmuştur.\n\nİyi çalışmalar dileriz.');
-        window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+        window.location.href = 'mailto:' + toList + '?subject=' + subject + '&body=' + body;
       }
 
       /* ═══════════════════════════════════════
@@ -1037,7 +1044,7 @@
 
         const { data, error } = await dbClient
           .from('crm_contacts')
-          .select('full_name, title')
+          .select('full_name, title, email')
           .eq('lead_id', leadId);
 
         if (error) {
@@ -1054,9 +1061,10 @@
         container.innerHTML = data.map((c, i) => {
           const isChecked = selectedRecipients.includes(c.full_name) ? 'checked' : '';
           const titleStr = c.title ? ` (${esc(c.title)})` : '';
+          const emailAttr = c.email ? `data-email="${esc(c.email)}"` : 'data-email=""';
           return `
             <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:500; cursor:pointer; color:var(--text-main); margin-right:15px; user-select:none;">
-              <input type="checkbox" class="recipient-checkbox" value="${esc(c.full_name)}" ${isChecked} onchange="updatePDFRecipients()" style="cursor:pointer;" />
+              <input type="checkbox" class="recipient-checkbox" value="${esc(c.full_name)}" ${emailAttr} ${isChecked} onchange="updatePDFRecipients()" style="cursor:pointer;" />
               <span>${esc(c.full_name)}${titleStr}</span>
             </label>
           `;

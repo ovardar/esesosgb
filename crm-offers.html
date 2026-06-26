@@ -955,13 +955,36 @@
         alert("PDF / Yazdır (özel antetli teklif formatı) modülü şu anda geliştirme aşamasındadır.");
       }
 
-      function emailDrawerOffer() {
+      async function emailDrawerOffer() {
         if (!drawerCurrentOffer) return;
         const offerNo = drawerCurrentOffer.offer_no || 'Yeni Teklif';
         const companyName = (drawerCurrentOffer.crm_leads && drawerCurrentOffer.crm_leads.company_name) || 'Firma';
+        
+        let emails = [];
+        if (drawerCurrentOffer.notes) {
+          const match = drawerCurrentOffer.notes.match(/\[recipients:\s*(.+?)\]/);
+          if (match && match[1]) {
+            const names = match[1].split(',').map(n => n.trim()).filter(n => n);
+            if (names.length > 0 && drawerCurrentOffer.lead_id) {
+              const { data, error } = await dbClient
+                .from('crm_contacts')
+                .select('email')
+                .eq('lead_id', drawerCurrentOffer.lead_id)
+                .in('full_name', names)
+                .not('email', 'is', null)
+                .neq('email', '');
+              
+              if (!error && data) {
+                emails = data.map(d => d.email);
+              }
+            }
+          }
+        }
+        
+        const toList = emails.join(',');
         const subject = encodeURIComponent(companyName + ' - İSG Hizmetleri Teklifi (' + offerNo + ')');
         const body = encodeURIComponent('Sayın İlgili,\n\nİSG hizmetleri teklifimiz (No: ' + offerNo + ') değerlendirmeniz için tarafınıza sunulmuştur.\n\nİyi çalışmalar dileriz.');
-        window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+        window.location.href = 'mailto:' + toList + '?subject=' + subject + '&body=' + body;
       }
 
       function closeDrawer() {
