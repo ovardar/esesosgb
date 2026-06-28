@@ -356,7 +356,8 @@
             full_name: w.full_name || '',
             age: w.age !== null && w.age !== undefined ? Number(w.age) : '',
             gender: w.gender || '',
-            job_title: w.job_title || ''
+            job_title: w.job_title || '',
+            is_disabled: w.is_disabled
           }));
 
           renderWorkerTable();
