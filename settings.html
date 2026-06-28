@@ -159,14 +159,26 @@
             <div style="margin-bottom: 8px;">
               <label style="display:block; font-size:13.5px; font-weight:700; color:#334155; margin-bottom:8px;">Dışa Aktarılacak Tablo:</label>
               <select id="export_table_select" onchange="onExportTableChange()" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box; font-size:14px; background:#fff;">
-                <option value="crm_leads" selected>🎯 Fırsat Müşterileri (crm_leads)</option>
-                <option value="crm_contacts">👥 İletişim Kişileri (crm_contacts)</option>
-                <option value="crm_offers">📝 Teklifler (crm_offers)</option>
-                <option value="crm_contracts">📄 Sözleşmeler (crm_contracts)</option>
-                <option value="crm_activities">💬 Görüşmeler & Aktiviteler (crm_activities)</option>
-                <option value="crm_tasks">📋 Takip Görevleri (crm_tasks)</option>
-                <option value="osgb_staff">🧑‍💼 Personel Listesi (osgb_staff)</option>
-                <option value="crm_price_list">💰 Fiyat Listesi (crm_price_list)</option>
+                <optgroup label="CRM Modülü">
+                  <option value="crm_leads" selected>🎯 Fırsat Müşterileri (crm_leads)</option>
+                  <option value="crm_contacts">👥 İletişim Kişileri (crm_contacts)</option>
+                  <option value="crm_offers">📝 Teklifler (crm_offers)</option>
+                  <option value="crm_contracts">📄 Sözleşmeler (crm_contracts)</option>
+                  <option value="crm_activities">💬 Görüşmeler & Aktiviteler (crm_activities)</option>
+                  <option value="crm_tasks">📋 Takip Görevleri (crm_tasks)</option>
+                  <option value="crm_price_list">💰 Fiyat Listesi (crm_price_list)</option>
+                </optgroup>
+                <optgroup label="İSG Kadro & Operasyon Modülü">
+                  <option value="workers">👷 Çalışan Listesi (workers)</option>
+                  <option value="training_attendance_entries">📚 Eğitim Katılım Dersleri (training_attendance_entries)</option>
+                  <option value="training_completions">🎓 Eğitim Tamamlama Durumları (training_completions)</option>
+                  <option value="ppe_assignments">🛡️ KKD Zimmetleri (ppe_assignments)</option>
+                  <option value="ppe_assignment_events">🧾 KKD İşlem Olayları (ppe_assignment_events)</option>
+                  <option value="work_accidents">🚨 İş Kazaları (work_accidents)</option>
+                  <option value="near_miss_reports">⚠️ Ramak Kala Raporları (near_miss_reports)</option>
+                  <option value="risk_assessments">📋 Risk Analizleri (risk_assessments)</option>
+                  <option value="osgb_staff">🧑‍💼 Personel Listesi (osgb_staff)</option>
+                </optgroup>
               </select>
             </div>
 
@@ -452,6 +464,87 @@
           select: "full_name,tc_kimlik_no,email,access_role,status,created_at",
           mapper: (s) => [
             s.full_name||'', s.tc_kimlik_no||'', s.email||'', s.access_role||'', s.status||'', s.created_at||''
+          ]
+        },
+        crm_price_list: {
+          title: "💰 Fiyat Listesi",
+          fields: "Tehlike Sınıfı, Min. Çalışan Sayısı, Max. Çalışan Sayısı, Hizmet Adı, Birim Fiyat, Tarih",
+          headers: ["Tehlike Sınıfı","Min. Çalışan Sayısı","Max. Çalışan Sayısı","Hizmet Adı","Birim Fiyat","Oluşturulma Tarihi"],
+          select: "danger_class,min_emp,max_emp,service_name,price,created_at",
+          mapper: (p) => [
+            p.danger_class||'', p.min_emp||'', p.max_emp||'', p.service_name||'', p.price||'', p.created_at||''
+          ]
+        },
+        workers: {
+          title: "👷 Çalışan Listesi",
+          fields: "Çalışan Adı, Yaş, Cinsiyet, Görev / Unvan, Tarih",
+          headers: ["Çalışan Adı","Yaş","Cinsiyet","Görev / Unvan","Oluşturulma Tarihi"],
+          select: "full_name,age,gender,job_title,created_at",
+          mapper: (w) => [
+            w.full_name||'', w.age||'', w.gender||'', w.job_title||'', w.created_at||''
+          ]
+        },
+        training_attendance_entries: {
+          title: "📚 Eğitim Katılım Dersleri",
+          fields: "Eğitim Tipi, Ders Tarihi, Katılım Durumu, Katılınan Saat, Eğitmen, Notlar, Tarih",
+          headers: ["Eğitim Tipi","Ders Tarihi","Katılım Durumu","Katılınan Saat","Eğitmen","Notlar","Oluşturulma Tarihi"],
+          select: "training_type,session_date,attendance_status,attended_hours,trainer_name,notes,created_at",
+          mapper: (ae) => [
+            ae.training_type||'', ae.session_date||'', ae.attendance_status||'', ae.attended_hours||0, ae.trainer_name||'', ae.notes||'', ae.created_at||''
+          ]
+        },
+        training_completions: {
+          title: "🎓 Eğitim Tamamlama Durumları",
+          fields: "Çalışan Adı, Eğitim Tipi, Tehlike Sınıfı, Gerekli Saat, Tamamlanan Saat, Durum, Yenileme Tarihi, Tarih",
+          headers: ["Çalışan Adı","Eğitim Tipi","Tehlike Sınıfı","Gerekli Saat","Tamamlanan Saat","Durum","Yenileme Tarihi","Oluşturulma Tarihi"],
+          select: "worker_name,training_type,hazard_class,required_hours,completed_hours,completion_status,renewal_date,created_at",
+          mapper: (tc) => [
+            tc.worker_name||'', tc.training_type||'', tc.hazard_class||'', tc.required_hours||0, tc.completed_hours||0, tc.completion_status||'', tc.renewal_date||'', tc.created_at||''
+          ]
+        },
+        ppe_assignments: {
+          title: "🛡️ KKD Zimmetleri",
+          fields: "KKD Türü, Adet, Seri/Beden, Veriliş Tarihi, Yenileme Tarihi, Teslim Eden, Durum, Tarih",
+          headers: ["KKD Türü","Adet","Seri/Beden","Veriliş Tarihi","Yenileme Tarihi","Teslim Eden","Durum","Oluşturulma Tarihi"],
+          select: "ppe_type_name,quantity,serial_no,issue_date,renewal_date,issued_by_email,status,created_at",
+          mapper: (pa) => [
+            pa.ppe_type_name||'', pa.quantity||1, pa.serial_no||'', pa.issue_date||'', pa.renewal_date||'', pa.issued_by_email||'', pa.status||'', pa.created_at||''
+          ]
+        },
+        ppe_assignment_events: {
+          title: "🧾 KKD İşlem Olayları",
+          fields: "İşlem Tarihi, İşlem Tipi, Not, Oluşturan E-posta, Tarih",
+          headers: ["İşlem Tarihi","İşlem Tipi","Not","Oluşturan E-posta","Oluşturulma Tarihi"],
+          select: "event_date,event_type,note,created_by_email,created_at",
+          mapper: (pe) => [
+            pe.event_date||'', pe.event_type||'', pe.note||'', pe.created_by_email||'', pe.created_at||''
+          ]
+        },
+        work_accidents: {
+          title: "🚨 İş Kazaları",
+          fields: "Kaza Tarihi, Kaza Saati, Kaza Yeri, Kaza Tipi, Çalışan Adı, Önem Derecesi, SGK Son Bildirim, Bildirildi mi, Açıklama, Sorumlu, Tarih",
+          headers: ["Kaza Tarihi","Kaza Saati","Kaza Yeri","Kaza Tipi","Çalışan Adı","Önem Derecesi","SGK Son Bildirim","Bildirildi mi","Açıklama","Sorumlu","Oluşturulma Tarihi"],
+          select: "accident_date,accident_time,accident_location,accident_type,worker_name,severity,sgk_deadline,sgk_notified,description,responsible_person,created_at",
+          mapper: (wa) => [
+            wa.accident_date||'', wa.accident_time||'', wa.accident_location||'', wa.accident_type||'', wa.worker_name||'', wa.severity||'', wa.sgk_deadline||'', wa.sgk_notified ? 'Evet' : 'Hayır', wa.description||'', wa.responsible_person||'', wa.created_at||''
+          ]
+        },
+        near_miss_reports: {
+          title: "⚠️ Ramak Kala Raporları",
+          fields: "Tarih, Olay Yeri, Olay Açıklaması, Bildiren E-posta, Durum, Öncelik, Tarih",
+          headers: ["Tarih","Olay Yeri","Olay Açıklaması","Bildiren E-posta","Durum","Öncelik","Oluşturulma Tarihi"],
+          select: "report_date,location,description,reporter_email,status,priority,created_at",
+          mapper: (nm) => [
+            nm.report_date||'', nm.location||'', nm.description||'', nm.reporter_email||'', nm.status||'', nm.priority||'', nm.created_at||''
+          ]
+        },
+        risk_assessments: {
+          title: "📋 Risk Analizleri",
+          fields: "Tehlike, Risk, Olasılık, Şiddet, Risk Skoru, Durum, Kontrol Tedbirleri, Sorumlu, Son Tarih, Tarih",
+          headers: ["Tehlike","Risk","Olasılık","Şiddet","Risk Skoru","Durum","Kontrol Tedbirleri","Sorumlu","Son Tarih","Oluşturulma Tarihi"],
+          select: "hazard,risk,likelihood,severity,risk_score,status,control_measures,responsible,due_date,created_at",
+          mapper: (ra) => [
+            ra.hazard||'', ra.risk||'', ra.likelihood||'', ra.severity||'', ra.risk_score||'', ra.status||'', ra.control_measures||'', ra.responsible||'', ra.due_date||'', ra.created_at||''
           ]
         },
         crm_price_list: {
