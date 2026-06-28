@@ -129,16 +129,16 @@
         <div class="nav-container"></div>
       </div>
 
+      <div class="crm-sub-nav" id="settings_tabs">
+        <a href="javascript:void(0);" onclick="switchSettingsTab('transfer', this)" class="crm-sub-nav-btn crm-sub-active">🔄 Veri Aktarımı</a>
+        <a href="javascript:void(0);" onclick="switchSettingsTab('theme', this)" class="crm-sub-nav-btn">🎨 Görünüm & Tema</a>
+        <a href="javascript:void(0);" onclick="switchSettingsTab('security', this)" class="crm-sub-nav-btn">🔒 Şifre Değiştir</a>
+        <a href="javascript:void(0);" onclick="alert('Yakında eklenecek')" class="crm-sub-nav-btn">🌍 Dil & Bölge</a>
+      </div>
+
       <div class="transfer-shell">
         <h1 class="transfer-page-title" style="margin-top: 10px;">⚙️ Genel Ayarlar</h1>
         <p class="transfer-page-desc">Sistem ayarlarınızı, tema/dil tercihlerinizi ve veri aktarımı işlemlerini bu alandan yönetebilirsiniz.</p>
-
-        <div class="settings-tabs" id="settings_tabs" style="display: flex; gap: 24px; margin-bottom: 24px; border-bottom: 1px solid #e2e8f0; padding-bottom: 0;">
-            <a href="javascript:void(0);" onclick="switchSettingsTab('transfer', this)" style="text-decoration:none; color:var(--transfer-indigo); font-weight:600; border-bottom:2px solid var(--transfer-indigo); padding-bottom:12px; margin-bottom:-1px; font-size: 14.5px;">🔄 Veri Aktarımı</a>
-            <a href="javascript:void(0);" onclick="switchSettingsTab('theme', this)" style="text-decoration:none; color:#64748b; font-weight:500; padding-bottom:12px; cursor:pointer; font-size: 14.5px;">🎨 Görünüm & Tema</a>
-            <a href="javascript:void(0);" onclick="switchSettingsTab('security', this)" style="text-decoration:none; color:#64748b; font-weight:500; padding-bottom:12px; cursor:pointer; font-size: 14.5px;">🔒 Şifre Değiştir</a>
-            <a href="javascript:void(0);" onclick="alert('Yakında eklenecek')" style="text-decoration:none; color:#64748b; font-weight:500; padding-bottom:12px; cursor:pointer; font-size: 14.5px;">🌍 Dil & Bölge</a>
-        </div>
 
         <div id="status_banner" class="import-status-bar" style="display:none; margin-bottom: 20px;"></div>
 
@@ -951,13 +951,9 @@
       // -- AYARLAR SEKME & TEMA YÖNETİMİ --
       function switchSettingsTab(tabName, el) {
         document.querySelectorAll('#settings_tabs a').forEach(a => {
-            a.style.color = '#64748b';
-            a.style.fontWeight = '500';
-            a.style.borderBottom = 'none';
+            a.classList.remove('crm-sub-active');
         });
-        el.style.color = 'var(--transfer-indigo)';
-        el.style.fontWeight = '600';
-        el.style.borderBottom = '2px solid var(--transfer-indigo)';
+        el.classList.add('crm-sub-active');
 
         document.getElementById('tab_transfer').style.display = tabName === 'transfer' ? 'block' : 'none';
         document.getElementById('tab_theme').style.display = tabName === 'theme' ? 'block' : 'none';
