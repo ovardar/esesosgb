@@ -150,25 +150,35 @@
             <div class="transfer-card-header">
               <div class="transfer-icon-wrap icon-export">📤</div>
               <div>
-                <p class="transfer-card-title">Dışa Aktar</p>
-                <p class="transfer-card-sub">Tüm müşteri kayıtlarını CSV olarak indir</p>
+                <p class="transfer-card-title">Verileri Dışa Aktar</p>
+                <p class="transfer-card-sub">Sistemdeki verilerinizi seçerek CSV formatında indirin</p>
               </div>
             </div>
             <hr class="transfer-divider" />
-            <div class="transfer-info-box">
+            
+            <div style="margin-bottom: 8px;">
+              <label style="display:block; font-size:13.5px; font-weight:700; color:#334155; margin-bottom:8px;">Dışa Aktarılacak Tablo:</label>
+              <select id="export_table_select" onchange="onExportTableChange()" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:8px; box-sizing:border-box; font-size:14px; background:#fff;">
+                <option value="crm_leads" selected>🎯 Fırsat Müşterileri (crm_leads)</option>
+                <option value="crm_contacts">👥 İletişim Kişileri (crm_contacts)</option>
+                <option value="crm_offers">📝 Teklifler (crm_offers)</option>
+                <option value="crm_contracts">📄 Sözleşmeler (crm_contracts)</option>
+                <option value="osgb_staff">🧑‍💼 Personel Listesi (osgb_staff)</option>
+                <option value="crm_price_list">💰 Fiyat Listesi (crm_price_list)</option>
+              </select>
+            </div>
+
+            <div class="transfer-info-box" id="export_info_box" style="font-size:12px; line-height:1.5;">
               <strong>Dışa aktarılacak sütunlar:</strong>
-              <ul class="col-list">
-                <li>Firma Adı, Şehir, İlçe, Sektör</li>
-                <li>Nace Kodu, Tehlike Sınıfı, Çalışan Sayısı</li>
-                <li>Aşama, Durum, Kaynak, Notlar</li>
-                <li>Oluşturulma Tarihi</li>
-              </ul>
+              <span id="export_fields_desc">Firma Adı, Şehir, İlçe, Sektör, Nace Kodu, Tehlike Sınıfı, Çalışan Sayısı, Aşama, Durum, Kaynak, Notlar, Tarih</span>
             </div>
+            
             <div id="export_count_area" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-height:28px;">
-              <span class="export-count-badge">⏳ Veriler yükleniyor...</span>
+              <span class="export-count-badge" id="export_count_badge">⏳ Sayı hesaplanıyor...</span>
             </div>
-            <button class="btn-transfer-export" onclick="exportLeadsToCSV()">
-              📤 Müşteri Listesini İndir (.csv)
+            
+            <button class="btn-transfer-export" onclick="exportSelectedTable()">
+              📤 Seçilen Tabloyu İndir (.csv)
             </button>
           </div>
 
@@ -371,21 +381,92 @@
       }
 
 
-      async function loadLeadCount() {
+      const EXPORT_CONFIGS = {
+        crm_leads: {
+          title: "🎯 Fırsat Müşterileri",
+          fields: "Firma Adı, Vergi No, Vergi Dairesi, Sektör, Nace Kodu, Tehlike Sınıfı, Çalışan Sayısı, İl, İlçe, Adres, Web Sitesi, Kaynak, Aşama, Durum, Notlar, Sorumlu, Tarih",
+          headers: ["Firma Adı","Vergi No","Vergi Dairesi","Sektör","Nace Kodu","Tehlike Sınıfı","Çalışan Sayısı","Şehir","İlçe","Adres","Web Sitesi","Kaynak","Aşama","Durum","Notlar","Sorumlu","Oluşturulma Tarihi"],
+          select: "company_name,tax_no,tax_office,sector,nace_code,danger_class,employee_count,city,district,address,website,lead_source,stage,lead_status,notes,assigned_to,created_at",
+          mapper: (l) => [
+            l.company_name||'', l.tax_no||'', l.tax_office||'', l.sector||'', l.nace_code||'', l.danger_class||'',
+            l.employee_count||'', l.city||'', l.district||'', l.address||'', l.website||'', l.lead_source||'',
+            l.stage||'', l.lead_status||'', l.notes||'', l.assigned_to||'', l.created_at||''
+          ]
+        },
+        crm_contacts: {
+          title: "👥 İletişim Kişileri",
+          fields: "Ad Soyad, Unvan, Telefon, E-posta, Birincil Yetkili, Fatura Yetkilisi, Sözleşme Yetkilisi, Notlar, Tarih",
+          headers: ["Ad Soyad","Unvan","Telefon","E-posta","Birincil Yetkili","Fatura Yetkilisi","Sözleşme Yetkilisi","Notlar","Oluşturulma Tarihi"],
+          select: "full_name,title,phone,email,is_primary,is_invoice_contact,is_contract_authority,notes,created_at",
+          mapper: (c) => [
+            c.full_name||'', c.title||'', c.phone||'', c.email||'',
+            c.is_primary ? 'Evet' : 'Hayır', c.is_invoice_contact ? 'Evet' : 'Hayır', c.is_contract_authority ? 'Evet' : 'Hayır',
+            c.notes||'', c.created_at||''
+          ]
+        },
+        crm_offers: {
+          title: "📝 Teklifler",
+          fields: "Teklif No, Versiyon, Teklif Tarihi, Geçerlilik Tarihi, Çalışan Sayısı, Aylık Ücret, İskonto (%), KDV Oranı (%), KDV Dahil Genel Toplam, Durum, Notlar, Tarih",
+          headers: ["Teklif No","Versiyon","Teklif Tarihi","Geçerlilik Tarihi","Çalışan Sayısı","Aylık Ücret","İskonto (%)","KDV Oranı (%)","Genel Toplam","Durum","Notlar","Oluşturulma Tarihi"],
+          select: "offer_no,version,offer_date,valid_until,employee_count,monthly_fee,discount,kdv_rate,total_amount,status,notes,created_at",
+          mapper: (o) => [
+            o.offer_no||'', o.version||'', o.offer_date||'', o.valid_until||'', o.employee_count||'', o.monthly_fee||'',
+            o.discount||'', o.kdv_rate||'', o.total_amount||'', o.status||'', o.notes||'', o.created_at||''
+          ]
+        },
+        crm_contracts: {
+          title: "📄 Sözleşmeler",
+          fields: "Sözleşme No, Versiyon, Başlangıç Tarihi, Bitiş Tarihi, Aylık Ücret, Ödeme Dönemi, Ödeme Şekli, İmzalandı mı, İSG-Katip yapıldı mı, Sorumlu Uzman, Sorumlu Hekim, Durum, Notlar, Tarih",
+          headers: ["Sözleşme No","Versiyon","Başlangıç Tarihi","Bitiş Tarihi","Aylık Ücret","Ödeme Dönemi","Ödeme Şekli","İmzalandı mı","İSG-Katip yapıldı mı","Sorumlu Uzman","Sorumlu Hekim","Durum","Notlar","Oluşturulma Tarihi"],
+          select: "contract_no,version,start_date,end_date,monthly_fee,payment_period,payment_method,is_signed,isg_katip_done,assigned_uzman,assigned_hekim,status,notes,created_at",
+          mapper: (c) => [
+            c.contract_no||'', c.version||'', c.start_date||'', c.end_date||'', c.monthly_fee||'', c.payment_period||'', c.payment_method||'',
+            c.is_signed ? 'Evet' : 'Hayır', c.isg_katip_done ? 'Evet' : 'Hayır', c.assigned_uzman||'', c.assigned_hekim||'', c.status||'', c.notes||'', c.created_at||''
+          ]
+        },
+        osgb_staff: {
+          title: "🧑‍💼 Personel Listesi",
+          fields: "Ad Soyad, TC Kimlik No, E-posta, Yetki Rolü, Durum, Tarih",
+          headers: ["Ad Soyad","TC Kimlik No","E-posta","Yetki Rolü","Durum","Oluşturulma Tarihi"],
+          select: "full_name,tc_kimlik_no,email,access_role,status,created_at",
+          mapper: (s) => [
+            s.full_name||'', s.tc_kimlik_no||'', s.email||'', s.access_role||'', s.status||'', s.created_at||''
+          ]
+        },
+        crm_price_list: {
+          title: "💰 Fiyat Listesi",
+          fields: "Tehlike Sınıfı, Min. Çalışan Sayısı, Max. Çalışan Sayısı, Hizmet Adı, Birim Fiyat, Tarih",
+          headers: ["Tehlike Sınıfı","Min. Çalışan Sayısı","Max. Çalışan Sayısı","Hizmet Adı","Birim Fiyat","Oluşturulma Tarihi"],
+          select: "danger_class,min_emp,max_emp,service_name,price,created_at",
+          mapper: (p) => [
+            p.danger_class||'', p.min_emp||'', p.max_emp||'', p.service_name||'', p.price||'', p.created_at||''
+          ]
+        }
+      };
+
+      async function onExportTableChange() {
+        const table = document.getElementById('export_table_select').value;
+        const config = EXPORT_CONFIGS[table];
+        if (!config) return;
+
+        document.getElementById('export_fields_desc').innerText = config.fields;
+        const badge = document.getElementById('export_count_badge');
+        badge.innerText = '⏳ Sayı hesaplanıyor...';
+
         if (!CURRENT_AUTH || !dbClient) return;
-        const { count } = await dbClient
-          .from('crm_leads')
-          .select('id', { count: 'exact', head: true })
-          .eq('tenant_id', CURRENT_AUTH.tenant_id);
-        allLeads = [];
-        const { data } = await dbClient
-          .from('crm_leads')
-          .select('company_name,city,district,sector,nace_code,danger_class,employee_count,stage,lead_status,lead_source,notes,created_at')
-          .eq('tenant_id', CURRENT_AUTH.tenant_id)
-          .order('created_at', { ascending: false });
-        allLeads = data || [];
-        const badge = document.getElementById('export_count_area');
-        badge.innerHTML = '<span class="export-count-badge">📊 ' + allLeads.length + ' müşteri kaydı mevcut</span>';
+
+        try {
+          const { count, error } = await dbClient
+            .from(table)
+            .select('*', { count: 'exact', head: true })
+            .eq('tenant_id', CURRENT_AUTH.tenant_id);
+
+          if (error) throw error;
+          badge.innerText = '📊 ' + (count || 0) + ' kayıt mevcut';
+        } catch (err) {
+          console.warn('Kayıt sayısı alınamadı:', err);
+          badge.innerText = '⚠️ Kayıt sayısı alınamadı';
+        }
       }
 
       window.downloadSampleCSV = function() {
@@ -400,34 +481,50 @@
         showToast("Örnek şablon indirildi.", "success");
       };
 
-      window.exportLeadsToCSV = function() {
-        if (allLeads.length === 0) {
-          showToast('Dışa aktarılacak kayıt bulunamadı.', 'error');
-          return;
+      window.exportSelectedTable = async function() {
+        const table = document.getElementById('export_table_select').value;
+        const config = EXPORT_CONFIGS[table];
+        if (!config || !CURRENT_AUTH || !dbClient) return;
+
+        const button = document.querySelector('.btn-transfer-export');
+        button.disabled = true;
+        button.innerText = '⏳ Hazırlanıyor...';
+
+        try {
+          const { data, error } = await dbClient
+            .from(table)
+            .select(config.select)
+            .eq('tenant_id', CURRENT_AUTH.tenant_id);
+
+          if (error) throw error;
+
+          if (!data || data.length === 0) {
+            showToast('Dışa aktarılacak kayıt bulunamadı.', 'error');
+            return;
+          }
+
+          const rows = data.map(item => {
+            const mapped = config.mapper(item);
+            return mapped.map(v => '"' + String(v).replace(/"/g, '""') + '"');
+          });
+
+          const csv = "\uFEFF" + [config.headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${table}_ihracat_${new Date().toISOString().slice(0, 10)}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+
+          showToast(`${data.length} kayıt başarıyla dışa aktarıldı.`, "success");
+        } catch (err) {
+          showToast('Dışa aktarma hatası: ' + err.message, 'error');
+        } finally {
+          button.disabled = false;
+          button.innerHTML = `📤 Seçilen Tabloyu İndir (.csv)`;
         }
-        const headers = ["Firma Adı","Şehir","İlçe","Sektör","Nace Kodu","Tehlike Sınıfı","Çalışan Sayısı","Aşama","Durum","Kaynak","Notlar","Oluşturulma Tarihi"];
-        const rows = allLeads.map(l => [
-          '"' + (l.company_name||'').replace(/"/g,'""') + '"',
-          '"' + (l.city||'').replace(/"/g,'""') + '"',
-          '"' + (l.district||'').replace(/"/g,'""') + '"',
-          '"' + (l.sector||'').replace(/"/g,'""') + '"',
-          '"' + (l.nace_code||'').replace(/"/g,'""') + '"',
-          '"' + (l.danger_class||'').replace(/"/g,'""') + '"',
-          l.employee_count || '',
-          '"' + (l.stage||'').replace(/"/g,'""') + '"',
-          '"' + (l.lead_status||'').replace(/"/g,'""') + '"',
-          '"' + (l.lead_source||'').replace(/"/g,'""') + '"',
-          '"' + (l.notes||'').replace(/"/g,'""') + '"',
-          l.created_at || ''
-        ]);
-        const csv = "\uFEFF" + [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "crm_lead_ihracat_" + new Date().toISOString().slice(0,10) + ".csv";
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        showToast(allLeads.length + " kayıt başarıyla dışa aktarıldı.", "success");
       };
 
       function parseCSVText(text) {
@@ -730,16 +827,12 @@
           });
         }
       });
-          document.addEventListener('DOMContentLoaded', async () => {
+      document.addEventListener('DOMContentLoaded', async () => {
         const auth = await requireAuthAndRole('crm');
         if (!auth) return;
         CURRENT_AUTH = auth;
-        await loadLeadCount();
+        await onExportTableChange();
       });
-
-      async function loadLeadCount() {
-        // Just refresh page or logic
-      }
       
       // -- AYARLAR SEKME & TEMA YÖNETİMİ --
       function switchSettingsTab(tabName, el) {
