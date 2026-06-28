@@ -81,6 +81,10 @@
             <div class="form-group">
               <label>Görev / Unvan</label><input type="text" id="worker_job" placeholder="Örn: Kaynakçı" />
             </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; padding-top: 24px;">
+              <input type="checkbox" id="worker_is_disabled" style="width: 18px; height: 18px; cursor: pointer;" />
+              <label for="worker_is_disabled" style="cursor: pointer; font-weight: 700; margin: 0; white-space: nowrap;">♿ Engelli</label>
+            </div>
           </div>
           <button class="submit-btn" onclick="saveWorker()" style="margin-top: 14px;">Yeni Çalışanı Kadroya Ekle</button>
           <div id="status"></div>
@@ -213,6 +217,10 @@
             <div class="form-group">
               <label>Görev / Unvan</label>
               <input type="text" id="edit_worker_job" placeholder="Örn: Kaynakçı" />
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; padding-top: 14px;">
+              <input type="checkbox" id="edit_worker_is_disabled" style="width: 18px; height: 18px; cursor: pointer;" />
+              <label for="edit_worker_is_disabled" style="cursor: pointer; font-weight: 700; margin: 0; white-space: nowrap;">♿ Engelli</label>
             </div>
           </div>
           <div class="modal-actions">
