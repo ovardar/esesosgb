@@ -15,45 +15,56 @@
 body.theme-palette-blue {
   --primary: #2563EB;
   --uc-primary: #2563EB;
-  --uc-primary-soft: #DBEAFE;
-  --uc-focus: #1D4ED8;
+  --uc-primary-soft: #eff6ff;
+  --uc-bg: #f8fafc;
+  --uc-focus: #1d4ed8;
+  --uc-line: #dbeafe;
 }
 
 body.theme-palette-emerald {
   --primary: #059669;
   --uc-primary: #059669;
-  --uc-primary-soft: #D1FAE5;
+  --uc-primary-soft: #f0fdf4;
+  --uc-bg: #f4fbf7;
   --uc-focus: #047857;
+  --uc-line: #d1fae5;
 }
 
 body.theme-palette-purple {
-  --primary: #7C3AED;
-  --uc-primary: #7C3AED;
-  --uc-primary-soft: #EDE9FE;
-  --uc-focus: #6D28D9;
+  --primary: #7c3aed;
+  --uc-primary: #7c3aed;
+  --uc-primary-soft: #faf5ff;
+  --uc-bg: #faf7ff;
+  --uc-focus: #6d28d9;
+  --uc-line: #e9d5ff;
 }
 
 body.theme-palette-rose {
-  --primary: #E11D48;
-  --uc-primary: #E11D48;
-  --uc-primary-soft: #FFE4E6;
-  --uc-focus: #BE123C;
+  --primary: #e11d48;
+  --uc-primary: #e11d48;
+  --uc-primary-soft: #fff1f2;
+  --uc-bg: #fff5f6;
+  --uc-focus: #be123c;
+  --uc-line: #ffe4e6;
 }
 
 body.theme-palette-slate {
   --primary: #475569;
   --uc-primary: #475569;
-  --uc-primary-soft: #F1F5F9;
+  --uc-primary-soft: #f1f5f9;
+  --uc-bg: #f8fafc;
   --uc-focus: #334155;
+  --uc-line: #cbd5e1;
 }
 
 
 body.theme-ultra-clean {
   margin: 0;
   padding: 0;
-  background: linear-gradient(180deg, #fbfcfd, var(--uc-bg) 32%, var(--uc-bg));
+  background: linear-gradient(180deg, var(--uc-primary-soft), var(--uc-bg) 240px, var(--uc-bg));
   color: var(--uc-text);
   font-family: 'Manrope', 'Segoe UI', Tahoma, sans-serif;
+  min-height: 100vh;
 }
 
 body.theme-ultra-clean .card {
@@ -70,9 +81,10 @@ body.theme-ultra-clean .global-header {
   top: 0;
   z-index: 100;
   padding: 14px 28px 10px;
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--uc-line);
+  border-top: 4px solid var(--uc-primary);
   color: var(--uc-text);
 }
 
@@ -89,6 +101,7 @@ body.theme-ultra-clean .logo-area {
 body.theme-ultra-clean .logo-badge {
   background: var(--uc-primary-soft);
   color: var(--uc-primary);
+  border: 1px solid var(--uc-line);
   border-radius: 999px;
   padding: 3px 8px;
   font-size: 10px;
@@ -102,10 +115,18 @@ body.theme-ultra-clean .user-info {
 }
 
 body.theme-ultra-clean .logout-btn {
-  background: #1f4f54;
-  color: #f8fbfc;
+  background: var(--uc-primary);
+  color: #ffffff;
   border-radius: 8px;
   padding: 8px 12px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+body.theme-ultra-clean .logout-btn:hover {
+  opacity: 0.9;
 }
 
 body.theme-ultra-clean .nav-container {
@@ -116,20 +137,27 @@ body.theme-ultra-clean .nav-container {
 }
 
 body.theme-ultra-clean .nav-btn {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.75);
   color: #334155;
   border: 1px solid var(--uc-line);
   border-radius: 999px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   font-size: 12px;
   font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+body.theme-ultra-clean .nav-btn:hover {
+  background: var(--uc-primary-soft);
+  border-color: var(--uc-primary);
+  color: var(--uc-primary);
 }
 
 body.theme-ultra-clean .nav-btn.active-page {
-  background: var(--uc-primary-soft);
-  color: var(--uc-primary) !important;
-  border-color: #bfe4e6;
-  box-shadow: none;
+  background: var(--uc-primary);
+  color: #ffffff !important;
+  border-color: var(--uc-primary);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 body.theme-ultra-clean .crm-page-shell {
@@ -352,4 +380,26 @@ body.theme-ultra-clean .toast-alert {
   body.theme-ultra-clean .logo-area {
     font-size: 16px;
   }
+}
+
+/* ── THEMED SUB-NAV OVERRIDES ── */
+body.theme-ultra-clean .crm-sub-nav {
+  background: var(--uc-primary-soft);
+  border-bottom: 1px solid var(--uc-line);
+}
+
+body.theme-ultra-clean .crm-sub-nav-btn {
+  color: var(--uc-text-muted);
+}
+
+body.theme-ultra-clean .crm-sub-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--uc-primary);
+}
+
+body.theme-ultra-clean .crm-sub-nav-btn.crm-sub-active {
+  background: var(--uc-surface);
+  color: var(--uc-primary);
+  border-color: var(--uc-line);
+  box-shadow: inset 0 3px 0 var(--uc-primary);
 }
