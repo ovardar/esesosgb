@@ -860,6 +860,7 @@
         const age = document.getElementById('worker_age').value;
         const gender = document.getElementById('worker_gender').value;
         const job = document.getElementById('worker_job').value;
+        const isDisabled = document.getElementById('worker_is_disabled').checked;
         const statusDiv = document.getElementById('status');
 
         if (!compId || !name || !age) {
@@ -867,7 +868,7 @@
           statusDiv.innerText = 'Eksik alanları doldurun!';
           return;
         }
-        const payload = { company_id: compId, full_name: name, age: parseInt(age), gender: gender, job_title: job };
+        const payload = { company_id: compId, full_name: name, age: parseInt(age), gender: gender, job_title: job, is_disabled: isDisabled };
         if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) payload.tenant_id = CURRENT_AUTH.tenant_id;
         const { error } = await dbClient.from('workers').insert([payload]);
         if (error) alert(error.message);
@@ -875,6 +876,7 @@
           document.getElementById('worker_name').value = '';
           document.getElementById('worker_age').value = '';
           document.getElementById('worker_job').value = '';
+          document.getElementById('worker_is_disabled').checked = false;
           setNewWorkerFormOpen(false);
           fetchWorkers();
         }
@@ -892,6 +894,7 @@
         document.getElementById('edit_worker_age').value = worker.age;
         document.getElementById('edit_worker_gender').value = worker.gender || 'Erkek';
         document.getElementById('edit_worker_job').value = worker.job_title;
+        document.getElementById('edit_worker_is_disabled').checked = !!worker.is_disabled;
 
         const statusDiv = document.getElementById('edit_status');
         statusDiv.innerText = '';
@@ -909,6 +912,7 @@
         const age = document.getElementById('edit_worker_age').value;
         const gender = document.getElementById('edit_worker_gender').value;
         const job = document.getElementById('edit_worker_job').value;
+        const isDisabled = document.getElementById('edit_worker_is_disabled').checked;
         const statusDiv = document.getElementById('edit_status');
 
         if (!id || !name || !age) {
@@ -925,7 +929,8 @@
             full_name: name,
             age: parseInt(age),
             gender: gender,
-            job_title: job
+            job_title: job,
+            is_disabled: isDisabled
           };
 
           const { error } = await dbClient
