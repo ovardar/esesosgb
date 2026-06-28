@@ -197,7 +197,7 @@
       </div>
     </div>
 
-    <div class="worker-edit-modal" id="worker_edit_modal">
+    <div class="worker-edit-modal" id="worker_edit_modal" onclick="if(event.target.id === 'worker_edit_modal') closeWorkerEditModal()">
       <div class="worker-edit-card">
         <div class="worker-edit-head">
           <div>
@@ -923,11 +923,17 @@
         const statusDiv = document.getElementById('edit_status');
         statusDiv.innerText = '';
 
-        document.getElementById('worker_edit_modal').style.display = 'flex';
+        const modal = document.getElementById('worker_edit_modal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('active'), 10);
       }
 
       function closeWorkerEditModal() {
-        document.getElementById('worker_edit_modal').style.display = 'none';
+        const modal = document.getElementById('worker_edit_modal');
+        modal.classList.remove('active');
+        setTimeout(() => {
+          modal.style.display = 'none';
+        }, 250);
       }
 
       async function updateWorker() {

@@ -374,3 +374,58 @@ body.theme-ultra-clean .workers-page-shell .worker-edit-btn:hover {
     padding: 18px 14px 24px;
   }
 }
+
+/* ── DRAWER DESIGN FOR WORKER EDIT MODAL ── */
+body.theme-ultra-clean .worker-edit-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: flex-end;
+  align-items: stretch;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  padding: 0 !important;
+  animation: none !important;
+}
+
+body.theme-ultra-clean .worker-edit-modal.active {
+  display: flex;
+  opacity: 1;
+}
+
+body.theme-ultra-clean .worker-edit-card {
+  width: 100% !important;
+  max-width: 480px !important;
+  height: 100vh !important;
+  background: #ffffff;
+  border-radius: 0 !important;
+  box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: 0 !important;
+  animation: none !important;
+}
+
+body.theme-ultra-clean .worker-edit-modal.active .worker-edit-card {
+  transform: translateX(0);
+}
+
+body.theme-ultra-clean .worker-edit-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+body.theme-ultra-clean .worker-edit-head {
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 20px 24px;
+}
