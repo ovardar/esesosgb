@@ -755,12 +755,14 @@
           const statusBadge = getStatusBadge(latest.status);
 
           const versionToggleHtml = hasHistory 
-            ? `<span class="btn-version-badge" onclick="event.stopPropagation(); toggleVersionHistory('${cNo}')">v${latest.version} (${list.length} Sürüm) ▾</span>`
+            ? `<span class="btn-version-badge" onclick="toggleVersionHistory('${cNo}', event)">v${latest.version} (${list.length} Sürüm) ▾</span>`
             : `<span class="badge badge-gray">v${latest.version}</span>`;
 
           const rowHtml = `
-            <tr class="main-contract-row" onclick="toggleVersionHistory('${cNo}')">
-              <td>${hasHistory ? '📁' : '📄'}</td>
+            <tr class="main-contract-row" onclick="openEditContractDrawer('${latest.id}')">
+              <td onclick="toggleVersionHistory('${cNo}', event)" style="text-align:center; font-size:16px; color:var(--uc-primary); font-weight:800; cursor:pointer;">
+                <span id="arrow_${cNo}">${hasHistory ? '▸' : '•'}</span>
+              </td>
               <td><strong>${latest.contract_no}</strong><br>${versionToggleHtml}</td>
               <td><strong>${companyName}</strong></td>
               <td style="font-size:12px; color:#475569;">${datesStr}</td>
@@ -794,7 +796,7 @@
                     </thead>
                     <tbody>
                       ${list.map(sub => `
-                        <tr onclick="openEditContractDrawer('${sub.id}')">
+                        <tr onclick="openEditContractDrawer('${sub.id}'); event.stopPropagation();">
                           <td><strong>v${sub.version}</strong></td>
                           <td>${sub.monthly_fee ? new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(sub.monthly_fee) : '0,00 ₺'}</td>
                           <td>${sub.start_date || '-'} / ${sub.end_date || 'Belirsiz'}</td>
@@ -820,13 +822,17 @@
         });
       }
 
-      function toggleVersionHistory(cNo) {
+      function toggleVersionHistory(cNo, event) {
+        if (event) event.stopPropagation();
         const row = document.getElementById(`history_${cNo}`);
+        const arrow = document.getElementById(`arrow_${cNo}`);
         if (!row) return;
         if (row.style.display === 'table-row') {
           row.style.display = 'none';
+          if (arrow && arrow.textContent !== '•') arrow.textContent = '▸';
         } else {
           row.style.display = 'table-row';
+          if (arrow && arrow.textContent !== '•') arrow.textContent = '▾';
         }
       }
 
