@@ -448,7 +448,15 @@
                 <td>${disabledStatusHtml}</td>
                 <td><button class="worker-action-btn" onclick="openWorkerTrainingModal('${escapeHtml(w.id)}')">Eğitimler</button></td>
                 <td><button class="worker-ppe-btn" onclick="openWorkerPpeModal('${escapeHtml(w.id)}')">KKD</button></td>
-                <td><button class="worker-edit-btn" onclick="openWorkerEditModal('${escapeHtml(w.id)}')">📝 Düzenle</button></td>
+                <td style="text-align: center;">
+                  <button onclick="openWorkerEditModal('${escapeHtml(w.id)}')" 
+                          style="background: none; border: none; padding: 4px 8px; cursor: pointer; font-size: 15px; transition: transform 0.2s;" 
+                          onmouseover="this.style.transform='scale(1.2)'" 
+                          onmouseout="this.style.transform='scale(1)'" 
+                          title="Düzenle">
+                    ✏️
+                  </button>
+                </td>
             </tr>
         `;
         });
