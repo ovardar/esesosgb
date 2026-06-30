@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css?v=3" />
     <link rel="stylesheet" href="css/theme-ultra-clean-crm-detail.css" />
     <script defer src="js/supabase-config.js"></script>
     <script defer src="js/navigation.js"></script>
@@ -143,44 +143,43 @@
 
         <!-- TAB: Contacts -->
         <div class="tab-pane" id="tab_contacts">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3 style="margin:0;font-size:15px;">İletişim Kişileri</h3>
-            <button class="btn-primary" onclick="openContactModal()">+ Kişi Ekle</button>
-          </div>
-          <div id="contacts_list">Yükleniyor...</div>
-
-          <!-- Contact Modal -->
-          <div class="modal-overlay" id="contact_modal" style="position:fixed">
-            <div class="modal-box">
-              <h3 id="contact_modal_title">Yeni İletişim Kişisi</h3>
-              <input type="hidden" id="c_id" />
-              <div class="form-grid">
-                <div class="form-group full"><label>Ad Soyad *</label><input type="text" id="c_name" /></div>
-                <div class="form-group"><label>Görev / Unvan</label><input type="text" id="c_title" placeholder="İK Müdürü, Muhasebe..." /></div>
-                <div class="form-group"><label>Telefon</label><input type="tel" id="c_phone" /></div>
-                <div class="form-group full"><label>E-posta</label><input type="email" id="c_email" /></div>
-                <div class="form-group full">
-                  <label>Roller (birden fazla seçebilirsin)</label>
-                  <select id="c_roles" multiple>
-                    <option value="primary">Birincil iletişim</option>
-                    <option value="invoice">Fatura kişisi</option>
-                    <option value="contract">Sözleşme yetkilisi</option>
-                    <option value="ik">İK Yetkilisi</option>
-                    <option value="muhasebe">Muhasebe</option>
-                    <option value="operasyon">Operasyon Sorumlusu</option>
-                    <option value="isg">İSG Sorumlusu</option>
-                    <option value="saha">Saha Sorumlusu</option>
-                  </select>
+          <div class="panel" style="margin-bottom: 16px;">
+            <button class="panel-toggle" id="contact_form_toggle" type="button" onclick="toggleContactForm()" aria-expanded="false" style="padding: 12px 20px;">
+              <h3 id="contact_modal_title" style="margin:0; font-size:15px;">➕ Yeni İletişim Kişisi</h3>
+              <span class="panel-toggle-icon">▾</span>
+            </button>
+            <div id="contact_form_panel" class="panel-collapsible is-collapsed">
+              <div class="panel-body" style="padding-top: 16px;">
+                <input type="hidden" id="c_id" />
+                <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div class="form-group-premium full" style="grid-column:1/-1;"><label>Ad Soyad *</label><input type="text" id="c_name" /></div>
+                  <div class="form-group-premium"><label>Görev / Unvan</label><input type="text" id="c_title" placeholder="İK Müdürü, Muhasebe..." /></div>
+                  <div class="form-group-premium"><label>Telefon</label><input type="tel" id="c_phone" /></div>
+                  <div class="form-group-premium full" style="grid-column:1/-1;"><label>E-posta</label><input type="email" id="c_email" /></div>
+                  <div class="form-group-premium full" style="grid-column:1/-1;">
+                    <label>Roller (birden fazla seçebilirsin)</label>
+                    <select id="c_roles" multiple style="width:100%; height:80px;">
+                      <option value="primary">Birincil iletişim</option>
+                      <option value="invoice">Fatura kişisi</option>
+                      <option value="contract">Sözleşme yetkilisi</option>
+                      <option value="ik">İK Yetkilisi</option>
+                      <option value="muhasebe">Muhasebe</option>
+                      <option value="operasyon">Operasyon Sorumlusu</option>
+                      <option value="isg">İSG Sorumlusu</option>
+                      <option value="saha">Saha Sorumlusu</option>
+                    </select>
+                  </div>
+                  <div class="form-group-premium full" style="grid-column:1/-1;"><label>Not</label><textarea id="c_notes" rows="2"></textarea></div>
                 </div>
-                <div class="form-group full"><label>Not</label><textarea id="c_notes" rows="2"></textarea></div>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+                  <button class="btn-secondary-premium" onclick="toggleContactForm(false)">İptal</button>
+                  <button class="btn-primary" onclick="saveContact()">Kaydet</button>
+                </div>
               </div>
-              <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeContactModal()">İptal</button>
-                <button class="btn-primary" onclick="saveContact()">Kaydet</button>
-              </div>
-              <div id="contact_status" style="text-align:center;font-size:13px;margin-top:8px;"></div>
             </div>
           </div>
+
+          <div id="contacts_list">Yükleniyor...</div>
         </div>
 
         <!-- TAB: Activities -->
@@ -277,67 +276,92 @@
         <div class="tab-pane" id="tab_contract">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap;">
             <h3 style="margin:0;font-size:15px;">Sözleşme Süreci</h3>
+            <button class="btn-primary" onclick="toggleNewContractForm()">+ Yeni Sözleşme</button>
           </div>
           <div class="saas-admin-note" style="margin-bottom:14px;">
-            Girdiğiniz bilgileri mevcut revizyon içinde kaydetmek istiyorsanız <strong>Kaydet</strong> düğmesini,
-            yeni bir versiyon olarak saklamak istiyorsanız <strong>Revizyon</strong> düğmesini kullanınız.
+            Firma için birden fazla isimlendirilmiş sözleşme oluşturabilir ve yönetebilirsiniz.
           </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Sözleşme Durumu</label>
-              <select id="ct_status">
-                <option>Hazırlanıyor</option><option>Müşteriye Gönderildi</option>
-                <option>İmza Bekleniyor</option><option>İmzalandı</option>
-                <option>ISG-Katip Bekleniyor</option><option>Aktif</option><option>İptal</option>
-              </select>
-            </div>
-            <div class="form-group"><label>Bağlı Teklif</label><select id="ct_offer_id"><option value="">Seçiniz</option></select></div>
-            <div class="form-group"><label>Sözleşme Başlangıç Tarihi</label><input type="date" id="ct_start_date" /></div>
-            <div class="form-group"><label>Sözleşme Bitiş Tarihi</label><input type="date" id="ct_end_date" /></div>
-            <div class="form-group"><label>Hizmet Başlangıç Tarihi</label><input type="date" id="ct_service_start" /></div>
-            <div class="form-group"><label>Aylık Anlaşma Bedeli (₺)</label><input type="number" id="ct_monthly_fee" step="0.01" /></div>
-            <div class="form-group"><label>Ödeme Periyodu</label>
-              <select id="ct_payment_period"><option>Aylık</option><option>3 Aylık</option><option>6 Aylık</option><option>Yıllık</option></select>
-            </div>
-            <div class="form-group"><label>Ödeme Şekli</label>
-              <select id="ct_payment_method"><option>Taksitli</option><option>Nakit</option><option>Elden</option><option>Dönem Başı</option><option>Dönem Sonu</option></select>
-            </div>
-            <div class="form-group"><label>Fatura Kesilecek Taraf</label>
-              <select id="ct_billing_target"><option>Firmaya</option><option>Bağlı OSGB'ye</option></select>
-            </div>
-            <div class="form-group"><label>Fatura Günü (1-31)</label><input type="number" id="ct_invoice_day" min="1" max="31" /></div>
-            <div class="form-group">
-              <label>Atanacak Uzman</label>
-              <select id="ct_uzman">
-                <option value="">Seçiniz</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Atanacak Hekim</label>
-              <select id="ct_hekim">
-                <option value="">Seçiniz</option>
-              </select>
-            </div>
-            <div class="form-group full" style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;"><input type="checkbox" id="ct_signed" /> Sözleşme imzalandı</label>
-              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;"><input type="checkbox" id="ct_katip" /> ISG-Katip tamamlandı</label>
-            </div>
-            <div class="form-group full"><label>Notlar</label><textarea id="ct_notes" rows="2"></textarea></div>
-          </div>
-          <div class="save-row" style="gap:12px;display:flex;flex-wrap:wrap;">
-            <button class="btn-primary" onclick="saveContract()">💾 Kaydet</button>
-            <button class="btn-secondary" onclick="createNewContractVersion()">Revizyon</button>
-            <button class="btn-secondary" id="contract_print_btn" onclick="printContract()" disabled>🖨️ Yazdır / PDF</button>
-          </div>
-          <div id="contract_status" style="text-align:right;font-size:13px;margin-top:8px;"></div>
 
-          <div style="margin-top:16px;">
-            <h4 style="margin:0 0 10px;font-size:13px;color:var(--text-muted);">Sözleşme Versiyonları</h4>
-            <div id="contract_version_list">Yükleniyor...</div>
+          <!-- Yeni Sözleşme Inline Form (Gizli/Göster) -->
+          <div id="new_contract_inline_form" style="display:none; margin-bottom:20px; padding:20px; background:#f8fafc; border:1px solid var(--uc-line); border-radius:12px;">
+            <h4 style="margin:0 0 16px; font-size:14px; font-weight:700; color:var(--uc-text);">Hızlı Sözleşme Oluştur</h4>
+            <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group-premium full-width">
+                <label>Sözleşme Adı *</label>
+                <input type="text" id="inl_ct_name" placeholder="Örn: Ana Sözleşme, Şantiye A Sözleşmesi..." />
+              </div>
+              <div class="form-group-premium">
+                <label>Bağlı Teklif</label>
+                <select id="inl_ct_offer_id"><option value="">Seçiniz</option></select>
+              </div>
+              <div class="form-group-premium">
+                <label>Sözleşme Durumu</label>
+                <select id="inl_ct_status">
+                  <option>Hazırlanıyor</option><option>Müşteriye Gönderildi</option>
+                  <option>İmza Bekleniyor</option><option>İmzalandı</option>
+                  <option>ISG-Katip Bekleniyor</option><option>Aktif</option><option>İptal</option>
+                </select>
+              </div>
+              <div class="form-group-premium">
+                <label>Sözleşme Başlangıç</label>
+                <input type="date" id="inl_ct_start" />
+              </div>
+              <div class="form-group-premium">
+                <label>Sözleşme Bitiş</label>
+                <input type="date" id="inl_ct_end" />
+              </div>
+              <div class="form-group-premium">
+                <label>Hizmet Başlangıç</label>
+                <input type="date" id="inl_ct_service_start" />
+              </div>
+              <div class="form-group-premium">
+                <label>Aylık Bedel (₺) *</label>
+                <input type="number" id="inl_ct_fee" step="0.01" placeholder="0.00" />
+              </div>
+              <div class="form-group-premium">
+                <label>Ödeme Periyodu</label>
+                <select id="inl_ct_payment_period"><option>Aylık</option><option>3 Aylık</option><option>6 Aylık</option><option>Yıllık</option></select>
+              </div>
+              <div class="form-group-premium">
+                <label>Ödeme Şekli</label>
+                <select id="inl_ct_payment_method"><option>Taksitli</option><option>Nakit</option><option>Elden</option><option>Dönem Başı</option><option>Dönem Sonu</option></select>
+              </div>
+              <div class="form-group-premium">
+                <label>Fatura Kesilecek Taraf</label>
+                <select id="inl_ct_billing_target"><option>Firmaya</option><option>Bağlı OSGB'ye</option></select>
+              </div>
+              <div class="form-group-premium">
+                <label>Fatura Günü (1-31)</label>
+                <input type="number" id="inl_ct_invoice_day" min="1" max="31" />
+              </div>
+              <div class="form-group-premium">
+                <label>Atanacak Uzman</label>
+                <select id="inl_ct_uzman"><option value="">Seçiniz</option></select>
+              </div>
+              <div class="form-group-premium">
+                <label>Atanacak Hekim</label>
+                <select id="inl_ct_hekim"><option value="">Seçiniz</option></select>
+              </div>
+              <div class="form-group-premium full-width" style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;"><input type="checkbox" id="inl_ct_signed" /> İmzalandı</label>
+              </div>
+              <div class="form-group-premium full-width">
+                <label>İSG-Katip Sözleşme ID</label>
+                <input type="text" id="inl_ct_katip_id" placeholder="İSG-Katip üzerindeki sözleşme numarası" />
+              </div>
+              <div class="form-group-premium full-width">
+                <label>Notlar</label>
+                <textarea id="inl_ct_notes" rows="2"></textarea>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+              <button class="btn-secondary-premium" onclick="toggleNewContractForm()">İptal</button>
+              <button class="btn-primary" onclick="saveInlineContract()">Oluştur</button>
+            </div>
           </div>
+
+          <div id="contracts_list">Yükleniyor...</div>
         </div>
-
-        
 
       </div>
     </div>
@@ -389,7 +413,6 @@
       }
 
       document.addEventListener('DOMContentLoaded', async function () {
-        // En basta body'yi goster ve debug panelini ekle ki bembeyaz kalmasin
         document.body.style.display = 'block';
 
         const logPanel = document.createElement('div');
@@ -408,7 +431,7 @@
         const initialTab = params.get('tab') || 'general';
         if (!LEAD_ID) { 
           appendLog('❌ Fırsat ID bulunamadı.');
-          alert('Fırsat ID bulunamadı.'); 
+          showToast('Fırsat ID bulunamadı.', 'error'); 
           window.location.href = 'crm.html'; 
           return; 
         }
@@ -432,11 +455,9 @@
           updateContractPrintButton();
         }
 
-        // Set today as default date for activity
         const actDateEl = document.getElementById('act_date');
         if (actDateEl) actDateEl.value = new Date().toISOString().slice(0,10);
 
-        // Hata toleransli ve loglamali yukleme
         const loaders = [
           { name: 'Fırsat', fn: loadLead },
           { name: 'Contacts', fn: loadContacts },
@@ -463,7 +484,6 @@
           }
         }
 
-        // Eğer tüm veriler hatasız yüklendiyse debug panelini temizle
         if (!hasError) {
           logPanel.remove();
         }
@@ -472,13 +492,11 @@
         if (initialBtn) switchTab(initialTab, initialBtn);
       });
 
-      /* ──────────────────── FIRSAT ──────────────────── */
       async function loadLead() {
         const { data, error } = await dbClient.from('crm_leads').select('*').eq('id', LEAD_ID).single();
-        if (error || !data) { alert('Fırsat bulunamadı.'); window.location.href = 'crm.html'; return; }
+        if (error || !data) { showToast('Fırsat bulunamadı.', 'error'); window.location.href = 'crm.html'; return; }
         currentLead = { ...data, stage_raw: data.stage, stage: normalizeStage(data.stage) };
         
-        // 15 Gün Zaman Aşımı Kontrolü
         const fifteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
         const updatedAt = new Date(currentLead.updated_at);
         const currentStatus = resolveLeadStatus(currentLead);
@@ -660,14 +678,14 @@
         const customVal = document.getElementById('lost_reason_custom').value.trim();
 
         if (!selectVal) {
-          alert('Lütfen bir kayıp nedeni seçin.');
+          showToast('Lütfen bir kayıp nedeni seçin.', 'warning');
           return;
         }
 
         let lostReason = selectVal;
         if (selectVal === 'Diğer') {
           if (!customVal) {
-            alert('Lütfen kayıp nedenini yazın.');
+            showToast('Lütfen kayıp nedenini yazın.', 'warning');
             return;
           }
           lostReason = customVal;
@@ -689,7 +707,6 @@
             .eq('id', LEAD_ID);
 
           if (!error) {
-            currentLead.lead_status = 'İnfer_durum_islemde'; // local state update
             currentLead.lead_status = 'İşlemde';
             document.getElementById('status_select').value = 'İşlemde';
             checkConversionSection(currentLead);
@@ -727,14 +744,11 @@
         }
       }
 
-      /* ══════════════════════════════════════════════════════
-         CONVERSION WIZARD — State & Functions
-         ══════════════════════════════════════════════════════ */
+      /* ──────────────────── CONVERSION WIZARD ──────────────────── */
       let wizardStep = 1;
-      let wizardContacts = []; // crm_contacts listesi
+      let wizardContacts = []; 
 
       function openConversionWizard() {
-        // Adım 1 verilerini currentLead'den doldur
         document.getElementById('wiz_company_name').value = currentLead.company_name || '';
         document.getElementById('wiz_tax_no').value = currentLead.tax_no || '';
         document.getElementById('wiz_tax_office').value = currentLead.tax_office || '';
@@ -757,19 +771,15 @@
       }
 
       function renderWizardStep() {
-        // Pane'lar
         document.querySelectorAll('.wiz-step-pane').forEach((p, i) => {
           p.classList.toggle('active', i + 1 === wizardStep);
         });
-        // Pills
         document.querySelectorAll('.wiz-step-pill').forEach((p, i) => {
           p.classList.remove('active', 'done');
           if (i + 1 < wizardStep) p.classList.add('done');
           if (i + 1 === wizardStep) p.classList.add('active');
         });
-        // Progress bar
         document.getElementById('wiz_progress').style.width = (wizardStep / 4 * 100) + '%';
-        // Title
         const titles = [
           ['Adım 1 — Firma Bilgileri', 'Müşteriye aktarılacak firma bilgilerini doğrulayın'],
           ['Adım 2 — İletişim Kişileri', 'Aktarılacak yetkili kişileri seçin'],
@@ -778,7 +788,6 @@
         ];
         document.getElementById('wiz_title').innerText = titles[wizardStep-1][0];
         document.getElementById('wiz_subtitle').innerText = titles[wizardStep-1][1];
-        // Butonlar
         document.getElementById('wiz_prev_btn').style.display = wizardStep > 1 && wizardStep < 4 ? '' : 'none';
         const nextBtn = document.getElementById('wiz_next_btn');
         if (wizardStep === 4) {
@@ -792,9 +801,7 @@
           nextBtn.onclick = () => wizardNext();
         }
         document.getElementById('wiz_footer_status').innerText = `Adım ${wizardStep} / 4`;
-        // Adım 2'ye geçince kişileri yükle
         if (wizardStep === 2) loadWizardContacts();
-        // Adım 3'e geçince sözleşme bilgilerini prefill et
         if (wizardStep === 3) prefillWizardContract();
       }
 
@@ -846,7 +853,6 @@
       }
 
       async function prefillWizardContract() {
-        // crm_contracts'tan bilgi varsa doldur
         const { data } = await dbClient.from('crm_contracts').select('*').eq('lead_id', LEAD_ID).maybeSingle();
         if (!data) return;
         if (data.service_start_date) document.getElementById('wiz_service_start').value = data.service_start_date;
@@ -867,7 +873,6 @@
         document.getElementById('wiz_footer_status').innerText = 'Veritabanına yazılıyor...';
         document.getElementById('wiz_footer_status').style.color = 'var(--text-muted)';
 
-        // Client-side UUID generator helper
         const companyId = (window.crypto && window.crypto.randomUUID) 
           ? window.crypto.randomUUID() 
           : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -875,7 +880,6 @@
               return v.toString(16);
             });
 
-        // ── ADIM A: customer_companies'e ekle ──
         const compPayload = {
           id: companyId,
           company_name: document.getElementById('wiz_company_name').value.trim(),
@@ -896,7 +900,6 @@
 
         window._wiz_company_id = companyId;
 
-        // ── ADIM B: crm_leads güncelle ──
         await dbClient.from('crm_leads').update({
           is_converted: true,
           converted_company_id: companyId,
@@ -905,13 +908,11 @@
           updated_at: new Date().toISOString()
         }).eq('id', LEAD_ID);
 
-        // ── ADIM C: Seçilen kişileri aktar (opsiyonel, yalnızca log) ──
         const selectedContacts = wizardContacts.filter((_, i) => {
           const ck = document.getElementById('wiz_ck_' + i);
           return ck && ck.checked;
         });
 
-        // ── ADIM D: Sözleşme bilgilerini crm_contracts'a güncelle ──
         const contractRow = {
           service_start_date: document.getElementById('wiz_service_start').value || null,
           monthly_fee: parseFloat(document.getElementById('wiz_monthly_fee').value) || null,
@@ -924,7 +925,6 @@
           notes: document.getElementById('wiz_contract_notes').value.trim() || null,
           status: 'Aktif'
         };
-        // Mevcut contract varsa güncelle, yoksa insert
         const { data: existCt } = await dbClient.from('crm_contracts').select('id').eq('lead_id', LEAD_ID).maybeSingle();
         if (existCt) {
           await dbClient.from('crm_contracts').update(contractRow).eq('id', existCt.id);
@@ -936,7 +936,6 @@
           await createFirstContactTaskIfNeeded(LEAD_ID, compPayload.company_name, contractRow.assigned_uzman);
         }
 
-        // ── Başarı ekranını doldur ──
         const monthlyFeeStr = contractRow.monthly_fee ? '₺' + Number(contractRow.monthly_fee).toLocaleString('tr-TR') + '/ay' : 'Belirtilmedi';
         document.getElementById('wiz_success_msg').innerText = `"${compPayload.company_name}" artık aktif müşteri olarak sistemde kayıtlıdır.`;
         document.getElementById('wiz_result_summary').innerHTML = `
@@ -948,7 +947,6 @@
           <div class="wiz-info-row"><span class="wiz-info-label">📝 ISG-Katip</span><span>${contractRow.isg_katip_done ? '✅ Tamamlandı' : '⏳ Bekliyor'}</span></div>
         `;
 
-        // Fırsat header'ı güncelle
         currentLead.is_converted = true;
         currentLead.converted_company_id = companyId;
         currentLead.lead_status = 'Kazanıldı';
@@ -961,10 +959,33 @@
         renderWizardStep();
       }
 
-      // Eski tek-adım fonksiyon — artık wizard'a yönlendirir
-      function convertToCustomer() { openConversionWizard(); }
-
       /* ──────────────────── CONTACTS ──────────────────── */
+      window.toggleContactForm = function(forceOpen = null, contactId = null) {
+        const panel = document.getElementById('contact_form_panel');
+        const toggle = document.getElementById('contact_form_toggle');
+        if (!panel) return;
+        const isCurrentlyOpen = !panel.classList.contains('is-collapsed');
+        const willBeOpen = forceOpen !== null ? forceOpen : !isCurrentlyOpen;
+        
+        if (willBeOpen) {
+          if (!contactId) {
+            document.getElementById('c_id').value = '';
+            document.getElementById('c_name').value = '';
+            document.getElementById('c_title').value = '';
+            document.getElementById('c_phone').value = '';
+            document.getElementById('c_email').value = '';
+            const sel = document.getElementById('c_roles');
+            for (let i = 0; i < sel.options.length; i++) sel.options[i].selected = false;
+            document.getElementById('c_notes').value = '';
+            document.getElementById('contact_modal_title').innerText = 'Yeni İletişim Kişisi';
+          }
+          setTimeout(() => document.getElementById('c_name').focus(), 100);
+        }
+        
+        panel.classList.toggle('is-collapsed', !willBeOpen);
+        if (toggle) toggle.setAttribute('aria-expanded', willBeOpen);
+      }
+
       async function loadContacts() {
         const { data } = await dbClient.from('crm_contacts').select('*').eq('lead_id', LEAD_ID).order('is_primary', { ascending: false });
         const list = document.getElementById('contacts_list');
@@ -976,9 +997,9 @@
               <div class="sub">${esc(c.title || '')} ${c.phone ? '• 📞 ' + esc(c.phone) : ''} ${c.email ? '• ✉️ ' + esc(c.email) : ''}</div>
               ${c.notes ? '<div class="sub" style="margin-top:4px;font-style:italic">' + esc(c.notes) + '</div>' : ''}
             </div>
-            <div style="display:flex;gap:6px;">
-              <button class="btn-secondary" onclick="openContactModal('${c.id}')">Düzenle</button>
-              <button class="btn-danger" onclick="deleteContact('${c.id}')">Sil</button>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <button class="btn-secondary-premium" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px;" onclick="openContactModal('${c.id}')">✏️ Düzenle</button>
+              <button class="btn-secondary-premium" style="padding: 6px 12px; font-size: 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; background: #fff5f5; color: #e11d48; border-color: #fecdd3;" onmouseover="this.style.background='#ffe4e6'" onmouseout="this.style.background='#fff5f5'" onclick="deleteContact('${c.id}')">🗑️ Sil</button>
             </div>
           </div>
         `).join('');
@@ -988,51 +1009,65 @@
         return Array.from(document.getElementById('c_roles').selectedOptions).map(o => o.value);
       }
 
-      function setSelectedRoles(values) {
-        const set = new Set(values || []);
-        Array.from(document.getElementById('c_roles').options).forEach((o) => {
-          o.selected = set.has(o.value);
-        });
-      }
-
-      function resetContactForm() {
-        editingContactId = null;
-        document.getElementById('contact_modal_title').innerText = 'Yeni İletişim Kişisi';
-        document.getElementById('c_id').value = '';
-        document.getElementById('c_name').value = '';
-        document.getElementById('c_title').value = '';
-        document.getElementById('c_phone').value = '';
-        document.getElementById('c_email').value = '';
-        document.getElementById('c_notes').value = '';
-        setSelectedRoles([]);
-      }
-
       async function openContactModal(contactId = null) {
-        resetContactForm();
         if (contactId) {
           const { data } = await dbClient.from('crm_contacts').select('*').eq('id', contactId).maybeSingle();
           if (data) {
             editingContactId = data.id;
-            document.getElementById('contact_modal_title').innerText = 'İletişim Kişisi Düzenle';
-            document.getElementById('c_id').value = data.id;
-            document.getElementById('c_name').value = data.full_name || '';
-            document.getElementById('c_title').value = data.title || '';
-            document.getElementById('c_phone').value = data.phone || '';
-            document.getElementById('c_email').value = data.email || '';
-            document.getElementById('c_notes').value = data.notes || '';
+            document.getElementById('edit_c_id').value = data.id;
+            document.getElementById('edit_c_name').value = data.full_name || '';
+            document.getElementById('edit_c_title').value = data.title || '';
+            document.getElementById('edit_c_phone').value = data.phone || '';
+            document.getElementById('edit_c_email').value = data.email || '';
+            document.getElementById('edit_c_notes').value = data.notes || '';
             const presetRoles = [];
             if (data.is_primary) presetRoles.push('primary');
             if (data.is_invoice_contact) presetRoles.push('invoice');
             if (data.is_contract_authority) presetRoles.push('contract');
-            setSelectedRoles(presetRoles);
+            const sel = document.getElementById('edit_c_roles');
+            for (let i = 0; i < sel.options.length; i++) {
+                sel.options[i].selected = presetRoles.includes(sel.options[i].value);
+            }
+            document.getElementById('contact_edit_drawer').classList.add('active');
           }
         }
-        document.getElementById('contact_modal').classList.add('open');
       }
 
-      function closeContactModal() {
-        document.getElementById('contact_modal').classList.remove('open');
-        resetContactForm();
+      function closeContactEditDrawer() {
+        document.getElementById('contact_edit_drawer').classList.remove('active');
+        editingContactId = null;
+        document.getElementById('edit_c_id').value = '';
+        document.getElementById('edit_c_name').value = '';
+        document.getElementById('edit_c_title').value = '';
+        document.getElementById('edit_c_phone').value = '';
+        document.getElementById('edit_c_email').value = '';
+        document.getElementById('edit_c_notes').value = '';
+        document.getElementById('edit_contact_status').innerText = '';
+      }
+
+      async function saveEditContact() {
+        const name = document.getElementById('edit_c_name').value.trim();
+        if (!name) { document.getElementById('edit_contact_status').innerText = '⚠️ Ad soyad zorunludur.'; return; }
+        const sel = document.getElementById('edit_c_roles');
+        const roles = Array.from(sel.selectedOptions).map(o => o.value);
+        const payload = {
+          tenant_id: CURRENT_AUTH.tenant_id, lead_id: LEAD_ID,
+          full_name: name,
+          title: document.getElementById('edit_c_title').value.trim() || null,
+          phone: document.getElementById('edit_c_phone').value.trim() || null,
+          email: document.getElementById('edit_c_email').value.trim() || null,
+          is_primary: roles.includes('primary'),
+          is_invoice_contact: roles.includes('invoice'),
+          is_contract_authority: roles.includes('contract'),
+          notes: document.getElementById('edit_c_notes').value.trim() || null
+        };
+        let error;
+        if (editingContactId) {
+          ({ error } = await dbClient.from('crm_contacts').update(payload).eq('id', editingContactId));
+        }
+        if (error) { document.getElementById('edit_contact_status').innerText = '❌ ' + error.message; return; }
+        closeContactEditDrawer();
+        loadContacts();
       }
 
       async function saveContact() {
@@ -1057,7 +1092,8 @@
           ({ error } = await dbClient.from('crm_contacts').insert([payload]));
         }
         if (error) { document.getElementById('contact_status').innerText = '❌ ' + error.message; return; }
-        closeContactModal();
+        toggleContactForm(false);
+        editingContactId = null;
         loadContacts();
       }
 
@@ -1130,7 +1166,7 @@
       async function completeTask(id) {
         const { error } = await dbClient.from('crm_tasks').update({ status: 'Tamamlandı', completed_at: new Date().toISOString() }).eq('id', id);
         if (error) {
-          alert('Görev tamamlanırken hata oluştu: ' + error.message);
+          showToast('Görev tamamlanırken hata oluştu: ' + error.message, 'error');
         } else {
           loadTasks();
         }
@@ -1168,7 +1204,6 @@
 
         await autoUpdateStatusToProgress();
 
-        // Tarih girilmişse mevcut kullanıcıya otomatik hatırlatma görevi oluştur
         if (reminderDate) {
           const taskPayload = [{
             tenant_id: CURRENT_AUTH.tenant_id,
@@ -1183,7 +1218,6 @@
             created_by: CURRENT_AUTH.email
           }];
 
-          // Ayrıca seçili OSGB personeline de (varsa, kendisi hariç) ayrı görev yaz
           const otherStaff = relatedStaff.filter(s => s.email && s.email !== CURRENT_AUTH.email);
           otherStaff.forEach(s => {
             taskPayload.push({
@@ -1291,15 +1325,26 @@
         const { data } = await dbClient.from('crm_offers').select('*').eq('lead_id', LEAD_ID).order('created_at', { ascending: false });
         const list = document.getElementById('offers_list');
 
-        // Offer dropdown for contract
         const ctOfferSel = document.getElementById('ct_offer_id');
-        ctOfferSel.innerHTML = '<option value="">Seçiniz</option>';
+        const inlCtOfferSel = document.getElementById('inl_ct_offer_id');
+        
+        if (ctOfferSel) ctOfferSel.innerHTML = '<option value="">Seçiniz</option>';
+        if (inlCtOfferSel) inlCtOfferSel.innerHTML = '<option value="">Seçiniz</option>';
 
         if (!data || !data.length) { list.innerHTML = '<p style="color:var(--text-muted);font-size:13px">Henüz teklif oluşturulmadı.</p>'; return; }
         data.forEach(o => {
-          const opt = document.createElement('option');
-          opt.value = o.id; opt.text = o.offer_no + ' v' + o.version + ' – ₺' + Number(o.total_amount || 0).toLocaleString('tr-TR');
-          ctOfferSel.appendChild(opt);
+          const optText = o.offer_no + ' v' + o.version + ' – ₺' + Number(o.total_amount || 0).toLocaleString('tr-TR');
+          
+          if (ctOfferSel) {
+            const opt1 = document.createElement('option');
+            opt1.value = o.id; opt1.text = optText;
+            ctOfferSel.appendChild(opt1);
+          }
+          if (inlCtOfferSel) {
+            const opt2 = document.createElement('option');
+            opt2.value = o.id; opt2.text = optText;
+            inlCtOfferSel.appendChild(opt2);
+          }
         });
         list.innerHTML = data.map(o => {
           const isRevision = o.notes && o.notes.includes('[Fiyat revizyon teklifi]');
@@ -1312,7 +1357,7 @@
               </div>
               <div style="text-align:right;">
                 <div class="offer-amount">₺${Number(o.total_amount || 0).toLocaleString('tr-TR')}</div>
-                <a href="crm-offer.html?id=${o.id}" class="btn-sm btn-view" style="text-decoration:none;display:inline-block;margin-top:4px">Düzenle</a>
+                <a href="crm-offer.html?id=${o.id}" class="btn-secondary-premium" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px; padding:6px 12px; font-size:12px; border-radius:8px; margin-top:4px;">✏️ Düzenle</a>
               </div>
             </div>
           `;
@@ -1330,6 +1375,8 @@
         contractStaffOptions = data;
         populateStaffSelect('ct_uzman', contractStaffOptions);
         populateStaffSelect('ct_hekim', contractStaffOptions);
+        populateStaffSelect('inl_ct_uzman', contractStaffOptions);
+        populateStaffSelect('inl_ct_hekim', contractStaffOptions);
         populateStaffSelect('wiz_uzman', contractStaffOptions);
         populateStaffSelect('wiz_hekim', contractStaffOptions);
         const activitySel = document.getElementById('act_related_staff');
@@ -1394,28 +1441,231 @@
           </div>
           </body></html>`;
         const w = window.open('', '_blank');
-        if (!w) { alert('Yeni pencere açılamadı. Lütfen tarayıcı ayarlarını kontrol edin.'); return; }
+        if (!w) { showToast('Yeni pencere açılamadı. Lütfen tarayıcı ayarlarını kontrol edin.', 'warning'); return; }
         w.document.write(html);
         w.document.close();
       }
 
-      function maybePrintSignedContract(isSigned) {
-        if (!isSigned) return;
-        printContract();
+      /* ──────────────────── CONTRACT ──────────────────── */
+      let allContractsGrouped = {};
+      let activeContractId = null;
+
+      async function loadContractData() {
+        await loadContractStaffOptions();
+        updateBillingTargetOptions(document.getElementById('n_existing_osgb')?.value || '');
+        
+        const { data } = await dbClient.from('crm_contracts')
+                                       .select('*')
+                                       .eq('lead_id', LEAD_ID)
+                                       .order('version', { ascending: false });
+        allContractsGrouped = {};
+        if (data) {
+          data.forEach(c => {
+            if (!allContractsGrouped[c.contract_no]) allContractsGrouped[c.contract_no] = [];
+            allContractsGrouped[c.contract_no].push(c);
+          });
+        }
+        renderContractsList();
       }
 
-      /* ──────────────────── CONTRACT ──────────────────── */
-      async function loadContract() {} // loaded inside tab switch
+      function renderContractsList() {
+        const listDiv = document.getElementById('contracts_list');
+        const keys = Object.keys(allContractsGrouped);
+        if (keys.length === 0) {
+          listDiv.innerHTML = '<div style="padding:30px; text-align:center; color:var(--text-muted); background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">Henüz sözleşme oluşturulmamış.</div>';
+          return;
+        }
 
-      async function saveContract() {
+        let html = '';
+        keys.forEach(no => {
+          const versions = allContractsGrouped[no];
+          const latest = versions[0];
+          html += `
+            <div class="offer-card" style="margin-bottom:10px;">
+              <div>
+                <div class="offer-num">${esc(latest.contract_name || 'İsimsiz Sözleşme')} — v${latest.version} <span style="font-size:11px;color:var(--text-muted)">${latest.contract_no}</span></div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
+                  Durum: <span style="font-weight:600;">${esc(latest.status)}</span> · 
+                  Geçerlilik: ${formatDate(latest.start_date)} - ${formatDate(latest.end_date)}
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div class="offer-amount">₺${Number(latest.monthly_fee || 0).toLocaleString('tr-TR')} <span style="font-size:10px; font-weight:normal; color:var(--text-muted)">/ Ay</span></div>
+                <button class="btn-secondary-premium" style="padding:6px 12px; font-size:12px; border-radius:8px; display:inline-flex; align-items:center; gap:4px; margin-top:4px;" onclick="openContractDrawer('${latest.id}')">✏️ Düzenle</button>
+              </div>
+            </div>
+          `;
+        });
+        listDiv.innerHTML = html;
+      }
+
+      function toggleNewContractForm() {
+        const form = document.getElementById('new_contract_inline_form');
+        if (form.style.display === 'none' || !form.style.display) {
+          form.style.display = 'block';
+          // reset fields
+          document.getElementById('inl_ct_name').value = '';
+          document.getElementById('inl_ct_offer_id').value = '';
+          document.getElementById('inl_ct_status').value = 'Hazırlanıyor';
+          document.getElementById('inl_ct_start').value = '';
+          document.getElementById('inl_ct_end').value = '';
+          document.getElementById('inl_ct_service_start').value = '';
+          document.getElementById('inl_ct_fee').value = '';
+          document.getElementById('inl_ct_payment_period').value = 'Aylık';
+          document.getElementById('inl_ct_payment_method').value = 'Taksitli';
+          document.getElementById('inl_ct_billing_target').value = 'Firmaya';
+          document.getElementById('inl_ct_invoice_day').value = '';
+          document.getElementById('inl_ct_uzman').value = '';
+          document.getElementById('inl_ct_hekim').value = '';
+          document.getElementById('inl_ct_signed').checked = false;
+          document.getElementById('inl_ct_katip_id').value = '';
+          document.getElementById('inl_ct_notes').value = '';
+        } else {
+          form.style.display = 'none';
+        }
+      }
+
+      async function saveInlineContract() {
+        const nameVal = document.getElementById('inl_ct_name').value.trim();
+        const feeVal = document.getElementById('inl_ct_fee').value;
+        if (!nameVal || !feeVal) {
+          showToast('Lütfen Sözleşme Adı ve Aylık Bedel alanlarını doldurun.', 'error');
+          return;
+        }
+        
+        const y = new Date().getFullYear();
+        const r = String(Math.floor(Math.random() * 9000) + 1000);
+        const contractNo = `SOZ-${y}-${r}`;
+
+        const row = {
+          tenant_id: CURRENT_AUTH.tenant_id,
+          lead_id: LEAD_ID,
+          contract_name: nameVal,
+          contract_no: contractNo,
+          version: 1,
+          offer_id: document.getElementById('inl_ct_offer_id').value || null,
+          status: document.getElementById('inl_ct_status').value,
+          start_date: document.getElementById('inl_ct_start').value || null,
+          end_date: document.getElementById('inl_ct_end').value || null,
+          service_start_date: document.getElementById('inl_ct_service_start').value || null,
+          monthly_fee: parseFloat(feeVal) || 0,
+          payment_period: document.getElementById('inl_ct_payment_period').value,
+          payment_method: document.getElementById('inl_ct_payment_method').value,
+          billing_target: document.getElementById('inl_ct_billing_target').value,
+          invoice_day: document.getElementById('inl_ct_invoice_day').value ? parseInt(document.getElementById('inl_ct_invoice_day').value) : null,
+          assigned_uzman: document.getElementById('inl_ct_uzman').value || null,
+          assigned_hekim: document.getElementById('inl_ct_hekim').value || null,
+          is_signed: document.getElementById('inl_ct_signed').checked,
+          isg_katip_id: document.getElementById('inl_ct_katip_id').value.trim() || null,
+          notes: document.getElementById('inl_ct_notes').value || null
+        };
+
+        const { error } = await dbClient.from('crm_contracts').insert([row]);
+        if (error) {
+          showToast('Hata: ' + error.message, 'error');
+        } else {
+          showToast('Yeni sözleşme oluşturuldu!', 'success');
+          toggleNewContractForm();
+          await loadContractData();
+        }
+      }
+
+      function openContractDrawer(id) {
+        if (!id) return;
+        activeContractId = id;
+        document.getElementById('contract_drawer').classList.add('active');
+        
+        // Edit existing
+        let selected = null;
+        Object.values(allContractsGrouped).forEach(arr => {
+          const found = arr.find(c => c.id === id);
+          if (found) selected = found;
+        });
+        if (selected) {
+          document.getElementById('drawer_contract_title').textContent = '📝 Sözleşme Düzenle';
+          document.getElementById('ct_name').value = selected.contract_name || '';
+          currentContractNo = selected.contract_no;
+          currentContractVersion = selected.version;
+          document.getElementById('ct_status').value = selected.status || 'Hazırlanıyor';
+          document.getElementById('ct_offer_id').value = selected.offer_id || '';
+          document.getElementById('ct_start_date').value = selected.start_date || '';
+          document.getElementById('ct_end_date').value = selected.end_date || '';
+          document.getElementById('ct_service_start').value = selected.service_start_date || '';
+          document.getElementById('ct_monthly_fee').value = selected.monthly_fee || '';
+          document.getElementById('ct_payment_period').value = selected.payment_period || 'Aylık';
+          document.getElementById('ct_payment_method').value = selected.payment_method || 'Taksitli';
+          document.getElementById('ct_billing_target').value = selected.billing_target || 'Firmaya';
+          document.getElementById('ct_invoice_day').value = selected.invoice_day || '';
+          document.getElementById('ct_uzman').value = selected.assigned_uzman || '';
+          document.getElementById('ct_hekim').value = selected.assigned_hekim || '';
+          document.getElementById('ct_signed').checked = !!selected.is_signed;
+          document.getElementById('ct_katip_id').value = selected.isg_katip_id || '';
+          document.getElementById('ct_notes').value = selected.notes || '';
+          
+          document.getElementById('btn_contract_rev').style.display = 'inline-flex';
+          document.getElementById('contract_print_btn').disabled = false;
+          
+          renderContractVersionsInDrawer(currentContractNo);
+          
+          // Prevent auto-focusing on inputs by focusing the title
+          const title = document.getElementById('drawer_contract_title');
+          if (title) {
+            title.setAttribute('tabindex', '-1');
+            title.style.outline = 'none';
+            title.focus();
+          }
+        }
+      }
+
+      function closeContractDrawer() {
+        document.getElementById('contract_drawer').classList.remove('active');
+        activeContractId = null;
+      }
+
+      function renderContractVersionsInDrawer(contractNo) {
+        const versions = allContractsGrouped[contractNo] || [];
+        const el = document.getElementById('contract_version_list');
+        if (!versions.length) {
+          el.innerHTML = '<p style="font-size:12px;color:var(--text-muted)">Henüz versiyon yok.</p>';
+          return;
+        }
+        el.innerHTML = versions.map(v => `
+          <div class="version-item" style="${v.id === activeContractId ? 'border-color:var(--primary);background:rgba(15,118,110,.06);' : ''}" onclick="openContractDrawer('${v.id}')">
+            <div>
+              <span class="vno">v${v.version}</span>
+              <span style="font-size:11px;color:var(--text-muted);margin-left:8px;">${formatDate(v.start_date)}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-weight:700;font-size:13px;">${v.monthly_fee ? '₺' + Number(v.monthly_fee).toLocaleString('tr-TR') : '-'}</span>
+              <span class="vstatus">${esc(v.status || '-')}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      async function saveContract(isNewVersion = false) {
+        const nameVal = document.getElementById('ct_name').value.trim();
+        if (!nameVal) {
+          showStatus('contract_status', '⚠️ Sözleşme Adı zorunludur.', 'error');
+          return false;
+        }
+
         if (!currentContractNo) {
           const y = new Date().getFullYear();
           const r = String(Math.floor(Math.random() * 9000) + 1000);
           currentContractNo = `SOZ-${y}-${r}`;
           currentContractVersion = 1;
+          isNewVersion = false;
+        } else if (isNewVersion) {
+          const versions = allContractsGrouped[currentContractNo] || [];
+          currentContractVersion = versions.length ? Math.max(...versions.map(v => Number(v.version) || 1)) + 1 : 2;
+          activeContractId = null; // force insert
         }
+
         const row = {
-          tenant_id: CURRENT_AUTH.tenant_id, lead_id: LEAD_ID,
+          tenant_id: CURRENT_AUTH.tenant_id, 
+          lead_id: LEAD_ID,
+          contract_name: nameVal,
           contract_no: currentContractNo,
           version: currentContractVersion,
           offer_id: document.getElementById('ct_offer_id').value || null,
@@ -1431,26 +1681,31 @@
           assigned_uzman: document.getElementById('ct_uzman').value.trim() || null,
           assigned_hekim: document.getElementById('ct_hekim').value.trim() || null,
           is_signed: document.getElementById('ct_signed').checked,
-          isg_katip_done: document.getElementById('ct_katip').checked,
+          isg_katip_id: document.getElementById('ct_katip_id').value.trim() || null,
           notes: document.getElementById('ct_notes').value.trim() || null
         };
+
         let error;
-        if (contractId) {
-          ({ error } = await dbClient.from('crm_contracts').update(row).eq('id', contractId));
+        if (activeContractId) {
+          ({ error } = await dbClient.from('crm_contracts').update(row).eq('id', activeContractId));
         } else {
           const res = await dbClient.from('crm_contracts').insert([row]).select().single();
           error = res.error;
-          if (!error) contractId = res.data.id;
+          if (!error) activeContractId = res.data.id;
         }
+
         showStatus('contract_status', error ? '❌ ' + error.message : '✅ Kaydedildi.', error ? 'error' : 'ok');
         if (error) return false;
-        updateContractPrintButton();
-        await loadContractVersions(currentContractNo);
-        markContractClean();
+
+        document.getElementById('contract_print_btn').disabled = false;
+        document.getElementById('btn_contract_rev').style.display = 'inline-flex';
+        
+        await loadContractData();
+        openContractDrawer(activeContractId); // reload exact version
+
         if (row.is_signed) {
           await syncLeadWonStateFromContract();
           await createFirstContactTaskIfNeeded(LEAD_ID, currentLead.company_name, row.assigned_uzman);
-          printContract();
         } else {
           const currentStatus = resolveLeadStatus(currentLead);
           if (currentStatus !== 'Kaybedildi') {
@@ -1463,170 +1718,15 @@
       async function syncLeadWonStateFromContract() {
         document.getElementById('stage_select').value = 'Sözleşme';
         document.getElementById('status_select').value = 'Kazanıldı';
-        await dbClient
-          .from('crm_leads')
-          .update({
+        await dbClient.from('crm_leads').update({
             stage: stageToDbValue('Sözleşme'),
             lead_status: 'Kazanıldı',
             updated_at: new Date().toISOString()
-          })
-          .eq('id', LEAD_ID);
+        }).eq('id', LEAD_ID);
         currentLead.stage = 'Sözleşme';
         currentLead.stage_raw = stageToDbValue('Sözleşme');
         currentLead.lead_status = 'Kazanıldı';
         checkConversionSection(currentLead);
-      }
-
-      async function loadContractVersions(contractNo) {
-        if (!contractNo) {
-          document.getElementById('contract_version_list').innerHTML = '<p style="font-size:12px;color:var(--text-muted)">Henüz sözleşme yok.</p>';
-          return;
-        }
-        const { data } = await dbClient
-          .from('crm_contracts')
-          .select('id,contract_no,version,status,start_date,monthly_fee')
-          .eq('lead_id', LEAD_ID)
-          .eq('contract_no', contractNo)
-          .order('version', { ascending: false });
-        allContractVersions = data || [];
-        const el = document.getElementById('contract_version_list');
-        if (!allContractVersions.length) {
-          el.innerHTML = '<p style="font-size:12px;color:var(--text-muted)">Henüz sözleşme versiyonu yok.</p>';
-          return;
-        }
-        el.innerHTML = allContractVersions.map(v => `
-          <div class="version-item" style="${v.id === contractId ? 'border-color:var(--primary);background:rgba(15,118,110,.06);' : ''}" onclick="requestLoadContractVersion('${v.id}')">
-            <div>
-              <span class="vno">v${v.version}</span>
-              <span style="font-size:11px;color:var(--text-muted);margin-left:8px;">${formatDate(v.start_date)}</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-              <span style="font-weight:700;font-size:13px;">${v.monthly_fee ? '₺' + Number(v.monthly_fee).toLocaleString('tr-TR') : '-'}</span>
-              <span class="vstatus">${esc(v.status || '-')}</span>
-            </div>
-          </div>
-        `).join('');
-      }
-
-      function getContractFormState() {
-        return {
-          offer_id: document.getElementById('ct_offer_id')?.value || '',
-          status: document.getElementById('ct_status')?.value || 'Hazırlanıyor',
-          start_date: document.getElementById('ct_start_date')?.value || '',
-          end_date: document.getElementById('ct_end_date')?.value || '',
-          service_start_date: document.getElementById('ct_service_start')?.value || '',
-          monthly_fee: document.getElementById('ct_monthly_fee')?.value || '',
-          payment_period: document.getElementById('ct_payment_period')?.value || 'Aylık',
-          payment_method: document.getElementById('ct_payment_method')?.value || 'Taksitli',
-          billing_target: normalizedBillingTarget(),
-          invoice_day: document.getElementById('ct_invoice_day')?.value || '',
-          assigned_uzman: document.getElementById('ct_uzman')?.value || '',
-          assigned_hekim: document.getElementById('ct_hekim')?.value || '',
-          is_signed: !!document.getElementById('ct_signed')?.checked,
-          isg_katip_done: !!document.getElementById('ct_katip')?.checked,
-          notes: document.getElementById('ct_notes')?.value || ''
-        };
-      }
-
-      function markContractClean() {
-        contractFormSnapshot = JSON.stringify(getContractFormState());
-      }
-
-      function hasContractUnsavedChanges() {
-        if (!document.getElementById('tab_contract')) return false;
-        if (!contractFormSnapshot) return false;
-        return contractFormSnapshot !== JSON.stringify(getContractFormState());
-      }
-
-      async function requestLoadContractVersion(id) {
-        if (id === contractId) return;
-        if (hasContractUnsavedChanges()) {
-          const saveFirst = confirm('Kaydedilmemiş sözleşme değişiklikleri var.\n\nTamam: Önce mevcut revizyonu kaydet, sonra seçtiğiniz revizyona geç.\nİptal: Kaydetmeden revizyona geçme seçeneklerini aç.');
-          if (saveFirst) {
-            const saved = await saveContract();
-            if (!saved) {
-              showStatus('contract_status', '❌ Kaydetme başarısız oldu. Lütfen hatayı düzeltip tekrar deneyin.', 'error');
-              return;
-            }
-          } else {
-            const discard = confirm('Değişiklikler kaydedilmeden seçilen revizyona geçilsin mi?\n\nTamam: Değişiklikleri kaybet ve geç\nİptal: Bu revizyonda kal');
-            if (!discard) {
-              showStatus('contract_status', 'ℹ️ Mevcut revizyonda kaldınız. Kaydet veya Revizyon ile devam edebilirsiniz.', 'info');
-              return;
-            }
-          }
-        }
-        await loadContractVersion(id);
-      }
-
-      async function loadContractVersion(id) {
-        const { data } = await dbClient.from('crm_contracts').select('*').eq('id', id).maybeSingle();
-        if (!data) return;
-        contractId = data.id;
-        currentContractNo = data.contract_no || currentContractNo;
-        currentContractVersion = data.version || 1;
-        document.getElementById('ct_status').value = data.status || 'Hazırlanıyor';
-        document.getElementById('ct_offer_id').value = data.offer_id || '';
-        document.getElementById('ct_start_date').value = data.start_date || '';
-        document.getElementById('ct_end_date').value = data.end_date || '';
-        document.getElementById('ct_service_start').value = data.service_start_date || '';
-        document.getElementById('ct_monthly_fee').value = data.monthly_fee || '';
-        document.getElementById('ct_payment_period').value = data.payment_period || 'Aylık';
-        document.getElementById('ct_payment_method').value = data.payment_method || 'Taksitli';
-        const billSel = document.getElementById('ct_billing_target');
-        if (billSel) {
-          if ((data.billing_target || 'Firmaya') === 'Firmaya') {
-            billSel.value = 'Firmaya';
-          } else {
-            const osgbOption = Array.from(billSel.options).find(o => o.text.startsWith("Bağlı OSGB'ye"));
-            if (osgbOption) billSel.value = osgbOption.value;
-          }
-        }
-        document.getElementById('ct_invoice_day').value = data.invoice_day || '';
-        document.getElementById('ct_uzman').value = data.assigned_uzman || '';
-        document.getElementById('ct_hekim').value = data.assigned_hekim || '';
-        document.getElementById('ct_signed').checked = !!data.is_signed;
-        document.getElementById('ct_katip').checked = !!data.isg_katip_done;
-        document.getElementById('ct_notes').value = data.notes || '';
-        updateContractPrintButton();
-        await loadContractVersions(currentContractNo);
-        markContractClean();
-      }
-
-      async function createNewContractVersion() {
-        if (!contractId) {
-          showStatus('contract_status', '⚠️ Önce mevcut sözleşmeyi kaydedin.', 'error');
-          return;
-        }
-        const nextVersion = allContractVersions.length ? Math.max(...allContractVersions.map(v => Number(v.version) || 1)) + 1 : 2;
-        const row = {
-          tenant_id: CURRENT_AUTH.tenant_id,
-          lead_id: LEAD_ID,
-          contract_no: currentContractNo,
-          version: nextVersion,
-          offer_id: document.getElementById('ct_offer_id').value || null,
-          status: 'Hazırlanıyor',
-          start_date: document.getElementById('ct_start_date').value || null,
-          end_date: document.getElementById('ct_end_date').value || null,
-          service_start_date: document.getElementById('ct_service_start').value || null,
-          monthly_fee: parseFloat(document.getElementById('ct_monthly_fee').value) || null,
-          payment_period: document.getElementById('ct_payment_period').value,
-          payment_method: document.getElementById('ct_payment_method').value,
-          billing_target: normalizedBillingTarget(),
-          invoice_day: parseInt(document.getElementById('ct_invoice_day').value) || null,
-          assigned_uzman: document.getElementById('ct_uzman').value.trim() || null,
-          assigned_hekim: document.getElementById('ct_hekim').value.trim() || null,
-          is_signed: false,
-          isg_katip_done: false,
-          notes: document.getElementById('ct_notes').value.trim() || null
-        };
-        const { data, error } = await dbClient.from('crm_contracts').insert([row]).select().single();
-        if (error) {
-          showStatus('contract_status', '❌ ' + error.message, 'error');
-          return;
-        }
-        showStatus('contract_status', '✅ Yeni sözleşme revizyonu oluşturuldu.', 'ok');
-        await loadContractVersion(data.id);
       }
 
       /* ──────────────────── TAB SWITCH ──────────────────── */
@@ -1635,43 +1735,7 @@
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         if (btn) btn.classList.add('active');
         document.getElementById('tab_' + name).classList.add('active');
-        // Lazy load contract tab
         if (name === 'contract') loadContractData();
-      }
-
-      async function loadContractData() {
-        await loadContractStaffOptions();
-        updateBillingTargetOptions(document.getElementById('n_existing_osgb')?.value || '');
-        const { data } = await dbClient.from('crm_contracts').select('*').eq('lead_id', LEAD_ID).order('version', { ascending: false }).limit(1).maybeSingle();
-        if (!data) {
-          currentContractNo = null;
-          currentContractVersion = 1;
-          await loadContractVersions(null);
-          updateContractPrintButton();
-          markContractClean();
-          return;
-        }
-        contractId = data.id;
-        currentContractNo = data.contract_no || null;
-        currentContractVersion = data.version || 1;
-        document.getElementById('ct_status').value = data.status || 'Hazırlanıyor';
-        document.getElementById('ct_offer_id').value = data.offer_id || '';
-        document.getElementById('ct_start_date').value = data.start_date || '';
-        document.getElementById('ct_end_date').value = data.end_date || '';
-        document.getElementById('ct_service_start').value = data.service_start_date || '';
-        document.getElementById('ct_monthly_fee').value = data.monthly_fee || '';
-        document.getElementById('ct_payment_period').value = data.payment_period || 'Aylık';
-        document.getElementById('ct_payment_method').value = data.payment_method || 'Taksitli';
-        document.getElementById('ct_billing_target').value = data.billing_target || 'Firmaya';
-        document.getElementById('ct_invoice_day').value = data.invoice_day || '';
-        document.getElementById('ct_uzman').value = data.assigned_uzman || '';
-        document.getElementById('ct_hekim').value = data.assigned_hekim || '';
-        document.getElementById('ct_signed').checked = !!data.is_signed;
-        document.getElementById('ct_katip').checked = !!data.isg_katip_done;
-        document.getElementById('ct_notes').value = data.notes || '';
-        await loadContractVersions(currentContractNo);
-        updateContractPrintButton();
-        markContractClean();
       }
 
       /* ──────────────────── HELPERS ──────────────────── */
@@ -1685,23 +1749,13 @@
       function esc(str) { return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
       function formatDate(iso) { if (!iso) return '-'; return new Date(iso).toLocaleDateString('tr-TR'); }
 
-      // NACE Autocomplete logic for General Info Tab
       window.searchNaceForGeneral = async function() {
         const query = document.getElementById('g_nace_code').value.trim();
         const list = document.getElementById('general_nace_suggestions');
-        if (query.length < 2) {
-          list.style.display = 'none';
-          return;
-        }
+        if (query.length < 2) { list.style.display = 'none'; return; }
         try {
-          const { data, error } = await dbClient
-            .from('nace_codes')
-            .select('*')
-            .or(`nace_code.ilike.%${query}%,description.ilike.%${query}%`)
-            .limit(5);
-
+          const { data, error } = await dbClient.from('nace_codes').select('*').or(`nace_code.ilike.%${query}%,description.ilike.%${query}%`).limit(5);
           if (error) throw error;
-
           if (data && data.length > 0) {
             list.innerHTML = '';
             list.style.display = 'block';
@@ -1711,12 +1765,8 @@
               li.onclick = () => selectNaceForGeneral(item.nace_code, item.danger_class);
               list.appendChild(li);
             });
-          } else {
-            list.style.display = 'none';
-          }
-        } catch (err) {
-          console.error('Nace search error:', err);
-        }
+          } else { list.style.display = 'none'; }
+        } catch (err) { console.error('Nace search error:', err); }
       }
 
       window.selectNaceForGeneral = function(code, dangerClass) {
@@ -1725,23 +1775,13 @@
         document.getElementById('general_nace_suggestions').style.display = 'none';
       }
 
-      // NACE Autocomplete logic for Conversion Wizard
       window.searchNaceForWizard = async function() {
         const query = document.getElementById('wiz_nace_code').value.trim();
         const list = document.getElementById('wiz_nace_suggestions');
-        if (query.length < 2) {
-          list.style.display = 'none';
-          return;
-        }
+        if (query.length < 2) { list.style.display = 'none'; return; }
         try {
-          const { data, error } = await dbClient
-            .from('nace_codes')
-            .select('*')
-            .or(`nace_code.ilike.%${query}%,description.ilike.%${query}%`)
-            .limit(5);
-
+          const { data, error } = await dbClient.from('nace_codes').select('*').or(`nace_code.ilike.%${query}%,description.ilike.%${query}%`).limit(5);
           if (error) throw error;
-
           if (data && data.length > 0) {
             list.innerHTML = '';
             list.style.display = 'block';
@@ -1751,12 +1791,8 @@
               li.onclick = () => selectNaceForWizard(item.nace_code, item.danger_class);
               list.appendChild(li);
             });
-          } else {
-            list.style.display = 'none';
-          }
-        } catch (err) {
-          console.error('Nace search error:', err);
-        }
+          } else { list.style.display = 'none'; }
+        } catch (err) { console.error('Nace search error:', err); }
       }
 
       window.selectNaceForWizard = function(code, dangerClass) {
@@ -1765,17 +1801,11 @@
         document.getElementById('wiz_nace_suggestions').style.display = 'none';
       }
 
-      // Close suggestions on outside click and close contact modal
       document.addEventListener('click', function(e) {
         const genSug = document.getElementById('general_nace_suggestions');
-        if (genSug && e.target.id !== 'g_nace_code') {
-          genSug.style.display = 'none';
-        }
+        if (genSug && e.target.id !== 'g_nace_code') genSug.style.display = 'none';
         const wizSug = document.getElementById('wiz_nace_suggestions');
-        if (wizSug && e.target.id !== 'wiz_nace_code') {
-          wizSug.style.display = 'none';
-        }
-        if (e.target.id === 'contact_modal') closeContactModal();
+        if (wizSug && e.target.id !== 'wiz_nace_code') wizSug.style.display = 'none';
       });
 
       async function createFirstContactTaskIfNeeded(leadId, companyName, uzmanName) {
@@ -1971,6 +2001,119 @@
         <div class="modal-footer" style="padding: 16px 24px; border-top: 1px solid var(--uc-line); display: flex; justify-content: flex-end; gap: 12px; background: #f8fafc; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;">
           <button class="btn-wiz-prev" onclick="cancelLostReason()" style="padding: 8px 16px; border: 1px solid var(--uc-line); background: white; border-radius: 8px; cursor: pointer; font-weight: 500; font-family: inherit;">İptal</button>
           <button class="btn-wiz-next" onclick="confirmLostReason()" style="padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-family: inherit;">Kaydet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔍 İLETİŞİM KİŞİSİ DÜZENLEME ÇEKMECESİ (DRAWER) -->
+    <div class="drawer-backdrop" id="contact_edit_drawer" onclick="closeContactEditDrawer()">
+      <div class="drawer-card" style="max-width: 500px;" onclick="event.stopPropagation()">
+        <div class="drawer-head">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: var(--uc-text);">✏️ İletişim Kişisini Düzenle</h3>
+          <button class="modal-close-btn" onclick="closeContactEditDrawer()">&times;</button>
+        </div>
+        <div class="drawer-body">
+          <input type="hidden" id="edit_c_id" />
+          <div class="form-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
+            <div class="form-group-premium"><label>Ad Soyad *</label><input type="text" id="edit_c_name" /></div>
+            <div class="form-group-premium"><label>Görev / Unvan</label><input type="text" id="edit_c_title" placeholder="İK Müdürü, Muhasebe..." /></div>
+            <div class="form-group-premium"><label>Telefon</label><input type="tel" id="edit_c_phone" /></div>
+            <div class="form-group-premium"><label>E-posta</label><input type="email" id="edit_c_email" /></div>
+            <div class="form-group-premium">
+              <label>Roller (birden fazla seçebilirsin)</label>
+              <select id="edit_c_roles" multiple style="width:100%; height:120px;">
+                <option value="primary">Birincil iletişim</option>
+                <option value="invoice">Fatura kişisi</option>
+                <option value="contract">Sözleşme yetkilisi</option>
+                <option value="ik">İK Yetkilisi</option>
+                <option value="muhasebe">Muhasebe</option>
+                <option value="operasyon">Operasyon Sorumlusu</option>
+                <option value="isg">İSG Sorumlusu</option>
+                <option value="saha">Saha Sorumlusu</option>
+              </select>
+            </div>
+            <div class="form-group-premium"><label>Not</label><textarea id="edit_c_notes" rows="3"></textarea></div>
+          </div>
+          <div id="edit_contact_status" style="margin-top: 10px; font-size: 13px; font-weight: 600; text-align: center; color: red;"></div>
+        </div>
+        <div class="drawer-actions">
+          <button class="btn btn-secondary-premium" onclick="closeContactEditDrawer()">İptal</button>
+          <button class="btn btn-primary" onclick="saveEditContact()">Kaydet</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🔍 SÖZLEŞME DÜZENLEME ÇEKMECESİ (DRAWER) -->
+    <div class="drawer-backdrop" id="contract_drawer" onclick="closeContractDrawer()">
+      <div class="drawer-card" onclick="event.stopPropagation()">
+        <div class="drawer-head">
+          <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: var(--uc-text);" id="drawer_contract_title">📝 Sözleşme Düzenle</h3>
+          <button class="drawer-close" onclick="closeContractDrawer()">&times;</button>
+        </div>
+        <div class="drawer-body">
+          <div id="contract_status" style="font-size:13px; margin-bottom:12px; color:var(--primary); font-weight:600;"></div>
+          
+          <div class="form-grid">
+            <div class="form-group-premium full-width">
+              <label>Sözleşme Adı *</label>
+              <input type="text" id="ct_name" placeholder="Örn: Merkez Ofis, Şantiye A..." />
+            </div>
+            <div class="form-group-premium">
+              <label>Sözleşme Durumu</label>
+              <select id="ct_status">
+                <option>Hazırlanıyor</option><option>Müşteriye Gönderildi</option>
+                <option>İmza Bekleniyor</option><option>İmzalandı</option>
+                <option>ISG-Katip Bekleniyor</option><option>Aktif</option><option>İptal</option>
+              </select>
+            </div>
+            <div class="form-group-premium"><label>Bağlı Teklif</label><select id="ct_offer_id"><option value="">Seçiniz</option></select></div>
+            <div class="form-group-premium"><label>Sözleşme Başlangıç</label><input type="date" id="ct_start_date" /></div>
+            <div class="form-group-premium"><label>Sözleşme Bitiş</label><input type="date" id="ct_end_date" /></div>
+            <div class="form-group-premium"><label>Hizmet Başlangıç</label><input type="date" id="ct_service_start" /></div>
+            <div class="form-group-premium"><label>Aylık Bedel (₺)</label><input type="number" id="ct_monthly_fee" step="0.01" /></div>
+            <div class="form-group-premium">
+              <label>Ödeme Periyodu</label>
+              <select id="ct_payment_period"><option>Aylık</option><option>3 Aylık</option><option>6 Aylık</option><option>Yıllık</option></select>
+            </div>
+            <div class="form-group-premium">
+              <label>Ödeme Şekli</label>
+              <select id="ct_payment_method"><option>Taksitli</option><option>Nakit</option><option>Elden</option><option>Dönem Başı</option><option>Dönem Sonu</option></select>
+            </div>
+            <div class="form-group-premium">
+              <label>Fatura Kesilecek Taraf</label>
+              <select id="ct_billing_target"><option>Firmaya</option><option>Bağlı OSGB'ye</option></select>
+            </div>
+            <div class="form-group-premium"><label>Fatura Günü (1-31)</label><input type="number" id="ct_invoice_day" min="1" max="31" /></div>
+            <div class="form-group-premium">
+              <label>Atanacak Uzman</label>
+              <select id="ct_uzman"><option value="">Seçiniz</option></select>
+            </div>
+            <div class="form-group-premium">
+              <label>Atanacak Hekim</label>
+              <select id="ct_hekim"><option value="">Seçiniz</option></select>
+            </div>
+            <div class="form-group-premium full-width" style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;"><input type="checkbox" id="ct_signed" /> İmzalandı</label>
+            </div>
+            <div class="form-group-premium full-width">
+              <label>İSG-Katip Sözleşme ID</label>
+              <input type="text" id="ct_katip_id" placeholder="İSG-Katip üzerindeki sözleşme numarası" />
+            </div>
+            <div class="form-group-premium full-width"><label>Notlar</label><textarea id="ct_notes" rows="2"></textarea></div>
+          </div>
+          
+          <div style="margin-top:20px; border-top:1px solid var(--border-color); padding-top:16px;">
+            <h4 style="margin:0 0 10px;font-size:13px;color:var(--text-muted);">Sözleşme Versiyonları</h4>
+            <div id="contract_version_list">Henüz kaydedilmedi.</div>
+          </div>
+        </div>
+        <div class="drawer-actions" style="justify-content:space-between;">
+          <button class="btn-secondary" id="contract_print_btn" onclick="printContract()" disabled>🖨️ Yazdır / PDF</button>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-secondary-premium" onclick="closeContractDrawer()">İptal</button>
+            <button class="btn btn-secondary-premium" style="background:#e0f2fe; border-color:#bae6fd; color:#0369a1;" id="btn_contract_rev" onclick="saveContract(true)">🔄 Yeni Revizyon (v+1)</button>
+            <button class="btn btn-primary" onclick="saveContract(false)">💾 Kaydet</button>
+          </div>
         </div>
       </div>
     </div>
