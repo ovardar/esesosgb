@@ -299,7 +299,8 @@ function App() {
           />
         );
     }
-  }, [activeSection, activeTheme, customers, offers, contracts, selectedCustomerName]);
+  }, [activeSection, activeTheme, customers, offers, contracts, selectedCustomerName, isSuperAdmin, impersonatedTenant]);
+
 
   if (authLoading) {
     return (
