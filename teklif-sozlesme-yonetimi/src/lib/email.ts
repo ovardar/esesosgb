@@ -1,4 +1,4 @@
-// Resend email helper for Codentra Teklif ve Sözleşme Yönetimi
+import { supabase } from './supabase';
 
 const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || '';
 const DEFAULT_FROM = import.meta.env.VITE_FROM_EMAIL || 'Codentra CRM <davet@codentra.com.tr>';
@@ -8,36 +8,57 @@ export interface SendEmailOptions {
   subject: string;
   html: string;
   from?: string;
+  redirectTo?: string;
 }
 
-export async function sendEmail({ to, subject, html, from = DEFAULT_FROM }: SendEmailOptions) {
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${RESEND_API_KEY}`
-      },
-      body: JSON.stringify({
-        from: from,
-        to: Array.isArray(to) ? to : [to],
-        subject: subject,
-        html: html
-      })
-    });
+export async function sendEmail({ to, subject, html, from = DEFAULT_FROM, redirectTo }: SendEmailOptions) {
+  const targetEmail = Array.isArray(to) ? to[0] : to;
 
-    const data = await response.json();
-    if (!response.ok) {
-      console.error('Resend e-posta gönderme hatası:', data);
-      return { success: false, error: data };
+  // 1. Try Resend API if API Key is configured
+  if (RESEND_API_KEY) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${RESEND_API_KEY}`
+        },
+        body: JSON.stringify({
+          from: from,
+          to: Array.isArray(to) ? to : [to],
+          subject: subject,
+          html: html
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        return { success: true, provider: 'resend', data };
+      }
+      console.warn('[Email] Resend API error response:', data);
+    } catch (err) {
+      console.warn('[Email] Resend fetch failed:', err);
     }
-
-    return { success: true, data };
-  } catch (err) {
-    console.error('E-posta gönderimi başarısız oldu:', err);
-    return { success: false, error: err };
   }
+
+  // 2. Fallback: Use Supabase Auth SMTP service if available
+  if (targetEmail) {
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+        redirectTo: redirectTo || targetEmail
+      });
+      if (!error) {
+        return { success: true, provider: 'supabase', data };
+      }
+      console.warn('[Email] Supabase auth resetPasswordForEmail warning:', error);
+    } catch (err) {
+      console.warn('[Email] Supabase auth resetPasswordForEmail failed:', err);
+    }
+  }
+
+  return { success: false, error: 'Resend API key missing or unverified domain. Direct link fallback available.' };
 }
+
 
 /**
  * Müşteriye Özel Davet E-Postası Şablonu

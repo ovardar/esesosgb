@@ -274,6 +274,14 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
   const [detailTab, setDetailTab] = useState<'info' | 'license' | 'billing' | 'modules' | 'notes'>('info');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
+  const [activeInviteDialogInfo, setActiveInviteDialogInfo] = useState<{
+
+    email: string;
+    companyName: string;
+    inviteLink: string;
+    success: boolean;
+  } | null>(null);
+
 
   // Client Offer Preview & Online Approval Simulation Modal
   const [previewOffer, setPreviewOffer] = useState<SaaSOffer | null>(null);
@@ -516,7 +524,8 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     const res = await sendEmail({
       to: email,
       subject: subject,
-      html: htmlContent
+      html: htmlContent,
+      redirectTo: inviteLink
     });
 
     setSendingEmail(false);
@@ -544,12 +553,14 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       );
     }
 
-    if (res.success) {
-      alert(`✉️ DAVET E-POSTASI BAŞARIYLA GÖNDERİLDİ!\n\nAlıcı: ${email}\nFirma: ${companyName}\nKonu: ${subject}\n\nLütfen e-posta kutunuzu (Gelen Kutusu & Spam/Junk klasörü) kontrol ediniz.`);
-    } else {
-      alert(`✉️ E-posta gönderildi/oluşturuldu. Davet Bağlantısı:\n${inviteLink}`);
-    }
+    setActiveInviteDialogInfo({
+      email,
+      companyName,
+      inviteLink,
+      success: res.success
+    });
   };
+
 
 
   // Handle Copy Invite Link
@@ -3596,6 +3607,149 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           </div>,
           document.body
         )}
+
+      {/* Invite Link & Email Status Dialog Modal */}
+      {activeInviteDialogInfo &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 999999,
+              background: 'rgba(15, 23, 42, 0.75)',
+              backdropFilter: 'blur(8px)',
+              display: 'grid',
+              placeItems: 'center',
+              padding: 20
+            }}
+            onClick={() => setActiveInviteDialogInfo(null)}
+          >
+            <div
+              style={{
+                maxWidth: 620,
+                width: '100%',
+                background: '#ffffff',
+                color: '#0f172a',
+                borderRadius: 18,
+                boxShadow: '0 25px 50px rgba(0, 0, 0, 0.3)',
+                padding: 28,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e2e8f0', paddingBottom: 12 }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  <span style={{ fontSize: '1.5rem' }}>✉️</span>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#0f172a' }}>Davet & Şifre Belirleme Bağlantısı</h3>
+                    <p style={{ margin: 0, fontSize: '0.8rem', color: '#64748b' }}>{activeInviteDialogInfo.companyName} ({activeInviteDialogInfo.email})</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveInviteDialogInfo(null)}
+                  style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: '#64748b' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16 }}>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: '#334155', lineHeight: 1.5 }}>
+                  E-posta daveti <strong>{activeInviteDialogInfo.email}</strong> adresine gönderildi/tetiklendi.
+                  <br />
+                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                    (Sunucu e-posta yoğunluğuna bağlı olarak ulaşması 1-2 dakika sürebilir. Lütfen <strong>Spam / Gereksiz</strong> klasörünü kontrol ediniz.)
+                  </span>
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569' }}>
+                  Doğrudan Aktivasyon & Şifre Belirleme Bağlantısı:
+                </label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={activeInviteDialogInfo.inviteLink}
+                    style={{
+                      flex: 1,
+                      padding: '10px 12px',
+                      fontSize: '0.82rem',
+                      borderRadius: 8,
+                      border: '1px solid #cbd5e1',
+                      background: '#f1f5f9',
+                      color: '#0f172a',
+                      fontWeight: 600
+                    }}
+                  />
+                  <button
+                    type="button"
+                    style={{
+                      padding: '10px 16px',
+                      background: '#4f46e5',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: 8,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      whiteSpace: 'nowrap'
+                    }}
+                    onClick={() => {
+                      navigator.clipboard?.writeText(activeInviteDialogInfo.inviteLink);
+                      alert('📋 Davet bağlantısı panoya kopyalandı!');
+                    }}
+                  >
+                    📋 Kopyala
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+                <button
+                  type="button"
+                  style={{
+                    padding: '10px 16px',
+                    background: '#f1f5f9',
+                    color: '#334155',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setActiveInviteDialogInfo(null)}
+                >
+                  Kapat
+                </button>
+                <a
+                  href={activeInviteDialogInfo.inviteLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    padding: '10px 18px',
+                    background: '#10b981',
+                    color: '#ffffff',
+                    textDecoration: 'none',
+                    borderRadius: 8,
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
+                >
+                  🚀 Şifre Belirleme Ekranını Doğrudan Aç →
+                </a>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
+
