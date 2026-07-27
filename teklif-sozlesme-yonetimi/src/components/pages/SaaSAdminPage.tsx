@@ -129,10 +129,17 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       try {
         const { data, error } = await supabase.from('tenants').select('*');
         if (data && data.length > 0 && !error) {
-          const dummyNames = ['Eses Software', 'Girişim OSGB', 'Mavi Liman OSGB', 'Soyyılmaz OSGB', 'oddn osgb', 'Test OSGB', 'Eses Software & Yazılım A.Ş.'];
+          const isDummyTenant = (name: string) => {
+            if (!name) return false;
+            const clean = name.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').trim();
+            if (clean.includes('test osgb 3')) return false;
+            const keywords = ['eses', 'girisim', 'mavi liman', 'soyyilmaz', 'oddn'];
+            if (clean === 'test osgb') return true;
+            return keywords.some(kw => clean.includes(kw));
+          };
           setTenants((prev) => {
             const dbTenants: SaaSTenant[] = data
-              .filter((row: any) => row.name && !dummyNames.includes(row.name.trim()))
+              .filter((row: any) => row.name && !isDummyTenant(row.name))
               .map((row: any) => ({
               id: row.id,
               tenantCode: `TNT-${row.id.substring(0, 4).toUpperCase()}`,
@@ -163,7 +170,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               activationStatus: 'Hesap Aktif (Şifre Belirlendi)'
             }));
 
-            const cleanPrev = prev.filter((p) => !dummyNames.includes(p.companyName.trim()));
+            const cleanPrev = prev.filter((p) => !isDummyTenant(p.companyName));
             const existingIds = new Set(dbTenants.map((t) => t.id));
             const merged = [...dbTenants, ...cleanPrev.filter((p) => !existingIds.has(p.id))];
             return merged.length > 0 ? merged : initialSaaSTenants;

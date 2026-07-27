@@ -235,11 +235,18 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
   try {
     const { data, error } = await supabase.from('tenants').select('*');
     if (!error && data && data.length > 0) {
-      const dummyNames = ['Eses Software', 'Girişim OSGB', 'Mavi Liman OSGB', 'Soyyılmaz OSGB', 'oddn osgb', 'Test OSGB', 'Eses Software & Yazılım A.Ş.'];
+      const isDummyTenant = (name: string) => {
+        if (!name) return false;
+        const clean = name.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').trim();
+        if (clean.includes('test osgb 3')) return false;
+        const keywords = ['eses', 'girisim', 'mavi liman', 'soyyilmaz', 'oddn'];
+        if (clean === 'test osgb') return true;
+        return keywords.some(kw => clean.includes(kw));
+      };
       const tenants: SaaSTenant[] = data
         .filter((row: any) => {
           const name = row.name || row.companyName;
-          return name && !dummyNames.includes(name.trim());
+          return name && !isDummyTenant(name);
         })
         .map((row: any) => ({
         id: row.id,
