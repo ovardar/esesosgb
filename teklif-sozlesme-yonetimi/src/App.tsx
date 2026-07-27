@@ -50,19 +50,19 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Automatic one-time purge of legacy dummy seeds from browser storage
+  // Forced one-time purge of legacy browser state to show Login Screen cleanly
   useEffect(() => {
-    if (!localStorage.getItem('crm_dummy_cleaned_v1')) {
+    if (!localStorage.getItem('crm_auth_reset_v2')) {
+      localStorage.removeItem('crm_superadmins_v2');
       localStorage.removeItem('crm_customers_v2');
       localStorage.removeItem('crm_offers_v3');
       localStorage.removeItem('crm_contracts_v3');
-      localStorage.removeItem('crm_superadmins_v2');
-      localStorage.setItem('crm_dummy_cleaned_v1', 'true');
-      setCustomers([]);
-      setOffers([]);
-      setContracts([]);
+      localStorage.removeItem('crm_user_session');
+      localStorage.setItem('crm_auth_reset_v2', 'true');
+      setSession(null);
     }
   }, []);
+
 
 
   const [customers, setCustomers] = useState<CustomerRecord[]>(() => {
@@ -93,18 +93,8 @@ function App() {
   });
 
 
-  const [superAdminEmails] = useState<string[]>(() => {
-    try {
-      const saved = localStorage.getItem('crm_superadmins_v2');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed.map((sa: any) => (sa.email || sa).toLowerCase());
-      }
-    } catch (e) {
-      console.error(e);
-    }
-    return ['orhan.vardar@gmail.com'];
-  });
+  const [superAdminEmails] = useState<string[]>(['orhan.vardar@gmail.com']);
+
 
 
 
