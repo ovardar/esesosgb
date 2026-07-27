@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
+
 :root {
   color-scheme: light;
-  font-family: 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color: #111827;
@@ -23,6 +25,7 @@
   --good: #0f766e;
   --shadow: 0 16px 40px rgba(17, 24, 39, 0.08);
 }
+
 
 :root[data-theme='graphite'] {
   color-scheme: dark;
@@ -299,11 +302,18 @@ button {
   box-shadow: var(--shadow);
 }
 
+.brand-mark {
+  font-family: 'Outfit', sans-serif;
+}
+
 .brand h1,
 .workspace h2,
 .section-heading h3,
-.module-card h4 {
+.module-card h4,
+h1, h2, h3, h4, h5, h6 {
   margin: 0;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  letter-spacing: -0.015em;
 }
 
 .brand h1 {
@@ -314,10 +324,13 @@ button {
 .eyebrow {
   margin: 0 0 4px;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.05em;
+  font-family: 'Inter', sans-serif;
 }
+
 
 .sidebar-nav {
   display: grid;
@@ -444,12 +457,14 @@ button {
 .module-tag {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   border-radius: 999px;
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-family: 'Inter', sans-serif;
 }
+
 
 .status-pill {
   padding: 8px 12px;
@@ -540,13 +555,18 @@ button {
 .module-card p,
 .roadmap-list {
   color: var(--text-muted);
+  font-size: 0.84rem;
 }
 
 .metric-card strong {
   display: block;
-  margin: 10px 0 6px;
-  font-size: clamp(1.8rem, 2vw, 2.4rem);
+  margin: 6px 0 4px;
+  font-size: 1.65rem;
+  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  line-height: 1.15;
 }
+
 
 .content-grid {
   display: grid;
@@ -1172,15 +1192,18 @@ button {
 }
 
 .customer-table thead th {
-  padding: 16px 18px;
+  padding: 14px 18px;
   text-align: left;
-  font-size: 0.76rem;
-  letter-spacing: 0.14em;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
   background: var(--surface-strong);
+  font-family: 'Inter', sans-serif;
 }
+
 
 .table-sort-button {
   display: inline-flex;
