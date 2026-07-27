@@ -235,7 +235,7 @@ export const initialSaaSOffers: SaaSOffer[] = [
     status: 'Gönderildi',
     createdAt: '2026-07-21',
     validUntil: '2026-08-04',
-    onlineLink: 'https://app.osgb-sistem.com/offer/OFF-2026-042',
+    onlineLink: 'https://app.codentra.com.tr/offer/OFF-2026-042',
     notes: '%15 Yıllık erken ödeme indirimi uygulandı.'
   },
   {
@@ -250,7 +250,7 @@ export const initialSaaSOffers: SaaSOffer[] = [
     status: 'Pazarlıkta',
     createdAt: '2026-07-15',
     validUntil: '2026-07-29',
-    onlineLink: 'https://app.osgb-sistem.com/offer/OFF-2026-039',
+    onlineLink: 'https://app.codentra.com.tr/offer/OFF-2026-039',
     notes: 'Kullanıcı limitini 5 kişiden 8 kişiye çıkarma talebindeler.'
   },
   {
@@ -265,7 +265,8 @@ export const initialSaaSOffers: SaaSOffer[] = [
     status: 'Kabul Edildi',
     createdAt: '2025-01-10',
     validUntil: '2025-01-24',
-    onlineLink: 'https://app.osgb-sistem.com/offer/OFF-2026-011',
+    onlineLink: 'https://app.codentra.com.tr/offer/OFF-2026-011',
+
     notes: 'Sözleşmeye dönüştürüldü.'
   }
 ];

@@ -5,6 +5,7 @@ import { initialSaaSTenants } from '../../data/saasWorkbench';
 import { initialTenantUsersMap, TenantUser } from '../../data/tenantUsers';
 import { permissionSeeds } from '../../data/workbench';
 import type { SaaSTenant } from '../../types';
+import { sendEmail, buildCustomerInviteTemplate } from '../../lib/email';
 
 type Props = {
   impersonatedTenant?: SaaSTenant | null;
@@ -13,6 +14,8 @@ type Props = {
 };
 
 export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, isSuperAdmin = true }: Props) {
+  const [sendingEmail, setSendingEmail] = useState(false);
+
   // SaaS Tenants list
   const [tenants] = useState<SaaSTenant[]>(initialSaaSTenants);
 
@@ -929,7 +932,7 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
                   <p style={{ margin: 0, color: '#475569', lineHeight: 1.5 }}>
                     1. Süper Admin olarak tanımlanan kişiye özel aktivasyon linki e-posta ile otomatik iletilir.<br />
                     2. Linke tıklayan yeni Süper Admin, kendi güvenli şifresini belirler.<br />
-                    3. Ardından <strong>https://app.osgb-sistem.com/login</strong> adresinden e-postası ve belirlediği şifresiyle sisteme giriş yapar.
+                    3. Ardından <strong>https://app.codentra.com.tr</strong> adresinden e-postası ve belirlediği şifresiyle sisteme giriş yapar.
                   </p>
                 </div>
 
@@ -941,14 +944,14 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
                     <input
                       type="text"
                       readOnly
-                      value={`https://app.osgb-sistem.com/superadmin-invite?email=${encodeURIComponent(superAdminInviteUser.email)}&token=SA_MAGIC_${Math.random().toString(36).substring(2, 8)}`}
+                      value={`https://app.codentra.com.tr/superadmin-invite?email=${encodeURIComponent(superAdminInviteUser.email)}`}
                       style={{ flex: 1, padding: '8px 12px', fontSize: '0.8rem', borderRadius: 8, border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontWeight: 600 }}
                     />
                     <button
                       type="button"
                       style={{ padding: '8px 14px', background: '#6366f1', color: '#ffffff', border: 'none', borderRadius: 8, fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' }}
                       onClick={() => {
-                        const link = `https://app.osgb-sistem.com/superadmin-invite?email=${encodeURIComponent(superAdminInviteUser.email)}&token=SA_MAGIC_TOKEN_2026`;
+                        const link = `https://app.codentra.com.tr/superadmin-invite?email=${encodeURIComponent(superAdminInviteUser.email)}`;
                         navigator.clipboard?.writeText(link);
                         alert(`📋 Süper Admin Davet Bağlantısı Kopyalandı:\n\n${link}`);
                       }}
@@ -958,7 +961,42 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
                   </div>
                 </div>
 
-                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14, marginTop: 4, display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14, marginTop: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    disabled={sendingEmail}
+                    style={{
+                      padding: '10px 18px',
+                      background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: 10,
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: sendingEmail ? 'not-allowed' : 'pointer',
+                      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)',
+                      opacity: sendingEmail ? 0.7 : 1
+                    }}
+                    onClick={async () => {
+                      setSendingEmail(true);
+                      const link = `https://app.codentra.com.tr/superadmin-invite?email=${encodeURIComponent(superAdminInviteUser.email)}`;
+                      const html = buildCustomerInviteTemplate(superAdminInviteUser.name, link);
+                      const res = await sendEmail({
+                        to: superAdminInviteUser.email,
+                        subject: 'Codentra OSGB CRM — Süper Admin Davetiniz',
+                        html
+                      });
+                      setSendingEmail(false);
+                      if (res.success) {
+                        alert(`✅ Davet e-postası ${superAdminInviteUser.email} adresine (davet@codentra.com.tr üzerinden) başarıyla gönderildi!`);
+                      } else {
+                        alert(`⚠️ E-posta gönderilirken bir uyarı oluştu. Resend durumunu kontrol ediniz.`);
+                      }
+                    }}
+                  >
+                    {sendingEmail ? '✉️ E-Posta Gönderiliyor...' : '✉️ Davet E-Postası Gönder'}
+                  </button>
+
                   <button
                     type="button"
                     style={{ padding: '10px 18px', background: '#10b981', color: '#fff', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
@@ -977,9 +1015,10 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
                       });
                     }}
                   >
-                    🔑 İlk Giriş & Şifre Belirleme Ekranını Test Et →
+                    🔑 İlk Giriş Ekranını Test Et →
                   </button>
                 </div>
+
               </div>
             </div>
           </div>,

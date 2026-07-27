@@ -22,13 +22,18 @@ import type {
   SaaSSubscriptionStatus
 } from '../../types';
 
+import { sendEmail, buildCustomerInviteTemplate } from '../../lib/email';
+
 type Props = {
+
   onImpersonateTenant?: (tenant: SaaSTenant) => void;
   onNavigateSection?: (section: SectionId) => void;
 };
 
 export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection }: Props) {
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [tenants, setTenants] = useState<SaaSTenant[]>(initialSaaSTenants);
+
   const [offers, setOffers] = useState<SaaSOffer[]>(initialSaaSOffers);
   const [contracts, setContracts] = useState<SaaSContract[]>(initialSaaSContracts);
   const [packages, setPackages] = useState<SaaSPackageDefinition[]>(initialSaaSPackages);
@@ -2771,9 +2776,9 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection }: Props)
                 <div style={{ background: '#f8fafc', padding: 14, borderRadius: 12, border: '1px solid #e2e8f0', fontSize: '0.84rem' }}>
                   <strong style={{ color: '#1e293b', display: 'block', marginBottom: 4 }}>📌 Yeni Süper Admin Nasıl Giriş Yapacak?</strong>
                   <p style={{ margin: 0, color: '#475569', lineHeight: 1.5 }}>
-                    1. Süper Admin olarak tanımlanan kişiye özel aktivasyon linki e-posta ile iletilir.<br />
+                    1. Süper Admin olarak tanımlanan kişiye özel aktivasyon linki e-posta ile otomatik iletilir.<br />
                     2. Linke tıklayan yeni Süper Admin, kendi güvenli şifresini belirler.<br />
-                    3. Ardından <strong>https://app.osgb-sistem.com/login</strong> adresinden e-postası ve şifresiyle SaaS Yönetimi paneline giriş yapar.
+                    3. Ardından <strong>https://app.codentra.com.tr</strong> adresinden e-postası ve belirlediği şifresiyle sisteme giriş yapar.
                   </p>
                 </div>
 
@@ -2785,14 +2790,14 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection }: Props)
                     <input
                       type="text"
                       readOnly
-                      value={`https://app.osgb-sistem.com/superadmin-invite?email=${encodeURIComponent(superAdminInviteUser.email)}&token=SA_MAGIC_${Math.random().toString(36).substring(2, 8)}`}
+                      value={`https://app.codentra.com.tr/superadmin-invite?email=${encodeURIComponent(superAdminInviteUser.email)}`}
                       style={{ flex: 1, padding: '8px 12px', fontSize: '0.8rem', borderRadius: 8, border: '1px solid #cbd5e1', background: '#ffffff', color: '#0f172a', fontWeight: 600 }}
                     />
                     <button
                       type="button"
                       style={{ padding: '8px 14px', background: '#6366f1', color: '#ffffff', border: 'none', borderRadius: 8, fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer' }}
                       onClick={() => {
-                        const link = `https://app.osgb-sistem.com/superadmin-invite?email=${encodeURIComponent(superAdminInviteUser.email)}&token=SA_MAGIC_TOKEN_2026`;
+                        const link = `https://app.codentra.com.tr/superadmin-invite?email=${encodeURIComponent(superAdminInviteUser.email)}`;
                         navigator.clipboard?.writeText(link);
                         alert(`📋 Süper Admin Davet Bağlantısı Kopyalandı:\n\n${link}`);
                       }}

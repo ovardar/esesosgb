@@ -953,7 +953,8 @@ export function TenantTemplatesTab({ impersonatedTenant }: Props) {
                     .replace('{TOPLAM_TUTAR}', '₺40.512')
                     .replace('{KDV_DURUMU}', 'KDV Dahil')
                     .replace('{GECERLILIK_TARIHI}', '25.08.2026')
-                    .replace('{ONLINE_TEKLIF_LINKI}', 'https://app.osgb-sistem.com/online-offer/TKL-2026-089')
+                    .replace('{ONLINE_TEKLIF_LINKI}', 'https://app.codentra.com.tr/online-offer/TKL-2026-089')
+
                     .replace('{FIRMA_ADI}', companyDisplayName)}
                 </pre>
               </div>
@@ -1050,7 +1051,8 @@ export function TenantTemplatesTab({ impersonatedTenant }: Props) {
                     .replace('{BASTAR_TARIHI}', '01.08.2026')
                     .replace('{BITIS_TARIHI}', '01.08.2027')
                     .replace('{AYLIK_TUTAR}', '₺40.512')
-                    .replace('{ONLINE_SOZLESME_LINKI}', 'https://app.osgb-sistem.com/online-contract/SZL-2026-042')
+                    .replace('{ONLINE_SOZLESME_LINKI}', 'https://app.codentra.com.tr/online-contract/SZL-2026-042')
+
                     .replace('{FIRMA_ADI}', companyDisplayName)}
                 </pre>
               </div>
@@ -1143,7 +1145,8 @@ export function TenantTemplatesTab({ impersonatedTenant }: Props) {
                   {templates.employeeInvite.body
                     .replace('{PERSONEL_ADI}', 'Oğuz Vardar')
                     .replace('{FIRMA_ADI}', companyDisplayName)
-                    .replace('{AKTIVASYON_LINKI}', 'https://app.osgb-sistem.com/set-password?token=XYZ_123')}
+                    .replace('{AKTIVASYON_LINKI}', 'https://app.codentra.com.tr/set-password?token=XYZ_123')}
+
                 </pre>
               </div>
             </div>
