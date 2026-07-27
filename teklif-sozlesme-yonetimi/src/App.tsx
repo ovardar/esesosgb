@@ -92,13 +92,26 @@ function App() {
   });
 
 
-  const currentUserEmail = session?.user?.email || 'ovardar@gmail.com';
+  const currentUserEmail = session?.user?.email || '';
 
   const isSuperAdmin = useMemo(() => {
+    if (!currentUserEmail) return false;
     return superAdminEmails.includes(currentUserEmail.toLowerCase());
   }, [superAdminEmails, currentUserEmail]);
 
+  // Default initial page routing based on user authority
+  useEffect(() => {
+    if (session) {
+      if (isSuperAdmin && !impersonatedTenant) {
+        setActiveSection('saas-admin');
+      } else if (!isSuperAdmin) {
+        setActiveSection('dashboard');
+      }
+    }
+  }, [session, isSuperAdmin, impersonatedTenant]);
+
   const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null);
+
 
 
   useEffect(() => {
