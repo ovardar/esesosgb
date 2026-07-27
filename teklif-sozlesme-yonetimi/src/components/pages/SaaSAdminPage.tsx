@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
 import { createPortal } from 'react-dom';
 
 import {
@@ -33,14 +34,89 @@ type Props = {
 export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentUserEmail }: Props) {
   const activeUserEmail = currentUserEmail || localStorage.getItem('crm_user_session') || 'orhan.vardar@gmail.com';
   const [sendingEmail, setSendingEmail] = useState(false);
-  const [tenants, setTenants] = useState<SaaSTenant[]>(initialSaaSTenants);
+  const [tenants, setTenants] = useState<SaaSTenant[]>(() => {
+    try {
+      const saved = localStorage.getItem('crm_saas_tenants_v3');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return initialSaaSTenants;
+  });
 
+  const [offers, setOffers] = useState<SaaSOffer[]>(() => {
+    try {
+      const saved = localStorage.getItem('crm_saas_offers_v3');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return initialSaaSOffers;
+  });
 
-  const [offers, setOffers] = useState<SaaSOffer[]>(initialSaaSOffers);
-  const [contracts, setContracts] = useState<SaaSContract[]>(initialSaaSContracts);
-  const [packages, setPackages] = useState<SaaSPackageDefinition[]>(initialSaaSPackages);
-  const [invoices, setInvoices] = useState<SaaSInvoice[]>(initialSaaSInvoices);
-  const [emailTemplates, setEmailTemplates] = useState<SaaSEmailTemplate[]>(initialSaaSEmailTemplates);
+  const [contracts, setContracts] = useState<SaaSContract[]>(() => {
+    try {
+      const saved = localStorage.getItem('crm_saas_contracts_v3');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return initialSaaSContracts;
+  });
+
+  const [packages, setPackages] = useState<SaaSPackageDefinition[]>(() => {
+    try {
+      const saved = localStorage.getItem('crm_saas_packages_v3');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return initialSaaSPackages;
+  });
+
+  const [invoices, setInvoices] = useState<SaaSInvoice[]>(() => {
+    try {
+      const saved = localStorage.getItem('crm_saas_invoices_v3');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return initialSaaSInvoices;
+  });
+
+  const [emailTemplates, setEmailTemplates] = useState<SaaSEmailTemplate[]>(() => {
+    try {
+      const saved = localStorage.getItem('crm_saas_email_templates_v3');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return initialSaaSEmailTemplates;
+  });
+
+  useEffect(() => {
+    try { localStorage.setItem('crm_saas_tenants_v3', JSON.stringify(tenants)); } catch (e) { console.error(e); }
+  }, [tenants]);
+
+  useEffect(() => {
+    try { localStorage.setItem('crm_saas_offers_v3', JSON.stringify(offers)); } catch (e) { console.error(e); }
+  }, [offers]);
+
+  useEffect(() => {
+    try { localStorage.setItem('crm_saas_contracts_v3', JSON.stringify(contracts)); } catch (e) { console.error(e); }
+  }, [contracts]);
+
+  useEffect(() => {
+    try { localStorage.setItem('crm_saas_packages_v3', JSON.stringify(packages)); } catch (e) { console.error(e); }
+  }, [packages]);
+
+  useEffect(() => {
+    try { localStorage.setItem('crm_saas_invoices_v3', JSON.stringify(invoices)); } catch (e) { console.error(e); }
+  }, [invoices]);
+
+  useEffect(() => {
+    try { localStorage.setItem('crm_saas_email_templates_v3', JSON.stringify(emailTemplates)); } catch (e) { console.error(e); }
+  }, [emailTemplates]);
 
   // Main Section Tab ('tenants' | 'packages' | 'offers-contracts' | 'invoices' | 'email-templates' | 'super-admins')
   const [mainTab, setMainTab] = useState<'tenants' | 'packages' | 'offers-contracts' | 'invoices' | 'email-templates' | 'super-admins'>('tenants');
@@ -54,8 +130,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       console.error(e);
     }
     return [
-      { id: 'sa-1', email: 'admin@osgbsistem.com', name: 'Sistem Yöneticisi (Ana Kullanıcı)', addedAt: '2025-01-01' },
-      { id: 'sa-2', email: 'ovardar@gmail.com', name: 'Oğuz Vardar (Süper Admin)', addedAt: '2025-01-01' }
+      { id: 'sa-1', email: 'orhan.vardar@gmail.com', name: 'Orhan Vardar (Süper Admin)', addedAt: '2026-01-01' }
     ];
   });
 
@@ -66,13 +141,14 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
   const [showPassword, setShowPassword] = useState(false);
   const [passwordForm, setPasswordForm] = useState({ password: '', confirmPassword: '' });
 
-  useMemo(() => {
+  useEffect(() => {
     try {
       localStorage.setItem('crm_superadmins_v2', JSON.stringify(superAdmins));
     } catch (e) {
       console.error(e);
     }
   }, [superAdmins]);
+
 
   const handleAddSuperAdmin = (e: React.FormEvent) => {
     e.preventDefault();
