@@ -3658,13 +3658,15 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: 16 }}>
                 <p style={{ margin: 0, fontSize: '0.9rem', color: '#334155', lineHeight: 1.5 }}>
-                  E-posta daveti <strong>{activeInviteDialogInfo.email}</strong> adresine gönderildi/tetiklendi.
-                  <br />
-                  <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    (Sunucu e-posta yoğunluğuna bağlı olarak ulaşması 1-2 dakika sürebilir. Lütfen <strong>Spam / Gereksiz</strong> klasörünü kontrol ediniz.)
-                  </span>
+                  E-posta daveti <strong>{activeInviteDialogInfo.email}</strong> adresi için oluşturuldu.
                 </p>
+                <div style={{ marginTop: 8, fontSize: '0.8rem', color: '#475569', background: '#fff', border: '1px solid #cbd5e1', borderRadius: 8, padding: 10 }}>
+                  💡 <strong>Not (Resend Test Modu):</strong> Resend e-posta servisinizde custom alan adı (<code>codentra.com.tr</code>) doğrulanana kadar test modundaki API anahtarı harici e-posta adreslerine (ör. gmail) gönderimi engelleyebilir.
+                  <br />
+                  Aşağıdaki <strong>'Şifre Belirleme Ekranını Doğrudan Aç'</strong> butonuna tıklayarak yeni şifrenizi hemen belirleyebilirsiniz.
+                </div>
               </div>
+
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <label style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569' }}>

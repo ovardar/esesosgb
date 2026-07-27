@@ -34,7 +34,7 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM }: Send
       if (response.ok) {
         return { success: true, provider: 'resend', data };
       }
-      console.warn('[Email] Resend API attempt 1 warning:', data);
+      let lastError = data?.message || data?.error || JSON.stringify(data);
 
       // 2. Retry with Resend sandbox onboarding address if custom domain is not yet verified
       if (from !== 'Codentra CRM <onboarding@resend.dev>') {
@@ -57,14 +57,18 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM }: Send
           return { success: true, provider: 'resend-onboarding', data: fallbackData };
         }
         console.warn('[Email] Resend API attempt 2 warning:', fallbackData);
+        lastError = fallbackData?.message || fallbackData?.error || lastError;
       }
+
+      return { success: false, error: lastError };
     } catch (err) {
       console.warn('[Email] Resend fetch failed:', err);
     }
   }
 
-  return { success: false, error: 'Resend API key missing or email sending rejected. Direct link modal activated.' };
+  return { success: false, error: 'Resend API key missing or domain unverified.' };
 }
+
 
 
 
