@@ -153,7 +153,7 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
 
   // Handle Send Invite Email
   const handleSendInvite = (usr: TenantUser) => {
-    const inviteLink = `https://app.osgb-sistem.com/set-password?tenant=${currentTenant.id}&token=${Math.random().toString(36).substring(2, 10)}`;
+    const inviteLink = `https://app.codentra.com.tr/set-password?tenant=${currentTenant.id}&token=${Math.random().toString(36).substring(2, 10)}`;
     alert(
       `✉️ Davet & Şifre Oluşturma E-postası Gönderildi!\n\nAlıcı: ${usr.email}\nFirma: ${currentTenant.companyName}\n\nÖzel Aktivasyon Bağlantısı:\n${inviteLink}`
     );
@@ -161,7 +161,7 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
 
   // Handle Copy Invite Link
   const handleCopyInviteLink = (usr: TenantUser) => {
-    const inviteLink = `https://app.osgb-sistem.com/set-password?tenant=${currentTenant.id}&user=${usr.id}&token=MAGIC_LINK_TOKEN`;
+    const inviteLink = `https://app.codentra.com.tr/set-password?tenant=${currentTenant.id}&user=${usr.id}&token=MAGIC_LINK_TOKEN`;
     navigator.clipboard?.writeText(inviteLink);
     alert(`📋 ${usr.name} için Özel Aktivasyon & Şifre Belirleme Bağlantısı kopyalandı:\n${inviteLink}`);
   };
@@ -176,7 +176,8 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
       return;
     }
 
-    const cleanDomain = currentTenant.email.split('@')[1] || 'osgb-sistem.com';
+    const cleanDomain = currentTenant.email.split('@')[1] || 'codentra.com.tr';
+
 
     const newUser: TenantUser = {
       id: `usr-${currentTenant.id}-${Date.now()}`,

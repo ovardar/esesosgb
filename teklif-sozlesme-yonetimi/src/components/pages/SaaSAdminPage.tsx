@@ -316,13 +316,13 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     );
     const tmpl = emailTemplates.find((t) => t.type === 'offer');
     alert(
-      `✉️ SaaS Lisans Teklifi E-posta Şablonu Kullanılarak Müşteriye İletildi!\n\nKonu: ${tmpl?.subject.replace('{FIRMA_ADI}', offer.tenantName).replace('{TEKLIF_NO}', offer.offerNumber)}\n\nTeklif No: ${offer.offerNumber}\nFirma: ${offer.tenantName}\nOnline Onay Bağlantısı:\n${offer.onlineLink || 'https://app.osgb-sistem.com/offer/' + offer.offerNumber}`
+      `✉️ SaaS Lisans Teklifi E-posta Şablonu Kullanılarak Müşteriye İletildi!\n\nKonu: ${tmpl?.subject.replace('{FIRMA_ADI}', offer.tenantName).replace('{TEKLIF_NO}', offer.offerNumber)}\n\nTeklif No: ${offer.offerNumber}\nFirma: ${offer.tenantName}\nOnline Onay Bağlantısı:\n${offer.onlineLink || 'https://app.codentra.com.tr/offer/' + offer.offerNumber}`
     );
   };
 
   // Handle Send Invitation Email to Tenant User
   const handleSendInvitation = (tenantId: string, email: string, companyName: string) => {
-    const inviteLink = `https://app.osgb-sistem.com/invite?tenant=${tenantId}&token=${Math.random().toString(36).substring(2, 10)}`;
+    const inviteLink = `https://app.codentra.com.tr/invite?tenant=${tenantId}&token=${Math.random().toString(36).substring(2, 10)}`;
     setTenants((prev) =>
       prev.map((t) =>
         t.id === tenantId
@@ -354,10 +354,11 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
   // Handle Copy Invite Link
   const handleCopyInviteLink = (tenantId: string) => {
-    const inviteLink = `https://app.osgb-sistem.com/invite?tenant=${tenantId}&token=MAGIC_LOGIN_TOKEN`;
+    const inviteLink = `https://app.codentra.com.tr/invite?tenant=${tenantId}&token=MAGIC_LOGIN_TOKEN`;
     navigator.clipboard?.writeText(inviteLink);
     alert(`📋 Şifre Oluşturma & Davet Bağlantısı kopyalandı:\n${inviteLink}`);
   };
+
 
   // Handle Convert Offer to Contract
   const handleConvertOfferToContract = (offer: SaaSOffer) => {
@@ -518,7 +519,8 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       status: 'Gönderildi',
       createdAt: new Date().toISOString().split('T')[0],
       validUntil: new Date(Date.now() + offerForm.validDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      onlineLink: `https://app.osgb-sistem.com/offer/OFF-${Math.floor(100 + Math.random() * 900)}`,
+      onlineLink: `https://app.codentra.com.tr/offer/OFF-${Math.floor(100 + Math.random() * 900)}`,
+
       notes: offerForm.notes
     };
 
@@ -1153,7 +1155,8 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                           <button
                             className="btn-action-ghost"
                             onClick={() => {
-                              const link = off.onlineLink || `https://app.osgb-sistem.com/offer/${off.offerNumber}`;
+                              const link = off.onlineLink || `https://app.codentra.com.tr/offer/${off.offerNumber}`;
+
                               navigator.clipboard?.writeText(link);
                               alert(`📋 Müşteri Online Teklif Onay Bağlantısı kopyalandı:\n${link}`);
                             }}
