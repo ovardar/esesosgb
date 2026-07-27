@@ -24,17 +24,26 @@ function App() {
   const [activeTheme, setActiveTheme] = useState<ThemeId>('ivory');
   const [impersonatedTenant, setImpersonatedTenant] = useState<SaaSTenant | null>(null);
 
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<any>(() => {
+    const savedUser = localStorage.getItem('crm_user_session');
+    return savedUser ? { user: { email: savedUser } } : null;
+  });
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+      if (session) {
+        setSession(session);
+        localStorage.setItem('crm_user_session', session.user.email || '');
+      }
       setAuthLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+      if (session) {
+        setSession(session);
+        localStorage.setItem('crm_user_session', session.user.email || '');
+      }
       setAuthLoading(false);
     });
 
@@ -79,8 +88,9 @@ function App() {
     } catch (e) {
       console.error(e);
     }
-    return ['admin@osgbsistem.com', 'ovardar@gmail.com'];
+    return ['admin@osgbsistem.com', 'ovardar@gmail.com', 'orhan.vardar@gmail.com'];
   });
+
 
   const currentUserEmail = session?.user?.email || 'ovardar@gmail.com';
 

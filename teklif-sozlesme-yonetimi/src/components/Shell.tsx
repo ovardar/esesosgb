@@ -140,9 +140,11 @@ export function Shell({
               className="btn-action-secondary"
               style={{ padding: '6px 14px', fontSize: '0.82rem', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444' }}
               onClick={async () => {
+                localStorage.removeItem('crm_user_session');
                 await supabase.auth.signOut();
                 window.location.reload();
               }}
+
 
               title="Oturumu Kapat"
             >
