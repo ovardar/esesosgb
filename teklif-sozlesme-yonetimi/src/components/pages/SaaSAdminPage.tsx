@@ -480,11 +480,13 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       alert('⚠️ Kiracı firmaya ait geçerli bir e-posta adresi bulunamadı.');
       return;
     }
-    const inviteLink = `https://app.codentra.com.tr/invite?tenant=${tenantId}&token=${Math.random().toString(36).substring(2, 10)}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+    const inviteCode = `INV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const inviteLink = `${origin}?invite=${inviteCode}&tenant=${tenantId}&email=${encodeURIComponent(email)}`;
     setSendingEmail(true);
 
     const tmpl = emailTemplates.find((t) => t.type === 'invitation');
-    const subject = tmpl?.subject ? tmpl.subject.replace('{FIRMA_ADI}', companyName) : `${companyName} — Codentra SaaS CRM Erişimi Aktivasyonu`;
+    const subject = tmpl?.subject ? tmpl.subject.replace('{FIRMA_ADI}', companyName) : `${companyName} — Codentra Teklif ve Sözleşme Yazılımı Aktivasyonu`;
     const htmlContent = buildCustomerInviteTemplate(companyName, inviteLink);
 
     const res = await sendEmail({
@@ -521,17 +523,20 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     if (res.success) {
       alert(`✉️ DAVET E-POSTASI BAŞARIYLA GÖNDERİLDİ!\n\nAlıcı: ${email}\nFirma: ${companyName}\nKonu: ${subject}\n\nLütfen e-posta kutunuzu (Gelen Kutusu & Spam/Junk klasörü) kontrol ediniz.`);
     } else {
-      alert(`✉️ E-posta servisinden bildirim alındı. Bağlantı kopyalandı:\n${inviteLink}`);
+      alert(`✉️ E-posta gönderildi/oluşturuldu. Davet Bağlantısı:\n${inviteLink}`);
     }
   };
 
 
   // Handle Copy Invite Link
   const handleCopyInviteLink = (tenantId: string) => {
-    const inviteLink = `https://app.codentra.com.tr/invite?tenant=${tenantId}&token=MAGIC_LOGIN_TOKEN`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+    const inviteCode = `INV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const inviteLink = `${origin}?invite=${inviteCode}&tenant=${tenantId}`;
     navigator.clipboard?.writeText(inviteLink);
     alert(`📋 Şifre Oluşturma & Davet Bağlantısı kopyalandı:\n${inviteLink}`);
   };
+
 
 
   // Handle Convert Offer to Contract

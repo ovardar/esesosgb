@@ -992,31 +992,44 @@ export function ContractsPage({
       </div>
 
       {/* TOP KPI CARDS */}
-      <div className="customer-summary-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 14 }}>
-        <article className="summary-card" style={{ borderLeft: '4px solid #10b981' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Aktif Sözleşmeler</span>
-          <strong style={{ fontSize: '1.4rem', color: '#10b981' }}>{kpiStats.activeCount} Kayıt</strong>
-          <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Toplam {kpiStats.totalCount} sözleşme içinde</p>
+      <div className="stat-grid-standard">
+        <article className="stat-card-standard" style={{ borderLeft: '4px solid #10b981' }}>
+          <div className="stat-header">
+            <span className="stat-label">Aktif Sözleşmeler</span>
+            <span className="stat-badge" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981' }}>● Aktif</span>
+          </div>
+          <div className="stat-value" style={{ color: '#10b981' }}>{kpiStats.activeCount} Kayıt</div>
+          <div className="stat-subtext">Toplam {kpiStats.totalCount} sözleşme içinde</div>
         </article>
 
-        <article className="summary-card" style={{ borderLeft: '4px solid #f59e0b' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>İmza / Onay Bekleyen</span>
-          <strong style={{ fontSize: '1.4rem', color: '#f59e0b' }}>{kpiStats.pendingCount} Dosya</strong>
-          <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Müşteri onayı bekleniyor</p>
+        <article className="stat-card-standard" style={{ borderLeft: '4px solid #f59e0b' }}>
+          <div className="stat-header">
+            <span className="stat-label">İmza / Onay Bekleyen</span>
+            <span className="stat-badge" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b' }}>⏳ Bekliyor</span>
+          </div>
+          <div className="stat-value" style={{ color: '#f59e0b' }}>{kpiStats.pendingCount} Dosya</div>
+          <div className="stat-subtext">Müşteri onayı bekleniyor</div>
         </article>
 
-        <article className="summary-card" style={{ borderLeft: '4px solid #ec4899' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Kalem Bazlı Yenilemeler ⭐</span>
-          <strong style={{ fontSize: '1.4rem', color: '#ec4899' }}>{kpiStats.lineRenewalAlertCount} Kalem Uyarısı</strong>
-          <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>30 gün içinde yenilenecek hizmetler</p>
+        <article className="stat-card-standard" style={{ borderLeft: '4px solid #ec4899' }}>
+          <div className="stat-header">
+            <span className="stat-label">Kalem Bazlı Yenilemeler</span>
+            <span className="stat-badge" style={{ background: 'rgba(236, 72, 153, 0.12)', color: '#ec4899' }}>⭐ Uharı</span>
+          </div>
+          <div className="stat-value" style={{ color: '#ec4899' }}>{kpiStats.lineRenewalAlertCount} Kalem Uyarısı</div>
+          <div className="stat-subtext">30 gün içinde yenilenecek hizmetler</div>
         </article>
 
-        <article className="summary-card" style={{ borderLeft: '4px solid #6366f1' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Aylık Sözleşme Hacmi</span>
-          <strong style={{ fontSize: '1.4rem', color: '#6366f1' }}>₺{kpiStats.totalMonthlyVolume.toLocaleString('tr-TR')}</strong>
-          <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Aktif sözleşmeler aylık tutarı</p>
+        <article className="stat-card-standard" style={{ borderLeft: '4px solid #6366f1' }}>
+          <div className="stat-header">
+            <span className="stat-label">Aylık Sözleşme Hacmi</span>
+            <span className="stat-badge" style={{ background: 'rgba(99, 102, 241, 0.12)', color: '#6366f1' }}>💰 Hacim</span>
+          </div>
+          <div className="stat-value" style={{ color: '#6366f1' }}>₺{kpiStats.totalMonthlyVolume.toLocaleString('tr-TR')}</div>
+          <div className="stat-subtext">Aktif sözleşmeler aylık tutarı</div>
         </article>
       </div>
+
 
       {/* KALEM BAZLI YENİLEME HATIRLATICI UYARISI (LINE ITEM RENEWAL WIDGET) */}
       {lineItemRenewalAlerts.length > 0 && (

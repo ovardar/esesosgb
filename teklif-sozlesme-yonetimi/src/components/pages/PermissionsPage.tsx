@@ -231,10 +231,12 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
       alert('⚠️ Kullanıcıya ait geçerli bir e-posta adresi bulunamadı.');
       return;
     }
-    const inviteLink = `https://app.codentra.com.tr/set-password?tenant=${currentTenant.id}&token=${Math.random().toString(36).substring(2, 10)}`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+    const inviteCode = `INV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const inviteLink = `${origin}?invite=${inviteCode}&tenant=${currentTenant.id}&email=${encodeURIComponent(usr.email)}`;
     setSendingEmail(true);
 
-    const subject = `${currentTenant.companyName} — Codentra İSG Kullanıcı Daveti ve Şifre Belirleme`;
+    const subject = `${currentTenant.companyName} — Codentra Teklif ve Sözleşme Yazılımı Kullanıcı Daveti ve Şifre Belirleme`;
     const htmlContent = buildCustomerInviteTemplate(currentTenant.companyName, inviteLink);
 
     const res = await sendEmail({
@@ -248,17 +250,20 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
     if (res.success) {
       alert(`✉️ DAVET E-POSTASI BAŞARIYLA GÖNDERİLDİ!\n\nAlıcı: ${usr.email}\nFirma: ${currentTenant.companyName}\n\nLütfen e-posta kutunuzu (Gelen Kutusu & Spam/Junk klasörü) kontrol ediniz.`);
     } else {
-      alert(`✉️ E-posta servisinden bildirim alındı. Bağlantı kopyalandı:\n${inviteLink}`);
+      alert(`✉️ E-posta gönderildi/oluşturuldu. Davet Bağlantısı:\n${inviteLink}`);
     }
   };
 
 
   // Handle Copy Invite Link
   const handleCopyInviteLink = (usr: TenantUser) => {
-    const inviteLink = `https://app.codentra.com.tr/set-password?tenant=${currentTenant.id}&user=${usr.id}&token=MAGIC_LINK_TOKEN`;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
+    const inviteCode = `INV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const inviteLink = `${origin}?invite=${inviteCode}&tenant=${currentTenant.id}&email=${encodeURIComponent(usr.email)}`;
     navigator.clipboard?.writeText(inviteLink);
     alert(`📋 ${usr.name} için Özel Aktivasyon & Şifre Belirleme Bağlantısı kopyalandı:\n${inviteLink}`);
   };
+
 
   // Handle Add User Submit
   const handleAddUserSubmit = (e: React.FormEvent) => {

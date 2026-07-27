@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { OfferRecord, ContractRecord, SaaSTenant } from '../types';
+import type { OfferRecord, ContractRecord, SaaSTenant, PriceRule, SaaSEmailTemplate, SuperAdminUser } from '../types';
 import type { CustomerRecord } from '../components/pages/CustomersPage';
 import type { TenantUser } from '../data/tenantUsers';
 
@@ -381,3 +381,152 @@ export async function saveCloudTenantUsersMap(map: Record<string, TenantUser[]>)
     console.warn('[CloudDB] Tenant users cloud upsert warning', err);
   }
 }
+
+// ==========================================
+// 6. PRICE RULES CLOUD SYNC
+// ==========================================
+export async function fetchCloudPriceRules(fallback: PriceRule[] = []): Promise<PriceRule[]> {
+  try {
+    const { data, error } = await supabase.from('price_rules').select('*');
+    if (!error && data && data.length > 0) {
+      const rules: PriceRule[] = data.map((row: any) => ({
+        id: row.id,
+        danger_class: row.danger_class || row.dangerClass,
+        min_emp: row.min_emp ?? row.minEmp ?? 1,
+        max_emp: row.max_emp ?? row.maxEmp ?? null,
+        service_name: row.service_name || row.serviceName,
+        price: row.price || 0
+      }));
+      setLocalItem('crm_price_rules_v2', rules);
+      return rules;
+    }
+  } catch (err) {
+    console.warn('[CloudDB] Price rules fetch falling back to local storage', err);
+  }
+  return getLocalItem('crm_price_rules_v2', fallback);
+}
+
+export async function saveCloudPriceRules(rules: PriceRule[]): Promise<void> {
+  setLocalItem('crm_price_rules_v2', rules);
+  try {
+    const payload = rules.map(r => ({
+      id: r.id,
+      danger_class: r.danger_class,
+      min_emp: r.min_emp,
+      max_emp: r.max_emp,
+      service_name: r.service_name,
+      price: r.price,
+      updated_at: new Date().toISOString()
+    }));
+    await supabase.from('price_rules').upsert(payload, { onConflict: 'id' });
+  } catch (err) {
+    console.warn('[CloudDB] Price rules cloud upsert warning', err);
+  }
+}
+
+// ==========================================
+// 7. TEMPLATES CLOUD SYNC
+// ==========================================
+export async function fetchCloudTemplates(fallback: SaaSEmailTemplate[] = []): Promise<SaaSEmailTemplate[]> {
+  try {
+    const { data, error } = await supabase.from('templates').select('*');
+    if (!error && data && data.length > 0) {
+      const templates: SaaSEmailTemplate[] = data.map((row: any) => ({
+        id: row.id,
+        type: row.type || 'general-notice',
+        title: row.title || '',
+        subject: row.subject || '',
+        body: row.body || ''
+      }));
+      setLocalItem('crm_saas_email_templates_v3', templates);
+      return templates;
+    }
+  } catch (err) {
+    console.warn('[CloudDB] Templates fetch falling back to local storage', err);
+  }
+  return getLocalItem('crm_saas_email_templates_v3', fallback);
+}
+
+export async function saveCloudTemplates(templates: SaaSEmailTemplate[]): Promise<void> {
+  setLocalItem('crm_saas_email_templates_v3', templates);
+  try {
+    const payload = templates.map(t => ({
+      id: t.id,
+      type: t.type,
+      title: t.title,
+      subject: t.subject,
+      body: t.body,
+      updated_at: new Date().toISOString()
+    }));
+    await supabase.from('templates').upsert(payload, { onConflict: 'id' });
+  } catch (err) {
+    console.warn('[CloudDB] Templates cloud upsert warning', err);
+  }
+}
+
+// ==========================================
+// 8. SUPER ADMINS CLOUD SYNC
+// ==========================================
+export async function fetchCloudSuperAdmins(fallback: SuperAdminUser[] = []): Promise<SuperAdminUser[]> {
+  try {
+    const { data, error } = await supabase.from('super_admins').select('*');
+    if (!error && data && data.length > 0) {
+      const admins: SuperAdminUser[] = data.map((row: any) => ({
+        id: row.id,
+        email: row.email,
+        name: row.name || row.email.split('@')[0],
+        role: row.role || 'Süper Admin',
+        addedAt: row.added_at || row.createdAt || new Date().toISOString()
+      }));
+      setLocalItem('crm_superadmins_v2', admins);
+      return admins;
+    }
+  } catch (err) {
+    console.warn('[CloudDB] Super admins fetch falling back to local storage', err);
+  }
+  return getLocalItem('crm_superadmins_v2', fallback);
+}
+
+export async function saveCloudSuperAdmins(admins: SuperAdminUser[]): Promise<void> {
+  setLocalItem('crm_superadmins_v2', admins);
+  try {
+    const payload = admins.map(a => ({
+      id: a.id,
+      email: a.email,
+      name: a.name,
+      role: a.role,
+      added_at: a.addedAt,
+      updated_at: new Date().toISOString()
+    }));
+    await supabase.from('super_admins').upsert(payload, { onConflict: 'id' });
+  } catch (err) {
+    console.warn('[CloudDB] Super admins cloud upsert warning', err);
+  }
+}
+
+// ==========================================
+// REALTIME DATABASE SYNC LISTENER
+// ==========================================
+export function subscribeToCloudDb(onChange: (table: string, payload: any) => void) {
+  try {
+    const channel = supabase
+      .channel('cloud-db-realtime-channel')
+      .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+        console.log('[CloudDB Realtime] Event received:', payload.table, payload.eventType);
+        onChange(payload.table, payload);
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[CloudDB Realtime] Subscribed to Supabase Realtime changes.');
+        }
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  } catch (err) {
+    console.warn('[CloudDB Realtime] Subscription error:', err);
+    return () => {};
+  }
+}
+

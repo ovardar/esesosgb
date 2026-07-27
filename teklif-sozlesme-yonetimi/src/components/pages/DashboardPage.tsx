@@ -184,47 +184,58 @@ export function DashboardPage({
       </article>
 
       {/* 2. KPI METRICS GRID (4 CARDS) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
-        <article className="summary-card" style={{ padding: 16, borderLeft: '5px solid #6366f1' }}>
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Aktif Müşteri Portföyü</span>
-          <strong style={{ fontSize: '1.65rem', color: 'var(--text-main)', display: 'block', margin: '4px 0' }}>
-            {metrics.totalCustomers} Firma
-          </strong>
-          <p style={{ margin: 0, fontSize: '0.78rem', color: '#10b981', fontWeight: 700 }}>
+      <div className="stat-grid-standard">
+        <article className="stat-card-standard" style={{ borderLeft: '4px solid #6366f1' }}>
+          <div className="stat-header">
+            <span className="stat-label">Aktif Müşteri Portföyü</span>
+            <span className="stat-badge" style={{ background: 'rgba(99, 102, 241, 0.12)', color: '#6366f1' }}>👥 Portföy</span>
+          </div>
+          <div className="stat-value">{metrics.totalCustomers} Firma</div>
+          <div className="stat-subtext" style={{ color: '#10b981' }}>
             📈 Son 30 Günde +12 Yeni Kayıt
-          </p>
+          </div>
         </article>
 
-        <article className="summary-card" style={{ padding: 16, borderLeft: '5px solid #10b981' }}>
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Aylık Düzenli Sözleşme Cirosu</span>
-          <strong style={{ fontSize: '1.65rem', color: '#10b981', display: 'block', margin: '4px 0' }}>
+        <article className="stat-card-standard" style={{ borderLeft: '4px solid #10b981' }}>
+          <div className="stat-header">
+            <span className="stat-label">Aylık Düzenli Sözleşme Cirosu</span>
+            <span className="stat-badge" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981' }}>💰 Ciro</span>
+          </div>
+          <div className="stat-value" style={{ color: '#10b981' }}>
             ₺{metrics.monthlyContractRev.toLocaleString('tr-TR')}
-          </strong>
-          <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-            📑 {contracts.filter((c) => c.stage === 'Aktif').length} Aktif İSG Sözleşmesi
-          </p>
+          </div>
+          <div className="stat-subtext">
+            📑 {contracts.filter((c) => c.stage === 'Aktif').length} Aktif Sözleşme
+          </div>
         </article>
 
-        <article className="summary-card" style={{ padding: 16, borderLeft: '5px solid #f59e0b' }}>
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Cevap Bekleyen Teklif Hacmi</span>
-          <strong style={{ fontSize: '1.65rem', color: '#d97706', display: 'block', margin: '4px 0' }}>
+        <article className="stat-card-standard" style={{ borderLeft: '4px solid #f59e0b' }}>
+          <div className="stat-header">
+            <span className="stat-label">Cevap Bekleyen Teklif Hacmi</span>
+            <span className="stat-badge" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#d97706' }}>⏳ Takipte</span>
+          </div>
+          <div className="stat-value" style={{ color: '#d97706' }}>
             ₺{metrics.pendingOfferSum.toLocaleString('tr-TR')}
-          </strong>
-          <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          </div>
+          <div className="stat-subtext">
             ⏳ {metrics.pendingOffersCount} Adet Teklif Takipte
-          </p>
+          </div>
         </article>
 
-        <article className="summary-card" style={{ padding: 16, borderLeft: '5px solid #ec4899' }}>
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Süresi Dolan / Yenilenecekler</span>
-          <strong style={{ fontSize: '1.65rem', color: metrics.expiringContracts.length > 0 ? '#ec4899' : 'var(--text-main)', display: 'block', margin: '4px 0' }}>
+        <article className="stat-card-standard" style={{ borderLeft: '4px solid #ec4899' }}>
+          <div className="stat-header">
+            <span className="stat-label">Süresi Dolan / Yenilenecekler</span>
+            <span className="stat-badge" style={{ background: 'rgba(236, 72, 153, 0.12)', color: '#ec4899' }}>⚠️ Kritik</span>
+          </div>
+          <div className="stat-value" style={{ color: metrics.expiringContracts.length > 0 ? '#ec4899' : 'var(--text-main)' }}>
             {metrics.expiringContracts.length} Sözleşme
-          </strong>
-          <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          </div>
+          <div className="stat-subtext">
             🛑 Önümüzdeki 45 Gün İçinde
-          </p>
+          </div>
         </article>
       </div>
+
 
       {/* 3. URGENT ACTION CENTER & PENDING OFFERS (2 COLUMNS) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: 18, alignItems: 'start' }}>

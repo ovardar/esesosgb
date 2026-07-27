@@ -291,5 +291,19 @@ export interface DocumentRecord {
   notes?: string;
 }
 
+export interface PriceRule {
+  id: string;
+  danger_class: 'Az Tehlikeli' | 'Tehlikeli' | 'Çok Tehlikeli';
+  min_emp: number;
+  max_emp: number | null;
+  service_name: string;
+  price: number;
+}
 
-
+export interface SuperAdminUser {
+  id: string;
+  email: string;
+  name?: string;
+  role?: string;
+  addedAt?: string;
+}

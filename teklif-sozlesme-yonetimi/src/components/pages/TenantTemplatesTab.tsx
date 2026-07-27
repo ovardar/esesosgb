@@ -37,10 +37,10 @@ export type TenantTemplatesStore = {
 
 const defaultTemplates: TenantTemplatesStore = {
   employeeInvite: {
-    subject: 'İSG Portal Hesabı Aktivasyonu ve Şifre Belirleme',
+    subject: 'Codentra CRM Portal Aktivasyonu ve Şifre Belirleme',
     body: `Sayın {PERSONEL_ADI},
 
-Firmamızın Offer & Contract İSG yönetim platformunda kullanıcı hesabınız tanımlanmıştır.
+Firmamızın Codentra Teklif ve Sözleşme Yazılımı platformunda kullanıcı hesabınız tanımlanmıştır.
 
 Aktivasyonunuzu tamamlamak ve kendi güvenli şifrenizi oluşturmak için lütfen aşağıdaki bağlantıya tıklayınız:
 {AKTIVASYON_LINKI}
@@ -48,6 +48,7 @@ Aktivasyonunuzu tamamlamak ve kendi güvenli şifrenizi oluşturmak için lütfe
 İyi çalışmalar dileriz.
 {FIRMA_ADI} Yönetimi`
   },
+
   offerEmail: {
     subject: '{FIRMA_ADI} - İş Sağlığı ve Güvenliği Hizmet Teklifi ({TEKLIF_NO})',
     body: `Sayın {MUSTERI_YETKILISI},

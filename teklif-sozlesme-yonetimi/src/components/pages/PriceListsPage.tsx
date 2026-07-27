@@ -12,7 +12,9 @@ import {
   OfferServiceLine,
   VatMode
 } from '../../types';
+import { fetchCloudPriceRules, saveCloudPriceRules } from '../../lib/cloudDb';
 import { computeOfferFinancials } from './CustomersPage';
+
 
 function computeContractFinancialsLocal(services: ContractServiceLine[], vatMode: VatMode = 'KDV Hariç') {
   let subtotal = 0;
@@ -221,22 +223,15 @@ export function PriceListsPage() {
   const [statusNotice, setStatusNotice] = useState<{ message: string; type: 'ok' | 'err' | 'warn' } | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
-  // Load Initial Data
+  // Load Initial Data from Cloud DB
   useEffect(() => {
-    const savedRules = localStorage.getItem(STORAGE_KEY);
-    let loaded: PriceRule[];
-    if (savedRules) {
-      try {
-        loaded = JSON.parse(savedRules);
-      } catch (e) {
-        loaded = defaultPriceRules.map((r, i) => ({ ...r, id: `rule-${i + 1}` }));
-      }
-    } else {
-      loaded = defaultPriceRules.map((r, i) => ({ ...r, id: `rule-${i + 1}` }));
+    async function loadCloudRules() {
+      const defaults = defaultPriceRules.map((r, i) => ({ ...r, id: `rule-${i + 1}` }));
+      const dbRules = await fetchCloudPriceRules(defaults);
+      setPriceRules(dbRules);
+      setLastSavedRules(JSON.parse(JSON.stringify(dbRules)));
     }
-
-    setPriceRules(loaded);
-    setLastSavedRules(JSON.parse(JSON.stringify(loaded)));
+    loadCloudRules();
 
     const savedHistory = localStorage.getItem(HISTORY_STORAGE_KEY);
     if (savedHistory) {
@@ -250,7 +245,7 @@ export function PriceListsPage() {
     }
   }, []);
 
-  // Automatic Persistence Effect
+  // Automatic Persistence Effect (Cloud DB + Local Cache)
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -259,12 +254,13 @@ export function PriceListsPage() {
 
     if (priceRules.length === 0) return;
 
-    // Persist rules immediately to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(priceRules));
+    // Save to Cloud DB & local cache
+    saveCloudPriceRules(priceRules);
 
     // Update auto-save timestamp indicator
     const nowTimeStr = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setAutoSaveTime(nowTimeStr);
+
 
     // Auto-Log price change history
     const nowStr = new Date().toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' });

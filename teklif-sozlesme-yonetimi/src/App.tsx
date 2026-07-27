@@ -17,13 +17,29 @@ import { offerSeeds } from './data/workbench';
 import type { SectionId, SaaSTenant, ThemeId, ContractRecord, OfferRecord } from './types';
 
 import { LoginPage } from './components/LoginPage';
+import { SetPasswordModal } from './components/modals/SetPasswordModal';
 import { supabase } from './lib/supabase';
-import { fetchCloudCustomers, saveCloudCustomers, fetchCloudOffers, saveCloudOffers, fetchCloudContracts, saveCloudContracts } from './lib/cloudDb';
+import { fetchCloudCustomers, saveCloudCustomers, fetchCloudOffers, saveCloudOffers, fetchCloudContracts, saveCloudContracts, subscribeToCloudDb } from './lib/cloudDb';
+
 
 function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('dashboard');
   const [activeTheme, setActiveTheme] = useState<ThemeId>('ivory');
   const [impersonatedTenant, setImpersonatedTenant] = useState<SaaSTenant | null>(null);
+
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [activeInviteCode, setActiveInviteCode] = useState<string | undefined>(undefined);
+
+  // Dynamic URL Invite Parameter Detection
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('invite') || params.get('token') || params.get('code');
+    if (code) {
+      setActiveInviteCode(code);
+      setInviteModalOpen(true);
+    }
+  }, []);
+
 
   const [session, setSession] = useState<any>(() => {
     const savedUser = localStorage.getItem('crm_user_session');
@@ -350,44 +366,75 @@ function App() {
   }
 
   if (!session) {
-    return <LoginPage onLoginSuccess={(email) => setSession({ user: { email } })} />;
+    return (
+      <>
+        <SetPasswordModal
+          isOpen={inviteModalOpen}
+          inviteCode={activeInviteCode}
+          onClose={() => {
+            setInviteModalOpen(false);
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }}
+          onSuccess={() => {
+            setInviteModalOpen(false);
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }}
+        />
+        <LoginPage onLoginSuccess={(email) => setSession({ user: { email } })} />
+      </>
+    );
   }
 
   return (
-    <Shell
-      activeSection={activeSection}
-      activeTheme={activeTheme}
-      onSectionChange={handleSectionChange}
-      isSuperAdmin={isSuperAdmin}
-      currentUserEmail={currentUserEmail}
-      activeTenantName={impersonatedTenant ? impersonatedTenant.companyName : undefined}
+    <>
+      <SetPasswordModal
+        isOpen={inviteModalOpen}
+        inviteCode={activeInviteCode}
+        onClose={() => {
+          setInviteModalOpen(false);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }}
+        onSuccess={() => {
+          setInviteModalOpen(false);
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }}
+      />
+      <Shell
+        activeSection={activeSection}
+        activeTheme={activeTheme}
+        onSectionChange={handleSectionChange}
+        isSuperAdmin={isSuperAdmin}
+        currentUserEmail={currentUserEmail}
+        activeTenantName={impersonatedTenant ? impersonatedTenant.companyName : undefined}
 
-      activeTenantLogo={impersonatedTenant ? impersonatedTenant.logoUrl : undefined}
-      onClearImpersonation={() => setImpersonatedTenant(null)}
-      customers={customers}
-      onUpdateActivityStatus={handleUpdateActivityStatus}
-      onNavigateCustomer={handleNavigateCustomer}
-      title={
-        activeSection === 'saas-admin'
-          ? 'Yazılım Firması SaaS Yönetim ve Lisans Paneli'
-          : impersonatedTenant
-          ? `[${impersonatedTenant.companyName}] Kiracı Modunda İnceleme`
-          : undefined
-      }
-      subtitle={
-        activeSection === 'saas-admin'
-          ? 'Kendi SaaS müşterilerinizi, lisanslarınızı, paketlerinizi ve abonelik sözleşmelerinizi buradan takip edin.'
-          : impersonatedTenant
-          ? `Bu ekran ${impersonatedTenant.companyName} firmanızın kendi müşterilerine sunduğu teklif ve sözleşme CRM alanıdır.`
-          : undefined
-      }
-      sidebarNoteTitle={activeMeta.label}
-      sidebarNoteBody={activeMeta.description}
-    >
-      {content}
-    </Shell>
+        activeTenantLogo={impersonatedTenant ? impersonatedTenant.logoUrl : undefined}
+        onClearImpersonation={() => setImpersonatedTenant(null)}
+        customers={customers}
+        onUpdateActivityStatus={handleUpdateActivityStatus}
+        onNavigateCustomer={handleNavigateCustomer}
+        title={
+          activeSection === 'saas-admin'
+            ? 'Yazılım Firması SaaS Yönetim ve Lisans Paneli'
+            : impersonatedTenant
+            ? `[${impersonatedTenant.companyName}] Kiracı Modunda İnceleme`
+            : undefined
+        }
+        subtitle={
+          activeSection === 'saas-admin'
+            ? 'Kendi SaaS müşterilerinizi, lisanslarınızı, paketlerinizi ve abonelik sözleşmelerinizi buradan takip edin.'
+            : impersonatedTenant
+            ? `Bu ekran ${impersonatedTenant.companyName} firmanızın kendi müşterilerine sunduğu teklif ve sözleşme CRM alanıdır.`
+            : undefined
+        }
+        sidebarNoteTitle={activeMeta.label}
+        sidebarNoteBody={activeMeta.description}
+      >
+        {content}
+      </Shell>
+    </>
   );
 }
+
 
 export default App;
 

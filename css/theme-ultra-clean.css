@@ -72,9 +72,10 @@ body.theme-ultra-clean {
   padding: 0;
   background: linear-gradient(180deg, var(--uc-primary-soft), var(--uc-bg) 240px, var(--uc-bg));
   color: var(--uc-text);
-  font-family: 'Manrope', 'Segoe UI', Tahoma, sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, sans-serif;
   min-height: 100vh;
 }
+
 
 body.theme-ultra-clean .card {
   max-width: none;

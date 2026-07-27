@@ -664,35 +664,44 @@ export function OffersPage({
       </div>
 
       {/* KPI METRICS BAR */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
-        <div className="panel panel-elevated" style={{ padding: '16px 20px', background: 'var(--surface-strong)', border: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Toplam Teklif Adedi</span>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', marginTop: 4 }}>
-            {kpiStats.totalCount} <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 500 }}>Teklif</span>
+      <div className="stat-grid-standard">
+        <article className="stat-card-standard">
+          <div className="stat-header">
+            <span className="stat-label">Toplam Teklif Adedi</span>
+            <span className="stat-badge" style={{ background: 'rgba(99, 102, 241, 0.12)', color: '#6366f1' }}>📑 Teklifler</span>
           </div>
-        </div>
+          <div className="stat-value">{kpiStats.totalCount} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Teklif</span></div>
+          <div className="stat-subtext">Portföyde kayıtlı tüm teklifler</div>
+        </article>
 
-        <div className="panel panel-elevated" style={{ padding: '16px 20px', background: 'var(--surface-strong)', border: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Aktif Teklif Hacmi</span>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--accent)', marginTop: 4 }}>
-            ₺{kpiStats.totalValue.toLocaleString('tr-TR')}
+        <article className="stat-card-standard">
+          <div className="stat-header">
+            <span className="stat-label">Aktif Teklif Hacmi</span>
+            <span className="stat-badge" style={{ background: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6' }}>📊 Hacim</span>
           </div>
-        </div>
+          <div className="stat-value" style={{ color: 'var(--accent)' }}>₺{kpiStats.totalValue.toLocaleString('tr-TR')}</div>
+          <div className="stat-subtext">Süreçteki toplam tutar</div>
+        </article>
 
-        <div className="panel panel-elevated" style={{ padding: '16px 20px', background: 'var(--surface-strong)', border: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Kazanılan Teklif Tutarı</span>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#10b981', marginTop: 4 }}>
-            ₺{kpiStats.wonValue.toLocaleString('tr-TR')}
+        <article className="stat-card-standard">
+          <div className="stat-header">
+            <span className="stat-label">Kazanılan Teklif Tutarı</span>
+            <span className="stat-badge" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#10b981' }}>🏆 Kazanılan</span>
           </div>
-        </div>
+          <div className="stat-value" style={{ color: '#10b981' }}>₺{kpiStats.wonValue.toLocaleString('tr-TR')}</div>
+          <div className="stat-subtext">Onaylanıp sözleşmeye dönen</div>
+        </article>
 
-        <div className="panel panel-elevated" style={{ padding: '16px 20px', background: 'var(--surface-strong)', border: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>Revizyon Gören Teklifler</span>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#ec4899', marginTop: 4 }}>
-            {kpiStats.revisedCount} <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 500 }}>Sözleşme Adayı</span>
+        <article className="stat-card-standard">
+          <div className="stat-header">
+            <span className="stat-label">Revizyon Gören Teklifler</span>
+            <span className="stat-badge" style={{ background: 'rgba(236, 72, 153, 0.12)', color: '#ec4899' }}>🔄 Revizyon</span>
           </div>
-        </div>
+          <div className="stat-value" style={{ color: '#ec4899' }}>{kpiStats.revisedCount} <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Sözleşme Adayı</span></div>
+          <div className="stat-subtext">Güncellenmiş teklifler</div>
+        </article>
       </div>
+
 
       {/* FILTER & SEARCH BAR */}
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', background: 'var(--surface-subtle)', padding: 14, borderRadius: 14, border: '1px solid var(--border)' }}>
