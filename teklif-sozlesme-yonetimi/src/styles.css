@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
   color-scheme: light;
@@ -24,6 +24,12 @@
   --accent-strong: #111827;
   --good: #0f766e;
   --shadow: 0 16px 40px rgba(17, 24, 39, 0.08);
+}
+
+*,
+*::before,
+*::after {
+  font-family: inherit !important;
 }
 
 
@@ -302,17 +308,13 @@ button {
   box-shadow: var(--shadow);
 }
 
-.brand-mark {
-  font-family: 'Outfit', sans-serif;
-}
-
 .brand h1,
 .workspace h2,
 .section-heading h3,
 .module-card h4,
 h1, h2, h3, h4, h5, h6 {
   margin: 0;
-  font-family: 'Outfit', 'Inter', sans-serif;
+  font-family: inherit;
   letter-spacing: -0.015em;
 }
 
@@ -328,7 +330,47 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-family: 'Inter', sans-serif;
+}
+
+.summary-card,
+.metric-card,
+.module-card,
+.panel,
+.permission-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface-strong);
+  box-shadow: var(--shadow);
+}
+
+.summary-card,
+.metric-card,
+.module-card,
+.permission-card {
+  padding: 18px;
+}
+
+.summary-card strong,
+.metric-card strong,
+.module-card strong,
+.permission-card strong {
+  font-weight: 800;
+}
+
+.summary-card span,
+.metric-card span,
+.module-card span,
+.permission-card span,
+.summary-card p,
+.metric-card p,
+.module-card p,
+.permission-card p {
+  line-height: 1.45;
+}
+
+.page-copy,
+.page-copy * {
+  font-family: inherit;
 }
 
 

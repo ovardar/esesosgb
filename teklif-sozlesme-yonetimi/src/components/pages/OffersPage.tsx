@@ -19,6 +19,8 @@ const statusBadges: Record<string, { bg: string; color: string; label: string }>
   'Kaybedildi': { bg: 'rgba(239, 68, 68, 0.16)', color: '#ef4444', label: '✕ Kaybedildi' }
 };
 
+type OfferSortKey = 'offerNo' | 'customerName' | 'revision' | 'amount' | 'validUntilDate' | 'status';
+
 interface OffersPageProps {
   customers?: CustomerRecord[];
   onContractCreated?: (contract: ContractRecord) => void;
@@ -74,6 +76,8 @@ export function OffersPage({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState('Tümü');
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState('Tümü');
+  const [sortKey, setSortKey] = useState<OfferSortKey>('offerNo');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Modals state
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -92,6 +96,21 @@ export function OffersPage({
   const [contractStartDate, setContractStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [contractTitleInput, setContractTitleInput] = useState('');
   const [createdContractToast, setCreatedContractToast] = useState<{ show: boolean; contractTitle: string } | null>(null);
+
+  const handleSort = (key: OfferSortKey) => {
+    if (sortKey === key) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortKey(key);
+    setSortDirection('asc');
+  };
+
+  const sortIcon = (key: OfferSortKey) => {
+    if (sortKey !== key) return <span>↕</span>;
+    return sortDirection === 'asc' ? <span>↑</span> : <span>↓</span>;
+  };
 
   // New Offer Form State (Req 1: services starts empty [])
   const [newOfferForm, setNewOfferForm] = useState<{
@@ -542,6 +561,48 @@ export function OffersPage({
     });
   }, [offers, searchQuery, selectedStatusFilter, selectedCustomerFilter]);
 
+  const sortedOffers = useMemo(() => {
+    return [...filteredOffers].sort((left, right) => {
+      const leftRevision = left.revisions[left.revisions.length - 1];
+      const rightRevision = right.revisions[right.revisions.length - 1];
+
+      let leftValue: string | number = '';
+      let rightValue: string | number = '';
+
+      switch (sortKey) {
+        case 'customerName':
+          leftValue = `${left.customerName} ${left.subject}`.toLowerCase();
+          rightValue = `${right.customerName} ${right.subject}`.toLowerCase();
+          break;
+        case 'revision':
+          leftValue = Number(left.currentRevisionNo) || 0;
+          rightValue = Number(right.currentRevisionNo) || 0;
+          break;
+        case 'amount':
+          leftValue = Number(leftRevision?.grandTotal) || 0;
+          rightValue = Number(rightRevision?.grandTotal) || 0;
+          break;
+        case 'validUntilDate':
+          leftValue = new Date(left.validUntilDate).getTime() || 0;
+          rightValue = new Date(right.validUntilDate).getTime() || 0;
+          break;
+        case 'status':
+          leftValue = left.status.toLowerCase();
+          rightValue = right.status.toLowerCase();
+          break;
+        case 'offerNo':
+        default:
+          leftValue = left.offerNo.toLowerCase();
+          rightValue = right.offerNo.toLowerCase();
+          break;
+      }
+
+      if (leftValue < rightValue) return sortDirection === 'asc' ? -1 : 1;
+      if (leftValue > rightValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredOffers, sortDirection, sortKey]);
+
   // KPI Metrics
   const kpiStats = useMemo(() => {
     let totalVal = 0;
@@ -676,18 +737,42 @@ export function OffersPage({
         <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
           <thead>
             <tr style={{ background: 'var(--surface-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>
-              <th style={{ padding: '12px 16px' }}>Teklif No</th>
-              <th style={{ padding: '12px 16px' }}>Müşteri & Konu</th>
-              <th style={{ padding: '12px 16px' }}>Revizyon</th>
-              <th style={{ padding: '12px 16px' }}>Tutar (KDV Dahil)</th>
-              <th style={{ padding: '12px 16px' }}>Geçerlilik</th>
-              <th style={{ padding: '12px 16px' }}>Durum</th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('offerNo')}>
+                  Teklif No {sortIcon('offerNo')}
+                </button>
+              </th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('customerName')}>
+                  Müşteri & Konu {sortIcon('customerName')}
+                </button>
+              </th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('revision')}>
+                  Revizyon {sortIcon('revision')}
+                </button>
+              </th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('amount')}>
+                  Tutar (KDV Dahil) {sortIcon('amount')}
+                </button>
+              </th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('validUntilDate')}>
+                  Geçerlilik {sortIcon('validUntilDate')}
+                </button>
+              </th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('status')}>
+                  Durum {sortIcon('status')}
+                </button>
+              </th>
               <th style={{ padding: '12px 16px', textAlign: 'right' }}>İşlemler</th>
             </tr>
           </thead>
           <tbody>
-            {filteredOffers.length > 0 ? (
-              filteredOffers.map((off) => {
+            {sortedOffers.length > 0 ? (
+              sortedOffers.map((off) => {
                 const currentRev = off.revisions[off.revisions.length - 1];
                 const badge = statusBadges[off.status] || statusBadges['Taslak'];
 

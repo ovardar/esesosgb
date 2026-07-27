@@ -112,6 +112,8 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
   // Search & Role Filter State
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [sortKey, setSortKey] = useState<'name' | 'role' | 'phone' | 'addedAt' | 'status'>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // UI Modals State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -166,6 +168,56 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
       return matchesSearch && matchesRole;
     });
   }, [currentUsers, searchQuery, roleFilter]);
+
+  const handleSort = (key: 'name' | 'role' | 'phone' | 'addedAt' | 'status') => {
+    if (sortKey === key) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortKey(key);
+    setSortDirection('asc');
+  };
+
+  const sortIcon = (key: 'name' | 'role' | 'phone' | 'addedAt' | 'status') => {
+    if (sortKey !== key) return <span>↕</span>;
+    return sortDirection === 'asc' ? <span>↑</span> : <span>↓</span>;
+  };
+
+  const sortedUsers = useMemo(() => {
+    return [...filteredUsers].sort((left, right) => {
+      let leftValue = '';
+      let rightValue = '';
+
+      switch (sortKey) {
+        case 'role':
+          leftValue = left.role.toLowerCase();
+          rightValue = right.role.toLowerCase();
+          break;
+        case 'phone':
+          leftValue = left.phone.toLowerCase();
+          rightValue = right.phone.toLowerCase();
+          break;
+        case 'addedAt':
+          leftValue = left.addedAt;
+          rightValue = right.addedAt;
+          break;
+        case 'status':
+          leftValue = left.status.toLowerCase();
+          rightValue = right.status.toLowerCase();
+          break;
+        case 'name':
+        default:
+          leftValue = left.name.toLowerCase();
+          rightValue = right.name.toLowerCase();
+          break;
+      }
+
+      if (leftValue < rightValue) return sortDirection === 'asc' ? -1 : 1;
+      if (leftValue > rightValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredUsers, sortDirection, sortKey]);
 
   // Quota & Sizing calculations
   const maxUsersLimit = currentTenant.maxUsers || 50;
@@ -425,7 +477,7 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
             <input
               type="email"
               required
-              placeholder="Süper Admin E-posta (Örn: yonetici@osgbsistem.com)"
+              placeholder="Süper Admin E-posta (Örn: yonetici@codentra.com.tr)"
               value={newSuperAdminEmail}
               onChange={(e) => setNewSuperAdminEmail(e.target.value)}
               style={{ flex: 1, minWidth: 200, padding: '6px 12px', fontSize: '0.84rem', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
@@ -517,23 +569,43 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
             <thead>
               <tr>
                 <th>#</th>
-                <th>Kullanıcı Ad Soyad & İletişim</th>
-                <th>Sistem Rolü</th>
-                <th>Telefon</th>
-                <th>Kayıt Tarihi</th>
-                <th>Aktivasyon & Davet</th>
+                <th>
+                  <button type="button" className="table-sort-button" onClick={() => handleSort('name')}>
+                    Kullanıcı Ad Soyad & İletişim {sortIcon('name')}
+                  </button>
+                </th>
+                <th>
+                  <button type="button" className="table-sort-button" onClick={() => handleSort('role')}>
+                    Sistem Rolü {sortIcon('role')}
+                  </button>
+                </th>
+                <th>
+                  <button type="button" className="table-sort-button" onClick={() => handleSort('phone')}>
+                    Telefon {sortIcon('phone')}
+                  </button>
+                </th>
+                <th>
+                  <button type="button" className="table-sort-button" onClick={() => handleSort('addedAt')}>
+                    Kayıt Tarihi {sortIcon('addedAt')}
+                  </button>
+                </th>
+                <th>
+                  <button type="button" className="table-sort-button" onClick={() => handleSort('status')}>
+                    Aktivasyon & Davet {sortIcon('status')}
+                  </button>
+                </th>
                 <th style={{ textAlign: 'right' }}>İşlemler</th>
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.length === 0 ? (
+              {sortedUsers.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="customer-table-empty">
                     Arama kriterlerine uygun kullanıcı bulunamadı.
                   </td>
                 </tr>
               ) : (
-                filteredUsers.map((usr, index) => (
+                sortedUsers.map((usr, index) => (
                   <tr key={usr.id}>
                     <td><span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{index + 1}</span></td>
                     <td>
@@ -1026,7 +1098,7 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
                       const html = buildCustomerInviteTemplate(superAdminInviteUser.name, link);
                       const res = await sendEmail({
                         to: superAdminInviteUser.email,
-                        subject: 'Codentra OSGB CRM — Süper Admin Davetiniz',
+                        subject: 'Codentra Teklif ve Sözleşme Yönetimi — Süper Admin Davetiniz',
                         html
                       });
                       setSendingEmail(false);

@@ -55,6 +55,8 @@ const dspList = [
 
 const unitOptions = ['Saat/Ay', 'Aylık', 'Adet', 'Kişi/Ay', 'Kişi/Dönem', 'Paket', 'Yıllık'];
 
+type ContractSortKey = 'contractNo' | 'contractTitle' | 'customerName' | 'stage' | 'amount' | 'endDate' | 'assigned';
+
 // Helper to calculate exact 1 year minus 1 day end date
 const calculateDefaultEndDate = (startDateStr: string) => {
   if (!startDateStr) return '';
@@ -153,6 +155,8 @@ export function ContractsPage({
   const [selectedStageFilter, setSelectedStageFilter] = useState<string>('Tümü');
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState<string>('Tümü');
   const [selectedRenewalFilter, setSelectedRenewalFilter] = useState<string>('Tümü');
+  const [sortKey, setSortKey] = useState<ContractSortKey>('contractNo');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Active Modals & Selected Contract
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -789,6 +793,21 @@ export function ContractsPage({
 
   const [selectedRevisionFilter, setSelectedRevisionFilter] = useState<string>('Tümü');
 
+  const handleSort = (key: ContractSortKey) => {
+    if (sortKey === key) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortKey(key);
+    setSortDirection('asc');
+  };
+
+  const sortIcon = (key: ContractSortKey) => {
+    if (sortKey !== key) return <span>↕</span>;
+    return sortDirection === 'asc' ? <span>↑</span> : <span>↓</span>;
+  };
+
   // Filtered Contracts
   const filteredContracts = useMemo(() => {
     return contracts.filter((c) => {
@@ -837,6 +856,52 @@ export function ContractsPage({
       return matchSearch && matchStage && matchCustomer && matchRenewal && matchRevFilter;
     });
   }, [contracts, searchQuery, selectedStageFilter, selectedCustomerFilter, selectedRenewalFilter, selectedRevisionFilter]);
+
+  const sortedContracts = useMemo(() => {
+    return [...filteredContracts].sort((left, right) => {
+      const leftRev = left.revisions[left.revisions.length - 1];
+      const rightRev = right.revisions[right.revisions.length - 1];
+
+      let leftValue: string | number = '';
+      let rightValue: string | number = '';
+
+      switch (sortKey) {
+        case 'contractTitle':
+          leftValue = left.contractTitle.toLowerCase();
+          rightValue = right.contractTitle.toLowerCase();
+          break;
+        case 'customerName':
+          leftValue = left.customerName.toLowerCase();
+          rightValue = right.customerName.toLowerCase();
+          break;
+        case 'stage':
+          leftValue = left.stage.toLowerCase();
+          rightValue = right.stage.toLowerCase();
+          break;
+        case 'amount':
+          leftValue = Number(leftRev?.grandTotal) || 0;
+          rightValue = Number(rightRev?.grandTotal) || 0;
+          break;
+        case 'endDate':
+          leftValue = new Date(left.endDate).getTime() || 0;
+          rightValue = new Date(right.endDate).getTime() || 0;
+          break;
+        case 'assigned':
+          leftValue = `${left.assignedExpert || ''} ${left.assignedDoctor || ''} ${left.assignedDsp || ''}`.toLowerCase();
+          rightValue = `${right.assignedExpert || ''} ${right.assignedDoctor || ''} ${right.assignedDsp || ''}`.toLowerCase();
+          break;
+        case 'contractNo':
+        default:
+          leftValue = left.contractNo.toLowerCase();
+          rightValue = right.contractNo.toLowerCase();
+          break;
+      }
+
+      if (leftValue < rightValue) return sortDirection === 'asc' ? -1 : 1;
+      if (leftValue > rightValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredContracts, sortDirection, sortKey]);
 
   const bulkIncreasedContractsCount = useMemo(() => {
     return contracts.filter((c) =>
@@ -1146,18 +1211,42 @@ export function ContractsPage({
         <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
           <thead>
             <tr style={{ background: 'var(--surface-subtle)', textAlign: 'left', borderBottom: '1px solid var(--border)' }}>
-              <th style={{ padding: '12px 16px' }}>Sözleşme Takip Adı & No</th>
-              <th style={{ padding: '12px 16px' }}>Müşteri</th>
-              <th style={{ padding: '12px 16px' }}>Aşama</th>
-              <th style={{ padding: '12px 16px' }}>Aylık Tutar</th>
-              <th style={{ padding: '12px 16px' }}>Atanan İSG Kadrosu & Katip No</th>
-              <th style={{ padding: '12px 16px' }}>Geçerlilik Tarihi</th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('contractNo')}>
+                  Sözleşme Takip Adı & No {sortIcon('contractNo')}
+                </button>
+              </th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('customerName')}>
+                  Müşteri {sortIcon('customerName')}
+                </button>
+              </th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('stage')}>
+                  Aşama {sortIcon('stage')}
+                </button>
+              </th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('amount')}>
+                  Aylık Tutar {sortIcon('amount')}
+                </button>
+              </th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('assigned')}>
+                  Atanan İSG Kadrosu & Katip No {sortIcon('assigned')}
+                </button>
+              </th>
+              <th style={{ padding: '12px 16px' }}>
+                <button type="button" className="table-sort-button" onClick={() => handleSort('endDate')}>
+                  Geçerlilik Tarihi {sortIcon('endDate')}
+                </button>
+              </th>
               <th style={{ padding: '12px 16px', textAlign: 'right' }}>İşlemler</th>
             </tr>
           </thead>
           <tbody>
-            {filteredContracts.length > 0 ? (
-              filteredContracts.map((cnt) => {
+            {sortedContracts.length > 0 ? (
+              sortedContracts.map((cnt) => {
                 const activeRev = cnt.revisions[cnt.revisions.length - 1];
                 const badge = stageBadges[cnt.stage] || stageBadges['Taslak'];
 

@@ -72,7 +72,7 @@ export const initialSaaSTenants: SaaSTenant[] = [
     startDate: '2026-01-01',
     endDate: '2027-01-01',
     autoRenew: true,
-    notes: 'Ana Test Kiracısı',
+    notes: 'Codentra canlı doğrulama kiracısı',
     modulesEnabled: { crm: true, offers: true, contracts: true, documents: true, analytics: true },
     lastLoginAt: 'Bugün',
     createdBy: 'orhan.vardar@gmail.com',
@@ -94,10 +94,10 @@ export const initialSaaSEmailTemplates: SaaSEmailTemplate[] = [
     id: 'tmpl-1',
     type: 'invitation',
     title: 'Müşteri Davet & Aktivasyon',
-    subject: '{FIRMA_ADI} — Codentra SaaS CRM Erişimi Aktivasyonu',
+    subject: '{FIRMA_ADI} — Codentra Teklif ve Sözleşme Yönetimi Erişimi Aktivasyonu',
     body: `Sayın {YETKILI_ADI},
 
-{FIRMA_ADI} bünyesinde kullanabileceğiniz Codentra OSGB & İSG CRM bulut sisteminiz aktif edilmiştir.
+{FIRMA_ADI} bünyesinde kullanabileceğiniz Codentra Teklif ve Sözleşme Yönetimi bulut sisteminiz aktif edilmiştir.
 
 Aşağıdaki bağlantıya tıklayarak şifrenizi belirleyebilir ve hemen kullanmaya başlayabilirsiniz:
 {AKTIVASYON_LINKI}

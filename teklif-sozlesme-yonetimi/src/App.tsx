@@ -54,7 +54,22 @@ function App() {
   // Forced one-time purge of legacy browser state to clean production deployment
   useEffect(() => {
     if (!localStorage.getItem('crm_prod_clean_v5')) {
-      localStorage.clear();
+      const legacyKeysToReset = [
+        'crm_user_session',
+        'crm_customers_v2',
+        'crm_offers_v3',
+        'crm_contracts_v3',
+        'crm_documents_v2',
+        'crm_saas_tenants_v3',
+        'crm_saas_offers_v3',
+        'crm_saas_contracts_v3',
+        'crm_saas_invoices_v3',
+        'crm_saas_email_templates_v3',
+        'crm_superadmins_v2',
+        'crm_tenant_users_map_v2'
+      ];
+
+      legacyKeysToReset.forEach((key) => localStorage.removeItem(key));
       localStorage.setItem('crm_prod_clean_v5', 'true');
       setSession(null);
       setCustomers([]);
@@ -103,7 +118,7 @@ function App() {
   const isSuperAdmin = useMemo(() => {
     if (!currentUserEmail) return false;
     const email = currentUserEmail.toLowerCase().trim();
-    const hardcodedAdmins = ['orhan.vardar@gmail.com', 'ovardar@gmail.com', 'admin@osgbsistem.com'];
+    const hardcodedAdmins = ['orhan.vardar@gmail.com'];
     return hardcodedAdmins.includes(email) || superAdminEmails.includes(email);
   }, [superAdminEmails, currentUserEmail]);
 
@@ -375,4 +390,4 @@ function App() {
 }
 
 export default App;
-
+

@@ -6,7 +6,7 @@ Amac, ileride tasarim ve veri modeli kararlarini hizlandirmaktir.
 
 ## Temel Ilke
 
-SaaS Yonetimi ekrani OSGB operasyon verisini yonetmek icin degil, Eses Yazilim ile OSGB musterisi arasindaki iliskiyi yonetmek icin vardir.
+SaaS Yonetimi ekrani OSGB operasyon verisini yonetmek icin degil, Codentra ile OSGB musterisi arasindaki iliskiyi yonetmek icin vardir.
 
 Bu nedenle veri kaynaklari ikiye ayrilir:
 
@@ -17,12 +17,12 @@ Bu nedenle veri kaynaklari ikiye ayrilir:
 
 | Hedef bolum | Muhtemel mevcut kaynak | Tasinacak veri | Not |
 |---|---|---|---|
-| Ust ozet KPI'lar | saas-admin.html | aktif musteri sayisi, tenant sayisi, durum bilgileri | dogrudan Eses baglami |
+| Ust ozet KPI'lar | saas-admin.html | aktif musteri sayisi, tenant sayisi, durum bilgileri | dogrudan Codentra baglami |
 | Hizli aksiyonlar | saas-admin.html | tenant acma, musteri ekleme aksiyonlari | gelistirilerek kullanilir |
-| Satis hunisi | yeni Eses CRM akisi | lead asamasi, sonraki aksiyon, gorusme tarihi | mevcut OSGB CRM'den ayri olmalı |
+| Satis hunisi | yeni Codentra CRM akisi | lead asamasi, sonraki aksiyon, gorusme tarihi | mevcut operasyon CRM'inden ayri olmalı |
 | Aktif musteri tablosu | saas-admin.html | musteri listesi, paket, tenant durumu | ana kaynak |
-| SaaS sozlesme ozet | yeni olusacak Eses sozlesme kayitlari | sozlesme no, baslangic, bitis, paket, lisans | OSGB hizmet sozlesmesinden farkli |
-| Finans paneli | yeni olusacak fatura/tahsilat kayitlari | son fatura, borc, tahsilat, gecikme | Eses-OSGB ticari iliskisi |
+| SaaS sozlesme ozet | yeni olusacak Codentra sozlesme kayitlari | sozlesme no, baslangic, bitis, paket, lisans | OSGB hizmet sozlesmesinden farkli |
+| Finans paneli | yeni olusacak fatura/tahsilat kayitlari | son fatura, borc, tahsilat, gecikme | Codentra-OSGB ticari iliskisi |
 | Destek paneli | yeni destek kaydi yapisi | acik issue, kritik durum, son destek talebi | tenant destek akisina bagli |
 | Kullanim ozeti | tenant aktivite verileri | son login, aktif kullanici, kullanim sinyali | operasyonel degil, analitik ozet |
 
@@ -46,7 +46,7 @@ SaaS Yonetimi'nin cekirdegi buyuk olcude bu ekrandan tureyecektir.
 
 ### 2. crm.html ve bagli CRM ekranlari
 
-Bu moduller mevcut durumda OSGB CRM baglamina daha yakindir. Dogrudan kopyalanmamali, sadece mantik olarak referans alinmalidir.
+Bu moduller mevcut durumda operasyon CRM baglamina daha yakindir. Dogrudan kopyalanmamali, sadece mantik olarak referans alinmalidir.
 
 Buradan alinabilecek fikirler:
 
@@ -61,7 +61,7 @@ Buradan dogrudan tasinmamasi gerekenler:
 2. OSGB'nin son musterisine ait sozlesme alanlari
 3. OSGB personel atama mantigi
 
-Yani mevcut CRM yapisi kopyalanmaz, sadece Eses CRM icin referans olur.
+Yani mevcut CRM yapisi kopyalanmaz, sadece Codentra CRM icin referans olur.
 
 ### 3. crm-detail.html
 
@@ -76,7 +76,7 @@ Ancak buradaki veriler SaaS Yonetimi'ne dogrudan tasinmamali cunku bunlar OSGB'n
 
 ### 4. dashboard.html
 
-Bu ekranin verileri Eses tarafi icin dogrudan uygun degildir.
+Bu ekranin verileri Codentra tarafi icin dogrudan uygun degildir.
 
 Faydali olabilecek tarafi:
 
@@ -165,7 +165,7 @@ Gereken veri:
 
 Kaynak:
 
-1. yeni Eses CRM veri modeli
+1. yeni Codentra CRM veri modeli
 2. mevcut CRM ekranlarindaki akis mantigi referans olabilir
 
 ### C. Aktif Musteri Tablosu
@@ -221,14 +221,14 @@ Gereken veri:
 Kaynak:
 
 1. saas-admin temel verileri
-2. yeni Eses CRM
+2. yeni Codentra CRM
 3. yeni sozlesme / finans / destek veri yapilari
 
 ## Teknik Ayrim Notu
 
 Su ayrim korunmali:
 
-1. `Eses -> OSGB` iliskisi ayri veri katmani
+1. `Codentra -> OSGB` iliskisi ayri veri katmani
 2. `OSGB -> hizmet verilen firma` iliskisi ayri veri katmani
 
 Boylece SaaS Yonetimi ekraninda operasyonel musteri kayitlari ile ticari tenant kayitlari birbirine karismaz.
@@ -238,8 +238,8 @@ Boylece SaaS Yonetimi ekraninda operasyonel musteri kayitlari ile ticari tenant 
 Bu verileri toplarken asagidaki sirayla gitmek daha dogru olur:
 
 1. saas-admin kaynaklarini merkeze almak
-2. yeni Eses CRM veri modelini ayirmak
-3. sozlesme ve finans kayitlarini Eses baglaminda tanimlamak
+2. yeni Codentra CRM veri modelini ayirmak
+3. sozlesme ve finans kayitlarini Codentra baglaminda tanimlamak
 4. destek ve tenant saglik sinyallerini eklemek
 5. ancak en sonda OSGB tarafindan gelen kullanim ozetlerini baglamak
 
@@ -248,7 +248,7 @@ Bu verileri toplarken asagidaki sirayla gitmek daha dogru olur:
 SaaS Yonetimi ekraninin veri omurgasi mevcut OSGB operasyon ekranlarindan degil, agirlikli olarak su alanlardan gelmelidir:
 
 1. saas-admin baglami
-2. yeni Eses CRM yapisi
+2. yeni Codentra CRM yapisi
 3. yeni SaaS sozlesme kayitlari
 4. yeni finans / tahsilat kayitlari
 5. destek ve tenant aktivite sinyalleri

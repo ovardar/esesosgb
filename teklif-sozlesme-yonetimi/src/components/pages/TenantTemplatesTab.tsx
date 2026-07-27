@@ -74,7 +74,7 @@ Saygılarımızla,
 3. Tehlike sınıfı veya çalışan sayısındaki %10'u aşan değişikliklerde birim fiyatlar yeniden düzenlenir.
 4. İSG-KÂTİP onayları sözleşme imzalanmasını takiben 3 (üç) iş günü içerisinde tamamlanacaktır.
 5. Fatura ödemeleri hizmet ifasını takip eden ayın ilk 5 iş günü içerisinde banka hesabımıza ödenir.`,
-    footerText: 'Kurumsal İSG & Danışmanlık Hizmetleri • Tel: 0850 000 00 00 • E-posta: teklif@codentra.com.tr • Web: www.codentra.com.tr',
+    footerText: 'Codentra Teklif ve Sözleşme Yönetimi • Tel: 0850 000 00 00 • E-posta: teklif@codentra.com.tr • Web: www.codentra.com.tr',
     showSignatureBlock: true
   },
   contractEmail: {
@@ -108,7 +108,7 @@ Saygılarımızla,
 <b>MADDE 5 - SÖZLEŞME SÜRESİ VE FESİH KOŞULLARI:</b> İşbu sözleşme <u>1 (bir) yıl süreyle</u> geçerli olup, taraflar sürenin bitiminden en az 30 gün önce yazılı bildirimde bulunmadığı takdirde aynı şartlarla 1 yıl uzar.
 
 <b>MADDE 6 - GİZLİLİK VE KVKK:</b> Taraflar, hizmet ifası sırasında edindikleri tüm ticari ve kişisel verileri 6698 sayılı KVKK mevzuatına uygun olarak gizli tutacağını kabul eder.`,
-    footerText: 'Kurumsal İSG Hukuk & Danışmanlık Hizmetleri • Tel: 0850 000 00 00 • E-posta: hukuk@codentra.com.tr',
+    footerText: 'Codentra Teklif ve Sözleşme Yönetimi • Tel: 0850 000 00 00 • E-posta: hukuk@codentra.com.tr',
 
     showSignatureBlock: true
   }
@@ -148,7 +148,7 @@ export function TenantTemplatesTab({ impersonatedTenant }: Props) {
     setTimeout(() => setSavedSuccess(false), 3000);
   };
 
-  const companyDisplayName = impersonatedTenant ? impersonatedTenant.companyName : 'Metropol OSGB & Sağlık Hizmetleri A.Ş.';
+  const companyDisplayName = impersonatedTenant ? impersonatedTenant.companyName : 'Codentra Teklif ve Sözleşme Yönetimi';
   const companyLogoUrl = impersonatedTenant?.logoUrl;
 
   // Rich Text Formatting Insertion Helper for Contract Textarea

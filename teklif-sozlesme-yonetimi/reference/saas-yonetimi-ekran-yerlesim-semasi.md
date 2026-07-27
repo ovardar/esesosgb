@@ -1,10 +1,10 @@
 # SaaS Yönetimi Ekrani Bilesen Yerlesim Semasi
 
-Bu dokuman, Eses Yazilim tarafinin gunluk kullanim ana ekrani olacak SaaS Yonetimi sayfasinin birebir yerlesim semasini tanimlar.
+Bu dokuman, Codentra tarafinin gunluk kullanim ana ekrani olacak SaaS Yonetimi sayfasinin birebir yerlesim semasini tanimlar.
 
 ## Amac
 
-Bu ekranin ana amaci OSGB operasyonu yonetmek degil, Eses ile OSGB musterileri arasindaki ticari ve operasyonel iliskiyi tek yerden yonetmektir.
+Bu ekranin ana amaci OSGB operasyonu yonetmek degil, Codentra ile OSGB musterileri arasindaki ticari ve operasyonel iliskiyi tek yerden yonetmektir.
 
 Bu nedenle ekranin merkezi nesnesi sunlardir:
 
@@ -79,7 +79,7 @@ Icerik:
 5. Destek modunda gir butonu
 6. Bildirim ikonu
 7. Kullanici menusu
-8. Baglam etiketi: `Eses Yonetim Alani`
+8. Baglam etiketi: `Codentra Yonetim Alani`
 
 Beklenen davranis:
 

@@ -1,4 +1,4 @@
-# Teklif ve Sözleşme Yönetimi (OSGB CRM)
+# Teklif ve Sözleşme Yönetimi
 
 Canlı Ortam Yapılandırması & Vercel Deployment.
 

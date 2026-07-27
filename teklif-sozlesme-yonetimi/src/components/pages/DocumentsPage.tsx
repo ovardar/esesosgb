@@ -38,6 +38,8 @@ export function DocumentsPage({ customers = [], contracts = [] }: DocumentsPageP
   const [categoryFilter, setCategoryFilter] = useState<string>('Tümü');
   const [customerFilter, setCustomerFilter] = useState<string>('Tümü');
   const [statusFilter, setStatusFilter] = useState<string>('Tümü');
+  const [sortKey, setSortKey] = useState<'title' | 'category' | 'customer' | 'uploaded' | 'status' | 'fileName'>('title');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Modals state
   const [previewDoc, setPreviewDoc] = useState<DocumentRecord | null>(null);
@@ -76,6 +78,60 @@ export function DocumentsPage({ customers = [], contracts = [] }: DocumentsPageP
       return matchesSearch && matchesCat && matchesCust && matchesStatus;
     });
   }, [documents, searchQuery, categoryFilter, customerFilter, statusFilter]);
+
+  const handleSort = (key: 'title' | 'category' | 'customer' | 'uploaded' | 'status' | 'fileName') => {
+    if (sortKey === key) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'));
+      return;
+    }
+
+    setSortKey(key);
+    setSortDirection('asc');
+  };
+
+  const sortIcon = (key: 'title' | 'category' | 'customer' | 'uploaded' | 'status' | 'fileName') => {
+    if (sortKey !== key) return <span>↕</span>;
+    return sortDirection === 'asc' ? <span>↑</span> : <span>↓</span>;
+  };
+
+  const sortedDocuments = useMemo(() => {
+    return [...filteredDocuments].sort((left, right) => {
+      let leftValue: string | number = '';
+      let rightValue: string | number = '';
+
+      switch (sortKey) {
+        case 'category':
+          leftValue = left.category.toLowerCase();
+          rightValue = right.category.toLowerCase();
+          break;
+        case 'customer':
+          leftValue = (left.customerName || '').toLowerCase();
+          rightValue = (right.customerName || '').toLowerCase();
+          break;
+        case 'uploaded':
+          leftValue = new Date(left.uploadDate).getTime() || 0;
+          rightValue = new Date(right.uploadDate).getTime() || 0;
+          break;
+        case 'status':
+          leftValue = left.status.toLowerCase();
+          rightValue = right.status.toLowerCase();
+          break;
+        case 'fileName':
+          leftValue = left.fileName.toLowerCase();
+          rightValue = right.fileName.toLowerCase();
+          break;
+        case 'title':
+        default:
+          leftValue = left.title.toLowerCase();
+          rightValue = right.title.toLowerCase();
+          break;
+      }
+
+      if (leftValue < rightValue) return sortDirection === 'asc' ? -1 : 1;
+      if (leftValue > rightValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredDocuments, sortDirection, sortKey]);
 
   // Stats calculation
   const stats = useMemo(() => {
@@ -410,11 +466,31 @@ export function DocumentsPage({ customers = [], contracts = [] }: DocumentsPageP
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
               <thead>
                 <tr style={{ background: 'var(--surface-subtle)', borderBottom: '2px solid var(--border)', color: 'var(--text-muted)' }}>
-                  <th style={{ padding: '12px 16px' }}>Doküman & Dosya Adı</th>
-                  <th style={{ padding: '12px 16px' }}>Kategori</th>
-                  <th style={{ padding: '12px 16px' }}>Bağlı Müşteri & Sözleşme</th>
-                  <th style={{ padding: '12px 16px' }}>Yükleyen & Tarih</th>
-                  <th style={{ padding: '12px 16px' }}>Durum</th>
+                  <th style={{ padding: '12px 16px' }}>
+                    <button type="button" className="table-sort-button" onClick={() => handleSort('title')}>
+                      Doküman & Dosya Adı {sortIcon('title')}
+                    </button>
+                  </th>
+                  <th style={{ padding: '12px 16px' }}>
+                    <button type="button" className="table-sort-button" onClick={() => handleSort('category')}>
+                      Kategori {sortIcon('category')}
+                    </button>
+                  </th>
+                  <th style={{ padding: '12px 16px' }}>
+                    <button type="button" className="table-sort-button" onClick={() => handleSort('customer')}>
+                      Bağlı Müşteri & Sözleşme {sortIcon('customer')}
+                    </button>
+                  </th>
+                  <th style={{ padding: '12px 16px' }}>
+                    <button type="button" className="table-sort-button" onClick={() => handleSort('uploaded')}>
+                      Yükleyen & Tarih {sortIcon('uploaded')}
+                    </button>
+                  </th>
+                  <th style={{ padding: '12px 16px' }}>
+                    <button type="button" className="table-sort-button" onClick={() => handleSort('status')}>
+                      Durum {sortIcon('status')}
+                    </button>
+                  </th>
                   <th style={{ padding: '12px 16px', textAlign: 'right' }}>Aksiyonlar</th>
                 </tr>
               </thead>
@@ -426,7 +502,7 @@ export function DocumentsPage({ customers = [], contracts = [] }: DocumentsPageP
                     </td>
                   </tr>
                 ) : (
-                  filteredDocuments.map((doc) => (
+                  sortedDocuments.map((doc) => (
                     <tr key={doc.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }}>
                       <td style={{ padding: '12px 16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

@@ -133,7 +133,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             if (!name) return false;
             const clean = name.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').trim();
             if (clean.includes('test osgb 3')) return false;
-            const keywords = ['eses', 'girisim', 'mavi liman', 'soyyilmaz', 'oddn'];
+            const keywords = ['girisim', 'mavi liman', 'soyyilmaz', 'oddn'];
             if (clean === 'test osgb') return true;
             return keywords.some(kw => clean.includes(kw));
           };
@@ -1818,7 +1818,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               <input
                 type="email"
                 required
-                placeholder="Süper Admin E-posta (Örn: yonetici@osgbsistem.com)"
+                placeholder="Süper Admin E-posta (Örn: yonetici@codentra.com.tr)"
                 value={newSuperAdminEmail}
                 onChange={(e) => setNewSuperAdminEmail(e.target.value)}
                 style={{ flex: 1, minWidth: 240, padding: '9px 14px', fontSize: '0.86rem', borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-main)', color: 'var(--text-main)' }}
@@ -1947,7 +1947,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #e5e7eb', paddingBottom: 16, marginBottom: 20 }}>
                 <div>
                   <h2 style={{ margin: 0, color: '#111827' }}>CODENTRA SaaS LİSANS TEKLİFİ</h2>
-                  <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '0.9rem' }}>Teklif ve Sözleşme Yönetimi (CRM)</p>
+                  <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '0.9rem' }}>Teklif ve Sözleşme Yönetimi</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <strong style={{ fontSize: '1.1rem', color: '#374151', display: 'block' }}>{previewOffer.offerNumber}</strong>

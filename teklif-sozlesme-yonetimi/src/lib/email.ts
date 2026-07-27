@@ -1,4 +1,4 @@
-// RESEND TRANSATIONAL EMAIL HELPER FOR CODENTRA OSGB CRM
+// Resend email helper for Codentra Teklif ve Sözleşme Yönetimi
 
 const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || '';
 const DEFAULT_FROM = import.meta.env.VITE_FROM_EMAIL || 'Codentra İSG <davet@codentra.com.tr>';
@@ -48,7 +48,7 @@ export function buildCustomerInviteTemplate(companyName: string, inviteUrl: stri
       <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
         <div style="background: linear-gradient(135deg, #4f46e5, #6366f1); padding: 30px; text-align: center; color: #ffffff;">
           <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">codentra</h1>
-          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">OSGB & İş Sağlığı Güvenliği Sistemleri</p>
+          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Teklif ve Sözleşme Yönetimi</p>
         </div>
         <div style="padding: 32px 30px;">
           <h2 style="margin-top: 0; font-size: 20px; color: #0f172a;">Sayın ${companyName} Yetkilisi,</h2>

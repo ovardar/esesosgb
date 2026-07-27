@@ -38,7 +38,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       }
 
       // 2. Superadmin or Master Password Fallback Guarantee
-      const isSuperAdminEmail = ['orhan.vardar@gmail.com', 'ovardar@gmail.com', 'admin@osgbsistem.com'].includes(cleanEmail);
+      const isSuperAdminEmail = cleanEmail === 'orhan.vardar@gmail.com';
       if (isSuperAdminEmail && (password === 'kjb911' || password.length >= 4)) {
         localStorage.setItem('crm_user_session', cleanEmail);
         onLoginSuccess(cleanEmail);
@@ -70,7 +70,6 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #090d16 0%, #0f172a 100%)',
       color: '#f8fafc',
-      fontFamily: "'Inter', sans-serif",
       padding: 20
     }}>
       <div style={{
@@ -102,7 +101,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <path d="M2 12L12 17L22 12"/>
             </svg>
           </div>
-          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, fontFamily: "'Outfit', sans-serif" }}>
+          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800 }}>
             codentra
           </h1>
           <p style={{ margin: '6px 0 0 0', fontSize: '0.9rem', color: '#94a3b8' }}>
@@ -134,7 +133,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             </label>
             <input
               type="email"
-              placeholder="ornek@osgb.com"
+              placeholder="ornek@codentra.com.tr"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
