@@ -55,18 +55,18 @@
 
       <div class="panel">
         <div class="form-row" style="align-items: flex-end;">
-          <div class="form-group double">
+          <div class="form-group-premium double">
             <label>İlgili Müşteri Firma</label>
             <select id="company_select" onchange="updateRiskTemplateOptions()">
               <option value="">Firmalar yükleniyor...</option>
             </select>
           </div>
-          <div class="form-group" style="flex: 0 0 auto;">
+          <div class="form-group-premium" style="flex: 0 0 auto;">
             <button type="button" class="btn btn-secondary" onclick="manualRefreshCompanyCache()">
               🔄 Cihaza Güncelle
             </button>
           </div>
-          <div class="form-group" style="flex: 0 0 auto; justify-content: center; height: 35px;">
+          <div class="form-group-premium" style="flex: 0 0 auto; justify-content: center; height: 35px;">
             <span id="company_cache_status" style="font-size: 12px; color: var(--uc-text-muted);">Firma listesi kontrol ediliyor...</span>
           </div>
         </div>
@@ -74,7 +74,7 @@
         <div class="template-panel" style="margin-top: 16px !important;">
           <div class="template-panel-title">⚡ Kategorili Hazır Risk Şablonları</div>
           <div class="form-row" style="align-items: flex-end; margin-bottom: 0;">
-            <div class="form-group">
+            <div class="form-group-premium">
               <label>Kategori Seç</label>
               <select id="risk_template_category" onchange="updateRiskTemplateOptions(true)">
                 <option value="auto">Firma/NACE Önerileri</option>
@@ -96,13 +96,13 @@
                 <option value="physical">Gürültü / Toz / Titreşim</option>
               </select>
             </div>
-            <div class="form-group double">
+            <div class="form-group-premium double">
               <label>Hazır Şablon Seç</label>
               <select id="risk_template_select">
                 <option value="">Önce firma veya kategori seçin...</option>
               </select>
             </div>
-            <div class="form-group" style="flex: 0 0 auto;">
+            <div class="form-group-premium" style="flex: 0 0 auto;">
               <button type="button" class="btn btn-blue" onclick="applyRiskTemplate()">Şablonu Uygula</button>
             </div>
           </div>
@@ -113,7 +113,7 @@
         </div>
 
         <div class="form-row" style="margin-top: 14px;">
-          <div class="form-group">
+          <div class="form-group-premium">
             <label>Tehlike Tanımı / Bulgusu</label>
             <textarea
               id="hazard_title"
@@ -121,7 +121,7 @@
               placeholder="Örn: Yangın tüplerinin periyodik kontrol tarihi geçmiş..."
             ></textarea>
           </div>
-          <div class="form-group">
+          <div class="form-group-premium">
             <label>Önerilen Önlem / Aksiyon (DÖF)</label>
             <textarea
               id="action_plan"
@@ -132,22 +132,22 @@
         </div>
 
         <div class="form-row">
-          <div class="form-group double">
+          <div class="form-group-premium double">
             <label>Sorumlu Kişi / Firma Yetkilisi</label>
             <input type="text" id="responsible_person" placeholder="Örn: Şantiye Şefi / Bakım Sorumlusu" />
           </div>
-          <div class="form-group">
+          <div class="form-group-premium">
             <label>DÖF İlk Durumu</label>
             <input type="text" value="Açık" disabled />
           </div>
-          <div class="form-group">
+          <div class="form-group-premium">
             <label>Termin Tarihi (Hedef Çözüm)</label>
             <input type="date" id="target_date" />
           </div>
         </div>
 
         <div class="fine-kinney-row">
-          <div class="form-group">
+          <div class="form-group-premium">
             <label>Olasılık (O)</label>
             <select id="prob" onchange="calculateFineKinney()">
               <option value="0.1">0.1 - Zayıf İhtimal</option>
@@ -157,7 +157,7 @@
               <option value="10">10 - Beklenir/Kaçınılmaz</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="form-group-premium">
             <label>Frekans (F)</label>
             <select id="freq" onchange="calculateFineKinney()">
               <option value="0.5">0.5 - Çok Nadir</option>
@@ -167,7 +167,7 @@
               <option value="10">10 - Sürekli</option>
             </select>
           </div>
-          <div class="form-group">
+          <div class="form-group-premium">
             <label>Şiddet (Ş)</label>
             <select id="sev" onchange="calculateFineKinney()">
               <option value="1">1 - Dikkat Edilmeli</option>
@@ -187,7 +187,7 @@
         </div>
 
         <div class="form-row" style="align-items: stretch; margin-bottom: 16px;">
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group-premium" style="flex: 1;">
             <div class="photo-box" style="height: 100%; justify-content: center;">
               <label>Kanıt Fotoğrafı (Offline destekli)</label>
               <input type="file" id="risk_photo" accept="image/*" capture="environment" onchange="prepareRiskPhoto()" />
@@ -197,7 +197,7 @@
               </div>
             </div>
           </div>
-          <div class="form-group" style="flex: 1;">
+          <div class="form-group-premium" style="flex: 1;">
             <div class="offline-panel" style="height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; padding: 14px !important;">
               <div>
                 <strong>Offline Durum:</strong> <span id="connection_status">Kontrol ediliyor...</span><br />
@@ -1130,12 +1130,12 @@
         const templateSelect = document.getElementById('risk_template_select');
         const code = templateSelect ? templateSelect.value : '';
         if (!code) {
-          alert('Lütfen önce bir risk şablonu seçin.');
+          showToast('Lütfen önce bir risk şablonu seçin.', 'warning');
           return;
         }
         const tpl = RISK_TEMPLATE_LIBRARY.find((item) => item.code === code);
         if (!tpl) {
-          alert('Şablon bulunamadı.');
+          showToast('Şablon bulunamadı.', 'error');
           return;
         }
 
@@ -1161,7 +1161,7 @@
         CURRENT_AUTH = auth;
 
         if (!CURRENT_AUTH.tenant_id) {
-          alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
+          showToast('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.', 'warning');
           await dbClient.auth.signOut();
           window.location.href = 'login.html';
           return;
@@ -1305,7 +1305,7 @@
         const statusEl = document.getElementById('company_cache_status');
         if (!navigator.onLine) {
           await loadCompaniesFromCache();
-          alert('Şu anda internet yok. Varsa cihazdaki son firma listesi kullanılacak.');
+          showToast('Şu anda internet yok. Varsa cihazdaki son firma listesi kullanılacak.', 'warning');
           return;
         }
 
@@ -1539,7 +1539,7 @@
               ? ''
               : `<button class="btn btn-danger-soft btn-small" onclick="closeRisk('${r.id}')">Riski Kapat</button>`;
 
-          const actionCell = `${progressButton ? progressButton + '<br>' : ''}${closeButton}<br><button class="btn btn-red btn-small" onclick="deleteRisk('${r.id}')">Sil</button>`;
+          const actionCell = `${progressButton ? progressButton + '<br>' : ''}${closeButton}<br><button class="btn-secondary-premium" style="font-size:12px; padding:6px 12px; color:#ef4444; border-color:#ef4444;">Sil</button>`;
 
           const photoCell = r.image_url
             ? `<a href="${escapeHtml(r.image_url)}" target="_blank" style="color:var(--primary); font-weight:bold; text-decoration:none;">📷 Var</a>`
@@ -1618,7 +1618,7 @@
 
       async function setRiskInProgress(id) {
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
 
@@ -1629,7 +1629,7 @@
           .eq('tenant_id', CURRENT_AUTH.tenant_id);
 
         if (error) {
-          alert('Durum güncellenemedi: ' + error.message);
+          showToast('Durum güncellenemedi: ' + error.message, 'error');
           return;
         }
 
@@ -1638,14 +1638,14 @@
 
       async function closeRisk(id) {
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
 
         const note = prompt('Bu risk/DÖF nasıl giderildi? Kapanış açıklamasını yazın:');
         if (note === null) return;
         if (!note.trim()) {
-          alert('Kapanış açıklaması boş bırakılamaz.');
+          showToast('Kapanış açıklaması boş bırakılamaz.', 'warning');
           return;
         }
 
@@ -1660,7 +1660,7 @@
           .eq('tenant_id', CURRENT_AUTH.tenant_id);
 
         if (error) {
-          alert('Kapatma hatası: ' + error.message);
+          showToast('Kapatma hatası: ' + error.message, 'error');
           return;
         }
 
@@ -1683,7 +1683,7 @@
         if (!confirm('Bu risk kaydı ve varsa bağlı fotoğrafı kalıcı olarak silinsin mi?')) return;
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
 
@@ -1695,14 +1695,14 @@
           if (window.OSGBOfflineDB && window.OSGBOfflineDB.deleteRisk) {
             try {
               await window.OSGBOfflineDB.deleteRisk(id);
-              alert('Çevrimdışı kaydedilen bekleyen risk cihazdan silindi.');
+              showToast('Çevrimdışı kaydedilen bekleyen risk cihazdan silindi.', 'warning');
               await updateOfflineRiskCount();
               fetchRisks();
             } catch (err) {
-              alert('Cihazdan silinirken hata oluştu: ' + err.message);
+              showToast('Cihazdan silinirken hata oluştu: ' + err.message, 'error');
             }
           } else {
-            alert('Çevrimdışı veritabanı hazır değil.');
+            showToast('Çevrimdışı veritabanı hazır değil.', 'error');
           }
           return;
         }
@@ -1715,7 +1715,7 @@
           .single();
 
         if (readError) {
-          alert('Silme öncesi kayıt okunamadı: ' + readError.message);
+          showToast('Silme öncesi kayıt okunamadı: ' + readError.message, 'error');
           return;
         }
 
@@ -1740,7 +1740,7 @@
           .eq('id', id)
           .eq('tenant_id', CURRENT_AUTH.tenant_id);
         if (error) {
-          alert('Silme hatası: ' + error.message);
+          showToast('Silme hatası: ' + error.message, 'error');
           return;
         }
         fetchRisks();
@@ -1886,7 +1886,7 @@
           errorEl.innerText = '';
         }
         if (!navigator.onLine) {
-          alert('Şu anda internet yok. Kayıtlar cihazda beklemeye devam edecek.');
+          showToast('Şu anda internet yok. Kayıtlar cihazda beklemeye devam edecek.', 'warning');
           return;
         }
         if (statusEl) {
@@ -1931,12 +1931,12 @@
         const photoFile = selectedRiskPhotoBlob || originalPhotoFile;
 
         if (!compId || !hazard || !target) {
-          alert('Lütfen firma, tehlike tanımı ve termin tarihini doldurun!');
+          showToast('Lütfen firma, tehlike tanımı ve termin tarihini doldurun!', 'warning');
           return;
         }
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
 
@@ -1945,7 +1945,7 @@
         );
 
         if (!companyAllowed) {
-          alert('Seçilen firma bu tenant altında bulunamadı.');
+          showToast('Seçilen firma bu tenant altında bulunamadı.', 'error');
           return;
         }
 

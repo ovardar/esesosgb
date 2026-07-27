@@ -50,6 +50,9 @@ ALTER TABLE public.crm_activities ADD COLUMN IF NOT EXISTS summary TEXT NOT NULL
 ALTER TABLE public.crm_activities ADD COLUMN IF NOT EXISTS next_action TEXT;
 ALTER TABLE public.crm_activities ADD COLUMN IF NOT EXISTS created_by TEXT;
 
+-- crm_contracts tablosuna contract_name ekle
+ALTER TABLE public.crm_contracts ADD COLUMN IF NOT EXISTS contract_name TEXT;
+
 -- crm_tasks tablosuna eksik kolonları ekle
 ALTER TABLE public.crm_tasks ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE public.crm_tasks ADD COLUMN IF NOT EXISTS assigned_to TEXT;

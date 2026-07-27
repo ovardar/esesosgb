@@ -664,22 +664,36 @@
         { danger_class: 'Çok Tehlikeli', min_emp: 1, max_emp: null, service_name: 'Risk Analizi ve Değerlendirme', price: 9500 }
       ];
 
-      if (new URLSearchParams(window.location.search).get('bypass') === 'true') {
+      if (
+        new URLSearchParams(window.location.search).get('bypass') === 'true' &&
+        ['localhost', '127.0.0.1'].includes(window.location.hostname)
+      ) {
         window.confirm = () => true;
         window.alert = () => true;
       }
 
       document.addEventListener('DOMContentLoaded', async () => {
-        const checkAuth = setInterval(async () => {
-          if (window.requireAuthAndRole) {
-            clearInterval(checkAuth);
-            CURRENT_AUTH = await window.requireAuthAndRole('crm-offers');
-            if (CURRENT_AUTH) {
-              document.body.style.display = 'block';
-              await loadOffers();
-            }
+        // Prevent blank screen if auth bootstrap script is delayed or fails to attach.
+        for (let i = 0; i < 30 && typeof window.requireAuthAndRole !== 'function'; i++) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        if (typeof window.requireAuthAndRole !== 'function') {
+          showGlobalStatus('Kimlik doğrulama başlatılamadı. Giriş sayfasına yönlendiriliyorsunuz...', 'err');
+          setTimeout(() => { window.location.href = 'login.html'; }, 400);
+          return;
+        }
+
+        CURRENT_AUTH = await window.requireAuthAndRole('crm-offers');
+        if (!CURRENT_AUTH) {
+          if (!window.location.pathname.endsWith('/login.html') && !window.location.pathname.endsWith('login.html')) {
+            window.location.href = 'login.html';
           }
-        }, 100);
+          return;
+        }
+
+        document.body.style.display = 'block';
+        await loadOffers();
       });
 
       async function loadPriceList() {
@@ -843,7 +857,9 @@
               <td style="text-align:center;">
                 <span class="badge" style="background:${statusBadgeColor}; font-size:11px;">${esc(o.status)}</span>
               </td>
-              <td style="text-align:center; font-size:16px; color:var(--text-muted);">✎</td>
+              <td style="text-align:center;">
+                <button class="btn-secondary-premium" style="padding:4px 10px; font-size:11px; border-radius:6px; display:inline-flex; align-items:center; gap:4px; pointer-events:none;">✏️ Düzenle</button>
+              </td>
             </tr>
 
             <!-- Genişleyen Sürümler Satırı -->
@@ -952,7 +968,7 @@
       }
 
       function printDrawerOffer() {
-        alert("PDF / Yazdır (özel antetli teklif formatı) modülü şu anda geliştirme aşamasındadır.");
+        showToast("PDF / Yazdır (özel antetli teklif formatı) modülü şu anda geliştirme aşamasındadır.", 'warning');
       }
 
       async function emailDrawerOffer() {

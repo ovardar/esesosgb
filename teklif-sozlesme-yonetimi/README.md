@@ -1,4 +1,6 @@
-# Teklif ve Sözleşme Yönetimi
+# Teklif ve Sözleşme Yönetimi (OSGB CRM)
+
+Canlı Ortam Yapılandırması & Vercel Deployment.
 
 Bağımsız bir teklif, sözleşme, müşteri, doküman, fiyat listesi ve yetkilendirme uygulaması için başlangıç workspace'i.
 

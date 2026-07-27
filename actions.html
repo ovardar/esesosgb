@@ -81,12 +81,12 @@
         <!-- Toolbar (Arama & Filtreler) -->
         <div class="crm-toolbar-premium" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
           <div class="filters" style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="nav-btn active-page filter-btn" data-filter="active" onclick="setFilter('active')">Aktif DÖF</button>
-            <button class="nav-btn filter-btn" data-filter="overdue" onclick="setFilter('overdue')">Geciken</button>
-            <button class="nav-btn filter-btn" data-filter="Açık" onclick="setFilter('Açık')">Açık</button>
-            <button class="nav-btn filter-btn" data-filter="Devam Ediyor" onclick="setFilter('Devam Ediyor')">Devam Eden</button>
-            <button class="nav-btn filter-btn" data-filter="Kapalı" onclick="setFilter('Kapalı')">Kapalı</button>
-            <button class="nav-btn filter-btn" data-filter="all" onclick="setFilter('all')">Tümü</button>
+            <button class="btn-primary" data-filter="active" onclick="setFilter('active')">Aktif DÖF</button>
+            <button class="btn-secondary-premium" data-filter="overdue" onclick="setFilter('overdue')">Geciken</button>
+            <button class="btn-secondary-premium" data-filter="Açık" onclick="setFilter('Açık')">Açık</button>
+            <button class="btn-secondary-premium" data-filter="Devam Ediyor" onclick="setFilter('Devam Ediyor')">Devam Eden</button>
+            <button class="btn-secondary-premium" data-filter="Kapalı" onclick="setFilter('Kapalı')">Kapalı</button>
+            <button class="btn-secondary-premium" data-filter="all" onclick="setFilter('all')">Tümü</button>
           </div>
           <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             <input
@@ -359,12 +359,12 @@
           
           let actions = '';
           if (isClosed) {
-            actions = `<button disabled style="background:#f1f5f9; color:#94a3b8; border:1px solid var(--uc-line); border-radius:6px; padding:6px 12px; font-size:11px; cursor:not-allowed; font-weight:700;">Kapatıldı</button>`;
+            actions = `<button disabled class="btn-secondary-premium" style="opacity:0.5; cursor:not-allowed;">Kapatıldı</button>`;
           } else {
             actions = `
               <div style="display: flex; gap: 6px;">
-                <button onclick="markInProgress('${d.id}')" style="background:#e0f2fe; color:#0369a1; border:none; border-radius:6px; padding:6px 10px; font-size:11px; cursor:pointer; font-weight:700; transition: opacity 0.15s ease;">İşlemde</button>
-                <button onclick="closeDof('${d.id}')" style="background:#dcfce7; color:#15803d; border:none; border-radius:6px; padding:6px 10px; font-size:11px; cursor:pointer; font-weight:700; transition: opacity 0.15s ease;">Kapat</button>
+                <button onclick="markInProgress('${d.id}')" class="btn-primary" style="font-size:11px; padding:6px 10px;">İşlemde</button>
+                <button onclick="closeDof('${d.id}')" class="btn-secondary-premium" style="font-size:11px; padding:6px 10px;">Kapat</button>
               </div>
             `;
           }
@@ -391,7 +391,7 @@
 
       async function markInProgress(id) {
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
         const { error } = await dbClient
@@ -400,7 +400,7 @@
           .eq('id', id)
           .eq('tenant_id', CURRENT_AUTH.tenant_id);
         if (error) {
-          alert('Durum güncellenemedi: ' + error.message);
+          showToast('Durum güncellenemedi: ' + error.message, 'error');
           return;
         }
         await fetchDofs();
@@ -411,12 +411,12 @@
         if (note === null) return;
         const cleanNote = note.trim();
         if (!cleanNote) {
-          alert('Kapanış açıklaması boş olamaz.');
+          showToast('Kapanış açıklaması boş olamaz.', 'warning');
           return;
         }
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
 
@@ -431,7 +431,7 @@
           .eq('tenant_id', CURRENT_AUTH.tenant_id);
 
         if (error) {
-          alert('DÖF kapatılamadı: ' + error.message);
+          showToast('DÖF kapatılamadı: ' + error.message, 'error');
           return;
         }
         await fetchDofs();

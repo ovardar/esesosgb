@@ -167,77 +167,77 @@
       </div>
     </div>
 
-    <div class="worker-training-modal" id="worker_training_modal">
-      <div class="worker-training-card">
-        <div class="worker-training-head">
+    <div class="drawer-backdrop" id="worker_training_modal" onclick="if(event.target.id === 'worker_training_modal') closeWorkerTrainingModal()">
+      <div class="drawer-card">
+        <div class="drawer-header">
           <div>
             <h3 id="worker_training_title">Çalışan Eğitim Dosyası</h3>
-            <p id="worker_training_subtitle">Eğitim ve sertifika bilgileri yükleniyor...</p>
+            <p id="worker_training_subtitle" class="text-muted" style="margin:0; font-size:13px;">Eğitim ve sertifika bilgileri yükleniyor...</p>
           </div>
-          <button class="edu-close-btn" onclick="closeWorkerTrainingModal()">Kapat</button>
+          <button class="drawer-close-btn" onclick="closeWorkerTrainingModal()">×</button>
         </div>
-        <div class="worker-training-body" id="worker_training_body">
+        <div class="drawer-body" id="worker_training_body">
           <div class="empty-state">Eğitim bilgileri yükleniyor...</div>
         </div>
       </div>
     </div>
 
-    <div class="worker-ppe-modal" id="worker_ppe_modal">
-      <div class="worker-ppe-card">
-        <div class="worker-ppe-head">
+    <div class="drawer-backdrop" id="worker_ppe_modal" onclick="if(event.target.id === 'worker_ppe_modal') closeWorkerPpeModal()">
+      <div class="drawer-card">
+        <div class="drawer-header">
           <div>
             <h3 id="worker_ppe_title">Çalışan KKD Dosyası</h3>
-            <p id="worker_ppe_subtitle">KKD zimmet bilgileri yükleniyor...</p>
+            <p id="worker_ppe_subtitle" class="text-muted" style="margin:0; font-size:13px;">KKD zimmet bilgileri yükleniyor...</p>
           </div>
-          <button class="ppe-close-btn" onclick="closeWorkerPpeModal()">Kapat</button>
+          <button class="drawer-close-btn" onclick="closeWorkerPpeModal()">×</button>
         </div>
-        <div class="worker-ppe-body" id="worker_ppe_body">
+        <div class="drawer-body" id="worker_ppe_body">
           <div class="empty-state">KKD bilgileri yükleniyor...</div>
         </div>
       </div>
     </div>
 
-    <div class="worker-edit-modal" id="worker_edit_modal" onclick="if(event.target.id === 'worker_edit_modal') closeWorkerEditModal()">
-      <div class="worker-edit-card">
-        <div class="worker-edit-head">
+    <div class="drawer-backdrop" id="worker_edit_modal" onclick="if(event.target.id === 'worker_edit_modal') closeWorkerEditModal()">
+      <div class="drawer-card">
+        <div class="drawer-header">
           <div>
             <h3>📝 Çalışan Bilgilerini Düzenle</h3>
-            <p id="worker_edit_subtitle">Çalışan detaylarını güncelleyin</p>
+            <p id="worker_edit_subtitle" class="text-muted" style="margin:0; font-size:13px;">Çalışan detaylarını güncelleyin</p>
           </div>
-          <button class="edit-close-btn" onclick="closeWorkerEditModal()">×</button>
+          <button class="drawer-close-btn" onclick="closeWorkerEditModal()">×</button>
         </div>
-        <div class="worker-edit-body">
+        <div class="drawer-body">
           <input type="hidden" id="edit_worker_id" />
           <div class="form-container">
-            <div class="form-group">
+            <div class="form-group-premium">
               <label>Personel Adı Soyadı</label>
               <input type="text" id="edit_worker_name" placeholder="Örn: Ali Can" />
             </div>
-            <div class="form-group">
+            <div class="form-group-premium">
               <label>Yaş</label>
               <input type="number" id="edit_worker_age" placeholder="25" />
             </div>
-            <div class="form-group">
+            <div class="form-group-premium">
               <label>Cinsiyet</label>
               <select id="edit_worker_gender">
                 <option value="Erkek">Erkek</option>
                 <option value="Kadın">Kadın</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group-premium">
               <label>Görev / Unvan</label>
               <input type="text" id="edit_worker_job" placeholder="Örn: Kaynakçı" />
             </div>
-            <div class="form-group" style="display: flex; align-items: center; gap: 8px; padding-top: 14px;">
+            <div class="form-group-premium" style="display: flex; align-items: center; gap: 8px; padding-top: 14px;">
               <input type="checkbox" id="edit_worker_is_disabled" style="width: 18px; height: 18px; cursor: pointer;" />
               <label for="edit_worker_is_disabled" style="cursor: pointer; font-weight: 700; margin: 0; white-space: nowrap;">♿ Engelli</label>
             </div>
           </div>
-          <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeWorkerEditModal()">İptal Et</button>
-            <button class="btn-save" onclick="updateWorker()">Değişiklikleri Kaydet</button>
-          </div>
           <div id="edit_status" style="margin-top: 14px; font-size: 13px; text-align: center;"></div>
+        </div>
+        <div class="drawer-actions">
+          <button class="btn btn-secondary" onclick="closeWorkerEditModal()">İptal Et</button>
+          <button class="btn btn-primary" onclick="updateWorker()">Değişiklikleri Kaydet</button>
         </div>
       </div>
     </div>
@@ -589,7 +589,7 @@
         const title = document.getElementById('worker_training_title');
         const subtitle = document.getElementById('worker_training_subtitle');
         if (!worker || !company) {
-          alert('Çalışan veya firma bilgisi bulunamadı.');
+          showToast('Çalışan veya firma bilgisi bulunamadı.', 'error');
           return;
         }
 
@@ -699,7 +699,7 @@
       }
 
       function closeWorkerTrainingModal() {
-        document.getElementById('worker_training_modal').style.display = 'none';
+        document.getElementById('worker_training_modal').classList.remove('active');
       }
 
       function printWorkerTrainingReport() {
@@ -750,7 +750,7 @@
         const worker = window.__WORKER_PPE_WORKER__ || null;
         const company = window.__WORKER_PPE_COMPANY__ || getCurrentCompany();
         if (!row) {
-          alert('KKD zimmet kaydı bulunamadı.');
+          showToast('KKD zimmet kaydı bulunamadı.', 'error');
           return;
         }
         const win = window.open(
@@ -759,7 +759,7 @@
           'width=920,height=760,left=120,top=80,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes'
         );
         if (!win) {
-          alert('Teslim formu penceresi açılamadı. Tarayıcı pop-up engelini kontrol edin.');
+          showToast('Teslim formu penceresi açılamadı. Tarayıcı pop-up engelini kontrol edin.', 'error');
           return;
         }
         win.document.open();
@@ -776,14 +776,14 @@
         const title = document.getElementById('worker_ppe_title');
         const subtitle = document.getElementById('worker_ppe_subtitle');
         if (!worker || !company) {
-          alert('Çalışan veya firma bilgisi bulunamadı.');
+          showToast('Çalışan veya firma bilgisi bulunamadı.', 'error');
           return;
         }
 
         title.innerText = `${worker.full_name || '-'} - KKD Zimmet Dosyası`;
         subtitle.innerText = `${company.company_name || '-'} | Kadro Yönetimi`;
         body.innerHTML = '<div class="empty-state">KKD bilgileri yükleniyor...</div>';
-        modal.style.display = 'flex';
+        modal.classList.add('active');
 
         const assignmentRes = await dbClient
           .from('ppe_assignments')
@@ -879,7 +879,7 @@
       }
 
       function closeWorkerPpeModal() {
-        document.getElementById('worker_ppe_modal').style.display = 'none';
+        document.getElementById('worker_ppe_modal').classList.remove('active');
       }
 
       function printWorkerPpeReport() {
@@ -903,7 +903,7 @@
         const payload = { company_id: compId, full_name: name, age: parseInt(age), gender: gender, job_title: job, is_disabled: isDisabled };
         if (CURRENT_AUTH && CURRENT_AUTH.tenant_id) payload.tenant_id = CURRENT_AUTH.tenant_id;
         const { error } = await dbClient.from('workers').insert([payload]);
-        if (error) alert(error.message);
+        if (error) showToast(error.message, 'error');
         else {
           document.getElementById('worker_name').value = '';
           document.getElementById('worker_age').value = '';
@@ -917,7 +917,7 @@
       function openWorkerEditModal(workerId) {
         const worker = workerTableRows.find((w) => String(w.id) === String(workerId));
         if (!worker) {
-          alert('Çalışan bilgisi bulunamadı.');
+          showToast('Çalışan bilgisi bulunamadı.', 'error');
           return;
         }
 
@@ -932,16 +932,14 @@
         statusDiv.innerText = '';
 
         const modal = document.getElementById('worker_edit_modal');
-        modal.style.display = 'flex';
-        setTimeout(() => modal.classList.add('active'), 10);
+        modal.classList.add('active');
       }
 
       function closeWorkerEditModal() {
         const modal = document.getElementById('worker_edit_modal');
-        modal.classList.remove('active');
-        setTimeout(() => {
-          modal.style.display = 'none';
-        }, 250);
+        if (modal) {
+          modal.classList.remove('active');
+        }
       }
 
       async function updateWorker() {

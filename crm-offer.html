@@ -351,7 +351,7 @@
       window.onload = async function () {
         const params = new URLSearchParams(window.location.search);
         LEAD_ID  = params.get('lead_id');
-        OFFER_ID = params.get('id');
+        OFFER_ID = params.get('id') || params.get('offer_id');
 
         const auth = await requireAuthAndRole('crm');
         if (!auth) return;
@@ -367,7 +367,7 @@
         if (OFFER_ID) {
           await loadExistingOffer();
         } else {
-          if (!LEAD_ID) { alert('Fırsat ID bulunamadı.'); window.location.href = 'crm.html'; return; }
+          if (!LEAD_ID) { showToast('Fırsat ID bulunamadı.', 'error'); window.location.href = 'crm.html'; return; }
           await loadLead(LEAD_ID);
           generateOfferNo();
           addServiceRow();
@@ -382,7 +382,12 @@
          LOAD LEAD
       ═══════════════════════════════════════ */
       async function loadLead(id) {
-        const { data } = await dbClient.from('crm_leads').select('*').eq('id', id).single();
+        const { data } = await dbClient
+          .from('crm_leads')
+          .select('*')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('id', id)
+          .single();
         currentLead = data;
         if (!data) return;
 
@@ -410,8 +415,13 @@
          LOAD EXISTING OFFER
       ═══════════════════════════════════════ */
       async function loadExistingOffer() {
-        const { data } = await dbClient.from('crm_offers').select('*').eq('id', OFFER_ID).single();
-        if (!data) { alert('Teklif bulunamadı.'); return; }
+        const { data } = await dbClient
+          .from('crm_offers')
+          .select('*')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('id', OFFER_ID)
+          .single();
+        if (!data) { showToast('Teklif bulunamadı.', 'error'); return; }
 
         LEAD_ID        = data.lead_id;
         currentOfferNo = data.offer_no;
@@ -513,7 +523,7 @@
       }
 
       async function createNewVersion() {
-        if (!OFFER_ID) { alert('Önce teklifi kaydedin.'); return; }
+        if (!OFFER_ID) { showToast('Önce teklifi kaydedin.', 'warning'); return; }
         const nextV = allVersions.length ? Math.max(...allVersions.map(v => v.version)) + 1 : 2;
         const services = collectServices();
         const subtotal = services.reduce((s, r) => s + r.qty * r.unit_price, 0);
@@ -893,7 +903,7 @@
         setStatus('Kaydediliyor...', 'info');
         let error;
         if (OFFER_ID) {
-          ({ error } = await dbClient.from('crm_offers').update(payload).eq('id', OFFER_ID));
+          ({ error } = await dbClient.from('crm_offers').update(payload).eq('tenant_id', CURRENT_AUTH.tenant_id).eq('id', OFFER_ID));
         } else {
           const res = await dbClient.from('crm_offers').insert([payload]).select().single();
           error     = res.error;
@@ -917,7 +927,7 @@
          MARK AS SENT
       ═══════════════════════════════════════ */
       async function markAsSent() {
-        if (!OFFER_ID) { alert('Önce teklifi kaydedin.'); return; }
+        if (!OFFER_ID) { showToast('Önce teklifi kaydedin.', 'warning'); return; }
         if (!confirm('Teklif "Gönderildi" olarak işaretlensin ve müşteriye gönderilme tarihi kaydedilsin mi?')) return;
 
         const now = new Date().toISOString();
@@ -925,7 +935,7 @@
           status:          'Gönderildi',
           sent_at:         now,
           sent_by:         CURRENT_AUTH.email
-        }).eq('id', OFFER_ID);
+        }).eq('tenant_id', CURRENT_AUTH.tenant_id).eq('id', OFFER_ID);
 
         if (error) { setStatus('❌ ' + error.message, 'error'); return; }
         document.getElementById('offer_status').value = 'Gönderildi';
@@ -940,7 +950,7 @@
 
       async function emailOffer() {
         if (!OFFER_ID) {
-          alert('PDF bağlantısının oluşturulabilmesi için lütfen önce teklifi kaydedin (Değişiklikleri Kaydet butonuna basın).');
+          showToast('PDF bağlantısının oluşturulabilmesi için lütfen önce teklifi kaydedin (Değişiklikleri Kaydet butonuna basın).', 'warning');
           return;
         }
 
@@ -996,7 +1006,7 @@
           await dbClient.from('crm_offers').update({
             pdf_generated_at: ts,
             pdf_generated_by: CURRENT_AUTH.email
-          }).eq('id', OFFER_ID);
+          }).eq('tenant_id', CURRENT_AUTH.tenant_id).eq('id', OFFER_ID);
 
           document.getElementById('sum_pdf_row').style.display = 'flex';
           document.getElementById('sum_pdf_date').textContent = fmtDateTime(ts);
@@ -1086,7 +1096,7 @@
             pdf_url: publicUrl,
             pdf_generated_at: new Date().toISOString(),
             pdf_generated_by: CURRENT_AUTH.email
-          }).eq('id', offerId);
+          }).eq('tenant_id', CURRENT_AUTH.tenant_id).eq('id', offerId);
 
           return publicUrl;
         } catch (e) {

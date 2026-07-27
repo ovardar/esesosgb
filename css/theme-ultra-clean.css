@@ -19,6 +19,15 @@ body.theme-palette-blue {
   --uc-bg: #f8fafc;
   --uc-focus: #1d4ed8;
   --uc-line: #dbeafe;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body.theme-ultra-clean input,
+body.theme-ultra-clean select,
+body.theme-ultra-clean textarea,
+body.theme-ultra-clean button {
+  font-family: inherit;
 }
 
 body.theme-palette-emerald {
@@ -165,7 +174,12 @@ body.theme-ultra-clean .crm-page-shell {
 }
 
 body.theme-ultra-clean .page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 body.theme-ultra-clean .page-title-group h2 {
@@ -361,7 +375,33 @@ body.theme-ultra-clean .modal-footer-premium {
 }
 
 body.theme-ultra-clean .btn-secondary-premium {
-  background: #eff4f8;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+body.theme-ultra-clean .btn-secondary-premium:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+body.theme-ultra-clean .btn-primary {
+  background: var(--uc-primary, #059669);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+body.theme-ultra-clean .btn-primary:hover {
+  opacity: 0.9;
 }
 
 body.theme-ultra-clean .toast-alert {
@@ -403,3 +443,193 @@ body.theme-ultra-clean .crm-sub-nav-btn.crm-sub-active {
   border-color: var(--uc-line);
   box-shadow: inset 0 3px 0 var(--uc-primary);
 }
+/* ── GLOBAL DRAWER DESIGN ── */
+body.theme-ultra-clean .drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: flex-end;
+  align-items: stretch;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  padding: 0 !important;
+  animation: none !important;
+}
+
+body.theme-ultra-clean .drawer-backdrop.active {
+  display: flex;
+  opacity: 1;
+}
+
+body.theme-ultra-clean .drawer-card {
+  width: 100% !important;
+  max-width: 480px;
+  height: 100vh !important;
+  background: #ffffff;
+  border-radius: 0 !important;
+  box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: 0 !important;
+  animation: none !important;
+}
+
+body.theme-ultra-clean .drawer-backdrop.active .drawer-card {
+  transform: translateX(0);
+}
+
+body.theme-ultra-clean .drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+body.theme-ultra-clean .drawer-head {
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+body.theme-ultra-clean .drawer-actions {
+  padding: 16px 24px;
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: #f8fafc;
+}
+
+/* ── FLAT PENCIL ICON BUTTON ── */
+body.theme-ultra-clean .btn-flat-icon {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #475569;
+  padding: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body.theme-ultra-clean .btn-flat-icon:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+/* ---------------------------------------------------
+   Global Show / Hide Panel (.panel)
+--------------------------------------------------- */
+body.theme-ultra-clean .panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  border: 1px solid var(--uc-line);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+body.theme-ultra-clean .panel-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+body.theme-ultra-clean .panel-toggle:hover {
+  background: #f8fafc;
+}
+
+body.theme-ultra-clean .panel-toggle h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--uc-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.theme-ultra-clean .panel-toggle-icon {
+  font-size: 18px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+body.theme-ultra-clean .panel-toggle[aria-expanded='true'] .panel-toggle-icon {
+  transform: rotate(180deg);
+}
+
+body.theme-ultra-clean .panel-collapsible {
+  overflow: hidden;
+  max-height: 3000px; /* needed for CSS transition */
+  transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
+}
+
+body.theme-ultra-clean .panel-collapsible.is-collapsed {
+  max-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-top: none;
+}
+
+/* ---------------------------------------------------
+   Global Toast Notifications
+--------------------------------------------------- */
+#global-toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+.uc-toast {
+  background: white;
+  color: var(--uc-dark);
+  padding: 14px 20px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  border-left: 5px solid var(--uc-primary);
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 250px;
+  max-width: 400px;
+  transform: translateX(120%);
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+  pointer-events: auto;
+}
+.uc-toast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+.uc-toast.success { border-left-color: #10b981; }
+.uc-toast.error { border-left-color: #ef4444; }
+.uc-toast.warning { border-left-color: #f59e0b; }
+.uc-toast-icon { font-size: 18px; }
+.uc-toast-content { flex: 1; line-height: 1.4; word-break: break-word; }

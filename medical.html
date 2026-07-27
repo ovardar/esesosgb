@@ -370,7 +370,7 @@
         CURRENT_AUTH = auth;
 
         if (!CURRENT_AUTH.tenant_id) {
-          alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
+          showToast('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.', 'warning');
           await dbClient.auth.signOut();
           window.location.href = 'login.html';
           return;
@@ -860,12 +860,12 @@
         const decisionVal = document.getElementById('decision').value;
 
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
 
         if (!compId || !wName || !wAge || !gozVal || !kalpVal || !kasVal) {
-          alert('Lütfen gerekli alanları doldurun!');
+          showToast('Lütfen gerekli alanları doldurun!', 'warning');
           return;
         }
 
@@ -877,7 +877,7 @@
           .maybeSingle();
 
         if (companyCheckError || !companyCheck) {
-          alert('Seçilen firma bu tenant altında bulunamadı.');
+          showToast('Seçilen firma bu tenant altında bulunamadı.', 'error');
           return;
         }
 
@@ -896,7 +896,7 @@
         ]);
 
         if (error) {
-          alert('Sağlık kartı kaydedilemedi: ' + error.message);
+          showToast('Sağlık kartı kaydedilemedi: ' + error.message, 'error');
           return;
         }
 

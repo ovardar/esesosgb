@@ -90,9 +90,17 @@
         </div>
 
         <!-- Yeni Kontrol Kaydı Formu -->
-        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
-          <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📝 Yeni Kontrol Kaydı</h3>
-          <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">Firma Ekipman / Kontrol Kaydı Oluştur</p>
+        <div class="stat-card-premium panel" style="margin-bottom: 24px;">
+          <div class="panel-toggle" onclick="toggleAddPeriodicForm()" aria-expanded="false" style="padding: 24px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <h3 style="margin: 0; font-size: 16px; color: var(--uc-text); font-weight: 800;">📝 Yeni Kontrol Kaydı</h3>
+              <span style="color: var(--uc-text-muted); font-size: 13px;">Firma Ekipman / Kontrol Kaydı Oluştur</span>
+            </div>
+            <span class="chevron" style="transition: transform 0.3s; font-size: 12px; color: var(--uc-text-muted);">▼</span>
+          </div>
+
+          <div class="panel-collapsible is-collapsed" id="addPeriodicForm">
+            <div class="panel-content" style="padding: 0 24px 24px 24px;">
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
             <div class="form-group-premium">
@@ -178,6 +186,8 @@
             💾 Kontrol Kaydını Kaydet
           </button>
           <div id="periodic_status" style="margin-top: 10px; font-size: 13px; font-weight: 600; text-align: center;"></div>
+            </div>
+          </div>
         </div>
         <!-- Kontrol Listesi -->
         <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
@@ -238,13 +248,13 @@
     </div>
 
     <!-- ➕ KONTROL TÜRÜ EKLE MODAL -->
-    <div class="modal-backdrop-premium" id="type_modal">
-      <div class="modal-card-premium" style="max-width: 600px;">
-        <div class="modal-header-premium">
+    <div class="drawer-backdrop" id="type_modal" onclick="closeTypeModal()">
+      <div class="drawer-card" style="max-width: 600px;" onclick="event.stopPropagation()">
+        <div class="drawer-head">
           <h3>➕ Kontrol Türü Ekle</h3>
           <button class="modal-close-btn" onclick="closeTypeModal()">&times;</button>
         </div>
-        <div class="modal-body-premium">
+        <div class="drawer-body">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
             <div class="form-group-premium">
               <label>Yeni Kontrol Türü</label>
@@ -276,13 +286,13 @@
     </div>
 
     <!-- 🔍 PERİYODİK KONTROL DETAY MODAL -->
-    <div class="modal-backdrop-premium" id="detail_modal">
-      <div class="modal-card-premium" style="max-width: 800px;">
-        <div class="modal-header-premium">
+    <div class="drawer-backdrop" id="detail_modal" onclick="closeDetailModal()">
+      <div class="drawer-card" style="max-width: 800px;" onclick="event.stopPropagation()">
+        <div class="drawer-head">
           <h3>🔍 Periyodik Kontrol Detayı</h3>
           <button class="modal-close-btn" onclick="closeDetailModal()">&times;</button>
         </div>
-        <div class="modal-body-premium print-area">
+        <div class="drawer-body print-area">
           <div class="print-only"><h2>Periyodik Kontrol Formu</h2></div>
           <div id="detail_summary" class="detail-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 14px; border-radius: 10px;"></div>
           
@@ -301,7 +311,7 @@
             </table>
           </div>
         </div>
-        <div class="modal-footer-premium">
+        <div class="drawer-actions">
           <button class="btn btn-secondary" onclick="window.print()" style="border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--uc-line); background: #fff;">🖨️ Yazdır</button>
           <button class="btn btn-green" onclick="openOperationModal('Kontrol Yenilendi')" style="border-radius: 8px; padding: 10px 16px; background: #10b981; color: #fff; border: none; cursor: pointer; font-weight: 700;">🔄 Kontrol Yenile</button>
           <button class="btn btn-orange" onclick="openOperationModal('Rapor Alındı')" style="border-radius: 8px; padding: 10px 16px; background: #f59e0b; color: #fff; border: none; cursor: pointer; font-weight: 700;">📄 Rapor Alındı</button>
@@ -312,13 +322,13 @@
     </div>
 
     <!-- ⚙️ KONTROL İŞLEM MODAL -->
-    <div class="modal-backdrop-premium" id="operation_modal">
-      <div class="modal-card-premium" style="max-width: 760px;">
-        <div class="modal-header-premium">
+    <div class="drawer-backdrop" id="operation_modal" onclick="closeOperationModal()">
+      <div class="drawer-card" style="max-width: 760px;" onclick="event.stopPropagation()">
+        <div class="drawer-head">
           <h3 id="operation_title">Kontrol İşlemi</h3>
           <button class="modal-close-btn" onclick="closeOperationModal()">&times;</button>
         </div>
-        <div class="modal-body-premium">
+        <div class="drawer-body">
           <input type="hidden" id="operation_control_id" /><input type="hidden" id="operation_type" />
           <div id="operation_summary" class="detail-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 14px; border-radius: 10px;"></div>
           
@@ -369,7 +379,7 @@
             <textarea id="operation_note" rows="3" placeholder="Kontrol yenilendi, rapor alındı, uygunsuzluk giderildi..."></textarea>
           </div>
         </div>
-        <div class="modal-footer-premium">
+        <div class="drawer-actions">
           <button class="btn btn-secondary" onclick="closeOperationModal()" style="border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--uc-line); background: #fff;">Vazgeç</button>
           <button class="btn btn-purple" onclick="saveOperationModal()" style="border-radius: 8px; padding: 10px 16px; background: #7c3aed; color: #fff; border: none; cursor: pointer; font-weight: 700;">💾 İşlemi Kaydet</button>
         </div>
@@ -452,6 +462,20 @@
         if (st === 'Rapor Bekleniyor') return '<span class="badge badge-blue">Rapor Bekleniyor</span>';
         if (st === 'Kapandı') return '<span class="badge badge-gray">Kapandı</span>';
         return '<span class="badge badge-gray">' + escapeHtml(st) + '</span>';
+      }
+      function toggleAddPeriodicForm() {
+        const panel = document.getElementById('addPeriodicForm');
+        const toggleBtn = panel.previousElementSibling;
+        const chevron = toggleBtn.querySelector('.chevron');
+        if (panel.classList.contains('is-collapsed')) {
+          panel.classList.remove('is-collapsed');
+          toggleBtn.setAttribute('aria-expanded', 'true');
+          chevron.style.transform = 'rotate(180deg)';
+        } else {
+          panel.classList.add('is-collapsed');
+          toggleBtn.setAttribute('aria-expanded', 'false');
+          chevron.style.transform = 'rotate(0deg)';
+        }
       }
       window.onload = async function () {
         const auth = await requireAuthAndRole('periodic');
@@ -649,6 +673,10 @@
           document.getElementById('responsible_person').value = '';
           document.getElementById('notes').value = '';
           await fetchAllData();
+          const panel = document.getElementById('addPeriodicForm');
+          if (panel && !panel.classList.contains('is-collapsed')) {
+            toggleAddPeriodicForm();
+          }
         } catch (err) {
           setStatus('periodic_status', 'Hata: ' + (err.message || err), false);
         }
@@ -700,12 +728,12 @@
         });
       }
       function openTypeModal() {
-        document.getElementById('type_modal').style.display = 'flex';
+        document.getElementById('type_modal').classList.add('active');
         document.getElementById('new_type_name').focus();
         renderTypesTable();
       }
       function closeTypeModal() {
-        document.getElementById('type_modal').style.display = 'none';
+        document.getElementById('type_modal').classList.remove('active');
       }
       async function addControlType() {
         try {
@@ -767,10 +795,10 @@
               (tbody.innerHTML += `<tr><td>${escapeHtml(e.event_date || '-')}</td><td><strong>${escapeHtml(e.event_type || '-')}</strong></td><td>${escapeHtml(e.note || '-')}</td><td>${escapeHtml(e.created_by_email || '-')}</td></tr>`)
           );
         }
-        document.getElementById('detail_modal').style.display = 'flex';
+        document.getElementById('detail_modal').classList.add('active');
       }
       function closeDetailModal() {
-        document.getElementById('detail_modal').style.display = 'none';
+        document.getElementById('detail_modal').classList.remove('active');
       }
       function operationDefaultNote(type) {
         if (type === 'Kontrol Yenilendi') return 'Periyodik kontrol yenilendi.';
@@ -801,10 +829,10 @@
         const showRenew = type === 'Kontrol Yenilendi';
         document.getElementById('renew_block_1').style.display = showRenew ? 'block' : 'none';
         document.getElementById('renew_block_2').style.display = showRenew ? 'block' : 'none';
-        document.getElementById('operation_modal').style.display = 'flex';
+        document.getElementById('operation_modal').classList.add('active');
       }
       function closeOperationModal() {
-        document.getElementById('operation_modal').style.display = 'none';
+        document.getElementById('operation_modal').classList.remove('active');
       }
       function autoOperationNextDate() {
         const r = controlById(SELECTED_CONTROL_ID);

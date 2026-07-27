@@ -274,9 +274,14 @@
             <div id="form_status" class="status"></div>
           </div>
 
-          <div id="edit_panel" class="panel edit-panel hidden">
-            <h3>✏️ Müşteri / Admin Düzenle</h3>
-            <input type="hidden" id="edit_tenant_id" />
+          <div id="edit_panel" class="drawer-backdrop">
+            <div class="drawer-card" style="max-width: 600px;">
+              <div class="drawer-head">
+                <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--uc-text);">✏️ Müşteri / Admin Düzenle</h3>
+                <button class="btn-flat-icon" onclick="cancelEdit()" style="font-size:18px;">&times;</button>
+              </div>
+              <div class="drawer-body">
+                <input type="hidden" id="edit_tenant_id" />
             <input type="hidden" id="edit_admin_id" />
             <div class="form-grid">
               <div class="form-group full">
@@ -360,22 +365,15 @@
               Bu kullanıcı Super Admin olduğu için rol, e-posta ve giriş izni bu panelden değiştirilemez.
               Logo/tema/firma adı güvenle kaydedilir.
             </div>
-            <div class="actions">
+            </div>
+            <div id="edit_status" class="status" style="padding: 0 20px 20px;"></div>
+            <div class="drawer-actions" style="flex-wrap: wrap;">
               <button class="btn btn-primary" onclick="saveEditedTenant()">Kaydet</button>
               <button class="btn btn-blue" onclick="sendInviteForEditingAdmin()">Davet Gönder</button>
-              <button class="btn btn-secondary" onclick="resetInviteForEditingAdmin()">Davet Durumunu Sıfırla</button>
-              <button class="btn btn-secondary" onclick="cancelEdit()">Kapat</button>
+              <button class="btn btn-secondary" onclick="resetInviteForEditingAdmin()">Sıfırla</button>
             </div>
-            <div class="button-help">
-              <div><strong>Kaydet:</strong> müşteri ve admin bilgilerini günceller; mail göndermez.</div>
-              <div><strong>Davet Gönder:</strong> seçili admin e-postasına şifre oluşturma daveti yollar.</div>
-              <div>
-                <strong>Davet Durumunu Sıfırla:</strong> sadece davet takip bilgisini temizler; Auth kullanıcısını
-                silmez.
-              </div>
-            </div>
-            <div id="edit_status" class="status"></div>
           </div>
+        </div>
         </div>
 
         <div class="saas-list-layout">
@@ -639,12 +637,12 @@
         }
         if (!auth.canLogin) {
           await dbClient.auth.signOut();
-          alert('Bu kullanıcı için sistem erişimi pasif.');
+          showToast('Bu kullanıcı için sistem erişimi pasif.', 'warning');
           window.location.href = 'login.html';
           return null;
         }
         if (auth.role !== 'super_admin') {
-          alert('Bu sayfa yalnızca Super Admin içindir.');
+          showToast('Bu sayfa yalnızca Super Admin içindir.', 'warning');
           window.location.href = 'dashboard.html';
           return null;
         }
@@ -1598,7 +1596,7 @@
       async function saveEsesCrmOpportunity() {
         const companyName = document.getElementById('eses_crm_company_name')?.value.trim();
         if (!companyName) {
-          alert('Firma adı zorunlu.');
+          showToast('Firma adı zorunlu.', 'warning');
           return;
         }
         const editId = document.getElementById('eses_crm_edit_id')?.value || '';
@@ -1893,7 +1891,7 @@
               <strong>${escapeHtml(row.name)}</strong>
               <span>${escapeHtml(reason)} ${escapeHtml(row.primaryAdminEmail || row.slug || '')}</span>
               <div class="saas-card-actions" style="margin-top:8px;">
-                <button class="btn btn-secondary btn-small" onclick="openAttentionTenant('${escapeHtml(row.id)}')">Düzenleye Git</button>
+                <button class="btn-flat-icon" title="Düzenle" onclick="openAttentionTenant('${escapeHtml(row.id)}')">✏️</button>
                 ${inviteBtn}
               </div>
             </div>`;
@@ -1903,7 +1901,7 @@
       async function openAttentionTenant(tenantId) {
         const row = tenantDashboardRows.find((x) => x.id === tenantId);
         if (!row) {
-          alert('Kayıt bulunamadı. Liste yenilenecek.');
+          showToast('Kayıt bulunamadı. Liste yenilenecek.', 'error');
           await loadTenants();
           return;
         }
@@ -1918,7 +1916,7 @@
       async function sendAttentionInvite(tenantId) {
         const row = tenantDashboardRows.find((x) => x.id === tenantId);
         if (!row || !row.primaryAdminId) {
-          alert('Bu kayıtta davet gönderilecek admin bulunamadı.');
+          showToast('Bu kayıtta davet gönderilecek admin bulunamadı.', 'error');
           return;
         }
         await sendInvite(row.primaryAdminId);
@@ -1949,9 +1947,9 @@
         </span>
       </td>
       <td>
-        <div class="saas-link-actions">
-          <div class="link-box">${escapeHtml(row.loginUrl)}</div>
-          <button class="btn btn-secondary btn-small" onclick="copyText('${escapeHtml(row.loginUrl)}')">Kopyala</button>
+        <div class="saas-link-actions" style="display:flex; gap:6px; flex-direction:column; max-width:110px;">
+          <button class="btn btn-secondary btn-small" style="width:100%; justify-content:center;" onclick="copyText('${escapeHtml(row.loginUrl)}')">📋 Kopyala</button>
+          <a class="btn btn-blue btn-small" style="width:100%; justify-content:center; text-decoration:none; padding:4px 0; text-align:center;" href="${escapeHtml(row.loginUrl)}" target="_blank">Aç</a>
         </div>
       </td>
       <td>
@@ -1964,7 +1962,7 @@
       </td>
       <td>${activeBadge}</td>
       <td><div class="action-stack">
-        <button class="btn btn-primary btn-small" onclick="editTenant('${row.id}')">Düzenle</button>
+        <button class="btn-flat-icon" title="Düzenle" onclick="editTenant('${row.id}')">✏️</button>
         ${inviteButton}
         <button class="btn ${row.active ? 'btn-danger' : 'btn-green'} btn-small" onclick="toggleTenant('${row.id}', ${row.active})">${row.active ? 'Pasifleştir' : 'Aktifleştir'}</button>
       </div></td>
@@ -2002,11 +2000,11 @@
       }
       async function copyText(text) {
         await navigator.clipboard.writeText(text);
-        alert('Giriş linki kopyalandı.');
+        showToast('Giriş linki kopyalandı.', 'warning');
       }
       async function toggleTenant(id, isActive) {
         if (!currentAuth || currentAuth.role !== 'super_admin') {
-          alert('Bu işlem yalnızca Super Admin içindir.');
+          showToast('Bu işlem yalnızca Super Admin içindir.', 'warning');
           return;
         }
         const nextState = !isActive;
@@ -2016,7 +2014,7 @@
         if (!confirm(msg)) return;
         const { error } = await dbClient.from('tenants').update({ is_active: nextState }).eq('id', id);
         if (error) {
-          alert(error.message);
+          showToast(error.message, 'error');
           return;
         }
         await loadTenants();
@@ -2036,7 +2034,7 @@
         setEditStatus('');
         const { data: t, error } = await dbClient.from('tenants').select('*').eq('id', id).single();
         if (error) {
-          alert(error.message);
+          showToast(error.message, 'error');
           return;
         }
         const { data: admins, error: aLoadErr } = await dbClient
@@ -2046,7 +2044,7 @@
           .in('access_role', ['admin', 'super_admin'])
           .order('access_role', { ascending: true });
         if (aLoadErr) {
-          alert(aLoadErr.message);
+          showToast(aLoadErr.message, 'error');
           return;
         }
         const admin =
@@ -2078,7 +2076,7 @@
         document.getElementById('edit_admin_can_login').value = (!admin || admin.can_login !== false).toString();
         setAdminEditLocked(isLockedSuperAdmin);
 
-        document.getElementById('edit_panel').classList.remove('hidden');
+        document.getElementById('edit_panel').classList.add('active');
         previewEditLoginLink();
         const editPanel = document.getElementById('edit_panel');
         if (editPanel) {
@@ -2087,7 +2085,7 @@
         document.getElementById('edit_tenant_name')?.focus();
       }
       function cancelEdit() {
-        document.getElementById('edit_panel').classList.add('hidden');
+        document.getElementById('edit_panel').classList.remove('active');
         setAdminEditLocked(false);
         setEditStatus('');
       }
@@ -2264,7 +2262,7 @@
           await loadTenants();
         } catch (err) {
           setEditStatus('Davet gönderilemedi: ' + (err.message || err), false);
-          alert('Davet gönderilemedi: ' + (err.message || err));
+          showToast('Davet gönderilemedi: ' + (err.message || err, 'error'));
         }
       }
       window.onload = async () => {

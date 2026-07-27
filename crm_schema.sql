@@ -322,6 +322,7 @@ CREATE TABLE IF NOT EXISTS public.crm_contracts (
   id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tenant_id           UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   lead_id             UUID NOT NULL REFERENCES public.crm_leads(id) ON DELETE CASCADE,
+  contract_name       TEXT,
   contract_no         TEXT NOT NULL DEFAULT ('SOZ-' || to_char(NOW(),'YYYY') || '-' || lpad((floor(random()*9000)+1000)::text,4,'0')),
   version             INTEGER NOT NULL DEFAULT 1,
   offer_id            UUID REFERENCES public.crm_offers(id),
@@ -339,6 +340,7 @@ CREATE TABLE IF NOT EXISTS public.crm_contracts (
   file_url            TEXT,                      -- imzalı sözleşme dosyası
   is_signed           BOOLEAN DEFAULT FALSE,
   isg_katip_done      BOOLEAN DEFAULT FALSE,
+  isg_katip_id        VARCHAR(255),
   assigned_uzman      TEXT,
   assigned_hekim      TEXT,
   status              TEXT NOT NULL DEFAULT 'Hazırlanıyor'

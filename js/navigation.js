@@ -138,7 +138,7 @@ window.canAccessPage = function (role, page) {
   const crmPages = ['crm', 'crm-reports', 'crm-prices', 'crm-offers', 'crm-contracts', 'settings'];
   if (crmPages.includes(page)) return true;
   if (role === 'sales') return crmPages.includes(page);
-  if (['risk', 'accidents', 'near_miss', 'training', 'ppe', 'periodic', 'actions'].includes(page)) return role === 'uzman';
+  if (['risk', 'accidents', 'near_miss', 'training', 'ppe', 'periodic', 'actions', 'chemicals', 'emergency', 'documents', 'inspections'].includes(page)) return role === 'uzman';
   if (page === 'medical') return role === 'hekim';
   if (page === 'staff') return false;
   if (page === 'settings') return role === 'admin';
@@ -186,6 +186,10 @@ window.applyRoleBasedNavigation = function (role) {
     { id: 'training', href: 'training.html', text: 'Eğitim & Sertifika', icon: '🎓' },
     { id: 'ppe', href: 'ppe.html', text: 'KKD Zimmet', icon: '🧤' },
     { id: 'periodic', href: 'periodic.html', text: 'Periyodik Kontrol', icon: '🛠️' },
+    { id: 'chemicals', href: 'chemicals.html', text: 'Kimyasal Yönetimi', icon: '🧪' },
+    { id: 'emergency', href: 'emergency.html', text: 'Acil Durum & Tatbikat', icon: '🚨' },
+    { id: 'documents', href: 'documents.html', text: 'Doküman Kütüphanesi', icon: '📁' },
+    { id: 'inspections', href: 'inspections.html', text: 'Saha Denetimi', icon: '📋' },
     { id: 'defter', href: 'defter.html', text: 'Dijital Onaylı Defter', icon: '📘' },
     { id: 'kurul', href: 'kurul.html', text: 'İSG Kurul Toplantı Motoru', icon: '🪧' },
     { id: 'settings', href: 'settings.html', text: 'Ayarlar', icon: '⚙️' }
@@ -252,7 +256,9 @@ window.setTenantBranding = function (tenant) {
 };
 
 window.requireAuthAndRole = async function (page) {
-  if (new URLSearchParams(window.location.search).get('bypass') === 'true') {
+  const isBypassRequested = new URLSearchParams(window.location.search).get('bypass') === 'true';
+  const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  if (isBypassRequested && isLocalHost) {
     const mockAuth = {
       session: { user: { email: 'mockuzman@eses.com' } },
       canLogin: true,
@@ -269,6 +275,10 @@ window.requireAuthAndRole = async function (page) {
     return mockAuth;
   }
 
+  if (isBypassRequested && !isLocalHost) {
+    console.warn('Bypass parametresi sadece localhost ortaminda kullanilabilir.');
+  }
+
   const auth = await window.getCurrentAuthContext();
 
   if (!auth.session) {
@@ -278,7 +288,7 @@ window.requireAuthAndRole = async function (page) {
 
   if (!auth.canLogin) {
     if (window.dbClient) await window.dbClient.auth.signOut();
-    alert('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.');
+    window.showToast('Bu kullanıcı için sistem erişimi pasif. Lütfen OSGB yöneticisiyle iletişime geçin.', 'warning');
     window.location.href = 'login.html';
     return null;
   }
@@ -313,4 +323,46 @@ window.handleLogout = async function () {
     await window.dbClient.auth.signOut();
   }
   window.location.href = 'login.html';
+};
+
+// ---------------------------------------------------
+// Global Toast Notifications
+// ---------------------------------------------------
+window.showToast = function(message, type = 'success') {
+  let container = document.getElementById('global-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'global-toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `uc-toast ${type}`;
+  
+  let icon = '🔔';
+  if (type === 'success') icon = '✅';
+  if (type === 'error') icon = '❌';
+  if (type === 'warning') icon = '⚠️';
+
+  toast.innerHTML = `
+    <span class="uc-toast-icon">${icon}</span>
+    <span class="uc-toast-content">${message}</span>
+  `;
+
+  container.appendChild(toast);
+
+  // Trigger animation
+  requestAnimationFrame(() => {
+    toast.classList.add('show');
+  });
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    toast.classList.remove('show');
+    toast.addEventListener('transitionend', () => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast);
+      }
+    });
+  }, 3000);
 };

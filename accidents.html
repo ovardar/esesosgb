@@ -260,7 +260,7 @@
         if (!auth) return;
         CURRENT_AUTH = auth;
         if (!CURRENT_AUTH.tenant_id) {
-          alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.');
+          showToast('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen personel kaydını kontrol edin.', 'warning');
           await dbClient.auth.signOut();
           window.location.href = 'login.html';
           return;
@@ -647,7 +647,7 @@
           .eq('id', id)
           .eq('tenant_id', CURRENT_AUTH.tenant_id);
         if (error) {
-          alert('Güncellenemedi: ' + error.message);
+          showToast('Güncellenemedi: ' + error.message, 'error');
           return;
         }
         await fetchAccidents();
@@ -656,7 +656,7 @@
       async function convertAccidentToDof(id) {
         const a = accidentRows.find((row) => String(row.id) === String(id));
         if (!a) {
-          alert('Kaza kaydı bulunamadı.');
+          showToast('Kaza kaydı bulunamadı.', 'error');
           return;
         }
         if (!confirm('Bu iş kazası kaydından Aksiyon Havuzu için DÖF oluşturulsun mu?')) return;
@@ -686,7 +686,7 @@
           }
         ]);
         if (error) {
-          alert('DÖF oluşturulamadı: ' + error.message);
+          showToast('DÖF oluşturulamadı: ' + error.message, 'error');
           return;
         }
         await dbClient
@@ -694,7 +694,7 @@
           .update({ dof_created: true })
           .eq('id', id)
           .eq('tenant_id', CURRENT_AUTH.tenant_id);
-        alert('DÖF oluşturuldu. Aksiyon Havuzu üzerinden takip edebilirsiniz.');
+        showToast('DÖF oluşturuldu. Aksiyon Havuzu üzerinden takip edebilirsiniz.', 'warning');
         await fetchAccidents();
       }
     </script>

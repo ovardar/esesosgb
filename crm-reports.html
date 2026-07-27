@@ -302,7 +302,7 @@
         const tid = CURRENT_AUTH.tenant_id;
         const [leadsRes, offersRes, actsRes, tasksRes] = await Promise.all([
           dbClient.from('crm_leads').select('id, company_name, stage, lead_status, danger_class, assigned_to, lost_reason, created_at').eq('tenant_id', tid),
-          dbClient.from('crm_offers').select('id, offer_number, lead_id, subtotal, status, created_at, crm_leads(company_name)').eq('tenant_id', tid).order('created_at', { ascending: false }),
+          dbClient.from('crm_offers').select('id, offer_no, lead_id, subtotal, status, created_at, crm_leads(company_name)').eq('tenant_id', tid).order('created_at', { ascending: false }),
           dbClient.from('crm_activities').select('id, activity_type, summary, activity_date, created_by, lead_id, crm_leads(company_name)').eq('tenant_id', tid).order('activity_date', { ascending: false }),
           dbClient.from('crm_tasks').select('id, title, priority, status, due_date, lead_id, crm_leads(company_name)').eq('tenant_id', tid).order('due_date', { ascending: true })
         ]);
@@ -574,12 +574,12 @@
           const co = (o.crm_leads && o.crm_leads.company_name) ? esc(o.crm_leads.company_name) : '-';
           const cls = statusBadge[o.status] || 'badge-gray';
           return `<tr>
-            <td><strong>${esc(o.offer_number || '—')}</strong></td>
+            <td><strong>${esc(o.offer_no || '—')}</strong></td>
             <td>${co}</td>
             <td style="font-weight:700;color:var(--primary);">₺${Number(o.subtotal || 0).toLocaleString('tr-TR')}</td>
             <td><span class="badge-stage ${cls}">${esc(o.status || '—')}</span></td>
             <td style="color:var(--text-muted);">${(o.created_at || '').slice(0, 10)}</td>
-            <td><a href="crm-offer.html?lead_id=${o.lead_id}&offer_id=${o.id}" style="font-size:12px;color:var(--primary);font-weight:600;">Aç →</a></td>
+            <td><a href="crm-offer.html?id=${o.id}" style="font-size:12px;color:var(--primary);font-weight:600;">Aç →</a></td>
           </tr>`;
         }).join('');
       }

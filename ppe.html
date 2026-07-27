@@ -89,9 +89,14 @@
         </div>
 
         <!-- Yeni KKD Zimmeti Formu -->
-        <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
-          <h3 style="margin: 0 0 4px; font-size: 16px; color: var(--uc-text); font-weight: 800;">📝 Yeni KKD Zimmeti</h3>
-          <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">Çalışana KKD Zimmetle</p>
+        <div class="panel">
+          <button class="panel-toggle" id="add_ppe_form_toggle" type="button" onclick="toggleAddPpeForm()" aria-expanded="false">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 800;">➕ Yeni KKD Zimmeti</h3>
+            <span class="panel-toggle-icon">▾</span>
+          </button>
+          <div id="add_ppe_form_panel" class="panel-collapsible is-collapsed">
+            <div class="panel-body" style="padding: 0 24px 24px;">
+              <p style="color: var(--uc-text-muted); font-size: 13px; margin: 0 0 16px;">Çalışana KKD Zimmetle</p>
 
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
             <div class="form-group-premium">
@@ -155,6 +160,8 @@
             💾 KKD Zimmetini Kaydet
           </button>
           <div id="ppe_status" style="margin-top: 10px; font-size: 13px; font-weight: 600; text-align: center;"></div>
+            </div>
+          </div>
         </div>
         <!-- KKD Zimmet Listesi -->
         <div class="stat-card-premium" style="padding: 24px; margin-bottom: 24px;">
@@ -216,13 +223,13 @@
     </div>
 
     <!-- ➕ KKD TÜRÜ EKLE MODAL -->
-    <div class="modal-backdrop-premium" id="type_modal">
-      <div class="modal-card-premium" style="max-width: 600px;">
-        <div class="modal-header-premium">
+    <div class="drawer-backdrop" id="type_modal" onclick="closeTypeModal()">
+      <div class="drawer-card" style="max-width: 600px;" onclick="event.stopPropagation()">
+        <div class="drawer-head">
           <h3>➕ KKD Türü Ekle</h3>
           <button class="modal-close-btn" onclick="closeTypeModal()">&times;</button>
         </div>
-        <div class="modal-body-premium">
+        <div class="drawer-body">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
             <div class="form-group-premium">
               <label>Yeni KKD Türü</label>
@@ -254,13 +261,13 @@
     </div>
 
     <!-- 🔍 KKD ZİMMET DETAY MODAL -->
-    <div class="modal-backdrop-premium" id="detail_modal">
-      <div class="modal-card-premium" style="max-width: 800px;">
-        <div class="modal-header-premium">
+    <div class="drawer-backdrop" id="detail_modal" onclick="closeDetailModal()">
+      <div class="drawer-card" style="max-width: 800px;" onclick="event.stopPropagation()">
+        <div class="drawer-head">
           <h3>🔍 KKD Zimmet Detayı</h3>
           <button class="modal-close-btn" onclick="closeDetailModal()">&times;</button>
         </div>
-        <div class="modal-body-premium print-area">
+        <div class="drawer-body print-area">
           <div class="print-only"><h2>KKD Zimmet Formu</h2></div>
           <div id="detail_summary" class="detail-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 14px; border-radius: 10px;"></div>
           
@@ -279,7 +286,7 @@
             </table>
           </div>
         </div>
-        <div class="modal-footer-premium">
+        <div class="drawer-actions">
           <button class="btn btn-secondary" onclick="window.print()" style="border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--uc-line); background: #fff;">🖨️ Yazdır</button>
           <button class="btn btn-teal" onclick="openDeliveryForm(SELECTED_ASSIGNMENT_ID)" style="border-radius: 8px; padding: 10px 16px; background: #0f766e; color: #fff; border: none; cursor: pointer; font-weight: 700;">📝 Teslim Formu</button>
           <button class="btn btn-orange" onclick="openOperationModal('Hasarlı')" style="border-radius: 8px; padding: 10px 16px; background: #f59e0b; color: #fff; border: none; cursor: pointer; font-weight: 700;">⚠️ Hasarlı</button>
@@ -291,13 +298,13 @@
     </div>
 
     <!-- ⚙️ KKD İŞLEM MODAL (Hasarlı, Kayıp, İade, Değiştir) -->
-    <div class="modal-backdrop-premium" id="operation_modal">
-      <div class="modal-card-premium" style="max-width: 720px;">
-        <div class="modal-header-premium">
+    <div class="drawer-backdrop" id="operation_modal" onclick="closeOperationModal()">
+      <div class="drawer-card" style="max-width: 720px;" onclick="event.stopPropagation()">
+        <div class="drawer-head">
           <h3 id="operation_title">KKD İşlemi</h3>
           <button class="modal-close-btn" onclick="closeOperationModal()">&times;</button>
         </div>
-        <div class="modal-body-premium">
+        <div class="drawer-body">
           <input type="hidden" id="operation_assignment_id" />
           <input type="hidden" id="operation_status" />
           <div id="operation_summary" class="detail-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 14px; border-radius: 10px;"></div>
@@ -377,6 +384,18 @@
         ['Yüz Siperi', 12],
         ['İş Kıyafeti', 12]
       ];
+      
+      window.toggleAddPpeForm = function(forceOpen = null) {
+        const panel = document.getElementById('add_ppe_form_panel');
+        const toggle = document.getElementById('add_ppe_form_toggle');
+        if (!panel || !toggle) return;
+        const isCurrentlyOpen = !panel.classList.contains('is-collapsed');
+        const willBeOpen = forceOpen !== null ? forceOpen : !isCurrentlyOpen;
+        
+        panel.classList.toggle('is-collapsed', !willBeOpen);
+        toggle.setAttribute('aria-expanded', willBeOpen);
+      }
+
       function escapeHtml(v) {
         return (v || '')
           .toString()
@@ -649,6 +668,7 @@
           document.getElementById('serial_no').value = '';
           document.getElementById('notes').value = '';
           document.getElementById('quantity').value = 1;
+          if (typeof window.toggleAddPpeForm === 'function') window.toggleAddPpeForm(false);
           await fetchAllData();
           if (shouldOpenDelivery) {
             const saved = assignmentById(data.id) || data;
@@ -699,12 +719,12 @@
         });
       }
       function openTypeModal() {
-        document.getElementById('type_modal').style.display = 'flex';
+        document.getElementById('type_modal').classList.add('active');
         document.getElementById('new_type_name').focus();
         renderTypesTable();
       }
       function closeTypeModal() {
-        document.getElementById('type_modal').style.display = 'none';
+        document.getElementById('type_modal').classList.remove('active');
       }
       async function addPpeType() {
         try {
@@ -766,10 +786,10 @@
               (tbody.innerHTML += `<tr><td>${escapeHtml(e.event_date || '-')}</td><td><strong>${escapeHtml(e.event_type || '-')}</strong></td><td>${escapeHtml(e.note || '-')}</td><td>${escapeHtml(e.created_by_email || '-')}</td></tr>`)
           );
         }
-        document.getElementById('detail_modal').style.display = 'flex';
+        document.getElementById('detail_modal').classList.add('active');
       }
       function closeDetailModal() {
-        document.getElementById('detail_modal').style.display = 'none';
+        document.getElementById('detail_modal').classList.remove('active');
       }
       function operationDefaultNote(status) {
         if (status === 'İade Edildi') return 'Çalışandan teslim alındı.';
@@ -801,10 +821,10 @@
           document.getElementById('replacement_serial_no').value = '';
           autoReplacementRenewalDate();
         }
-        document.getElementById('operation_modal').style.display = 'flex';
+        document.getElementById('operation_modal').classList.add('active');
       }
       function closeOperationModal() {
-        document.getElementById('operation_modal').style.display = 'none';
+        document.getElementById('operation_modal').classList.remove('active');
       }
       function autoReplacementRenewalDate() {
         const r = assignmentById(SELECTED_ASSIGNMENT_ID);
@@ -899,7 +919,7 @@
             : (companyById(row.company_id) || {}).company_name || 'Bilinmeyen Firma';
         const today = todayString();
         const deliveredBy = CURRENT_AUTH && CURRENT_AUTH.email ? CURRENT_AUTH.email : '-';
-        return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>KKD Teslim Formu</title><style>@page{size:A4;margin:16mm}body{font-family:Inter,Arial,sans-serif;color:#111827;margin:0;background:#f8fafc}.print-toolbar{position:sticky;top:0;z-index:999;background:#fff;border-bottom:1px solid #e2e8f0;padding:12px 16px;display:flex;justify-content:flex-end;gap:10px;box-shadow:0 2px 8px rgba(15,23,42,.08)}.print-btn{display:inline-flex;align-items:center;gap:7px;background:#0f766e;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:900;cursor:pointer;font-size:14px}.form{background:white;border:2px solid #0f766e;border-radius:18px;padding:28px;min-height:250mm;position:relative}.title{text-align:center;color:#064e3b;font-size:27px;font-weight:900;letter-spacing:-.03em}.subtitle{text-align:center;color:#64748b;font-size:13px;margin-top:8px}.grid{display:grid;grid-template-columns:180px 1fr;gap:10px 16px;margin-top:30px;font-size:14px}.label{font-weight:900;color:#475569}.value{font-weight:700;color:#0f172a}.statement{margin-top:28px;border:1px solid #a7f3d0;background:#f0fdfa;border-radius:14px;padding:16px;line-height:1.65;font-size:14px}.signature-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:44px}.signature{border-top:1px solid #94a3b8;padding-top:10px;min-height:92px}.signature strong{display:block;color:#0f172a}.signature small{color:#64748b}.foot{position:absolute;left:28px;right:28px;bottom:20px;text-align:center;color:#64748b;font-size:11px}@media print{body{background:white}.print-toolbar{display:none}.form{border-radius:0;min-height:auto;border-width:1px}}@media(max-width:720px){.signature-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}</style></head><body><div class="print-toolbar"><button class="print-btn" onclick="window.print()">🖨️ Yazdır / PDF Kaydet</button></div><main class="form"><div class="title">KKD Teslim ve Zimmet Formu</div><div class="subtitle">Kişisel Koruyucu Donanım teslim kaydı</div><section class="grid"><div class="label">Firma</div><div class="value">${escapeHtml(company)}</div><div class="label">Çalışan</div><div class="value">${escapeHtml(row.worker_name || '-')}</div><div class="label">KKD Türü</div><div class="value">${escapeHtml(row.ppe_type_name || '-')}</div><div class="label">Adet</div><div class="value">${escapeHtml(row.quantity || 1)}</div><div class="label">Seri / Beden / Model</div><div class="value">${escapeHtml(row.serial_no || '-')}</div><div class="label">Veriliş Tarihi</div><div class="value">${escapeHtml(row.issue_date || '-')}</div><div class="label">Yenileme Tarihi</div><div class="value">${escapeHtml(row.renewal_date || '-')}</div><div class="label">Teslim Eden</div><div class="value">${escapeHtml(deliveredBy)}</div><div class="label">Form Tarihi</div><div class="value">${escapeHtml(today)}</div></section><div class="statement"><strong>Teslim ve kullanım beyanı:</strong><br>Yukarıda bilgileri yer alan kişisel koruyucu donanımı eksiksiz ve kullanıma uygun şekilde teslim aldığımı, tarafıma kullanım amacı ve dikkat edilmesi gereken hususlar hakkında bilgilendirme yapıldığını, donanımı iş sağlığı ve güvenliği kurallarına uygun şekilde kullanacağımı, hasar, kayıp veya uygunsuzluk durumunda ilgili birime bilgi vereceğimi kabul ve beyan ederim.</div><section class="signature-grid"><div class="signature"><strong>Çalışan İmzası</strong><small>Ad Soyad / Tarih / İmza</small></div><div class="signature"><strong>Teslim Eden İmzası</strong><small>Ad Soyad / Tarih / İmza</small></div></section><div class="foot">Bu form isgnova KKD Zimmet & Takip modülü üzerinden oluşturulmuştur.</div></main></body></html>`;
+        return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>KKD Teslim Formu</title><style>@page{size:A4;margin:16mm}body{font-family:'Manrope',Arial,sans-serif;color:#111827;margin:0;background:#f8fafc}.print-toolbar{position:sticky;top:0;z-index:999;background:#fff;border-bottom:1px solid #e2e8f0;padding:12px 16px;display:flex;justify-content:flex-end;gap:10px;box-shadow:0 2px 8px rgba(15,23,42,.08)}.print-btn{display:inline-flex;align-items:center;gap:7px;background:#0f766e;color:white;border:0;border-radius:10px;padding:10px 16px;font-weight:900;cursor:pointer;font-size:14px}.form{background:white;border:2px solid #0f766e;border-radius:18px;padding:28px;min-height:250mm;position:relative}.title{text-align:center;color:#064e3b;font-size:27px;font-weight:900;letter-spacing:-.03em}.subtitle{text-align:center;color:#64748b;font-size:13px;margin-top:8px}.grid{display:grid;grid-template-columns:180px 1fr;gap:10px 16px;margin-top:30px;font-size:14px}.label{font-weight:900;color:#475569}.value{font-weight:700;color:#0f172a}.statement{margin-top:28px;border:1px solid #a7f3d0;background:#f0fdfa;border-radius:14px;padding:16px;line-height:1.65;font-size:14px}.signature-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:44px}.signature{border-top:1px solid #94a3b8;padding-top:10px;min-height:92px}.signature strong{display:block;color:#0f172a}.signature small{color:#64748b}.foot{position:absolute;left:28px;right:28px;bottom:20px;text-align:center;color:#64748b;font-size:11px}@media print{body{background:white}.print-toolbar{display:none}.form{border-radius:0;min-height:auto;border-width:1px}}@media(max-width:720px){.signature-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}</style></head><body><div class="print-toolbar"><button class="print-btn" onclick="window.print()">🖨️ Yazdır / PDF Kaydet</button></div><main class="form"><div class="title">KKD Teslim ve Zimmet Formu</div><div class="subtitle">Kişisel Koruyucu Donanım teslim kaydı</div><section class="grid"><div class="label">Firma</div><div class="value">${escapeHtml(company)}</div><div class="label">Çalışan</div><div class="value">${escapeHtml(row.worker_name || '-')}</div><div class="label">KKD Türü</div><div class="value">${escapeHtml(row.ppe_type_name || '-')}</div><div class="label">Adet</div><div class="value">${escapeHtml(row.quantity || 1)}</div><div class="label">Seri / Beden / Model</div><div class="value">${escapeHtml(row.serial_no || '-')}</div><div class="label">Veriliş Tarihi</div><div class="value">${escapeHtml(row.issue_date || '-')}</div><div class="label">Yenileme Tarihi</div><div class="value">${escapeHtml(row.renewal_date || '-')}</div><div class="label">Teslim Eden</div><div class="value">${escapeHtml(deliveredBy)}</div><div class="label">Form Tarihi</div><div class="value">${escapeHtml(today)}</div></section><div class="statement"><strong>Teslim ve kullanım beyanı:</strong><br>Yukarıda bilgileri yer alan kişisel koruyucu donanımı eksiksiz ve kullanıma uygun şekilde teslim aldığımı, tarafıma kullanım amacı ve dikkat edilmesi gereken hususlar hakkında bilgilendirme yapıldığını, donanımı iş sağlığı ve güvenliği kurallarına uygun şekilde kullanacağımı, hasar, kayıp veya uygunsuzluk durumunda ilgili birime bilgi vereceğimi kabul ve beyan ederim.</div><section class="signature-grid"><div class="signature"><strong>Çalışan İmzası</strong><small>Ad Soyad / Tarih / İmza</small></div><div class="signature"><strong>Teslim Eden İmzası</strong><small>Ad Soyad / Tarih / İmza</small></div></section><div class="foot">Bu form isgnova KKD Zimmet & Takip modülü üzerinden oluşturulmuştur.</div></main></body></html>`;
       }
       function openDeliveryForm(id) {
         const row = assignmentById(id);

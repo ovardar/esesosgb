@@ -31,6 +31,15 @@
         <div class="nav-container"></div>
       </div>
 
+      <div class="crm-sub-nav">
+        <a href="crm.html" class="crm-sub-nav-btn crm-sub-active">👥 Müşteri Yönetimi</a>
+        <a href="crm-prices.html" class="crm-sub-nav-btn">💰 Fiyat Listesi</a>
+        <a href="crm-offers.html" class="crm-sub-nav-btn">📝 Teklif Yönetimi</a>
+        <a href="crm-contracts.html" class="crm-sub-nav-btn">📄 Sözleşme Yönetimi</a>
+
+        <a href="crm-reports.html" class="crm-sub-nav-btn">📈 CRM Raporları</a>
+      </div>
+
       <div class="crm-detail-page-shell">
         <div style="margin-bottom:12px;">
           <a href="crm.html" style="font-size:13px;color:var(--primary);text-decoration:none;">← Fırsat Listesine Dön</a>
@@ -401,6 +410,7 @@
 
       function inferLeadStatus(lead) {
         if (lead.lead_status && LEAD_STATUSES.includes(lead.lead_status)) return lead.lead_status;
+        if (lead.derived_status && LEAD_STATUSES.includes(lead.derived_status)) return lead.derived_status;
         if (lead.is_converted) return 'Kazanıldı';
         if (lead.stage_raw === 'Kazanıldı') return 'Kazanıldı';
         if (lead.stage_raw === 'Kaybedildi') return 'Kaybedildi';
@@ -414,16 +424,19 @@
 
       document.addEventListener('DOMContentLoaded', async function () {
         document.body.style.display = 'block';
+        const isDevHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
-        const logPanel = document.createElement('div');
-        logPanel.id = 'onscreen_loader_log';
-        logPanel.style.cssText = 'background:#f1f5f9;color:#334155;padding:12px;margin:22px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;font-family:monospace;white-space:pre-wrap;z-index:9999;position:relative;';
-        logPanel.innerText = 'Loader Initialization...\n';
-        const card = document.querySelector('.card');
-        if (card) card.insertBefore(logPanel, card.childNodes[2] || null);
+        const logPanel = isDevHost ? document.createElement('div') : null;
+        if (logPanel) {
+          logPanel.id = 'onscreen_loader_log';
+          logPanel.style.cssText = 'background:#f1f5f9;color:#334155;padding:12px;margin:22px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;font-family:monospace;white-space:pre-wrap;z-index:9999;position:relative;';
+          logPanel.innerText = 'Loader Initialization...\n';
+          const card = document.querySelector('.card');
+          if (card) card.insertBefore(logPanel, card.childNodes[2] || null);
+        }
 
         const appendLog = (msg) => {
-          logPanel.innerText += msg + '\n';
+          if (logPanel) logPanel.innerText += msg + '\n';
         };
 
         const params = new URLSearchParams(window.location.search);
@@ -484,7 +497,7 @@
           }
         }
 
-        if (!hasError) {
+        if (!hasError && logPanel) {
           logPanel.remove();
         }
 
@@ -493,7 +506,12 @@
       });
 
       async function loadLead() {
-        const { data, error } = await dbClient.from('crm_leads').select('*').eq('id', LEAD_ID).single();
+        const { data, error } = await dbClient
+          .from('crm_leads')
+          .select('*')
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('id', LEAD_ID)
+          .single();
         if (error || !data) { showToast('Fırsat bulunamadı.', 'error'); window.location.href = 'crm.html'; return; }
         currentLead = { ...data, stage_raw: data.stage, stage: normalizeStage(data.stage) };
         
@@ -501,18 +519,7 @@
         const updatedAt = new Date(currentLead.updated_at);
         const currentStatus = resolveLeadStatus(currentLead);
         if (updatedAt < fifteenDaysAgo && !['Kazanıldı', 'Kaybedildi', 'Askıda'].includes(currentStatus)) {
-          try {
-            const { error: updateErr } = await dbClient
-              .from('crm_leads')
-              .update({ lead_status: 'Askıda', updated_at: new Date().toISOString() })
-              .eq('id', LEAD_ID);
-            if (!updateErr) {
-              currentLead.lead_status = 'Askıda';
-              currentLead.updated_at = new Date().toISOString();
-            }
-          } catch (err) {
-            console.error('Fırsat Askıda durumuna otomatik alınırken hata:', err);
-          }
+          currentLead.derived_status = 'Askıda';
         }
 
         fillHeader(currentLead);
@@ -591,7 +598,11 @@
       async function updateStage() {
         const stage = document.getElementById('stage_select').value;
         const stageDb = stageToDbValue(stage);
-        const { error } = await dbClient.from('crm_leads').update({ stage: stageDb, updated_at: new Date().toISOString() }).eq('id', LEAD_ID);
+        const { error } = await dbClient
+          .from('crm_leads')
+          .update({ stage: stageDb, updated_at: new Date().toISOString() })
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('id', LEAD_ID);
         if (!error) {
           currentLead.stage_raw = stageDb;
           currentLead.stage = stage;
@@ -618,6 +629,7 @@
             lost_reason: lostReason,
             updated_at: new Date().toISOString() 
           })
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
           .eq('id', LEAD_ID)
           .then(({ error }) => {
             if (error) {
@@ -704,6 +716,7 @@
           const { error } = await dbClient
             .from('crm_leads')
             .update({ lead_status: 'İşlemde', updated_at: new Date().toISOString() })
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
             .eq('id', LEAD_ID);
 
           if (!error) {
@@ -735,7 +748,11 @@
           updated_at: new Date().toISOString()
         };
         if (!updates.company_name) { showStatus('general_status', '⚠️ Firma adı zorunludur.', 'error'); return; }
-        const { error } = await dbClient.from('crm_leads').update(updates).eq('id', LEAD_ID);
+        const { error } = await dbClient
+          .from('crm_leads')
+          .update(updates)
+          .eq('tenant_id', CURRENT_AUTH.tenant_id)
+          .eq('id', LEAD_ID);
         showStatus('general_status', error ? '❌ ' + error.message : '✅ Kaydedildi.', error ? 'error' : 'ok');
         if (!error) { 
           currentLead = { ...currentLead, ...updates }; 
@@ -906,7 +923,7 @@
           lead_status: 'Kazanıldı',
           stage: 'Sözleşme Bekleniyor',
           updated_at: new Date().toISOString()
-        }).eq('id', LEAD_ID);
+        }).eq('tenant_id', CURRENT_AUTH.tenant_id).eq('id', LEAD_ID);
 
         const selectedContacts = wizardContacts.filter((_, i) => {
           const ck = document.getElementById('wiz_ck_' + i);
@@ -1366,13 +1383,31 @@
 
       async function loadContractStaffOptions() {
         if (contractStaffOptions.length) return;
-        const { data, error } = await dbClient
+        // Tenant şemasında personel adı `name_surname` veya `full_name` olarak gelebilir.
+        let data = null;
+        let error = null;
+
+        ({ data, error } = await dbClient
           .from('osgb_staff')
           .select('id,name_surname,email')
           .eq('tenant_id', CURRENT_AUTH.tenant_id)
-          .order('name_surname');
+          .order('name_surname'));
+
+        if (error && (error.message || '').toLowerCase().includes('name_surname')) {
+          ({ data, error } = await dbClient
+            .from('osgb_staff')
+            .select('id,full_name,email')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id)
+            .order('full_name'));
+        }
+
         if (error || !data) return;
-        contractStaffOptions = data;
+
+        contractStaffOptions = data.map((s) => ({
+          ...s,
+          name_surname: (s.name_surname || s.full_name || s.email || '').trim()
+        }));
+
         populateStaffSelect('ct_uzman', contractStaffOptions);
         populateStaffSelect('ct_hekim', contractStaffOptions);
         populateStaffSelect('inl_ct_uzman', contractStaffOptions);
@@ -1722,7 +1757,7 @@
             stage: stageToDbValue('Sözleşme'),
             lead_status: 'Kazanıldı',
             updated_at: new Date().toISOString()
-        }).eq('id', LEAD_ID);
+        }).eq('tenant_id', CURRENT_AUTH.tenant_id).eq('id', LEAD_ID);
         currentLead.stage = 'Sözleşme';
         currentLead.stage_raw = stageToDbValue('Sözleşme');
         currentLead.lead_status = 'Kazanıldı';

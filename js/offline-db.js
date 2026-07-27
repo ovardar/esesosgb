@@ -109,10 +109,6 @@
     return pending.length;
   }
 
-  async function setMeta(key, value) {
-    return withStore(META_STORE, 'readwrite', (store) => store.put({ key, value }));
-  }
-
   async function getMeta(key) {
     const db = await openDB();
     return new Promise((resolve, reject) => {

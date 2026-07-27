@@ -103,8 +103,8 @@
           </div>
 
           <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button class="btn btn-secondary" onclick="resetDefterForm()" style="border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--uc-line); background: #fff;">Formu Temizle</button>
-            <button class="btn btn-purple" onclick="addDefterEntry()" style="border-radius: 8px; padding: 10px 16px; background: #7c3aed; color: #fff; border: none; cursor: pointer; font-weight: 700;">💾 Madde Kaydet</button>
+            <button class="btn-secondary-premium">Formu Temizle</button>
+            <button class="btn-add-lead-btn">💾 Madde Kaydet</button>
           </div>
         </div>
 
@@ -224,7 +224,7 @@
         const note = document.getElementById('entry_note').value.trim();
 
         if (!date || !subject) {
-          alert('Lütfen kayıt tarihi ve madde başlığını doldurun.');
+          showToast('Lütfen kayıt tarihi ve madde başlığını doldurun.', 'warning');
           return;
         }
 
@@ -307,9 +307,9 @@
               <td>${escapeHtml(entry.reference)}</td>
               <td>${formatEntryStatus(entry.status)}</td>
               <td style="white-space:nowrap;">
-                <button class="btn btn-blue btn-small" onclick="updateEntryStatus('${entry.id}', 'converted')">DÖF'e Dönüştür</button>
-                <button class="btn btn-secondary btn-small" onclick="updateEntryStatus('${entry.id}', 'archived')">Arşivle</button>
-                <button class="btn btn-red btn-small" onclick="deleteEntry('${entry.id}')">Sil</button>
+                <button class="btn-primary" style="font-size:12px; padding:6px 12px;">DÖF'e Dönüştür</button>
+                <button class="btn-secondary-premium" style="font-size:12px; padding:6px 12px;">Arşivle</button>
+                <button class="btn-secondary-premium" style="font-size:12px; padding:6px 12px; color:#ef4444; border-color:#ef4444;">Sil</button>
               </td>
             </tr>`;
           });

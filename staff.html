@@ -18,31 +18,6 @@
     <script defer src="js/supabase-config.js"></script>
     <script defer src="js/navigation.js"></script>
     <style>
-      .panel {
-        margin: 0 0 24px;
-      }
-      .panel-toggle {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 0;
-        border: none;
-        background: transparent;
-        color: inherit;
-        cursor: pointer;
-      }
-      .panel-toggle-icon {
-        font-size: 12px;
-        transition: transform 0.2s ease;
-      }
-      .panel-toggle[aria-expanded='true'] .panel-toggle-icon {
-        transform: rotate(180deg);
-      }
-      .panel-collapsible.is-collapsed {
-        display: none;
-      }
       .form-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -281,43 +256,44 @@
       </div>
     </div>
 
-    <!-- Modal -->
-    <div id="staffModal" class="modal-backdrop">
-      <div class="modal-card">
-        <div class="modal-head">
-          <h3>📝 Personel Güncelle</h3>
+    <!-- Drawer -->
+    <div id="staffModal" class="drawer-backdrop">
+      <div class="drawer-card">
+        <div class="drawer-head">
+          <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--uc-text);">📝 Personel Güncelle</h3>
+          <button class="btn-flat-icon" onclick="closeModal()" style="font-size:18px;">&times;</button>
         </div>
-        <div class="modal-body">
+        <div class="drawer-body">
           <input type="hidden" id="modal_staff_id" />
           <div class="form-grid">
-            <div class="form-group">
+            <div class="form-group span-12">
               <label>Adı Soyadı</label>
               <input type="text" id="modal_staff_name" />
             </div>
-            <div class="form-group">
+            <div class="form-group span-12">
               <label>E-Posta</label>
               <input type="email" id="modal_staff_email" />
             </div>
-            <div class="form-group" id="modal_tenant_group" style="display: none">
+            <div class="form-group span-12" id="modal_tenant_group" style="display: none">
               <label>Bağlı Tenant / OSGB</label>
               <select id="modal_tenant_select">
                 <option value="">Tenant yükleniyor...</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group span-12">
               <label>Sistem Erişim Yetkisi</label>
               <select id="modal_access_role">
                 <option value="">Yükleniyor...</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group span-12">
               <label>Sisteme Giriş İzni</label>
               <select id="modal_can_login">
                 <option value="true">Aktif - Giriş Yapabilir</option>
                 <option value="false">Pasif - Giriş Yapamaz</option>
               </select>
             </div>
-            <div class="form-group">
+            <div class="form-group span-12">
               <label>Kilit Durumu</label>
               <select id="modal_is_active_manual">
                 <option value="Otomatik">Otomatik</option>
@@ -327,9 +303,9 @@
             </div>
           </div>
         </div>
-        <div class="modal-actions">
-          <button class="btn btn-blue" onclick="updateStaff()">Güncelle</button>
+        <div class="drawer-actions">
           <button class="btn btn-secondary" onclick="closeModal()">İptal</button>
+          <button class="btn btn-blue" onclick="updateStaff()">Güncelle</button>
         </div>
       </div>
     </div>
@@ -350,7 +326,7 @@
         if (!auth) return;
         CURRENT_AUTH = auth;
         if (CURRENT_AUTH.role !== 'super_admin' && !CURRENT_AUTH.tenant_id) {
-          alert('Bu admin kullanıcısı herhangi bir tenant ile ilişkilendirilmemiş.');
+          showToast('Bu admin kullanıcısı herhangi bir tenant ile ilişkilendirilmemiş.', 'warning');
           await dbClient.auth.signOut();
           window.location.href = 'login.html';
           return;
@@ -465,7 +441,7 @@
           .order('name', { ascending: true });
 
         if (error) {
-          alert('Tenant listesi yüklenemedi: ' + error.message);
+          showToast('Tenant listesi yüklenemedi: ' + error.message, 'error');
           TENANTS_CACHE = [];
         } else {
           TENANTS_CACHE = data || [];
@@ -480,7 +456,7 @@
         if (isSuperAdmin()) {
           const selectedTenantId = document.getElementById('staff_tenant_select')?.value || '';
           if (!selectedTenantId) {
-            alert('Super admin olarak personel eklerken bağlı tenant seçmelisiniz.');
+            showToast('Super admin olarak personel eklerken bağlı tenant seçmelisiniz.', 'warning');
             return null;
           }
           return selectedTenantId;
@@ -494,12 +470,12 @@
         if (isSuperAdmin()) return true;
 
         if (selectedAccessRole === 'super_admin') {
-          alert('Tenant admin, Super Admin yetkisi atayamaz.');
+          showToast('Tenant admin, Super Admin yetkisi atayamaz.', 'warning');
           return false;
         }
 
         if (!CURRENT_AUTH.tenant_id || String(recordTenantId) !== String(CURRENT_AUTH.tenant_id)) {
-          alert('Bu personel kaydı sizin tenant alanınızda değil.');
+          showToast('Bu personel kaydı sizin tenant alanınızda değil.', 'error');
           return false;
         }
 
@@ -643,7 +619,7 @@
             <td><code>${row.email_html}</code></td>
             <td>${row.date_html}</td>
             <td style="text-align: center;"><span class="badge ${row.is_system_active ? 'badge-active' : 'badge-passive'}">${row.system_status_badge}</span></td>
-            <td><button class="btn-edit-action" onclick="openStaffModalById('${row.id_attr}')">Düzenle</button><button class="btn-delete-action" onclick="deleteStaff('${row.id_attr}', '${row.tenant_id_attr}')">Sil</button></td>
+            <td><button class="btn-flat-icon" title="Düzenle" onclick="openStaffModalById('${row.id_attr}')">✏️</button><button class="btn-delete-action" style="margin-left:8px;" onclick="deleteStaff('${row.id_attr}', '${row.tenant_id_attr}')">Sil</button></td>
           </tr>
         `).join('');
       }
@@ -755,7 +731,7 @@
       function openStaffModalById(id) {
         const s = STAFF_CACHE_BY_ID[String(id)];
         if (!s) {
-          alert('Personel kaydı bulunamadı. Lütfen sayfayı yenileyin.');
+          showToast('Personel kaydı bulunamadı. Lütfen sayfayı yenileyin.', 'error');
           return;
         }
         const accessRole = normalizeAccessRole(s.access_role) || normalizeAccessRole(s.staff_role) || 'uzman';
@@ -785,11 +761,11 @@
             tenantSelect.value = tenantId || '';
           }
         }
-        document.getElementById('staffModal').style.display = 'flex';
+        document.getElementById('staffModal').classList.add('active');
       }
 
       function closeModal() {
-        document.getElementById('staffModal').style.display = 'none';
+        document.getElementById('staffModal').classList.remove('active');
       }
 
       async function updateStaff() {
@@ -802,7 +778,7 @@
             : null;
 
         if (!targetTenantId) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
 
@@ -823,7 +799,7 @@
 
         const { error } = await query;
         if (error) {
-          alert('Güncelleme hatası: ' + error.message);
+          showToast('Güncelleme hatası: ' + error.message, 'error');
           return;
         }
         closeModal();
@@ -834,7 +810,7 @@
         const name = document.getElementById('staff_name').value;
         const email = document.getElementById('staff_email').value;
         if (!name || !email) {
-          alert('Lütfen gerekli alanları doldurun!');
+          showToast('Lütfen gerekli alanları doldurun!', 'warning');
           return;
         }
 
@@ -858,7 +834,7 @@
         };
         const { error } = await dbClient.from('osgb_staff').insert([payload]);
         if (error) {
-          alert('Kayıt hatası: ' + error.message);
+          showToast('Kayıt hatası: ' + error.message, 'error');
           return;
         }
         document.getElementById('staff_name').value = '';
@@ -876,7 +852,7 @@
 
         const { error } = await query;
         if (error) {
-          alert('Silme hatası: ' + error.message);
+          showToast('Silme hatası: ' + error.message, 'error');
           return;
         }
         fetchStaff();
@@ -923,10 +899,10 @@
             })
             .eq('id', staffId);
             
-          alert('Davet e-postası başarıyla gönderildi.');
+          showToast('Davet e-postası başarıyla gönderildi.', 'success');
           fetchStaff();
         } catch (err) {
-          alert('Davet gönderilemedi: ' + (err.message || err));
+          showToast('Davet gönderilemedi: ' + (err.message || err, 'error'));
         }
       }
     </script>

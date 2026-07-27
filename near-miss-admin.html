@@ -230,26 +230,26 @@
     </div>
 
     <!-- MODAL: Detay -->
-    <div class="modal-backdrop-premium" id="detail_modal" style="position:fixed; inset:0; background:rgba(15,23,42,0.45); backdrop-filter:blur(4px); display:none; align-items:center; justify-content:center; z-index:3000;">
-      <div class="modal-card-premium" style="background:var(--uc-surface); border: 1px solid var(--uc-line); border-radius:14px; width:min(680px, 90%); padding:24px; box-shadow: 0 20px 40px rgba(15,23,42,0.16);">
-        <div class="modal-header-premium" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--uc-line); padding-bottom:12px; margin-bottom:16px; background:none;">
-          <h3 style="margin:0; font-size:16px; font-weight:800; color:var(--uc-text);">Ramak Kala Bildirim Detayı</h3>
-          <button onclick="closeDetailModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:var(--uc-text-muted);">&times;</button>
+    <div class="drawer-backdrop" id="detail_modal">
+      <div class="drawer-card" style="max-width: 680px;">
+        <div class="drawer-head">
+          <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--uc-text);">🔍 Ramak Kala Bildirim Detayı</h3>
+          <button class="btn-flat-icon" onclick="closeDetailModal()" style="font-size:18px;">&times;</button>
         </div>
-        <div class="modal-body-premium" style="padding:0;">
+        <div class="drawer-body">
           <div id="detail_modal_content" class="detail-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;"></div>
-          <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--uc-line); padding-top:16px; margin-top:16px; flex-wrap:wrap; gap:12px;">
-            <div style="display:flex; gap:8px; align-items:center;">
-              <select id="detail_status_select" style="padding:8px 12px; border:1px solid var(--uc-line); border-radius:8px; font-size:13px; color:var(--uc-text);">
-                <option value="Yeni">Yeni</option>
-                <option value="İnceleniyor">İnceleniyor</option>
-                <option value="Kapatıldı">Kapatıldı</option>
-                <option value="DÖF'e Dönüştürüldü">DÖF'e Dönüştürüldü</option>
-              </select>
-              <button onclick="saveDetailStatus()" style="background:var(--uc-primary); color:#fff; border:none; border-radius:8px; padding:8px 14px; font-size:13px; font-weight:700; cursor:pointer;">Durumu Kaydet</button>
-            </div>
-            <button onclick="openDofModalFromDetail()" style="background:#e0f2fe; color:#0369a1; border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:700; cursor:pointer;">DÖF'e Dönüştür</button>
+        </div>
+        <div class="drawer-actions" style="justify-content: space-between;">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="detail_status_select" style="padding:8px 12px; border:1px solid var(--uc-line); border-radius:8px; font-size:13px; color:var(--uc-text);">
+              <option value="Yeni">Yeni</option>
+              <option value="İnceleniyor">İnceleniyor</option>
+              <option value="Kapatıldı">Kapatıldı</option>
+              <option value="DÖF'e Dönüştürüldü">DÖF'e Dönüştürüldü</option>
+            </select>
+            <button class="btn btn-blue" onclick="saveDetailStatus()">Durumu Kaydet</button>
           </div>
+          <button class="btn btn-secondary" style="background:#e0f2fe; color:#0369a1; border:none;" onclick="openDofModalFromDetail()">DÖF'e Dönüştür</button>
         </div>
       </div>
     </div>
@@ -435,16 +435,16 @@
       async function copyPublicNearMissLink() {
         const link = buildPublicNearMissLink();
         if (!link) {
-          alert('Önce firma seçerek link oluşturun.');
+          showToast('Önce firma seçerek link oluşturun.', 'warning');
           return;
         }
         await navigator.clipboard.writeText(link);
-        alert('Ramak Kala bildirim linki kopyalandı.');
+        showToast('Ramak Kala bildirim linki kopyalandı.', 'warning');
       }
       function openPublicNearMissLink() {
         const link = buildPublicNearMissLink();
         if (!link) {
-          alert('Önce firma seçerek link oluşturun.');
+          showToast('Önce firma seçerek link oluşturun.', 'warning');
           return;
         }
         window.open(link, '_blank');
@@ -453,7 +453,7 @@
         const img = document.getElementById('qr_img');
         const link = buildPublicNearMissLink();
         if (!img || !link) {
-          alert('Önce firma seçerek QR oluşturun.');
+          showToast('Önce firma seçerek QR oluşturun.', 'warning');
           return;
         }
         const a = document.createElement('a');
@@ -496,7 +496,7 @@
         if (!auth) return;
         CURRENT_AUTH = auth;
         if (!CURRENT_AUTH.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
         document.body.style.display = 'block';
@@ -584,7 +584,7 @@
               </td>
               <td style="padding: 12px 16px; font-size: 13px;">
                 <div style="display: flex; gap: 6px;">
-                  <button onclick="openReportDetail('${escapeHtml(r.id)}')" style="background:#f1f5f9; border:1px solid var(--uc-line); border-radius:6px; padding:6px 12px; font-size:11px; cursor:pointer; font-weight:700; color:#475569; transition: opacity 0.15s ease;">Detay</button>
+                  <button class="btn-flat-icon" title="Detay" onclick="openReportDetail('${escapeHtml(r.id)}')">✏️</button>
                   <button onclick="openDofModal('${escapeHtml(r.id)}')" style="background:#e0f2fe; color:#0369a1; border:none; border-radius:6px; padding:6px 12px; font-size:11px; cursor:pointer; font-weight:700; transition: opacity 0.15s ease;">DÖF'e Dönüştür</button>
                 </div>
               </td>
@@ -599,7 +599,7 @@
           .eq('id', id)
           .eq('tenant_id', CURRENT_AUTH.tenant_id);
         if (error) {
-          alert('Durum güncellenemedi: ' + error.message);
+          showToast('Durum güncellenemedi: ' + error.message, 'error');
           return;
         }
         await fetchReports();
@@ -610,7 +610,7 @@
       function openReportDetail(id) {
         const r = getReport(id);
         if (!r) {
-          alert('Bildirim bulunamadı.');
+          showToast('Bildirim bulunamadı.', 'error');
           return;
         }
         SELECTED_REPORT_ID = id;
@@ -625,10 +625,10 @@
         document.getElementById('detail_modal_content').innerHTML =
           `<div class="detail-box"><span>Firma</span><strong>${escapeHtml(comp)}</strong></div><div class="detail-box"><span>Bildiren</span><strong>${escapeHtml(reporter)}</strong></div><div class="detail-box"><span>Olay Tarihi</span><strong>${escapeHtml(r.incident_date || '-')}</strong></div><div class="detail-box"><span>Tehlike Türü</span><strong>${escapeHtml(r.hazard_type || '-')}</strong></div><div class="detail-box"><span>Olay Yeri</span><strong>${escapeHtml(r.incident_location || '-')}</strong></div><div class="detail-box"><span>Dosya</span><strong>${fileHtml}</strong></div><div class="detail-box" style="grid-column:1/-1;"><span>Açıklama</span><strong>${escapeHtml(r.description || '-')}</strong></div><div class="detail-box" style="grid-column:1/-1;"><span>Önerilen Aksiyon</span><strong>${escapeHtml(r.suggested_action || '-')}</strong></div>`;
         document.getElementById('detail_status_select').value = r.status || 'Yeni';
-        document.getElementById('detail_modal').style.display = 'flex';
+        document.getElementById('detail_modal').classList.add('active');
       }
       function closeDetailModal() {
-        document.getElementById('detail_modal').style.display = 'none';
+        document.getElementById('detail_modal').classList.remove('active');
       }
       async function saveDetailStatus() {
         if (!SELECTED_REPORT_ID) return;
@@ -649,7 +649,7 @@
       function openDofModal(id) {
         const r = getReport(id);
         if (!r) {
-          alert('Bildirim bulunamadı.');
+          showToast('Bildirim bulunamadı.', 'error');
           return;
         }
         if (!r.company_id) {
@@ -680,7 +680,7 @@
         const id = document.getElementById('dof_report_id').value;
         const r = getReport(id);
         if (!r) {
-          alert('Bildirim bulunamadı.');
+          showToast('Bildirim bulunamadı.', 'error');
           return;
         }
         const title = document.getElementById('dof_hazard_title').value.trim();
@@ -689,7 +689,7 @@
         const targetDate = document.getElementById('dof_target_date').value || todayString();
         const risk = riskValuesFromLevel(document.getElementById('dof_risk_level').value);
         if (!title || !action) {
-          alert('DÖF başlığı ve aksiyon planı zorunlu.');
+          showToast('DÖF başlığı ve aksiyon planı zorunlu.', 'warning');
           return;
         }
         const btn = document.getElementById('dof_save_btn');
@@ -715,7 +715,7 @@
           ]);
         btn.disabled = false;
         if (error) {
-          alert('DÖF oluşturulamadı: ' + error.message);
+          showToast('DÖF oluşturulamadı: ' + error.message, 'error');
           return;
         }
         await dbClient
@@ -724,7 +724,7 @@
           .eq('id', id)
           .eq('tenant_id', CURRENT_AUTH.tenant_id);
         closeDofModal();
-        alert('DÖF oluşturuldu. Aksiyon Havuzu üzerinden takip edebilirsiniz.');
+        showToast('DÖF oluşturuldu. Aksiyon Havuzu üzerinden takip edebilirsiniz.', 'warning');
         await fetchReports();
       }
     </script>

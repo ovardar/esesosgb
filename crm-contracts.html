@@ -332,9 +332,89 @@
             <p>Aktif ve taslak durumdaki iş sağlığı güvenliği sözleşmelerini yönetin.</p>
           </div>
           <div>
-            <button class="btn btn-primary" onclick="openNewContractDrawer()">
+            <button class="btn btn-primary" onclick="toggleNewContractForm()">
               ➕ Yeni Sözleşme Ekle
             </button>
+          </div>
+        </div>
+
+        <!-- Yeni Sözleşme Inline Form (Gizli/Göster) -->
+        <div id="new_contract_inline_form" style="display:none; margin:20px 24px; padding:20px; background:#f8fafc; border:1px solid var(--uc-line); border-radius:12px;">
+          <h4 style="margin:0 0 16px; font-size:14px; font-weight:700; color:var(--uc-text);">Hızlı Sözleşme Oluştur</h4>
+          <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group-drawer full-width">
+              <label>Müşteri Firma (Fırsat/Cari) *</label>
+              <select id="inl_ct_lead_id" required>
+                <option value="">Firma seçin...</option>
+              </select>
+            </div>
+            <div class="form-group-drawer full-width">
+              <label>Sözleşme Adı *</label>
+              <input type="text" id="inl_ct_name" placeholder="Örn: Merkez Ofis, Şantiye A..." />
+            </div>
+            <div class="form-group-drawer">
+              <label>Sözleşme Durumu</label>
+              <select id="inl_ct_status">
+                <option>Hazırlanıyor</option><option>Müşteriye Gönderildi</option>
+                <option>İmza Bekleniyor</option><option>İmzalandı</option>
+                <option>ISG-Katip Bekleniyor</option><option>Aktif</option><option>İptal</option>
+              </select>
+            </div>
+            <div class="form-group-drawer">
+              <label>Sözleşme Başlangıç</label>
+              <input type="date" id="inl_ct_start" />
+            </div>
+            <div class="form-group-drawer">
+              <label>Sözleşme Bitiş</label>
+              <input type="date" id="inl_ct_end" />
+            </div>
+            <div class="form-group-drawer">
+              <label>Hizmet Başlangıç</label>
+              <input type="date" id="inl_ct_service_start" />
+            </div>
+            <div class="form-group-drawer">
+              <label>Aylık Bedel (₺) *</label>
+              <input type="number" id="inl_ct_fee" step="0.01" placeholder="0.00" />
+            </div>
+            <div class="form-group-drawer">
+              <label>Ödeme Periyodu</label>
+              <select id="inl_ct_payment_period"><option>Aylık</option><option>3 Aylık</option><option>6 Aylık</option><option>Yıllık</option></select>
+            </div>
+            <div class="form-group-drawer">
+              <label>Ödeme Şekli</label>
+              <select id="inl_ct_payment_method"><option>Taksitli</option><option>Nakit</option><option>Elden</option><option>Dönem Başı</option><option>Dönem Sonu</option></select>
+            </div>
+            <div class="form-group-drawer">
+              <label>Fatura Kesilecek Taraf</label>
+              <select id="inl_ct_billing_target"><option>Firmaya</option><option>Bağlı OSGB'ye</option></select>
+            </div>
+            <div class="form-group-drawer">
+              <label>Fatura Günü (1-31)</label>
+              <input type="number" id="inl_ct_invoice_day" min="1" max="31" />
+            </div>
+            <div class="form-group-drawer">
+              <label>Atanacak Uzman</label>
+              <select id="inl_ct_uzman"><option value="">Seçiniz</option></select>
+            </div>
+            <div class="form-group-drawer">
+              <label>Atanacak Hekim</label>
+              <select id="inl_ct_hekim"><option value="">Seçiniz</option></select>
+            </div>
+              <div class="form-group-drawer full-width" style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:500;"><input type="checkbox" id="inl_ct_signed" /> İmzalandı</label>
+              </div>
+              <div class="form-group-drawer full-width">
+                <label>İSG-Katip Sözleşme ID</label>
+                <input type="text" id="inl_ct_katip_id" placeholder="İSG-Katip üzerindeki sözleşme numarası" />
+              </div>
+            <div class="form-group-drawer full-width">
+              <label>Notlar</label>
+              <textarea id="inl_ct_notes" rows="2"></textarea>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+            <button class="btn btn-secondary" onclick="toggleNewContractForm()">İptal</button>
+            <button class="btn btn-primary" onclick="saveInlineContract()">Oluştur</button>
           </div>
         </div>
 
@@ -418,8 +498,12 @@
               <option value="">Firma seçin...</option>
             </select>
           </div>
+          <div class="form-group-drawer" style="margin-top:12px;">
+            <label>Sözleşme Adı *</label>
+            <input type="text" id="drawer_contract_name" placeholder="Örn: Merkez Ofis Sözleşmesi" required />
+          </div>
 
-          <div class="form-grid-2">
+          <div class="form-grid-2" style="margin-top:12px;">
             <!-- Sözleşme No -->
             <div class="form-group-drawer">
               <label>Sözleşme No (Benzersiz)</label>
@@ -519,11 +603,11 @@
               ✍️ Sözleşme İmzalandı
             </label>
             
-            <!-- ISG Katip Done -->
-            <label style="display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:700; cursor:pointer;">
-              <input type="checkbox" id="drawer_isg_katip_done" style="width:18px; height:18px;" />
-              🖥️ ISG-Katip Yapıldı
-            </label>
+            <!-- ISG Katip ID -->
+            <div class="form-group-drawer" style="grid-column: span 2;">
+              <label>İSG-Katip Sözleşme ID</label>
+              <input type="text" id="drawer_katip_id" placeholder="İSG-Katip üzerindeki sözleşme numarası" />
+            </div>
             
             <!-- Status -->
             <div class="form-group-drawer">
@@ -569,6 +653,16 @@
       let allLeads = [];
       let staffList = [];
 
+      function esc(str) {
+        return (str || '')
+          .toString()
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
       document.addEventListener('DOMContentLoaded', async () => {
         const checkAuth = setInterval(async () => {
           if (window.requireAuthAndRole) {
@@ -598,26 +692,58 @@
             .select('id, company_name, danger_class, employee_count')
             .eq('tenant_id', CURRENT_AUTH.tenant_id)
             .order('company_name');
-
+          
           if (error) throw error;
           allLeads = data || [];
-          populateLeadSelect();
+          
+          const selDrawer = document.getElementById('drawer_lead_id');
+          const selInline = document.getElementById('inl_ct_lead_id');
+          if (selDrawer) {
+            selDrawer.innerHTML = '<option value="">Firma seçin...</option>' + 
+              allLeads.map(l => `<option value="${l.id}">${esc(l.company_name)}</option>`).join('');
+          }
+          if (selInline) {
+            selInline.innerHTML = '<option value="">Firma seçin...</option>' + 
+              allLeads.map(l => `<option value="${l.id}">${esc(l.company_name)}</option>`).join('');
+          }
         } catch (err) {
-          console.error('Firmalar yüklenirken hata:', err);
+          console.error('Firmalar yüklenemedi:', err);
         }
       }
 
       async function loadStaff() {
         try {
-          const { data, error } = await dbClient
+          // Tenant veritabanlarinda personel ad kolonu `name_surname` veya `full_name` olabilir.
+          let data = null;
+          let error = null;
+
+          ({ data, error } = await dbClient
             .from('osgb_staff')
-            .select('full_name, access_role')
-            .eq('tenant_id', CURRENT_AUTH.tenant_id)
-            .eq('status', 'Aktif');
+            .select('name_surname, access_role')
+            .eq('tenant_id', CURRENT_AUTH.tenant_id));
+
+          if (error && (error.message || '').toLowerCase().includes('name_surname')) {
+            ({ data, error } = await dbClient
+              .from('osgb_staff')
+              .select('full_name, access_role')
+              .eq('tenant_id', CURRENT_AUTH.tenant_id));
+          }
 
           if (error) throw error;
-          staffList = data || [];
+
+          staffList = (data || []).map(s => ({
+            ...s,
+            full_name: (s.name_surname || s.full_name || '').trim()
+          })).filter(s => !!s.full_name);
+
           populateStaffSelects();
+          
+          const inUzm = document.getElementById('inl_ct_uzman');
+          const inHek = document.getElementById('inl_ct_hekim');
+          let selHtml = '<option value="">Seçiniz...</option>';
+          staffList.forEach(s => { selHtml += `<option value="${s.full_name}">${esc(s.full_name)}</option>`; });
+          if (inUzm) inUzm.innerHTML = selHtml;
+          if (inHek) inHek.innerHTML = selHtml;
         } catch (err) {
           console.error('Personel yüklenirken hata:', err);
         }
@@ -704,7 +830,8 @@
           // 4. ISG-Katip Done
           if (katip !== '') {
             const isKatipMatch = katip === 'true';
-            if (c.isg_katip_done !== isKatipMatch) return false;
+            if (isKatipMatch && !c.isg_katip_id) return false;
+            if (!isKatipMatch && c.isg_katip_id) return false;
           }
 
           return true;
@@ -748,8 +875,8 @@
             ? '<span class="badge badge-green">✍️ İmzalandı</span>' 
             : '<span class="badge badge-gray">⌛ İmzasız</span>';
 
-          const katipBadge = latest.isg_katip_done 
-            ? '<span class="badge badge-green">🖥️ Katip Aktif</span>' 
+          const katipBadge = latest.isg_katip_id 
+            ? `<span class="badge badge-green" title="ID: ${esc(latest.isg_katip_id)}">🖥️ Katip Aktif</span>` 
             : '<span class="badge badge-gray">⏳ Katip Yok</span>';
 
           const statusBadge = getStatusBadge(latest.status);
@@ -763,7 +890,7 @@
               <td onclick="toggleVersionHistory('${cNo}', event)" style="text-align:center; font-size:16px; color:var(--uc-primary); font-weight:800; cursor:pointer;">
                 <span id="arrow_${cNo}">${hasHistory ? '▸' : '•'}</span>
               </td>
-              <td><strong>${latest.contract_no}</strong><br>${versionToggleHtml}</td>
+              <td><strong>${esc(latest.contract_name || 'İsimsiz Sözleşme')}</strong><br><span style="font-size:11px;color:#64748b;">${latest.contract_no}</span><br>${versionToggleHtml}</td>
               <td><strong>${companyName}</strong></td>
               <td style="font-size:12px; color:#475569;">${datesStr}</td>
               <td style="font-weight:700;">${feeStr}</td>
@@ -780,7 +907,7 @@
             <tr class="version-history-subrow" id="history_${cNo}">
               <td colspan="8">
                 <div class="version-history-box">
-                  <h4>Sözleşme Sürüm Geçmişi (${cNo})</h4>
+                  <h4>Sözleşme Sürüm Geçmişi: ${esc(latest.contract_name || 'İsimsiz')} (${cNo})</h4>
                   <table class="sub-contracts-table">
                     <thead>
                       <tr>
@@ -803,7 +930,7 @@
                           <td style="font-size:11px;">👤 Uzm: ${sub.assigned_uzman||'-'}<br>🩺 Hek: ${sub.assigned_hekim||'-'}</td>
                           <td>
                             ${sub.is_signed ? '✅ İmzalandı' : '❌ İmzasız'}<br>
-                            ${sub.isg_katip_done ? '✅ Katip Ok' : '❌ Katip Yok'}
+                            ${sub.isg_katip_id ? '✅ Katip Ok ('+esc(sub.isg_katip_id)+')' : '❌ Katip Yok'}
                           </td>
                           <td>${getStatusBadge(sub.status)}</td>
                           <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${sub.notes||''}">${sub.notes||'-'}</td>
@@ -852,34 +979,76 @@
       }
 
       // DRAWERS CONTROL
-      function openNewContractDrawer() {
-        document.getElementById('drawer_title').innerText = 'Yeni Sözleşme Oluştur';
-        document.getElementById('edit_contract_id').value = '';
-        document.getElementById('drawer_lead_id').disabled = false;
-        
-        // Reset fields
-        document.getElementById('drawer_lead_id').value = '';
-        document.getElementById('drawer_contract_no').value = ''; // Auto-generate on save if left empty
-        document.getElementById('drawer_version').value = '1';
-        document.getElementById('drawer_start_date').value = '';
-        document.getElementById('drawer_end_date').value = '';
-        document.getElementById('drawer_service_start_date').value = '';
-        document.getElementById('drawer_monthly_fee').value = '';
-        document.getElementById('drawer_payment_period').value = 'Aylık';
-        document.getElementById('drawer_payment_method').value = 'Taksitli';
-        document.getElementById('drawer_billing_target').value = 'Firmaya';
-        document.getElementById('drawer_invoice_day').value = '5';
-        document.getElementById('drawer_assigned_uzman').value = '';
-        document.getElementById('drawer_assigned_hekim').value = '';
-        document.getElementById('drawer_is_signed').checked = false;
-        document.getElementById('drawer_isg_katip_done').checked = false;
-        document.getElementById('drawer_status').value = 'Hazırlanıyor';
-        document.getElementById('drawer_notes').value = '';
-        document.getElementById('drawer_file_url').value = '';
+      function toggleNewContractForm() {
+        const form = document.getElementById('new_contract_inline_form');
+        if (form.style.display === 'none' || !form.style.display) {
+          form.style.display = 'block';
+          // reset fields
+          document.getElementById('inl_ct_lead_id').value = '';
+          document.getElementById('inl_ct_name').value = '';
+          document.getElementById('inl_ct_status').value = 'Hazırlanıyor';
+          document.getElementById('inl_ct_start').value = '';
+          document.getElementById('inl_ct_end').value = '';
+          document.getElementById('inl_ct_service_start').value = '';
+          document.getElementById('inl_ct_fee').value = '';
+          document.getElementById('inl_ct_payment_period').value = 'Aylık';
+          document.getElementById('inl_ct_payment_method').value = 'Taksitli';
+          document.getElementById('inl_ct_billing_target').value = 'Firmaya';
+          document.getElementById('inl_ct_invoice_day').value = '';
+          document.getElementById('inl_ct_uzman').value = '';
+          document.getElementById('inl_ct_hekim').value = '';
+          document.getElementById('inl_ct_signed').checked = false;
+          document.getElementById('inl_ct_katip_id').value = '';
+          document.getElementById('inl_ct_notes').value = '';
+        } else {
+          form.style.display = 'none';
+        }
+      }
 
-        const backdrop = document.getElementById('contract_drawer');
-        backdrop.style.display = 'flex';
-        setTimeout(() => backdrop.classList.add('active'), 10);
+      async function saveInlineContract() {
+        const leadId = document.getElementById('inl_ct_lead_id').value;
+        const nameVal = document.getElementById('inl_ct_name').value.trim();
+        const feeVal = document.getElementById('inl_ct_fee').value;
+        
+        if (!leadId || !nameVal || !feeVal) {
+          showToast('Firma, Sözleşme Adı ve Aylık Bedel zorunludur.', 'error');
+          return;
+        }
+        
+        const y = new Date().getFullYear();
+        const r = String(Math.floor(Math.random() * 9000) + 1000);
+        const contractNo = `SOZ-${y}-${r}`;
+
+        const row = {
+          tenant_id: CURRENT_AUTH.tenant_id,
+          lead_id: leadId,
+          contract_name: nameVal,
+          contract_no: contractNo,
+          version: 1,
+          status: document.getElementById('inl_ct_status').value,
+          start_date: document.getElementById('inl_ct_start').value || null,
+          end_date: document.getElementById('inl_ct_end').value || null,
+          service_start_date: document.getElementById('inl_ct_service_start').value || null,
+          monthly_fee: parseFloat(feeVal) || 0,
+          payment_period: document.getElementById('inl_ct_payment_period').value,
+          payment_method: document.getElementById('inl_ct_payment_method').value,
+          billing_target: document.getElementById('inl_ct_billing_target').value,
+          invoice_day: document.getElementById('inl_ct_invoice_day').value ? parseInt(document.getElementById('inl_ct_invoice_day').value) : null,
+          assigned_uzman: document.getElementById('inl_ct_uzman').value || null,
+          assigned_hekim: document.getElementById('inl_ct_hekim').value || null,
+          is_signed: document.getElementById('inl_ct_signed').checked,
+          isg_katip_id: document.getElementById('inl_ct_katip_id').value.trim() || null,
+          notes: document.getElementById('inl_ct_notes').value || null
+        };
+
+        const { error } = await dbClient.from('crm_contracts').insert([row]);
+        if (error) {
+          showToast('Hata: ' + error.message, 'error');
+        } else {
+          showToast('Yeni sözleşme oluşturuldu!', 'success');
+          toggleNewContractForm();
+          await loadContracts(); // Reloads table
+        }
       }
 
       async function openEditContractDrawer(contractId) {
@@ -893,6 +1062,7 @@
         document.getElementById('edit_contract_id').value = contract.id;
         document.getElementById('drawer_lead_id').value = contract.lead_id || '';
         document.getElementById('drawer_lead_id').disabled = true; // Kilitli
+        document.getElementById('drawer_contract_name').value = contract.contract_name || '';
         document.getElementById('drawer_contract_no').value = contract.contract_no || '';
         document.getElementById('drawer_version').value = contract.version || '1';
         document.getElementById('drawer_start_date').value = contract.start_date || '';
@@ -906,14 +1076,23 @@
         document.getElementById('drawer_assigned_uzman').value = contract.assigned_uzman || '';
         document.getElementById('drawer_assigned_hekim').value = contract.assigned_hekim || '';
         document.getElementById('drawer_is_signed').checked = !!contract.is_signed;
-        document.getElementById('drawer_isg_katip_done').checked = !!contract.isg_katip_done;
+        document.getElementById('drawer_katip_id').value = contract.isg_katip_id || '';
         document.getElementById('drawer_status').value = contract.status || 'Hazırlanıyor';
         document.getElementById('drawer_notes').value = contract.notes || '';
         document.getElementById('drawer_file_url').value = contract.file_url || '';
 
         const backdrop = document.getElementById('contract_drawer');
         backdrop.style.display = 'flex';
-        setTimeout(() => backdrop.classList.add('active'), 10);
+        setTimeout(() => {
+          backdrop.classList.add('active');
+          // Prevent auto-focusing on inputs by focusing the title
+          const title = document.getElementById('drawer_title');
+          if (title) {
+            title.setAttribute('tabindex', '-1');
+            title.style.outline = 'none';
+            title.focus();
+          }
+        }, 10);
       }
 
       function createNewVersion(baseContractId) {
@@ -930,6 +1109,7 @@
         document.getElementById('drawer_title').innerText = `${contract.contract_no} İçin Yeni Sürüm Ekle`;
         document.getElementById('drawer_lead_id').value = contract.lead_id || '';
         document.getElementById('drawer_lead_id').disabled = true;
+        document.getElementById('drawer_contract_name').value = contract.contract_name || '';
         document.getElementById('drawer_contract_no').value = contract.contract_no;
         // Bir sonraki versiyonu hesapla
         const versions = allContracts.filter(c => c.contract_no === contract.contract_no).map(c => c.version);
@@ -976,6 +1156,7 @@
         const payload = {
           tenant_id: CURRENT_AUTH.tenant_id,
           lead_id: leadId,
+          contract_name: document.getElementById('drawer_contract_name').value.trim() || null,
           version: parseInt(document.getElementById('drawer_version').value) || 1,
           start_date: document.getElementById('drawer_start_date').value || null,
           end_date: document.getElementById('drawer_end_date').value || null,
@@ -988,7 +1169,7 @@
           assigned_uzman: document.getElementById('drawer_assigned_uzman').value || null,
           assigned_hekim: document.getElementById('drawer_assigned_hekim').value || null,
           is_signed: document.getElementById('drawer_is_signed').checked,
-          isg_katip_done: document.getElementById('drawer_isg_katip_done').checked,
+          isg_katip_id: document.getElementById('drawer_katip_id').value.trim() || null,
           status: document.getElementById('drawer_status').value,
           notes: document.getElementById('drawer_notes').value || null,
           file_url: document.getElementById('drawer_file_url').value || null

@@ -213,7 +213,7 @@
           container.innerHTML += `
             <label class="checklist-label ${isChecked ? 'is-checked' : ''}" id="lbl_doc_${idx}">
               <span class="index-no">${idx + 1}.</span>
-              <input type="checkbox" class="checklist-item-checkbox" data-doc="${escapeHtml(doc)}" data-idx="${idx}" ${isChecked ? 'checked' : ''} onchange="handleCheckboxChange(this)" />
+              <input type="checkbox" data-doc="${escapeHtml(doc)}" data-idx="${idx}" ${isChecked ? 'checked' : ''} onchange="handleCheckboxChange(this)" />
               <span class="doc-name">${escapeHtml(doc)}</span>
             </label>
           `;
@@ -291,7 +291,7 @@
             statusEl.style.color = 'red';
             statusEl.innerText = '❌ Hata: ' + err.message;
           }
-          alert('Hata: Belge listesi kaydedilemedi. SQL Editor üzerinden upgrade_document_checklist.sql dosyasındaki komutun çalıştırıldığından emin olun.');
+          showToast('Hata: Belge listesi kaydedilemedi. SQL Editor üzerinden upgrade_document_checklist.sql dosyasındaki komutun çalıştırıldığından emin olun.', 'error');
         }
       }
 
@@ -390,7 +390,7 @@
 
       async function fetchCompanyProfile(id) {
         if (!CURRENT_AUTH || !CURRENT_AUTH.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           window.location.href = 'index.html';
           return false;
         }
@@ -403,13 +403,13 @@
           .maybeSingle();
 
         if (error) {
-          alert('Firma bilgisi okunamadı: ' + error.message);
+          showToast('Firma bilgisi okunamadı: ' + error.message, 'error');
           window.location.href = 'index.html';
           return false;
         }
 
         if (!data) {
-          alert('Bu firma bu tenant altında bulunamadı veya erişim yetkiniz yok.');
+          showToast('Bu firma bu tenant altında bulunamadı veya erişim yetkiniz yok.', 'error');
           window.location.href = 'index.html';
           return false;
         }
@@ -550,7 +550,7 @@
             kas: m.kas_secure,
             decision: m.final_decision
           };
-          tbody.innerHTML += `<tr><td><strong>${escapeHtml(m.worker_name || 'İsimsiz')}</strong><br><small>${escapeHtml(m.worker_age || '-')} Yaş / ${escapeHtml(m.worker_gender || '-')}</small></td><td><span style="font-size:11px; font-weight:bold; color:#1e40af;">${escapeHtml(m.final_decision || '-')}</span></td><td><button class="pdf-btn" onclick="generateEk2PDFFromPayload('${payloadId}')">📄 Ek-2 PDF</button></td></tr>`;
+          tbody.innerHTML += `<tr><td><strong>${escapeHtml(m.worker_name || 'İsimsiz')}</strong><br><small>${escapeHtml(m.worker_age || '-')} Yaş / ${escapeHtml(m.worker_gender || '-')}</small></td><td><span style="font-size:11px; font-weight:bold; color:#1e40af;">${escapeHtml(m.final_decision || '-')}</span></td><td><button class="btn-secondary-premium" style="font-size: 12px; padding: 6px 12px;" onclick="generateEk2PDFFromPayload('${payloadId}')">📄 Ek-2 PDF</button></td></tr>`;
         });
       }
 

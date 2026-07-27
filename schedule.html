@@ -13,7 +13,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css?v=4" />
     <link rel="stylesheet" href="css/theme-ultra-clean-schedule.css" />
     <script defer src="js/supabase-config.js"></script>
     <script defer src="js/navigation.js"></script>
@@ -42,7 +42,7 @@
             <p>Planlanan ve gerçekleşen saha ziyaretlerini yönetin, hedefleri takip edin.</p>
           </div>
           <div style="display:flex;gap:12px;align-items:center;">
-            <div class="view-toggle-container" style="display: none;">
+            <div class="view-toggle-container">
               <button class="view-toggle-btn active" id="toggle_calendar">Takvim</button>
               <button class="view-toggle-btn" id="toggle_list_view">Liste</button>
             </div>
@@ -175,17 +175,37 @@
           <div class="calendar-weekdays" id="calendar_weekdays"></div>
           <div class="calendar-grid" id="calendar_grid_body"></div>
         </div>
+        </div>
+        
+        <!-- Liste Alanı -->
+        <div class="stat-card-premium" id="list_view_container" style="display: none; padding: 20px;">
+          <table class="data-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--uc-border);">
+                <th style="padding: 12px 8px; font-weight: 700;">Tarih</th>
+                <th style="padding: 12px 8px; font-weight: 700;">Firma</th>
+                <th style="padding: 12px 8px; font-weight: 700;">Personel</th>
+                <th style="padding: 12px 8px; font-weight: 700;">Süre</th>
+                <th style="padding: 12px 8px; font-weight: 700;">Durum</th>
+                <th style="padding: 12px 8px; font-weight: 700;">Notlar</th>
+                <th style="padding: 12px 8px; font-weight: 700; width: 60px;">Aksiyon</th>
+              </tr>
+            </thead>
+            <tbody id="list_view_tbody">
+            </tbody>
+          </table>
+        </div>
       </div><!-- /schedule-page-shell -->
     </div><!-- /card -->
 
-    <!-- Düzenleme Modalı -->
-    <div class="modal-backdrop-premium" id="task_modal_backdrop">
-      <div class="modal-card-premium">
-        <div class="modal-header-premium">
-          <h3 id="modal_title">📝 Planı Düzenle</h3>
-          <button class="modal-close-btn" id="modal_close_btn">&times;</button>
+    <!-- Düzenleme Çekmecesi -->
+    <div class="drawer-backdrop" id="task_modal_backdrop">
+      <div class="drawer-card">
+        <div class="drawer-head">
+          <h3 id="modal_title" style="margin:0; font-size:18px; font-weight:800; color:var(--uc-text);">📝 Planı Düzenle</h3>
+          <button class="btn-flat-icon" id="modal_close_btn" style="font-size:18px;">&times;</button>
         </div>
-        <div class="modal-body-premium">
+        <div class="drawer-body">
           <input type="hidden" id="modal_task_id" />
           <div class="modal-grid-premium">
             <div class="form-group-premium full-width">
@@ -218,10 +238,10 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer-premium">
-          <button class="btn-secondary-premium" id="btn_delete">Sil</button>
-          <button class="btn-secondary-premium" id="btn_close">Kapat</button>
-          <button class="btn-add-lead-btn" id="btn_update">Kaydet</button>
+        <div class="drawer-actions">
+          <button class="btn btn-secondary" id="btn_delete" style="color: #ef4444; border-color: #fca5a5;">Sil</button>
+          <button class="btn btn-secondary" id="btn_close">Kapat</button>
+          <button class="btn btn-blue" id="btn_update">Kaydet</button>
         </div>
       </div>
     </div>
@@ -286,7 +306,7 @@
         };
         localStorage.setItem(TARGETS_STORAGE_KEY, JSON.stringify(targets));
 
-        alert('Hedef ziyaret sayıları başarıyla güncellendi.');
+        showToast('Hedef ziyaret sayıları başarıyla güncellendi.', 'success');
         renderCalendarWithTasks();
       }
 
@@ -316,7 +336,7 @@
         currentAuth = auth;
 
         if (!currentAuth.tenant_id) {
-          alert('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen Personel Yönetimi kaydını kontrol edin.');
+          showToast('Bu kullanıcı herhangi bir tenant ile ilişkilendirilmemiş. Lütfen Personel Yönetimi kaydını kontrol edin.', 'warning');
           await dbClient.auth.signOut();
           window.location.href = 'login.html';
           return;
@@ -430,6 +450,9 @@
 
         document.getElementById('lbl_month_year').innerText = `${MONTH_NAMES[month]} ${year}`;
         grid.innerHTML = '';
+        
+        const listTbody = document.getElementById('list_view_tbody');
+        if (listTbody) listTbody.innerHTML = '';
 
         const weekdaysContainer = document.getElementById('calendar_weekdays');
         if (weekdaysContainer) {
@@ -565,6 +588,54 @@
 
           grid.innerHTML += `<div class="calendar-cell"><div class="day-number">${day}</div><div class="task-list">${taskHTML}</div></div>`;
         }
+        
+        // Liste Görünümünü Doldur
+        if (listTbody && schedules) {
+          const monthlyForList = schedules.filter((s) => {
+            const d = new Date(s.visit_date);
+            return d.getFullYear() === year && d.getMonth() === month;
+          });
+
+          // Tarihe göre sırala
+          const sortedSchedules = [...monthlyForList].sort((a, b) => new Date(a.visit_date) - new Date(b.visit_date));
+          
+          let listHtml = '';
+          if (sortedSchedules.length === 0) {
+            listHtml = `<tr><td colspan="7" style="text-align:center; padding:16px; color:var(--text-muted);">Bu ay için ziyaret kaydı bulunamadı.</td></tr>`;
+          } else {
+            sortedSchedules.forEach(task => {
+              const companyName = task.customer_companies && task.customer_companies.company_name ? task.customer_companies.company_name : 'Firma';
+              const assignedSafe = (task.assigned_staff || '').replace(/'/g, "\\'");
+              const { status, cleanNotes } = parseVisitStatus(task.notes);
+              const noteSafe = cleanNotes.replace(/'/g, "\\'").replace(/\n/g, ' ');
+              
+              let statusLabel = 'Planlandı';
+              let badgeStyle = 'background: #eff6ff; color: #3b82f6;';
+              if (status === 'completed') {
+                statusLabel = 'Gerçekleşti';
+                badgeStyle = 'background: #f0fdf4; color: #22c55e;';
+              } else if (status === 'cancelled') {
+                statusLabel = 'İptal Edildi';
+                badgeStyle = 'background: #fef2f2; color: #ef4444;';
+              }
+              
+              listHtml += `
+                <tr style="border-bottom: 1px solid var(--uc-border);">
+                  <td style="padding: 12px 8px;">${task.visit_date}</td>
+                  <td style="padding: 12px 8px;"><strong>${companyName}</strong></td>
+                  <td style="padding: 12px 8px;">${task.assigned_staff || '-'}</td>
+                  <td style="padding: 12px 8px;">${task.planned_minutes} dk</td>
+                  <td style="padding: 12px 8px;"><span style="padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; ${badgeStyle}">${statusLabel}</span></td>
+                  <td style="padding: 12px 8px;">${cleanNotes || '-'}</td>
+                  <td style="padding: 12px 8px;">
+                    <button class="btn-flat-icon" title="Düzenle" onclick="openModal('${task.id}', '${task.visit_date}', '${task.planned_minutes}', '${assignedSafe}', '${noteSafe}', '${task.company_id}')">✏️</button>
+                  </td>
+                </tr>
+              `;
+            });
+          }
+          listTbody.innerHTML = listHtml;
+        }
       }
 
       function openModal(id, date, minutes, staff, notes, companyId) {
@@ -579,7 +650,7 @@
         document.getElementById('modal_visit_status').value = status;
         document.getElementById('modal_visit_notes').value = cleanNotes;
         
-        document.getElementById('task_modal_backdrop').classList.add('open');
+        document.getElementById('task_modal_backdrop').classList.add('active');
       }
 
       document.addEventListener('click', function (e) {
@@ -600,8 +671,23 @@
       document.getElementById('modal_close_btn').addEventListener('click', closeModal);
       
       function closeModal() {
-        document.getElementById('task_modal_backdrop').classList.remove('open');
+        document.getElementById('task_modal_backdrop').classList.remove('active');
       }
+
+      // View Toggle Logic
+      document.getElementById('toggle_calendar').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('toggle_list_view').classList.remove('active');
+        document.querySelector('.calendar-container').style.display = 'block';
+        document.getElementById('list_view_container').style.display = 'none';
+      });
+
+      document.getElementById('toggle_list_view').addEventListener('click', function() {
+        this.classList.add('active');
+        document.getElementById('toggle_calendar').classList.remove('active');
+        document.querySelector('.calendar-container').style.display = 'none';
+        document.getElementById('list_view_container').style.display = 'block';
+      });
 
       function toggleNewVisitForm() {
         const panel = document.getElementById('visit_form_panel');
@@ -634,7 +720,7 @@
         const id = document.getElementById('modal_task_id').value;
 
         if (!currentAuth || !currentAuth.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
 
@@ -647,9 +733,9 @@
         
         const finalNotes = formatVisitNotesWithStatus(rawNotes, newStatus);
 
-        if (!newCompany) { alert('Lütfen firma seçin.'); return; }
-        if (!newDate) { alert('Lütfen tarih seçin.'); return; }
-        if (!newMins || newMins <= 0) { alert('Lütfen geçerli bir süre girin.'); return; }
+        if (!newCompany) { showToast('Lütfen firma seçin.', 'warning'); return; }
+        if (!newDate) { showToast('Lütfen tarih seçin.', 'warning'); return; }
+        if (!newMins || newMins <= 0) { showToast('Lütfen geçerli bir süre girin.', 'warning'); return; }
 
         let error;
         if (id) {
@@ -682,7 +768,7 @@
         }
 
         if (error) {
-          alert('Ziyaret planı kaydedilemedi: ' + error.message);
+          showToast('Ziyaret planı kaydedilemedi: ' + error.message, 'error');
           return;
         }
 
@@ -694,7 +780,7 @@
         if (!confirm('Silinsin mi?')) return;
 
         if (!currentAuth || !currentAuth.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
 
@@ -719,12 +805,12 @@
         const finalNotes = formatVisitNotesWithStatus(rawNotes, status);
 
         if (!currentAuth || !currentAuth.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
 
         if (!compId || !staff || !date || !mins) {
-          alert('Lütfen form alanlarını doldurun!');
+          showToast('Lütfen form alanlarını doldurun!', 'warning');
           return;
         }
 
@@ -736,7 +822,7 @@
           .maybeSingle();
 
         if (companyCheckError || !companyCheck) {
-          alert('Seçilen firma bu tenant altında bulunamadı.');
+          showToast('Seçilen firma bu tenant altında bulunamadı.', 'error');
           return;
         }
 
@@ -752,7 +838,7 @@
         ]);
 
         if (error) {
-          alert('Ziyaret planı kaydedilemedi: ' + error.message);
+          showToast('Ziyaret planı kaydedilemedi: ' + error.message, 'error');
           return;
         }
 

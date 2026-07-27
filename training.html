@@ -399,13 +399,13 @@
     </div>
 
     <!-- 🔍 EĞİTİM DOSYASI DETAY MODALI -->
-    <div class="modal-backdrop-premium" id="detail_modal">
-      <div class="modal-card-premium" style="max-width: 800px;">
-        <div class="modal-header-premium">
-          <h3>🔍 Eğitim Dosyası Detayı</h3>
-          <button class="modal-close-btn" onclick="closeDetailModal()">&times;</button>
+    <div class="drawer-backdrop" id="detail_modal">
+      <div class="drawer-card" style="max-width: 800px;">
+        <div class="drawer-head">
+          <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--uc-text);">🔍 Eğitim Dosyası Detayı</h3>
+          <button class="btn-flat-icon" onclick="closeDetailModal()" style="font-size:18px;">&times;</button>
         </div>
-        <div class="modal-body-premium">
+        <div class="drawer-body">
           <div id="detail_summary" class="detail-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 14px; border-radius: 10px;"></div>
           
           <h4 style="margin: 18px 0 8px; font-size: 14px; font-weight: 800; color: var(--uc-text);">Aktif Dönem Oturum Geçmişi</h4>
@@ -444,11 +444,10 @@
               </tbody>
             </table>
           </div>
-
-          <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button class="btn btn-secondary" onclick="printDetailModal()" style="border-radius: 8px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--uc-line); background: #fff;">🖨️ Yazdır</button>
-            <button class="btn btn-purple" onclick="openSessionModalFromDetail()" style="border-radius: 8px; padding: 10px 16px; background: #7c3aed; color: #fff; border: none; cursor: pointer; font-weight: 700;">➕ Katılım Ekle</button>
-          </div>
+        </div>
+        <div class="drawer-actions">
+          <button class="btn btn-secondary" onclick="printDetailModal()">🖨️ Yazdır</button>
+          <button class="btn btn-purple" onclick="openSessionModalFromDetail()">➕ Katılım Ekle</button>
         </div>
       </div>
     </div>
@@ -578,7 +577,7 @@
         if (!auth) return;
         CURRENT_AUTH = auth;
         if (!CURRENT_AUTH.tenant_id) {
-          alert('Tenant bilgisi bulunamadı.');
+          showToast('Tenant bilgisi bulunamadı.', 'error');
           return;
         }
         document.body.style.display = 'block';
@@ -920,7 +919,7 @@
               <td style="padding: 12px; vertical-align: middle;">
                 <div class="action-stack">
                   <button class="btn btn-purple btn-small" onclick="openSessionModal('${escapeHtml(r.id)}')">Katılım Ekle</button>
-                  <button class="btn btn-secondary btn-small" onclick="openDetailModal('${escapeHtml(r.id)}')">Detay</button>
+                  <button class="btn-flat-icon" title="Detay" onclick="openDetailModal('${escapeHtml(r.id)}')">✏️</button>
                   ${actionHtml}
                 </div>
               </td>
@@ -949,7 +948,7 @@
       function openSessionModal(id) {
         const r = getCompletion(id);
         if (!r) {
-          alert('Eğitim dosyası bulunamadı.');
+          showToast('Eğitim dosyası bulunamadı.', 'error');
           return;
         }
         document.getElementById('session_completion_id').value = id;
@@ -990,13 +989,13 @@
           closeSessionModal();
           await fetchTrainingData();
         } catch (err) {
-          alert('Hata: ' + (err.message || err));
+          showToast('Hata: ' + (err.message || err), 'error');
         }
       }
       function openDetailModal(id) {
         const r = getCompletion(id);
         if (!r) {
-          alert('Eğitim dosyası bulunamadı.');
+          showToast('Eğitim dosyası bulunamadı.', 'error');
           return;
         }
         SELECTED_DETAIL_ID = id;
@@ -1012,7 +1011,7 @@
           });
         }
         renderCycleHistory(r);
-        document.getElementById('detail_modal').style.display = 'flex';
+        document.getElementById('detail_modal').classList.add('active');
       }
       function renderCycleHistory(row) {
         const tbody = document.getElementById('cycle_history_tbody');
@@ -1044,7 +1043,7 @@
         });
       }
       function closeDetailModal() {
-        document.getElementById('detail_modal').style.display = 'none';
+        document.getElementById('detail_modal').classList.remove('active');
       }
       function openSessionModalFromDetail() {
         if (!SELECTED_DETAIL_ID) return;
@@ -1060,11 +1059,11 @@
       async function copyVerifyLink(id) {
         const r = getCompletion(id);
         if (!r || completionStatus(r) !== 'Tamamlandı' || !r.verification_code) {
-          alert('Bu eğitim henüz tamamlanmadığı için doğrulama linki yok.');
+          showToast('Bu eğitim henüz tamamlanmadığı için doğrulama linki yok.', 'success');
           return;
         }
         await navigator.clipboard.writeText(verifyUrl(r));
-        alert('Doğrulama linki kopyalandı.');
+        showToast('Doğrulama linki kopyalandı.', 'warning');
       }
       function htmlEscapeForPrint(value) {
         return escapeHtml(value).replace(/\n/g, '<br>');
@@ -1083,18 +1082,18 @@
       function generateCertificatePdf(id) {
         const r = getCompletion(id);
         if (!r) {
-          alert('Kayıt bulunamadı.');
+          showToast('Kayıt bulunamadı.', 'error');
           return;
         }
         if (completionStatus(r) !== 'Tamamlandı') {
-          alert('Zorunlu süre tamamlanmadan sertifika oluşturulamaz.');
+          showToast('Zorunlu süre tamamlanmadan sertifika oluşturulamaz.', 'success');
           return;
         }
         const popupFeatures =
           'width=920,height=760,left=120,top=80,menubar=no,toolbar=no,location=no,status=no,scrollbars=yes,resizable=yes';
         const win = window.open('', 'trainingCertificatePopup', popupFeatures);
         if (!win) {
-          alert('Sertifika penceresi açılamadı. Tarayıcı pop-up engelini kontrol edin.');
+          showToast('Sertifika penceresi açılamadı. Tarayıcı pop-up engelini kontrol edin.', 'error');
           return;
         }
         win.document.open();
@@ -1105,11 +1104,11 @@
       async function startRenewalCycle(id) {
         const r = getCompletion(id);
         if (!r) {
-          alert('Eğitim dosyası bulunamadı.');
+          showToast('Eğitim dosyası bulunamadı.', 'error');
           return;
         }
         if (completionStatus(r) !== 'Tamamlandı') {
-          alert('Yenileme sadece tamamlanmış eğitimler için başlatılabilir.');
+          showToast('Yenileme sadece tamamlanmış eğitimler için başlatılabilir.', 'success');
           return;
         }
         if (
@@ -1155,10 +1154,10 @@
              .eq('tenant_id', CURRENT_AUTH.tenant_id)
              .eq('id', r.id);
           if (error) throw error;
-          alert('Yenileme dönemi başlatıldı. Bu satır artık yeni dönem için 0 saat olarak takip edilecek.');
+          showToast('Yenileme dönemi başlatıldı. Bu satır artık yeni dönem için 0 saat olarak takip edilecek.', 'warning');
           await fetchTrainingData();
         } catch (err) {
-          alert('Yenileme başlatılamadı: ' + (err.message || err));
+          showToast('Yenileme başlatılamadı: ' + (err.message || err, 'error'));
         }
       }
     </script>

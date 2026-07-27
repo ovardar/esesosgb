@@ -34,7 +34,7 @@ window.onload = async function () {
   CURRENT_AUTH = auth;
   
   if (CURRENT_AUTH.role !== 'admin' && CURRENT_AUTH.role !== 'super_admin') {
-    alert('Bu sayfaya sadece firma yöneticileri (admin) erişebilir.');
+    showToast('Bu sayfaya sadece firma yöneticileri (admin) erişebilir.', 'warning');
     window.location.href = 'dashboard.html';
     return;
   }
@@ -91,11 +91,11 @@ async function loadRolesAndPermissions() {
     renderMatris();
   } catch (err) {
     console.error('Veri yükleme hatası:', err);
-    alert('Yetkiler yüklenirken bir hata oluştu.');
+    showToast('Yetkiler yüklenirken bir hata oluştu.', 'error');
   }
 }
 
-function getFallbackPermission(role, page, type) {
+function getFallbackPermission(role, page) {
   // Veritabanında kayıt yoksa default sert kodlu izinleri ver
   if (role === 'uzman') {
     const uzmanPages = ['risk', 'accidents', 'near_miss', 'training', 'ppe', 'periodic', 'actions', 'company', 'workers', 'schedule', 'defter', 'kurul'];
@@ -152,8 +152,8 @@ function renderMatris() {
       const key = role.key + '_' + mod.id;
       const saved = PERMISSIONS_MAP[key];
       
-      const canView = saved ? saved.can_view : getFallbackPermission(role.key, mod.id, 'view');
-      const canAction = saved ? saved.can_action : getFallbackPermission(role.key, mod.id, 'action');
+      const canView = saved ? saved.can_view : getFallbackPermission(role.key, mod.id);
+      const canAction = saved ? saved.can_action : getFallbackPermission(role.key, mod.id);
 
       bodyHtml += `
         <td class="role-cell">
@@ -192,32 +192,32 @@ function slugify(text) {
     .replace(/_+/g, '_');
 }
 
-async function addNewRole() {
+window.addNewRole = async function () {
   const input = document.getElementById('new_role_name');
   if (!input) return;
 
   const roleName = input.value.trim();
   if (!roleName) {
-    alert('Lütfen bir rol adı girin.');
+    showToast('Lütfen bir rol adı girin.', 'warning');
     return;
   }
 
   const roleKey = slugify(roleName);
   if (!roleKey) {
-    alert('Geçersiz rol adı.');
+    showToast('Geçersiz rol adı.', 'warning');
     return;
   }
 
   // Sistem rollerinin key'leri ile çakışma kontrolü
   const systemKeys = ['super_admin', 'admin', 'sales', 'uzman', 'hekim', 'dsp', 'firma_yetkilisi'];
   if (systemKeys.includes(roleKey)) {
-    alert('Bu isimde bir sistem rolü zaten mevcut.');
+    showToast('Bu isimde bir sistem rolü zaten mevcut.', 'warning');
     return;
   }
 
   // Listede zaten var mı kontrolü
   if (ROLES_LIST.some(r => r.key === roleKey)) {
-    alert('Bu rol zaten eklenmiş.');
+    showToast('Bu rol zaten eklenmiş.', 'warning');
     return;
   }
 
@@ -232,20 +232,20 @@ async function addNewRole() {
       }]);
 
     if (error) {
-      alert('Rol eklenirken hata oluştu: ' + error.message);
+      showToast('Rol eklenirken hata oluştu: ' + error.message, 'error');
       return;
     }
 
     input.value = '';
-    alert('Rol başarıyla eklendi.');
+    showToast('Rol başarıyla eklendi.', 'success');
     await loadRolesAndPermissions();
   } catch (err) {
     console.error('Rol ekleme hatası:', err);
-    alert('Bir hata oluştu.');
+    showToast('Bir hata oluştu.', 'error');
   }
-}
+};
 
-async function savePermissions() {
+window.savePermissions = async function () {
   if (!dbClient || !CURRENT_AUTH) return;
 
   const tenantId = CURRENT_AUTH.tenant_id;
@@ -288,13 +288,13 @@ async function savePermissions() {
       .upsert(payload, { onConflict: 'tenant_id,role,page' });
 
     if (error) {
-      alert('Yetkiler kaydedilirken hata oluştu: ' + error.message);
+      showToast('Yetkiler kaydedilirken hata oluştu: ' + error.message, 'error');
       return;
     }
 
     // LocalStorage veya session tabanlı navigasyon önbelleğini temizleyelim (varsa)
     // Böylece sayfa yenilendiğinde yeni yetkiler anında yansır.
-    alert('Yetkiler başarıyla kaydedildi.');
+    showToast('Yetkiler başarıyla kaydedildi.', 'success');
     await loadRolesAndPermissions();
     
     // Navigasyon menüsünü anlık güncellemek için nav fonksiyonunu tekrar tetikleyebiliriz
@@ -303,9 +303,9 @@ async function savePermissions() {
     }
   } catch (err) {
     console.error('Kaydetme hatası:', err);
-    alert('Bir hata oluştu.');
+    showToast('Bir hata oluştu.', 'error');
   }
-}
+};
 
 function escapeHtml(value) {
   return (value || '').toString().replace(/[&<>'"]/g, function (char) {
@@ -317,14 +317,4 @@ function escapeHtml(value) {
       '"': '&quot;'
     }[char];
   });
-}
-
-function escapeAttr(value) {
-  return (value || '')
-    .toString()
-    .replace(/&/g, '&amp;')
-    .replace(/'/g, '&#39;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
 }

@@ -93,6 +93,43 @@
         color: #dc2626;
         border: 1px solid #fecaca;
       }
+      .status-alert.warn {
+        background: #fffbeb;
+        color: #b45309;
+        border: 1px solid #fde68a;
+      }
+      .bulk-targets {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 0 8px;
+        min-width: 260px;
+      }
+      .bulk-target-option {
+        font-size: 12px;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        line-height: 1.2;
+      }
+      .bulk-target-option input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        margin: 0;
+      }
+      .table-controls {
+        background: var(--bg-main);
+        padding: 14px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
       table.price-table {
         width: 100%;
         border-collapse: collapse;
@@ -181,7 +218,6 @@
             </p>
           </div>
           <div class="filter-group">
-            <button class="btn btn-secondary" style="background:#e0f2fe; border-color:#bae6fd; color:#0369a1;" onclick="handleBulkOffersUpdateClick()">Teklifleri Yeni Revizyon Olarak Güncelle</button>
             <button class="btn btn-secondary" onclick="loadDefaultTemplate()">🔄 Varsayılan Listeyi Yükle</button>
             <button class="btn btn-primary" onclick="savePriceList()">💾 Değişiklikleri Kaydet</button>
           </div>
@@ -191,9 +227,35 @@
 
         <div class="actions-bar" style="background:var(--bg-main);padding:14px;border-radius:12px;margin-bottom:20px;">
           <div class="filter-group" style="flex:1;">
+            <div style="border-left:1px solid #cbd5e1;padding-left:14px;display:flex;gap:8px;align-items:flex-end;">
+              <div>
+                <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">Toplu Zam Oranı (%)</label>
+                <input type="number" id="bulk_increase_percent" placeholder="Örn: 15" min="1" max="500" step="5" style="width:90px;" />
+              </div>
+              <div class="bulk-targets">
+                <label class="bulk-target-option">
+                  <input id="bulk_apply_price" type="checkbox" checked />
+                  Fiyat listesine uygula
+                </label>
+                <label class="bulk-target-option">
+                  <input id="bulk_apply_offers" type="checkbox" checked />
+                  Tekliflerde yeni revizyon oluştur
+                </label>
+              </div>
+              <button id="bulk_apply_btn" class="btn btn-secondary" style="background:#fffbeb;border-color:#fde68a;color:#b45309;" onclick="handleBulkCombinedUpdate()">⚡ Zam Operasyonunu Uygula</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="unsaved_warning" class="status-alert warn" style="display:none;">
+          ⚠️ Fiyat listesi değişti ama kaydedilmedi. Değişiklikleri Kaydet butonuna tıklayarak kalıcılaştırın.
+        </div>
+
+        <div class="table-controls">
+          <div class="filter-group">
             <div>
               <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">Tehlike Sınıfı Filtresi</label>
-              <select id="filter_danger" style="width:140px;" onchange="renderTable()">
+              <select id="filter_danger" style="width:160px;" onchange="renderTable()">
                 <option value="Tümü">Tümü</option>
                 <option value="Az Tehlikeli">Az Tehlikeli</option>
                 <option value="Tehlikeli">Tehlikeli</option>
@@ -202,14 +264,7 @@
             </div>
             <div>
               <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">Hizmet Adı Arama</label>
-              <input type="text" id="search_service" placeholder="Ara..." style="width:160px;" oninput="renderTable()" />
-            </div>
-            <div style="border-left:1px solid #cbd5e1;padding-left:14px;display:flex;gap:8px;align-items:flex-end;">
-              <div>
-                <label style="font-size:11px;font-weight:700;color:var(--text-muted);display:block;margin-bottom:4px;">Toplu Zam Oranı (%)</label>
-                <input type="number" id="bulk_increase_percent" placeholder="Örn: 15" min="1" max="500" style="width:90px;" />
-              </div>
-              <button class="btn btn-secondary" style="background:#fffbeb;border-color:#fde68a;color:#b45309;" onclick="applyBulkIncrease()">⚡ Uygula</button>
+              <input type="text" id="search_service" placeholder="Ara..." style="width:220px;" oninput="renderTable()" />
             </div>
           </div>
           <div class="filter-group" style="justify-content:flex-end;">
@@ -240,13 +295,17 @@
     </div>
 
     <script>
-      if (new URLSearchParams(window.location.search).get('bypass') === 'true') {
+      if (
+        new URLSearchParams(window.location.search).get('bypass') === 'true' &&
+        ['localhost', '127.0.0.1'].includes(window.location.hostname)
+      ) {
         window.confirm = () => true;
         window.alert = () => true;
       }
       let currentAuth = null;
       let priceRules = [];
       let storageMode = 'db'; // 'db' veya 'local'
+      let hasUnsavedPriceChanges = false;
 
       const STORAGE_KEY = 'crm_price_list_v1';
 
@@ -301,21 +360,73 @@
       ];
 
       document.addEventListener('DOMContentLoaded', async () => {
-        // Auth Kontrolü
-        const checkAuth = setInterval(async () => {
-          if (window.requireAuthAndRole) {
-            clearInterval(checkAuth);
-            currentAuth = await window.requireAuthAndRole('crm-prices');
-            if (currentAuth) {
-              document.body.style.display = 'block';
-              await initPage();
-            }
+        // Auth bootstrapi gecikirse sayfa sonsuza kadar gizli kalmasın.
+        for (let i = 0; i < 30 && typeof window.requireAuthAndRole !== 'function'; i++) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        if (typeof window.requireAuthAndRole !== 'function') {
+          setStatus('Kimlik doğrulama başlatılamadı. Giriş sayfasına yönlendiriliyorsunuz...', 'err');
+          setTimeout(() => { window.location.href = 'login.html'; }, 400);
+          return;
+        }
+
+        currentAuth = await window.requireAuthAndRole('crm-prices');
+        if (!currentAuth) {
+          if (!window.location.pathname.endsWith('/login.html') && !window.location.pathname.endsWith('login.html')) {
+            window.location.href = 'login.html';
           }
-        }, 100);
+          return;
+        }
+
+        document.body.style.display = 'block';
+        await initPage();
       });
 
       async function initPage() {
+        bindBulkOperationUi();
         await loadPriceList();
+      }
+
+      function bindBulkOperationUi() {
+        const priceToggle = document.getElementById('bulk_apply_price');
+        const offersToggle = document.getElementById('bulk_apply_offers');
+        if (priceToggle) priceToggle.addEventListener('change', updateBulkActionButtonLabel);
+        if (offersToggle) offersToggle.addEventListener('change', updateBulkActionButtonLabel);
+        updateBulkActionButtonLabel();
+      }
+
+      function updateBulkActionButtonLabel() {
+        const doPrice = !!document.getElementById('bulk_apply_price')?.checked;
+        const doOffers = !!document.getElementById('bulk_apply_offers')?.checked;
+        const btn = document.getElementById('bulk_apply_btn');
+        if (!btn) return;
+
+        if (doPrice && doOffers) {
+          btn.textContent = '⚡ Zam Operasyonunu Uygula';
+          btn.disabled = false;
+          return;
+        }
+        if (doPrice) {
+          btn.textContent = '⚡ Sadece Fiyat Listesine Uygula';
+          btn.disabled = false;
+          return;
+        }
+        if (doOffers) {
+          btn.textContent = '⚡ Sadece Teklif Revizyonu Oluştur';
+          btn.disabled = false;
+          return;
+        }
+
+        btn.textContent = '⚠️ Hedef Seçin';
+        btn.disabled = true;
+      }
+
+      function setUnsavedChanges(flag) {
+        hasUnsavedPriceChanges = !!flag;
+        const warningEl = document.getElementById('unsaved_warning');
+        if (!warningEl) return;
+        warningEl.style.display = hasUnsavedPriceChanges ? 'block' : 'none';
       }
 
       function setStatus(msg, type = 'ok') {
@@ -352,6 +463,7 @@
               priceRules = defaultPriceRules.map(r => ({ ...r }));
             }
             renderTable();
+            setUnsavedChanges(false);
           }
         } catch (err) {
           console.error('Fiyat listesi yüklenemedi:', err);
@@ -372,6 +484,7 @@
           priceRules = defaultPriceRules.map(r => ({ ...r }));
         }
         renderTable();
+        setUnsavedChanges(false);
         setStatus('Yerel Depolama (Offline Mode) aktif. Değişiklikler tarayıcıda saklanacaktır.', 'ok');
       }
 
@@ -379,6 +492,7 @@
         if (!confirm('Tüm fiyat listesini varsayılan şablon değerleriyle sıfırlamak istediğinize emin misiniz?')) return;
         priceRules = defaultPriceRules.map(r => ({ ...r }));
         renderTable();
+        setUnsavedChanges(true);
         setStatus('Varsayılan fiyat şablonu yüklendi. Değişiklikleri kaydetmeyi unutmayın.', 'ok');
       }
 
@@ -439,6 +553,7 @@
       function updateRule(index, key, val) {
         if (index >= 0 && index < priceRules.length) {
           priceRules[index][key] = val;
+          setUnsavedChanges(true);
         }
       }
 
@@ -451,12 +566,14 @@
           price: 0
         });
         renderTable();
+        setUnsavedChanges(true);
       }
 
       function deleteRow(index) {
         if (index >= 0 && index < priceRules.length) {
           priceRules.splice(index, 1);
           renderTable();
+          setUnsavedChanges(true);
         }
       }
 
@@ -567,6 +684,7 @@
 
             setStatus('Fiyat listesi veritabanına başarıyla kaydedildi.', 'ok');
             await loadPriceList();
+            setUnsavedChanges(false);
           } catch (err) {
             console.error('Veritabanına kaydedilirken hata oluştu:', err);
             setStatus('Veritabanına kaydedilemedi. Local storage kullanılacak: ' + err.message, 'err');
@@ -579,6 +697,7 @@
 
       function saveToLocalStorage() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(priceRules));
+        setUnsavedChanges(false);
         setStatus('Fiyat listesi tarayıcı önbelleğine başarıyla kaydedildi.', 'ok');
         renderTable();
       }
@@ -713,129 +832,103 @@
       }
 
       async function handleBulkOffersUpdateClick() {
-        // Öncelikle sayfadaki toplu zam oranı alanını kontrol et
-        const percentInput = document.getElementById('bulk_increase_percent');
-        let pct = parseFloat(percentInput?.value);
-        
-        if (isNaN(pct) || pct <= 0) {
-          // Eğer input boşsa prompt ile sor
-          const promptVal = prompt('Lütfen tekliflere uygulanacak toplu zam oranını (%) girin:');
-          if (promptVal === null) return; // İptal edildi
-          pct = parseFloat(promptVal);
-          if (isNaN(pct) || pct <= 0) {
-            alert('Lütfen geçerli bir zam oranı (%) girin!');
-            return;
-          }
-        }
-
-        setStatus('Revize edilecek teklifler hesaplanıyor, lütfen bekleyin...', 'info');
-        try {
-          // Durumu 'Kaybedildi' olmayan TÜM lead'leri (aktif, kazanıldı, sözleşmeli vs.) çekelim
-          const { data: leads, error: leadsErr } = await dbClient
-            .from('crm_leads')
-            .select('*')
-            .eq('tenant_id', currentAuth.tenant_id)
-            .neq('lead_status', 'Kaybedildi');
-
-          if (leadsErr) throw leadsErr;
-          if (!leads || !leads.length) {
-            setStatus('Sistemde revize edilecek aktif/kazanılmış firma bulunamadı.', 'err');
-            return;
-          }
-
-          const leadIds = leads.map(l => l.id);
-          
-          // Bu lead'lere ait tüm teklifleri çekelim
-          const { data: offers, error: offersErr } = await dbClient
-            .from('crm_offers')
-            .select('*')
-            .in('lead_id', leadIds);
-
-          if (offersErr) throw offersErr;
-
-          // Her lead için en yüksek version'lu son aktif teklifi bulalım
-          const latestOffersByLead = {};
-          if (offers && offers.length) {
-            offers.forEach(o => {
-              const leadId = o.lead_id;
-              const prev = latestOffersByLead[leadId];
-              if (!prev || o.version > prev.version) {
-                latestOffersByLead[leadId] = o;
-              }
-            });
-          }
-
-          let toUpdateCount = 0;
-          for (const lead of leads) {
-            const offer = latestOffersByLead[lead.id];
-            if (offer) {
-              const services = JSON.parse(JSON.stringify(offer.extra_services || []));
-              let hasChanges = false;
-              
-              services.forEach(s => {
-                const oldPrice = Number(s.unit_price) || 0;
-                if (oldPrice > 0) {
-                  const newPrice = Math.ceil(oldPrice * (1 + pct / 100));
-                  if (newPrice !== oldPrice) {
-                    hasChanges = true;
-                  }
-                }
-              });
-
-              if (hasChanges) {
-                toUpdateCount++;
-              }
-            } else {
-              // Teklifi yoksa dummy teklif eklenecek
-              toUpdateCount++;
-            }
-          }
-
-          setStatus('', ''); // Durumu temizle
-
-          if (toUpdateCount === 0) {
-            alert('Fiyatı güncellenecek herhangi bir aktif teklif bulunamadı.');
-            return;
-          }
-
-          const confirmed = confirm(`%${pct} oranında toplu zam uygulanarak ${toUpdateCount} adet teklif revizyonu/taslağı oluşturulacaktır. Devam etmek istiyor musunuz?`);
-          if (!confirmed) return;
-
-          setStatus('Teklifler güncelleniyor, lütfen sayfayı kapatmayın...', 'info');
-          const updatedCount = await performBulkOffersUpdate(pct);
-          setStatus(`Başarılı! ${updatedCount} adet aktif/sözleşmeli firma için %${pct} zamlı teklif revizyonu/taslağı oluşturuldu.`, 'ok');
-
-        } catch (err) {
-          console.error('Teklifler güncellenirken hata oluştu:', err);
-          setStatus('Teklifler güncellenirken hata oluştu: ' + err.message, 'err');
-        }
+        const priceToggle = document.getElementById('bulk_apply_price');
+        const offersToggle = document.getElementById('bulk_apply_offers');
+        if (priceToggle) priceToggle.checked = false;
+        if (offersToggle) offersToggle.checked = true;
+        updateBulkActionButtonLabel();
+        await handleBulkCombinedUpdate();
       }
 
       // --- ZAM UYGULAMA VE TARİHÇE MODAL YÖNETİMİ ---
-      function applyBulkIncrease() {
+      function getBulkIncreasePercent() {
         const percentInput = document.getElementById('bulk_increase_percent');
-        const pct = parseFloat(percentInput.value);
+        let pct = parseFloat(percentInput?.value);
         if (isNaN(pct) || pct <= 0) {
-          alert('Lütfen geçerli bir zam oranı (%) girin!');
-          return;
+          const promptVal = prompt('Lütfen uygulanacak toplu zam oranını (%) girin:');
+          if (promptVal === null) return null;
+          pct = parseFloat(promptVal);
+          if (isNaN(pct) || pct <= 0) return null;
+          if (percentInput) percentInput.value = String(pct);
         }
-        
-        if (!confirm(`Tüm fiyat kurallarına %${pct} oranında zam uygulamak istediğinize emin misiniz? (Küsuratlı rakamlar yukarı yuvarlanacaktır)`)) {
-          return;
-        }
-        
+        return pct;
+      }
+
+      function applyBulkIncreaseToPriceRules(pct) {
+        let changedCount = 0;
         priceRules = priceRules.map(r => {
           const oldPrice = Number(r.price || 0);
-          const newPrice = oldPrice * (1 + pct / 100);
+          const newPrice = Math.ceil(oldPrice * (1 + pct / 100));
+          if (newPrice !== oldPrice) changedCount++;
           return {
             ...r,
-            price: Math.ceil(newPrice)
+            price: newPrice
           };
         });
-        
         renderTable();
-        percentInput.value = '';
-        setStatus(`%${pct} oranında zam uygulandı. Kalıcı olması için "Değişiklikleri Kaydet" butonuna tıklayın.`, 'ok');
+        if (changedCount > 0) {
+          setUnsavedChanges(true);
+        }
+        return changedCount;
+      }
+
+      async function handleBulkCombinedUpdate() {
+        const pct = getBulkIncreasePercent();
+        if (pct === null) {
+          showToast('Lütfen geçerli bir zam oranı (%) girin!', 'warning');
+          return;
+        }
+
+        const doPriceUpdate = !!document.getElementById('bulk_apply_price')?.checked;
+        const doOffersUpdate = !!document.getElementById('bulk_apply_offers')?.checked;
+
+        if (!doPriceUpdate && !doOffersUpdate) {
+          showToast('Lütfen en az bir hedef seçin (Fiyat listesi veya Teklif revizyonları).', 'warning');
+          return;
+        }
+
+        let confirmLines = [`%${pct} oranında toplu zam uygulanacak.`];
+        if (doPriceUpdate) confirmLines.push('- Fiyat listesi kuralları güncellenecek');
+        if (doOffersUpdate) confirmLines.push('- Aktif/kazanılmış firmalar için teklif revizyonları oluşturulacak');
+        confirmLines.push('Devam etmek istiyor musunuz?');
+
+        if (!confirm(confirmLines.join('\n'))) return;
+
+        const results = [];
+        const percentInput = document.getElementById('bulk_increase_percent');
+
+        try {
+          if (doPriceUpdate) {
+            const changedCount = applyBulkIncreaseToPriceRules(pct);
+            results.push(`${changedCount} fiyat kuralına zam uygulandı`);
+          }
+
+          if (doOffersUpdate) {
+            setStatus('Teklif revizyonları oluşturuluyor, lütfen bekleyin...', 'info');
+            const updatedCount = await performBulkOffersUpdate(pct);
+            results.push(`${updatedCount} teklif revizyonu/taslağı oluşturuldu`);
+          }
+
+          if (percentInput) percentInput.value = '';
+
+          let finalMsg = `%${pct} zam operasyonu tamamlandı: ${results.join(' · ')}.`;
+          if (doPriceUpdate) {
+            finalMsg += ' Fiyat listesi değişikliklerini kalıcılaştırmak için "Değişiklikleri Kaydet" butonuna tıklayın.';
+          }
+          setStatus(finalMsg, 'ok');
+        } catch (err) {
+          console.error('Toplu zam operasyonunda hata oluştu:', err);
+          setStatus('Toplu zam operasyonunda hata oluştu: ' + err.message, 'err');
+        }
+      }
+
+      function applyBulkIncrease() {
+        const priceToggle = document.getElementById('bulk_apply_price');
+        const offersToggle = document.getElementById('bulk_apply_offers');
+        if (priceToggle) priceToggle.checked = true;
+        if (offersToggle) offersToggle.checked = false;
+        updateBulkActionButtonLabel();
+        handleBulkCombinedUpdate();
       }
 
       async function openHistoryModal() {
