@@ -51,16 +51,15 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Forced one-time purge of legacy browser state to show Login Screen cleanly
+  // Forced one-time purge of legacy browser state to clean production deployment
   useEffect(() => {
-    if (!localStorage.getItem('crm_auth_reset_v2')) {
-      localStorage.removeItem('crm_superadmins_v2');
-      localStorage.removeItem('crm_customers_v2');
-      localStorage.removeItem('crm_offers_v3');
-      localStorage.removeItem('crm_contracts_v3');
-      localStorage.removeItem('crm_user_session');
-      localStorage.setItem('crm_auth_reset_v2', 'true');
+    if (!localStorage.getItem('crm_prod_clean_v5')) {
+      localStorage.clear();
+      localStorage.setItem('crm_prod_clean_v5', 'true');
       setSession(null);
+      setCustomers([]);
+      setOffers([]);
+      setContracts([]);
     }
   }, []);
 
