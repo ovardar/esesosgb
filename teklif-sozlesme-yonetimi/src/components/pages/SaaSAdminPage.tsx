@@ -27,7 +27,8 @@ import type {
 
 import { sendEmail, buildCustomerInviteTemplate } from '../../lib/email';
 import { supabase } from '../../lib/supabase';
-import { fetchCloudTenants, saveCloudTenants } from '../../lib/cloudDb';
+import { fetchCloudTenants, saveCloudTenants, deleteCloudTenant } from '../../lib/cloudDb';
+
 
 
 type Props = {
@@ -329,8 +330,31 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     maxUsers: '' as string | number,
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    logoUrl: '',
     notes: ''
   });
+
+  // Edit Tenant Form State
+  const [isEditTenantModalOpen, setIsEditTenantModalOpen] = useState(false);
+  const [editingTenantForEdit, setEditingTenantForEdit] = useState<SaaSTenant | null>(null);
+  const [editTenantForm, setEditTenantForm] = useState({
+    companyName: '',
+    contactName: '',
+    email: '',
+    phone: '',
+    city: 'İstanbul',
+    package: 'Enterprise' as SaaSPackage,
+    status: 'Aktif' as SaaSSubscriptionStatus,
+    paymentStatus: 'Sorunsuz' as SaaSPaymentStatus,
+    healthStatus: 'Mükemmel' as SaaSHealthStatus,
+    billingCycle: 'Yıllık' as '' | 'Aylık' | 'Yıllık',
+    monthlyFee: 28000 as number | string,
+    annualFee: 336000 as number | string,
+    maxUsers: 50 as number | string,
+    logoUrl: '',
+    notes: ''
+  });
+
 
   // New SaaS Offer Form State
   const [offerForm, setOfferForm] = useState({
@@ -812,24 +836,120 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       createdAt: new Date().toLocaleString('tr-TR'),
       updatedBy: activeUserEmail,
       updatedAt: new Date().toLocaleString('tr-TR'),
-      activationStatus: 'Davet Gönderilmedi'
-
+      activationStatus: 'Davet Gönderilmedi',
+      logoUrl: newForm.logoUrl || undefined
     };
 
-    setTenants((prev) => [newTenant, ...prev]);
-
-    // Sync newly created tenant immediately to Supabase PostgreSQL Cloud Database!
-    supabase.from('tenants').insert([{
-      name: newTenant.companyName,
-      slug: newTenant.companyName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
-      is_active: true
-    }]).then((res) => {
-      console.log('Supabase tenant creation sync:', res);
+    setTenants((prev) => {
+      const next = [newTenant, ...prev];
+      saveCloudTenants(next);
+      return next;
     });
 
     setIsAddModalOpen(false);
     setSelectedTenant(newTenant);
   };
+
+  // Handle Delete Tenant
+  const handleDeleteTenant = (tenant: SaaSTenant) => {
+    if (window.confirm(`"${tenant.companyName}" isimli kiracıyı silmek istediğinizden emin misiniz?\nBu işlem geri alınamaz!`)) {
+      setTenants((prev) => {
+        const next = prev.filter((t) => t.id !== tenant.id);
+        saveCloudTenants(next);
+        return next;
+      });
+      deleteCloudTenant(tenant.id);
+      if (selectedTenant?.id === tenant.id) {
+        setSelectedTenant(null);
+      }
+    }
+  };
+
+  // Handle Open Edit Tenant Modal
+  const handleOpenEditTenantModal = (tenant: SaaSTenant) => {
+    setEditingTenantForEdit(tenant);
+    setEditTenantForm({
+      companyName: tenant.companyName || '',
+      contactName: tenant.contactName || '',
+      email: tenant.email || '',
+      phone: tenant.phone || '',
+      city: tenant.city || 'İstanbul',
+      package: tenant.package || 'Enterprise',
+      status: tenant.status || 'Aktif',
+      paymentStatus: tenant.paymentStatus || 'Sorunsuz',
+      healthStatus: tenant.healthStatus || 'Mükemmel',
+      billingCycle: tenant.billingCycle || 'Yıllık',
+      monthlyFee: tenant.monthlyFee || 0,
+      annualFee: tenant.annualFee || 0,
+      maxUsers: tenant.maxUsers || 10,
+      logoUrl: tenant.logoUrl || '',
+      notes: tenant.notes || ''
+    });
+    setIsEditTenantModalOpen(true);
+  };
+
+  // Handle Save Edit Tenant Submit
+  const handleSaveEditTenantSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTenantForEdit || !editTenantForm.companyName) return;
+
+    setTenants((prev) => {
+      const next = prev.map((t) =>
+        t.id === editingTenantForEdit.id
+          ? {
+              ...t,
+              companyName: editTenantForm.companyName,
+              contactName: editTenantForm.contactName,
+              email: editTenantForm.email,
+              phone: editTenantForm.phone,
+              city: editTenantForm.city,
+              package: editTenantForm.package,
+              status: editTenantForm.status,
+              paymentStatus: editTenantForm.paymentStatus,
+              healthStatus: editTenantForm.healthStatus,
+              billingCycle: editTenantForm.billingCycle,
+              monthlyFee: Number(editTenantForm.monthlyFee),
+              annualFee: Number(editTenantForm.annualFee),
+              maxUsers: Number(editTenantForm.maxUsers),
+              logoUrl: editTenantForm.logoUrl,
+              notes: editTenantForm.notes,
+              updatedAt: new Date().toLocaleString('tr-TR')
+            }
+          : t
+      );
+      saveCloudTenants(next);
+      return next;
+    });
+
+    if (selectedTenant && selectedTenant.id === editingTenantForEdit.id) {
+      setSelectedTenant((prev) =>
+        prev
+          ? {
+              ...prev,
+              companyName: editTenantForm.companyName,
+              contactName: editTenantForm.contactName,
+              email: editTenantForm.email,
+              phone: editTenantForm.phone,
+              city: editTenantForm.city,
+              package: editTenantForm.package,
+              status: editTenantForm.status,
+              paymentStatus: editTenantForm.paymentStatus,
+              healthStatus: editTenantForm.healthStatus,
+              billingCycle: editTenantForm.billingCycle,
+              monthlyFee: Number(editTenantForm.monthlyFee),
+              annualFee: Number(editTenantForm.annualFee),
+              maxUsers: Number(editTenantForm.maxUsers),
+              logoUrl: editTenantForm.logoUrl,
+              notes: editTenantForm.notes
+            }
+          : null
+      );
+    }
+
+    setIsEditTenantModalOpen(false);
+    setEditingTenantForEdit(null);
+  };
+
 
 
   return (
@@ -880,8 +1000,10 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                       maxUsers: '',
                       startDate: new Date().toISOString().split('T')[0],
                       endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                      logoUrl: '',
                       notes: ''
                     });
+
                     setIsAddModalOpen(true);
                   }}
                 >
@@ -1079,29 +1201,48 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                       >
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span
-                              style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: '50%',
-                                display: 'inline-block',
-                                background:
-                                  tenant.healthStatus === 'Mükemmel' || tenant.healthStatus === 'İyi'
-                                    ? '#10b981'
-                                    : tenant.healthStatus === 'Riskli'
-                                    ? '#f59e0b'
-                                    : '#ef4444'
-                              }}
-                              title={`Sağlık Durumu: ${tenant.healthStatus}`}
-                            />
+                            {tenant.logoUrl ? (
+                              <img
+                                src={tenant.logoUrl}
+                                alt={tenant.companyName}
+                                style={{
+                                  width: 34,
+                                  height: 34,
+                                  borderRadius: 8,
+                                  objectFit: 'contain',
+                                  border: '1px solid var(--border)',
+                                  background: '#ffffff',
+                                  padding: 3,
+                                  flexShrink: 0
+                                }}
+                              />
+                            ) : (
+                              <div
+                                style={{
+                                  width: 34,
+                                  height: 34,
+                                  borderRadius: 8,
+                                  background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                                  color: '#ffffff',
+                                  fontSize: '0.82rem',
+                                  fontWeight: 800,
+                                  display: 'grid',
+                                  placeItems: 'center',
+                                  flexShrink: 0
+                                }}
+                              >
+                                {tenant.companyName ? tenant.companyName.substring(0, 2).toUpperCase() : 'TN'}
+                              </div>
+                            )}
                             <div>
-                              <strong style={{ fontSize: '0.95rem' }}>{tenant.companyName}</strong>
+                              <strong style={{ fontSize: '0.95rem', display: 'block' }}>{tenant.companyName}</strong>
                               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                                 {tenant.tenantCode} • {tenant.city} • {tenant.contactName}
                               </span>
                             </div>
                           </div>
                         </td>
+
 
                         <td>
                           <strong>{tenant.package ? `${tenant.package} Paketi` : 'Paket Seçilmedi'}</strong>
@@ -1199,15 +1340,33 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                         </td>
 
                         <td style={{ textAlign: 'right' }}>
-                          <div style={{ display: 'inline-flex', gap: 8, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
                             <button
                               className="btn-action-ghost"
                               onClick={() => {
                                 setSelectedTenant(tenant);
                                 setDetailTab('info');
                               }}
+                              title="Kiracı Detayları"
                             >
                               👁️ Detay
+                            </button>
+
+                            <button
+                              className="btn-action-ghost"
+                              onClick={() => handleOpenEditTenantModal(tenant)}
+                              title="Kiracıyı ve Logosunu Düzenle"
+                            >
+                              ✏️ Düzenle
+                            </button>
+
+                            <button
+                              className="btn-action-ghost"
+                              style={{ color: '#ef4444' }}
+                              onClick={() => handleDeleteTenant(tenant)}
+                              title="Kiracıyı Sil"
+                            >
+                              🗑️ Sil
                             </button>
 
                             <button
@@ -1221,6 +1380,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                             </button>
                           </div>
                         </td>
+
                       </tr>
                     );
                   })
@@ -2757,6 +2917,47 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                 )}
 
                 <label className="select-field new-customer-full">
+                  <span>Kiracı Logosu (Görsel veya Yükleme)</span>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      placeholder="https://... veya dosya seçin"
+                      value={newForm.logoUrl}
+                      onChange={(e) => setNewForm({ ...newForm, logoUrl: e.target.value })}
+                      style={{ flex: 1 }}
+                    />
+                    <label className="btn-action-ghost" style={{ cursor: 'pointer', margin: 0, padding: '8px 14px', whiteSpace: 'nowrap' }}>
+                      📁 Görsel Yükle
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              if (ev.target?.result) {
+                                setNewForm({ ...newForm, logoUrl: ev.target.result as string });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                  {newForm.logoUrl && (
+                    <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <img src={newForm.logoUrl} alt="Logo Önizleme" style={{ height: 40, maxWidth: 140, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border)', background: '#fff', padding: 4 }} />
+                      <button type="button" className="btn-action-ghost" style={{ fontSize: '0.78rem', color: '#ef4444' }} onClick={() => setNewForm({ ...newForm, logoUrl: '' })}>
+                        ✕ Logoyu Kaldır
+                      </button>
+                    </div>
+                  )}
+                </label>
+
+                <label className="select-field new-customer-full">
                   <span>Özel Notlar</span>
                   <textarea
                     rows={3}
@@ -2779,6 +2980,229 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           </div>
         </div>
       )}
+
+      {/* Edit Tenant Modal */}
+      {isEditTenantModalOpen && editingTenantForEdit && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            background: 'rgba(17, 24, 39, 0.45)',
+            backdropFilter: 'blur(6px)',
+            display: 'grid',
+            placeItems: 'center',
+            padding: 20
+          }}
+          onClick={() => setIsEditTenantModalOpen(false)}
+        >
+          <div
+            className="panel panel-wide panel-elevated"
+            style={{ maxWidth: 720, width: '100%', padding: 28, maxHeight: '90vh', overflowY: 'auto' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Kiracı Bilgileri & Logo Güncelleme</p>
+                <h3>{editingTenantForEdit.companyName} — Düzenle</h3>
+              </div>
+              <button className="mini-badge" style={{ cursor: 'pointer' }} onClick={() => setIsEditTenantModalOpen(false)}>
+                ✕ Kapat
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditTenantSubmit} className="new-customer-form" style={{ padding: 0 }}>
+              <div className="new-customer-grid">
+                <label className="select-field">
+                  <span>Firma Ünvanı *</span>
+                  <input
+                    type="text"
+                    required
+                    value={editTenantForm.companyName}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, companyName: e.target.value })}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Yetkili Ad Soyad *</span>
+                  <input
+                    type="text"
+                    required
+                    value={editTenantForm.contactName}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, contactName: e.target.value })}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>E-posta Adresi *</span>
+                  <input
+                    type="email"
+                    required
+                    value={editTenantForm.email}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, email: e.target.value })}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Telefon</span>
+                  <input
+                    type="text"
+                    value={editTenantForm.phone}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, phone: e.target.value })}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Şehir</span>
+                  <input
+                    type="text"
+                    value={editTenantForm.city}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, city: e.target.value })}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Abonelik Durumu</span>
+                  <select
+                    value={editTenantForm.status}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, status: e.target.value as SaaSSubscriptionStatus })}
+                  >
+                    <option value="Aktif">Aktif</option>
+                    <option value="Demo">Demo / Deneme</option>
+                    <option value="Aday">Aday Müşteri</option>
+                    <option value="Askıda">Askıda / Dondurulmuş</option>
+                    <option value="İptal">İptal Edilmiş</option>
+                  </select>
+                </label>
+
+                <label className="select-field">
+                  <span>Ödeme Sağlık Durumu</span>
+                  <select
+                    value={editTenantForm.paymentStatus}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, paymentStatus: e.target.value as SaaSPaymentStatus })}
+                  >
+                    <option value="Sorunsuz">Sorunsuz</option>
+                    <option value="Bekliyor">Ödeme Bekliyor</option>
+                    <option value="Gecikmede">Gecikmede / İhtar</option>
+                  </select>
+                </label>
+
+                <label className="select-field">
+                  <span>Abonelik Paketi</span>
+                  <select
+                    value={editTenantForm.package}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, package: e.target.value as SaaSPackage })}
+                  >
+                    {packages.map((pkg) => (
+                      <option key={pkg.id} value={pkg.name.split(' ')[0]}>
+                        {pkg.name} ({pkg.maxUsers} Kullanıcı)
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="select-field">
+                  <span>Faturalama Periyodu</span>
+                  <select
+                    value={editTenantForm.billingCycle}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, billingCycle: e.target.value as '' | 'Aylık' | 'Yıllık' })}
+                  >
+                    <option value="Aylık">Aylık Ödemeli</option>
+                    <option value="Yıllık">Yıllık Ödemeli</option>
+                  </select>
+                </label>
+
+                <label className="select-field">
+                  <span>Kullanıcı Limiti</span>
+                  <input
+                    type="number"
+                    value={editTenantForm.maxUsers}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, maxUsers: Number(e.target.value) })}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Aylık Ücret (₺)</span>
+                  <input
+                    type="number"
+                    value={editTenantForm.monthlyFee}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, monthlyFee: Number(e.target.value) })}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Yıllık Ücret (₺)</span>
+                  <input
+                    type="number"
+                    value={editTenantForm.annualFee}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, annualFee: Number(e.target.value) })}
+                  />
+                </label>
+
+                <label className="select-field new-customer-full">
+                  <span>Kiracı Logosu (Görsel veya Yükleme)</span>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      placeholder="https://... veya bilgisayarınızdan dosya seçin"
+                      value={editTenantForm.logoUrl}
+                      onChange={(e) => setEditTenantForm({ ...editTenantForm, logoUrl: e.target.value })}
+                      style={{ flex: 1 }}
+                    />
+                    <label className="btn-action-ghost" style={{ cursor: 'pointer', margin: 0, padding: '8px 14px', whiteSpace: 'nowrap' }}>
+                      📁 Görsel Yükle
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              if (ev.target?.result) {
+                                setEditTenantForm({ ...editTenantForm, logoUrl: ev.target.result as string });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                  {editTenantForm.logoUrl && (
+                    <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <img src={editTenantForm.logoUrl} alt="Logo Önizleme" style={{ height: 40, maxWidth: 140, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border)', background: '#fff', padding: 4 }} />
+                      <button type="button" className="btn-action-ghost" style={{ fontSize: '0.78rem', color: '#ef4444' }} onClick={() => setEditTenantForm({ ...editTenantForm, logoUrl: '' })}>
+                        ✕ Logoyu Kaldır
+                      </button>
+                    </div>
+                  )}
+                </label>
+
+                <label className="select-field new-customer-full">
+                  <span>Notlar</span>
+                  <textarea
+                    rows={3}
+                    value={editTenantForm.notes}
+                    onChange={(e) => setEditTenantForm({ ...editTenantForm, notes: e.target.value })}
+                  />
+                </label>
+              </div>
+
+              <div className="new-customer-actions">
+                <button type="button" className="secondary-action" onClick={() => setIsEditTenantModalOpen(false)}>
+                  İptal
+                </button>
+                <button type="submit" className="primary-action">
+                  ✅ Güncellemeleri Kaydet
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
 
       {/* SaaS Offer Modal */}
       {isOfferModalOpen && (

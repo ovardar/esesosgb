@@ -275,7 +275,8 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
         createdAt: row.created_at ? new Date(row.created_at).toLocaleString('tr-TR') : new Date().toLocaleString('tr-TR'),
         updatedBy: 'orhan.vardar@gmail.com',
         updatedAt: new Date().toLocaleString('tr-TR'),
-        activationStatus: 'Hesap Aktif (Şifre Belirlendi)'
+        activationStatus: 'Hesap Aktif (Şifre Belirlendi)',
+        logoUrl: row.logo_url || row.logoUrl || undefined
       }));
       const cleanList = tenants.length > 0 ? tenants : fallback;
       setLocalItem('crm_saas_tenants_v3', cleanList);
@@ -313,6 +314,7 @@ export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
         max_users: t.maxUsers,
         active_users: t.activeUsers,
         modules_enabled: t.modulesEnabled,
+        logo_url: t.logoUrl || null,
         updated_at: new Date().toISOString()
       }));
     if (payload.length > 0) {
@@ -322,6 +324,18 @@ export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
     console.warn('[CloudDB] Tenants cloud upsert warning', err);
   }
 }
+
+export async function deleteCloudTenant(tenantId: string): Promise<void> {
+  try {
+    const validUuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (validUuidRegex.test(tenantId)) {
+      await supabase.from('tenants').delete().eq('id', tenantId);
+    }
+  } catch (err) {
+    console.warn('[CloudDB] Tenant delete warning', err);
+  }
+}
+
 
 // ==========================================
 // 5. TENANT USERS CLOUD SYNC
