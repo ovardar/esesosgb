@@ -129,13 +129,16 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       try {
         const { data, error } = await supabase.from('tenants').select('*');
         if (data && data.length > 0 && !error) {
+          const dummyNames = ['Eses Software', 'Girişim OSGB', 'Mavi Liman OSGB', 'Soyyılmaz OSGB', 'oddn osgb', 'Test OSGB', 'Eses Software & Yazılım A.Ş.'];
           setTenants((prev) => {
-            const dbTenants: SaaSTenant[] = data.map((row: any) => ({
+            const dbTenants: SaaSTenant[] = data
+              .filter((row: any) => row.name && !dummyNames.includes(row.name.trim()))
+              .map((row: any) => ({
               id: row.id,
               tenantCode: `TNT-${row.id.substring(0, 4).toUpperCase()}`,
               companyName: row.name,
               contactName: 'Sistem Yetkilisi',
-              email: `${row.slug}@codentra.com.tr`,
+              email: `${row.slug || 'info'}@codentra.com.tr`,
               phone: '0850 000 00 00',
               city: 'İstanbul',
               package: 'Enterprise' as SaaSPackage,
@@ -158,12 +161,12 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               updatedBy: 'orhan.vardar@gmail.com',
               updatedAt: new Date().toLocaleString('tr-TR'),
               activationStatus: 'Hesap Aktif (Şifre Belirlendi)'
-
             }));
 
-
+            const cleanPrev = prev.filter((p) => !dummyNames.includes(p.companyName.trim()));
             const existingIds = new Set(dbTenants.map((t) => t.id));
-            return [...dbTenants, ...prev.filter((p) => !existingIds.has(p.id))];
+            const merged = [...dbTenants, ...cleanPrev.filter((p) => !existingIds.has(p.id))];
+            return merged.length > 0 ? merged : initialSaaSTenants;
           });
         }
       } catch (e) {

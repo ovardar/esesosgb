@@ -235,7 +235,13 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
   try {
     const { data, error } = await supabase.from('tenants').select('*');
     if (!error && data && data.length > 0) {
-      const tenants: SaaSTenant[] = data.map((row: any) => ({
+      const dummyNames = ['Eses Software', 'Girişim OSGB', 'Mavi Liman OSGB', 'Soyyılmaz OSGB', 'oddn osgb', 'Test OSGB', 'Eses Software & Yazılım A.Ş.'];
+      const tenants: SaaSTenant[] = data
+        .filter((row: any) => {
+          const name = row.name || row.companyName;
+          return name && !dummyNames.includes(name.trim());
+        })
+        .map((row: any) => ({
         id: row.id,
         tenantCode: row.tenant_code || `TNT-${row.id.substring(0, 4).toUpperCase()}`,
         companyName: row.name || row.companyName || 'Test OSGB 3',
@@ -264,8 +270,9 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
         updatedAt: new Date().toLocaleString('tr-TR'),
         activationStatus: 'Hesap Aktif (Şifre Belirlendi)'
       }));
-      setLocalItem('crm_saas_tenants_v3', tenants);
-      return tenants;
+      const cleanList = tenants.length > 0 ? tenants : fallback;
+      setLocalItem('crm_saas_tenants_v3', cleanList);
+      return cleanList;
     }
   } catch (err) {
     console.warn('[CloudDB] Tenants fetch falling back to local storage', err);
