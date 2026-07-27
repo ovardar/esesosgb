@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codentra — OSGB ve İş Sağlığı Güvenliği CRM & Sözleşme Yönetim Sistemi</title>
+  <meta name="description" content="OSGB kurumları için özel geliştirilmiş yeni nesil Teklif, Sözleşme, Müşteri CRM ve NACE Tehlike Sınıfı Yönetim Platformu.">
+  <meta name="keywords" content="OSGB yazılımı, OSGB CRM, teklif hazırlama, iş sağlığı güvenliği sözleşme, NACE tehlike sınıfı">
+  <meta property="og:title" content="Codentra — OSGB ve İSG CRM Platformu">
+  <meta property="og:description" content="OSGB süreçlerinizi, teklif ve sözleşmelerinizi dijitalleştirin.">
+  <meta property="og:type" content="website">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar-header" id="navbar">
+    <div class="container nav-container">
+      <a href="#" class="brand-logo">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-name">codentra</span>
+          <span class="logo-badge">OSGB CRM</span>
+        </div>
+      </a>
+
+      <nav class="nav-menu" id="navMenu">
+        <a href="#ozellikler" class="nav-link">Özellikler</a>
+        <a href="#nace-sorgulama" class="nav-link">NACE Sorgu</a>
+        <a href="#nasil-calisir" class="nav-link">Nasıl Çalışır?</a>
+        <a href="#iletisim" class="nav-link">İletişim</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://app.codentra.com.tr" id="btn-login-header" class="btn btn-primary btn-glow" target="_blank" rel="noopener">
+          <span>Sisteme Giriş Yap</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+            <polyline points="10 17 15 12 10 7"></polyline>
+            <line x1="15" y1="12" x2="3" y2="12"></line>
+          </svg>
+        </a>
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Menü">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero-section">
+    <div class="hero-bg-glow"></div>
+    <div class="container hero-container">
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        <span>Yeni Nesil OSGB & İSG CRM Platformu</span>
+      </div>
+
+      <h1 class="hero-title">
+        OSGB Süreçlerinizi, Teklif ve Sözleşmelerinizi <span class="gradient-text">Tek Platformdan Yönetin</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Codentra ile müşteri yönetimi, NACE kodu tehlike sınıfı analizi, kurumsal teklif hazırlama ve revizyon takipli sözleşme süreçlerini dakikalar içinde dijitalleştirin.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="https://app.codentra.com.tr" id="btn-hero-login" class="btn btn-lg btn-primary btn-glow" target="_blank" rel="noopener">
+          <span>Sisteme Giriş Yap</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <a href="#ozellikler" class="btn btn-lg btn-secondary">
+          <span>Platformu İnceleyin</span>
+        </a>
+      </div>
+
+      <!-- HERO INTERACTIVE MOCKUP / GLASS CARD -->
+      <div class="hero-mockup-wrapper">
+        <div class="glass-card mockup-card">
+          <div class="mockup-header">
+            <div class="window-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="window-title">codentra.com.tr / app / crm-dashboard</div>
+            <div class="window-status">
+              <span class="status-badge live">● CANLI SISTEM</span>
+            </div>
+          </div>
+
+          <div class="mockup-body">
+            <div class="dashboard-stats-grid">
+              <div class="stat-mini-card">
+                <div class="stat-icon blue">🏢</div>
+                <div class="stat-info">
+                  <span class="stat-label">Aktif Müşteriler</span>
+                  <span class="stat-value">128 Firma</span>
+                </div>
+              </div>
+
+              <div class="stat-mini-card">
+                <div class="stat-icon emerald">📄</div>
+                <div class="stat-info">
+                  <span class="stat-label">Aylık Teklif Hacmi</span>
+                  <span class="stat-value">₺1.450.000</span>
+                </div>
+              </div>
+
+              <div class="stat-mini-card">
+                <div class="stat-icon purple">📑</div>
+                <div class="stat-info">
+                  <span class="stat-label">Onaylı Sözleşme</span>
+                  <span class="stat-value">%94.2 Oran</span>
+                </div>
+              </div>
+
+              <div class="stat-mini-card">
+                <div class="stat-icon amber">⚡</div>
+                <div class="stat-info">
+                  <span class="stat-label">Ort. Teklif Süresi</span>
+                  <span class="stat-value">3 Dakika</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- MOCKUP CONTENT PREVIEW -->
+            <div class="mockup-preview-table">
+              <div class="table-head-row">
+                <span>Firma Adı</span>
+                <span>Sektör / NACE</span>
+                <span>Tehlike Sınıfı</span>
+                <span>Çalışan</span>
+                <span>Durum</span>
+              </div>
+              <div class="table-data-row">
+                <span class="font-bold">Eses İnşaat A.Ş.</span>
+                <span>41.20 - İkamet Amaçlı Binalar</span>
+                <span><span class="tag tag-danger">Çok Tehlikeli</span></span>
+                <span>85 Personel</span>
+                <span><span class="tag tag-success">Sözleşme İmzalandı</span></span>
+              </div>
+              <div class="table-data-row">
+                <span class="font-bold">Anadolu Lojistik Ltd.</span>
+                <span>49.41 - Karayolu Kargo</span>
+                <span><span class="tag tag-warning">Tehlikeli</span></span>
+                <span>42 Personel</span>
+                <span><span class="tag tag-info">Teklif Gönderildi</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FEATURES SECTION -->
+  <section class="section features-section" id="ozellikler">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-tag">GÜÇLÜ MODÜLLER</span>
+        <h2 class="section-title">OSGB Yönetiminde <span class="gradient-text">Uçtan Uca Çözüm</span></h2>
+        <p class="section-desc">Geleneksel karmaşık tablolar yerine modern, hızlı ve hatasız operasyonel akışlar.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card glass-card">
+          <div class="feature-icon bg-indigo">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">Akıllı Teklif Hazırlama</h3>
+          <p class="feature-desc">Tehlike sınıfı ve kişi sayısına göre otomatik hesaplanan fiyat listeleriyle saniyeler içinde şık teklifler oluşturun ve PDF indirin.</p>
+        </div>
+
+        <div class="feature-card glass-card">
+          <div class="feature-icon bg-emerald">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <polyline points="17 11 19 13 23 9"></polyline>
+            </svg>
+          </div>
+          <h3 class="feature-title">Müşteri CRM & Kontak Yönetimi</h3>
+          <p class="feature-desc">Tüm müşteri kayıtlarını, karar verici yetkili kişileri, lokasyon ve iletişim geçmişini tek ekrandan filtresel olarak yönetin.</p>
+        </div>
+
+        <div class="feature-card glass-card">
+          <div class="feature-icon bg-purple">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">Revizyon Takipli Sözleşmeler</h3>
+          <p class="feature-desc">Müşteri sözleşmelerinin sürelerini, revizyon versiyonlarını ve şartlarını eksiksiz takip edin. Geçmişe dönük değişim farklarını kıyaslayın.</p>
+        </div>
+
+        <div class="feature-card glass-card">
+          <div class="feature-icon bg-amber">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">NACE & Tehlike Sınıfı Motoru</h3>
+          <p class="feature-desc">Sistem içi canlı NACE veritabanı sayesinde sektör araması yapın, otomatik tehlike sınıfı önerisini anında alın.</p>
+        </div>
+
+        <div class="feature-card glass-card">
+          <div class="feature-icon bg-rose">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <h3 class="feature-title">%100 KVKK & Veri İzolasyonu</h3>
+          <p class="feature-desc">Supabase Row Level Security (RLS) altyapısı sayesinde her kurumun verisi tamamen kendi güvenli alanında şifrelenir.</p>
+        </div>
+
+        <div class="feature-card glass-card">
+          <div class="feature-icon bg-cyan">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+          </div>
+          <h3 class="feature-title">Excel / CSV İçe-Dışa Aktarım</h3>
+          <p class="feature-desc">Mevcut müşteri listelerinizi ve fiyat tarifelerinizi akıllı eşleştirme sihirbazı ile saniyeler içinde sisteme aktarın.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE NACE WIDGET DEMO -->
+  <section class="section nace-widget-section" id="nace-sorgulama">
+    <div class="container">
+      <div class="glass-card widget-card">
+        <div class="widget-header">
+          <div>
+            <span class="section-tag">CANLI TEST</span>
+            <h2 class="widget-title">NACE Kodundan Tehlike Sınıfı Sorgulayın</h2>
+            <p class="widget-desc">Aşağıdaki kutucuğa bir sektör, iş kolu veya NACE kodu yazarak canlı tehlike sınıfını test edin.</p>
+          </div>
+        </div>
+
+        <div class="nace-search-box">
+          <input type="text" id="naceInput" placeholder="Örn: İnşaat, Lojistik, Yazılım, 41.20..." autocomplete="off">
+          <button class="btn btn-primary" id="btnNaceSearch">Sorgula</button>
+        </div>
+
+        <div class="nace-results-area" id="naceResults">
+          <!-- Results rendered via JavaScript -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS SECTION -->
+  <section class="section workflow-section" id="nasil-calisir">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-tag">KOLAY KULLANIM</span>
+        <h2 class="section-title">3 Adımda <span class="gradient-text">Dijital OSGB</span></h2>
+      </div>
+
+      <div class="workflow-steps">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <h3 class="step-title">Giriş Yapın & Kurumu Tanımlayın</h3>
+          <p class="step-desc">Codentra panelinize giriş yaparak kurum bilgilerinizi ve fiyat listenizi sisteme yükleyin.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">02</div>
+          <h3 class="step-title">Müşteriyi Ekleyin & NACE Seçin</h3>
+          <p class="step-desc">Müşteri bilgilerini girin; sistem NACE kodundan tehlike sınıfını ve standart kişi fiyatını getirsin.</p>
+        </div>
+
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <h3 class="step-title">Teklif Hazırlayın & Sözleşmeyi İmzalatın</h3>
+          <p class="step-desc">Tek tıkla PDF teklif oluşturup müşterinize iletin, onaylanan teklifi anında sözleşmeye dönüştürün.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER SECTION -->
+  <section class="cta-banner-section">
+    <div class="container">
+      <div class="glass-card cta-card">
+        <h2 class="cta-title">OSGB Süreçlerinizi Hızlandırmaya Hazır mısınız?</h2>
+        <p class="cta-desc">Codentra platformuna hemen giriş yapın, müşteri ve teklif süreçlerinizi dijital ortamda yönetin.</p>
+        <div class="cta-buttons">
+          <a href="https://app.codentra.com.tr" class="btn btn-lg btn-primary btn-glow" target="_blank" rel="noopener">
+            <span>Sisteme Giriş Yap</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+              <polyline points="10 17 15 12 10 7"></polyline>
+              <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT & FOOTER SECTION -->
+  <footer class="footer-section" id="iletisim">
+    <div class="container footer-container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="brand-logo">
+            <div class="logo-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2"/>
+                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2"/>
+                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <span class="logo-name text-white">codentra</span>
+          </div>
+          <p class="footer-about">
+            Codentra, OSGB ve İş Sağlığı Güvenliği kurumları için özel olarak geliştirilmiş bulut tabanlı CRM, Teklif ve Sözleşme Yönetim Yazılımıdır.
+          </p>
+        </div>
+
+        <div class="footer-links-col">
+          <h4 class="footer-col-title">Hızlı Bağlantılar</h4>
+          <ul>
+            <li><a href="https://app.codentra.com.tr" target="_blank" rel="noopener">Sisteme Giriş Yap</a></li>
+            <li><a href="#ozellikler">Özellikler</a></li>
+            <li><a href="#nace-sorgulama">NACE Sorgu</a></li>
+            <li><a href="#nasil-calisir">Nasıl Çalışır?</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-links-col">
+          <h4 class="footer-col-title">Kurumsal İletişim</h4>
+          <ul>
+            <li>
+              <span class="contact-label">Genel İletişim:</span>
+              <a href="mailto:bilgi@codentra.com.tr">bilgi@codentra.com.tr</a>
+            </li>
+            <li>
+              <span class="contact-label">Müşteri Destek:</span>
+              <a href="mailto:destek@destek.codentra.com.tr">destek@codentra.com.tr</a>
+            </li>
+            <li>
+              <span class="contact-label">Davet & Kayıt:</span>
+              <a href="mailto:davet@codentra.com.tr">davet@codentra.com.tr</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 Codentra Software Systems. Tüm hakları saklıdır.</p>
+        <div class="footer-legal">
+          <a href="#">Gizlilik Politikası</a>
+          <a href="#">KVKK Aydınlatma Metni</a>
+          <a href="#">Kullanım Şartları</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
