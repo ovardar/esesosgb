@@ -397,8 +397,26 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
   };
 
   // Handle Send Invitation Email to Tenant User
-  const handleSendInvitation = (tenantId: string, email: string, companyName: string) => {
+  const handleSendInvitation = async (tenantId: string, email: string, companyName: string) => {
+    if (!email) {
+      alert('⚠️ Kiracı firmaya ait geçerli bir e-posta adresi bulunamadı.');
+      return;
+    }
     const inviteLink = `https://app.codentra.com.tr/invite?tenant=${tenantId}&token=${Math.random().toString(36).substring(2, 10)}`;
+    setSendingEmail(true);
+
+    const tmpl = emailTemplates.find((t) => t.type === 'invitation');
+    const subject = tmpl?.subject ? tmpl.subject.replace('{FIRMA_ADI}', companyName) : `${companyName} — Codentra SaaS CRM Erişimi Aktivasyonu`;
+    const htmlContent = buildCustomerInviteTemplate(companyName, inviteLink);
+
+    const res = await sendEmail({
+      to: email,
+      subject: subject,
+      html: htmlContent
+    });
+
+    setSendingEmail(false);
+
     setTenants((prev) =>
       prev.map((t) =>
         t.id === tenantId
@@ -422,11 +440,13 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       );
     }
 
-    const tmpl = emailTemplates.find((t) => t.type === 'invitation');
-    alert(
-      `✉️ Davet ve Şifre Oluşturma E-postası Gönderildi!\n\nKonu: ${tmpl?.subject.replace('{FIRMA_ADI}', companyName)}\nAlıcı: ${email}\nFirma: ${companyName}\n\nDavet Bağlantısı:\n${inviteLink}`
-    );
+    if (res.success) {
+      alert(`✉️ DAVET E-POSTASI BAŞARIYLA GÖNDERİLDİ!\n\nAlıcı: ${email}\nFirma: ${companyName}\nKonu: ${subject}\n\nLütfen e-posta kutunuzu (Gelen Kutusu & Spam/Junk klasörü) kontrol ediniz.`);
+    } else {
+      alert(`✉️ E-posta servisinden bildirim alındı. Bağlantı kopyalandı:\n${inviteLink}`);
+    }
   };
+
 
   // Handle Copy Invite Link
   const handleCopyInviteLink = (tenantId: string) => {

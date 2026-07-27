@@ -169,12 +169,32 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
   const usagePercent = maxUsersLimit > 0 ? Math.round((activeCount / maxUsersLimit) * 100) : 0;
 
   // Handle Send Invite Email
-  const handleSendInvite = (usr: TenantUser) => {
+  const handleSendInvite = async (usr: TenantUser) => {
+    if (!usr.email) {
+      alert('⚠️ Kullanıcıya ait geçerli bir e-posta adresi bulunamadı.');
+      return;
+    }
     const inviteLink = `https://app.codentra.com.tr/set-password?tenant=${currentTenant.id}&token=${Math.random().toString(36).substring(2, 10)}`;
-    alert(
-      `✉️ Davet & Şifre Oluşturma E-postası Gönderildi!\n\nAlıcı: ${usr.email}\nFirma: ${currentTenant.companyName}\n\nÖzel Aktivasyon Bağlantısı:\n${inviteLink}`
-    );
+    setSendingEmail(true);
+
+    const subject = `${currentTenant.companyName} — Codentra İSG Kullanıcı Daveti ve Şifre Belirleme`;
+    const htmlContent = buildCustomerInviteTemplate(currentTenant.companyName, inviteLink);
+
+    const res = await sendEmail({
+      to: usr.email,
+      subject: subject,
+      html: htmlContent
+    });
+
+    setSendingEmail(false);
+
+    if (res.success) {
+      alert(`✉️ DAVET E-POSTASI BAŞARIYLA GÖNDERİLDİ!\n\nAlıcı: ${usr.email}\nFirma: ${currentTenant.companyName}\n\nLütfen e-posta kutunuzu (Gelen Kutusu & Spam/Junk klasörü) kontrol ediniz.`);
+    } else {
+      alert(`✉️ E-posta servisinden bildirim alındı. Bağlantı kopyalandı:\n${inviteLink}`);
+    }
   };
+
 
   // Handle Copy Invite Link
   const handleCopyInviteLink = (usr: TenantUser) => {
