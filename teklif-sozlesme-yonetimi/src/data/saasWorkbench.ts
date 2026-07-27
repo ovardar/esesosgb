@@ -53,7 +53,7 @@ export const initialSaaSPackages: SaaSPackageDefinition[] = [
 
 export const initialSaaSTenants: SaaSTenant[] = [
   {
-    id: 'tnt-test-osgb-3',
+    id: '3b3e7f5a-9d2c-4e8a-b1c4-9a8b7c6d5e4f',
     tenantCode: 'TNT-OSGB3',
     companyName: 'Test OSGB 3',
     contactName: 'Orhan Vardar',

@@ -23,7 +23,7 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
 
   // Selected active tenant for user management
   const [activeTenantId, setActiveTenantId] = useState<string>(
-    impersonatedTenant ? impersonatedTenant.id : (initialSaaSTenants[0]?.id || 'tnt-test-osgb-3')
+    impersonatedTenant ? impersonatedTenant.id : (initialSaaSTenants[0]?.id || '3b3e7f5a-9d2c-4e8a-b1c4-9a8b7c6d5e4f')
   );
 
   // All Tenants User Database State with Cloud DB persistence

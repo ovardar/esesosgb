@@ -290,29 +290,34 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
 export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
   setLocalItem('crm_saas_tenants_v3', tenants);
   try {
-    const payload = tenants.map(t => ({
-      id: t.id,
-      name: t.companyName,
-      companyName: t.companyName,
-      tenant_code: t.tenantCode,
-      contact_name: t.contactName,
-      email: t.email,
-      phone: t.phone,
-      city: t.city,
-      package: t.package,
-      status: t.status,
-      is_active: t.status === 'Aktif',
-      payment_status: t.paymentStatus,
-      health_status: t.healthStatus,
-      billing_cycle: t.billingCycle,
-      monthly_fee: t.monthlyFee,
-      annual_fee: t.annualFee,
-      max_users: t.maxUsers,
-      active_users: t.activeUsers,
-      modules_enabled: t.modulesEnabled,
-      updated_at: new Date().toISOString()
-    }));
-    await supabase.from('tenants').upsert(payload, { onConflict: 'id' });
+    const validUuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const payload = tenants
+      .filter(t => t.id && validUuidRegex.test(t.id))
+      .map(t => ({
+        id: t.id,
+        name: t.companyName,
+        slug: t.companyName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+        tenant_code: t.tenantCode,
+        contact_name: t.contactName,
+        email: t.email,
+        phone: t.phone,
+        city: t.city,
+        package: t.package,
+        status: t.status,
+        is_active: t.status === 'Aktif',
+        payment_status: t.paymentStatus,
+        health_status: t.healthStatus,
+        billing_cycle: t.billingCycle,
+        monthly_fee: t.monthlyFee,
+        annual_fee: t.annualFee,
+        max_users: t.maxUsers,
+        active_users: t.activeUsers,
+        modules_enabled: t.modulesEnabled,
+        updated_at: new Date().toISOString()
+      }));
+    if (payload.length > 0) {
+      await supabase.from('tenants').upsert(payload, { onConflict: 'id' });
+    }
   } catch (err) {
     console.warn('[CloudDB] Tenants cloud upsert warning', err);
   }
