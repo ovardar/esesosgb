@@ -1937,7 +1937,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #e5e7eb', paddingBottom: 16, marginBottom: 20 }}>
                 <div>
                   <h2 style={{ margin: 0, color: '#111827' }}>CODENTRA SaaS LİSANS TEKLİFİ</h2>
-                  <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '0.9rem' }}>Teklif ve Sözleşme Yazılımı (CRM)</p>
+                  <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '0.9rem' }}>Teklif ve Sözleşme Yönetimi (CRM)</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <strong style={{ fontSize: '1.1rem', color: '#374151', display: 'block' }}>{previewOffer.offerNumber}</strong>

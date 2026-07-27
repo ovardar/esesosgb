@@ -106,7 +106,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             codentra
           </h1>
           <p style={{ margin: '6px 0 0 0', fontSize: '0.9rem', color: '#94a3b8' }}>
-            Teklif ve Sözleşme Yazılımı (CRM)
+            Teklif ve Sözleşme Yönetimi
           </p>
         </div>
 

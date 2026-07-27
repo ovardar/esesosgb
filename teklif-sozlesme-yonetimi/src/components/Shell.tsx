@@ -69,7 +69,7 @@ export function Shell({
             <p className="eyebrow" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>
               {activeTenantName ? activeTenantName : 'CODENTRA'}
             </p>
-            <h1 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a' }}>{activeTenantName ? 'Teklif ve Sözleşme Yazılımı' : 'Teklif & Sözleşme CRM'}</h1>
+            <h1 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a' }}>{activeTenantName ? 'Teklif ve Sözleşme Yönetimi' : 'Teklif & Sözleşme Yönetimi'}</h1>
           </div>
         </div>
 
