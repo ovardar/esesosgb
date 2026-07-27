@@ -80,10 +80,5 @@ export function generateUsersForTenant(tenantId: string, companyDomain: string, 
 
 
 // Initial Seeded Tenant Users Store
-export const initialTenantUsersMap: Record<string, TenantUser[]> = {
-  'tenant-1': generateUsersForTenant('tenant-1', 'metropolosgb.com.tr', 12),
-  'tenant-2': generateUsersForTenant('tenant-2', 'vipisg.com', 38), // VIP İş Sağlığı: Exactly 38 Users!
-  'tenant-3': generateUsersForTenant('tenant-3', 'egerisk.com', 2),
-  'tenant-4': generateUsersForTenant('tenant-4', 'dogumarmaraosgb.com', 14),
-  'tenant-5': generateUsersForTenant('tenant-5', 'teknosaglik.com.tr', 1)
-};
+export const initialTenantUsersMap: Record<string, TenantUser[]> = {};
+

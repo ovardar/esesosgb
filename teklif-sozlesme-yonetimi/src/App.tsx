@@ -50,6 +50,21 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Automatic one-time purge of legacy dummy seeds from browser storage
+  useEffect(() => {
+    if (!localStorage.getItem('crm_dummy_cleaned_v1')) {
+      localStorage.removeItem('crm_customers_v2');
+      localStorage.removeItem('crm_offers_v3');
+      localStorage.removeItem('crm_contracts_v3');
+      localStorage.removeItem('crm_superadmins_v2');
+      localStorage.setItem('crm_dummy_cleaned_v1', 'true');
+      setCustomers([]);
+      setOffers([]);
+      setContracts([]);
+    }
+  }, []);
+
+
   const [customers, setCustomers] = useState<CustomerRecord[]>(() => {
     try {
       const saved = localStorage.getItem('crm_customers_v2');
@@ -83,13 +98,14 @@ function App() {
       const saved = localStorage.getItem('crm_superadmins_v2');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed.map((sa: any) => (sa.email || sa).toLowerCase());
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed.map((sa: any) => (sa.email || sa).toLowerCase());
       }
     } catch (e) {
       console.error(e);
     }
-    return ['admin@osgbsistem.com', 'ovardar@gmail.com', 'orhan.vardar@gmail.com'];
+    return ['orhan.vardar@gmail.com'];
   });
+
 
 
   const currentUserEmail = session?.user?.email || '';

@@ -36,10 +36,10 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
       console.error(e);
     }
     return [
-      { id: 'sa-1', email: 'admin@osgbsistem.com', name: 'Sistem Yöneticisi (Ana Kullanıcı)', addedAt: '2025-01-01' },
-      { id: 'sa-2', email: 'ovardar@gmail.com', name: 'Oğuz Vardar (Süper Admin)', addedAt: '2025-01-01' }
+      { id: 'sa-1', email: 'orhan.vardar@gmail.com', name: 'Orhan Vardar (Süper Admin)', addedAt: '2026-01-01' }
     ];
   });
+
 
   const [newSuperAdminEmail, setNewSuperAdminEmail] = useState('');
   const [newSuperAdminName, setNewSuperAdminName] = useState('');
