@@ -3,7 +3,9 @@ import type { ReactNode } from 'react';
 import { NotificationBell } from './NotificationBell';
 import type { CustomerActivity, CustomerRecord } from './pages/CustomersPage';
 import { sections } from '../data/navigation';
+import { supabase } from '../lib/supabase';
 import type { SectionId, ThemeId } from '../types';
+
 
 type ShellProps = {
   activeSection: SectionId;
@@ -126,15 +128,36 @@ export function Shell({
             </div>
           ) : null}
 
-          <NotificationBell
-            customers={customers}
-            onUpdateActivityStatus={onUpdateActivityStatus}
-            onNavigateCustomer={onNavigateCustomer}
-            onNavigateSection={onSectionChange}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <NotificationBell
+              customers={customers}
+              onUpdateActivityStatus={onUpdateActivityStatus}
+              onNavigateCustomer={onNavigateCustomer}
+              onNavigateSection={onSectionChange}
+            />
+            <button
+              type="button"
+              className="btn-action-secondary"
+              style={{ padding: '6px 14px', fontSize: '0.82rem', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444' }}
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.reload();
+              }}
+
+              title="Oturumu Kapat"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <span>Çıkış</span>
+            </button>
+          </div>
         </header>
 
         {children}
+
       </main>
     </div>
   );

@@ -16,10 +16,30 @@ import { sections } from './data/navigation';
 import { offerSeeds } from './data/workbench';
 import type { SectionId, SaaSTenant, ThemeId, ContractRecord, OfferRecord } from './types';
 
+import { LoginPage } from './components/LoginPage';
+import { supabase } from './lib/supabase';
+
 function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('dashboard');
   const [activeTheme, setActiveTheme] = useState<ThemeId>('ivory');
   const [impersonatedTenant, setImpersonatedTenant] = useState<SaaSTenant | null>(null);
+
+  const [session, setSession] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const [customers, setCustomers] = useState<CustomerRecord[]>(() => {
     try {
@@ -62,13 +82,14 @@ function App() {
     return ['admin@osgbsistem.com', 'ovardar@gmail.com'];
   });
 
-  const [currentUserEmail] = useState<string>('ovardar@gmail.com');
+  const currentUserEmail = session?.user?.email || 'ovardar@gmail.com';
 
   const isSuperAdmin = useMemo(() => {
     return superAdminEmails.includes(currentUserEmail.toLowerCase());
   }, [superAdminEmails, currentUserEmail]);
 
   const [selectedCustomerName, setSelectedCustomerName] = useState<string | null>(null);
+
 
   useEffect(() => {
     try {
@@ -248,6 +269,29 @@ function App() {
     }
   }, [activeSection, activeTheme, customers, offers, contracts, selectedCustomerName]);
 
+  if (authLoading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#090d16',
+        color: '#94a3b8',
+        fontFamily: "'Inter', sans-serif"
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '2rem', marginBottom: 12 }}>⚡</div>
+          <div>Yükleniyor...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <LoginPage onLoginSuccess={(email) => setSession({ user: { email } })} />;
+  }
+
   return (
     <Shell
       activeSection={activeSection}
@@ -282,4 +326,5 @@ function App() {
   );
 }
 
-export default App;
+export default App;
+
