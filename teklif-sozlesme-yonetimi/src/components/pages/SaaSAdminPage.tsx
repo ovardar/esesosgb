@@ -19,11 +19,15 @@ import type {
   SaaSPackage,
   SaaSPackageDefinition,
   SaaSPaymentStatus,
+  SaaSHealthStatus,
   SaaSTenant,
   SaaSSubscriptionStatus
 } from '../../types';
 
+
 import { sendEmail, buildCustomerInviteTemplate } from '../../lib/email';
+import { supabase } from '../../lib/supabase';
+
 
 type Props = {
   onImpersonateTenant?: (tenant: SaaSTenant) => void;
@@ -117,6 +121,69 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
   useEffect(() => {
     try { localStorage.setItem('crm_saas_email_templates_v3', JSON.stringify(emailTemplates)); } catch (e) { console.error(e); }
   }, [emailTemplates]);
+
+  // Supabase PostgreSQL Cloud Database & Real-Time Sync Effect
+  useEffect(() => {
+    const fetchCloudTenants = async () => {
+      try {
+        const { data, error } = await supabase.from('tenants').select('*');
+        if (data && data.length > 0 && !error) {
+          setTenants((prev) => {
+            const dbTenants: SaaSTenant[] = data.map((row: any) => ({
+              id: row.id,
+              tenantCode: `TNT-${row.id.substring(0, 4).toUpperCase()}`,
+              companyName: row.name,
+              contactName: 'Sistem Yetkilisi',
+              email: `${row.slug}@codentra.com.tr`,
+              phone: '0850 000 00 00',
+              city: 'İstanbul',
+              package: 'Enterprise' as SaaSPackage,
+              status: row.is_active ? ('Aktif' as SaaSSubscriptionStatus) : ('Pasif' as any),
+              paymentStatus: 'Sorunsuz' as SaaSPaymentStatus,
+              healthStatus: 'Mükemmel' as SaaSHealthStatus,
+              billingCycle: 'Aylık',
+              monthlyFee: 28000,
+              annualFee: 336000,
+              maxUsers: 50,
+              activeUsers: 1,
+              startDate: row.created_at ? row.created_at.split('T')[0] : '2026-01-01',
+              endDate: '2027-01-01',
+              autoRenew: true,
+              notes: 'Supabase Bulut Veritabanından Canlı Senkronize Edildi',
+              modulesEnabled: { crm: true, offers: true, contracts: true, documents: true, analytics: true },
+              lastLoginAt: 'Bugün',
+              createdBy: 'orhan.vardar@gmail.com',
+              createdAt: row.created_at ? new Date(row.created_at).toLocaleString('tr-TR') : new Date().toLocaleString('tr-TR'),
+              updatedBy: 'orhan.vardar@gmail.com',
+              updatedAt: new Date().toLocaleString('tr-TR'),
+              activationStatus: 'Hesap Aktif (Şifre Belirlendi)'
+
+            }));
+
+
+            const existingIds = new Set(dbTenants.map((t) => t.id));
+            return [...dbTenants, ...prev.filter((p) => !existingIds.has(p.id))];
+          });
+        }
+      } catch (e) {
+        console.error('Supabase tenants fetch error:', e);
+      }
+    };
+
+    fetchCloudTenants();
+
+    const channel = supabase
+      .channel('realtime-saas-tenants')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tenants' }, () => {
+        fetchCloudTenants();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
 
   // Main Section Tab ('tenants' | 'packages' | 'offers-contracts' | 'invoices' | 'email-templates' | 'super-admins')
   const [mainTab, setMainTab] = useState<'tenants' | 'packages' | 'offers-contracts' | 'invoices' | 'email-templates' | 'super-admins'>('tenants');
@@ -734,9 +801,20 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     };
 
     setTenants((prev) => [newTenant, ...prev]);
+
+    // Sync newly created tenant immediately to Supabase PostgreSQL Cloud Database!
+    supabase.from('tenants').insert([{
+      name: newTenant.companyName,
+      slug: newTenant.companyName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+      is_active: true
+    }]).then((res) => {
+      console.log('Supabase tenant creation sync:', res);
+    });
+
     setIsAddModalOpen(false);
     setSelectedTenant(newTenant);
   };
+
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
