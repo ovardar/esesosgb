@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <link rel="icon" type="image/svg+xml" href="brand/mark.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="brand/assets/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="brand/assets/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="brand/assets/apple-touch-icon.png" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>isgnova - Acil Durum Yönetimi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <style>
+      .modal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center;
+        backdrop-filter: blur(4px);
+      }
+      .modal.show { display: flex; }
+      .modal-content {
+        background: #fff; width: 90%; max-width: 600px; padding: 32px; border-radius: 20px;
+        position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+      .modal-close {
+        position: absolute; top: 24px; right: 24px; background: none; border: none; font-size: 24px;
+        cursor: pointer; color: #64748b;
+      }
+      .form-group { margin-bottom: 16px; }
+      .form-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: #334155; }
+      .form-group input, .form-group select, .form-group textarea {
+        width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; font-size: 14px;
+      }
+    </style>
+  </head>
+  <body class="theme-ultra-clean" style="display: none;">
+    <div class="card">
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">isgnova</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
+        </div>
+        <div class="nav-container">
+          <!-- Navigation will be populated by navigation.js -->
+        </div>
+      </div>
+
+      <div class="crm-page-shell">
+        <div class="page-header-row" style="margin-bottom: 24px;">
+          <div class="page-title-group">
+            <h2 style="font-size: clamp(24px, 2.2vw, 34px); letter-spacing: -0.03em; color: #0f172a; font-weight: 800; margin: 0 0 6px;">🚨 Acil Durum & Tatbikat Yönetimi</h2>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0;">Acil durum senaryolarını planlayın, toplanma alanlarını ve tatbikatları takip edin.</p>
+          </div>
+        </div>
+
+        <div class="crm-double-stats-grid" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+          <div class="stats-section-premium">
+            <div class="stats-cards-wrapper" style="display: flex; gap: 16px; flex-wrap: wrap;">
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#3b82f6"></div>
+                <span class="number" id="stat_total">0</span>
+                <span class="label">Kayıtlı Plan/Tatbikat</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#10b981"></div>
+                <span class="number" id="stat_completed">0</span>
+                <span class="label">Tamamlanan</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#f59e0b"></div>
+                <span class="number" id="stat_planned">0</span>
+                <span class="label">Planlanan (Gelecek)</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#ef4444"></div>
+                <span class="number" id="stat_overdue">0</span>
+                <span class="label">Geciken</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="crm-toolbar-premium" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <select id="filter_company" onchange="renderEmergencies()" style="padding: 10px 14px; border: 1px solid var(--uc-line); border-radius: 10px;">
+              <option value="">-- Tüm Firmalar --</option>
+            </select>
+          </div>
+          <button class="btn-add-lead-btn" onclick="openAddModal()" style="background: var(--uc-primary); border: none; padding: 10px 18px; border-radius: 999px; font-weight: 700; color:#fff; cursor:pointer;">+ Yeni Plan / Tatbikat Ekle</button>
+        </div>
+
+        <div class="stat-card-premium" style="padding: 24px;">
+          <div class="table-container-premium" style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr>
+                  <th style="padding: 12px 16px;">Firma</th>
+                  <th style="padding: 12px 16px;">Acil Durum Tipi</th>
+                  <th style="padding: 12px 16px;">Toplanma Alanı</th>
+                  <th style="padding: 12px 16px;">Tatbikat Tarihi</th>
+                  <th style="padding: 12px 16px;">Durum</th>
+                  <th style="padding: 12px 16px;">Açıklama</th>
+                  <th style="padding: 12px 16px;">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="emergencies_tbody">
+                <tr>
+                  <td colspan="7" style="text-align: center; color: #94a3b8; padding: 24px;">Veriler yükleniyor...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="status-line" id="status_msg" style="margin-top: 12px; font-size: 13px; font-weight: 600;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Add Emergency -->
+    <div class="modal" id="modal_add_emergency">
+      <div class="modal-content">
+        <button class="modal-close" onclick="closeAddModal()">&times;</button>
+        <h3 style="margin-top:0; font-size:20px; font-weight:800; color:#0f172a; margin-bottom: 24px;">Yeni Plan / Tatbikat</h3>
+        
+        <div class="form-group">
+          <label>Firma *</label>
+          <select id="modal_company_id"></select>
+        </div>
+        <div class="form-group">
+          <label>Acil Durum Tipi *</label>
+          <select id="modal_type">
+            <option value="Yangın">Yangın</option>
+            <option value="Deprem">Deprem</option>
+            <option value="Tahliye">Tahliye</option>
+            <option value="Kimyasal Döküntü">Kimyasal Döküntü</option>
+            <option value="İş Kazası">İş Kazası</option>
+            <option value="Diğer">Diğer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Toplanma Alanı</label>
+          <input type="text" id="modal_assembly" placeholder="Örn: A Blok Ön Bahçe">
+        </div>
+        <div style="display:flex; gap:16px;">
+          <div class="form-group" style="flex:1">
+            <label>Tatbikat Tarihi</label>
+            <input type="date" id="modal_date">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>Durum</label>
+            <select id="modal_drill_status">
+              <option value="Planlandı">Planlandı</option>
+              <option value="Tamamlandı">Tamamlandı</option>
+              <option value="İptal">İptal Edildi</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Notlar / Ekipler</label>
+          <textarea id="modal_notes" rows="3" placeholder="Görevli personel, senaryo notları..."></textarea>
+        </div>
+        
+        <div style="text-align: right; margin-top: 24px;">
+          <button onclick="saveEmergency()" style="background: var(--uc-primary); border: none; padding: 12px 24px; border-radius: 999px; font-weight: 700; color:#fff; cursor:pointer;">Kaydet</button>
+        </div>
+        <div id="modal_status" style="margin-top:12px; font-size:13px; font-weight:600; text-align:right;"></div>
+      </div>
+    </div>
+
+    <script>
+      let userContext = null;
+      let rawData = [];
+      let companies = [];
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        if (!window.dbClient) return;
+        userContext = await window.getCurrentAuthContext();
+        if (!userContext.canLogin) {
+          alert("Erişim izniniz yok. Lütfen giriş yapın.");
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        window.applyRoleBasedNavigation(userContext.role);
+        if (!window.canAccessPage(userContext.role, 'emergency')) {
+          document.body.innerHTML = '<div style="padding:40px;text-align:center;font-size:20px;font-weight:700;">Bu sayfaya erişim yetkiniz bulunmamaktadır.</div>';
+          document.body.style.display = 'block';
+          return;
+        }
+
+        document.getElementById('current_user_email').innerText = userContext.email;
+        if (userContext.tenant && userContext.tenant.name) {
+          document.getElementById('lbl_osgb_title').innerText = userContext.tenant.name;
+        }
+
+        document.body.style.display = 'block';
+        await loadCompanies();
+        await loadEmergencies();
+      });
+
+      async function loadCompanies() {
+        const { data, error } = await dbClient
+          .from('customer_companies')
+          .select('id, name')
+          .eq('tenant_id', userContext.tenant_id)
+          .eq('is_active', true)
+          .order('name');
+        
+        if (error) { console.error(error); return; }
+        companies = data || [];
+        
+        const filterSel = document.getElementById('filter_company');
+        const modalSel = document.getElementById('modal_company_id');
+        
+        companies.forEach(c => {
+          filterSel.appendChild(new Option(c.name, c.id));
+          modalSel.appendChild(new Option(c.name, c.id));
+        });
+      }
+
+      async function loadEmergencies() {
+        document.getElementById('status_msg').innerHTML = '<span style="color:#0284c7">Veriler yükleniyor...</span>';
+        const { data, error } = await dbClient
+          .from('emergencies')
+          .select('*, customer_companies(name)')
+          .eq('tenant_id', userContext.tenant_id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          document.getElementById('status_msg').innerHTML = '<span style="color:#ef4444">Hata: ' + error.message + '</span>';
+          return;
+        }
+        rawData = data || [];
+        document.getElementById('status_msg').innerHTML = '';
+        renderEmergencies();
+      }
+
+      function renderEmergencies() {
+        const tbody = document.getElementById('emergencies_tbody');
+        const companyFilter = document.getElementById('filter_company').value;
+        const today = new Date().toISOString().split('T')[0];
+
+        let filtered = rawData.filter(r => {
+          if (companyFilter && r.company_id !== companyFilter) return false;
+          return true;
+        });
+
+        let completed = 0;
+        let planned = 0;
+        let overdue = 0;
+
+        filtered.forEach(r => {
+          if (r.drill_status === 'Tamamlandı') completed++;
+          else if (r.drill_status === 'Planlandı') {
+            if (r.drill_date && r.drill_date < today) overdue++;
+            else planned++;
+          }
+        });
+
+        document.getElementById('stat_total').innerText = filtered.length;
+        document.getElementById('stat_completed').innerText = completed;
+        document.getElementById('stat_planned').innerText = planned;
+        document.getElementById('stat_overdue').innerText = overdue;
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #94a3b8; padding: 24px;">Kayıt bulunamadı.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = filtered.map(r => {
+          let badgeColor = '#e2e8f0'; let textColor = '#475569';
+          if (r.drill_status === 'Tamamlandı') { badgeColor = '#dcfce7'; textColor = '#166534'; }
+          else if (r.drill_status === 'Planlandı') {
+             if (r.drill_date && r.drill_date < today) { badgeColor = '#fee2e2'; textColor = '#991b1b'; r.drill_status = 'Gecikti'; }
+             else { badgeColor = '#fef3c7'; textColor = '#92400e'; }
+          }
+
+          return `
+          <tr style="border-bottom: 1px solid var(--uc-line);">
+            <td style="padding: 12px 16px; font-weight:600; color:#0f172a;">${r.customer_companies?.name || 'Bilinmiyor'}</td>
+            <td style="padding: 12px 16px; font-weight:700;">${r.emergency_type}</td>
+            <td style="padding: 12px 16px;">${r.assembly_point || '-'}</td>
+            <td style="padding: 12px 16px;">${r.drill_date ? new Date(r.drill_date).toLocaleDateString('tr-TR') : '-'}</td>
+            <td style="padding: 12px 16px;">
+              <span style="background:${badgeColor};color:${textColor};padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;">${r.drill_status}</span>
+            </td>
+            <td style="padding: 12px 16px; font-size:12px; color:var(--uc-text-muted); max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.notes || ''}">
+              ${r.notes || '-'}
+            </td>
+            <td style="padding: 12px 16px;">
+              <button onclick="updateStatus('${r.id}', 'Tamamlandı')" style="background:none; border:none; color:#10b981; cursor:pointer; font-size:16px; margin-right:8px;" title="Tamamlandı Olarak İşaretle">✔️</button>
+              <button onclick="deleteEmergency('${r.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:16px;" title="Sil">🗑</button>
+            </td>
+          </tr>
+        `;
+        }).join('');
+      }
+
+      function openAddModal() {
+        document.getElementById('modal_company_id').value = '';
+        document.getElementById('modal_type').value = 'Yangın';
+        document.getElementById('modal_assembly').value = '';
+        document.getElementById('modal_date').value = '';
+        document.getElementById('modal_drill_status').value = 'Planlandı';
+        document.getElementById('modal_notes').value = '';
+        document.getElementById('modal_status').innerHTML = '';
+        document.getElementById('modal_add_emergency').classList.add('show');
+      }
+
+      function closeAddModal() {
+        document.getElementById('modal_add_emergency').classList.remove('show');
+      }
+
+      async function saveEmergency() {
+        const companyId = document.getElementById('modal_company_id').value;
+        const type = document.getElementById('modal_type').value;
+        
+        if (!companyId || !type) {
+          document.getElementById('modal_status').innerHTML = '<span style="color:#ef4444">Firma ve Tipi zorunludur.</span>';
+          return;
+        }
+        
+        const payload = {
+          tenant_id: userContext.tenant_id,
+          company_id: companyId,
+          emergency_type: type,
+          assembly_point: document.getElementById('modal_assembly').value.trim() || null,
+          drill_date: document.getElementById('modal_date').value || null,
+          drill_status: document.getElementById('modal_drill_status').value,
+          notes: document.getElementById('modal_notes').value.trim() || null,
+          created_by: userContext.email
+        };
+
+        document.getElementById('modal_status').innerHTML = '<span style="color:#0284c7">Kaydediliyor...</span>';
+        
+        const { error } = await dbClient.from('emergencies').insert([payload]);
+        if (error) {
+          document.getElementById('modal_status').innerHTML = '<span style="color:#ef4444">Hata: ' + error.message + '</span>';
+        } else {
+          document.getElementById('modal_status').innerHTML = '<span style="color:#10b981">Kaydedildi!</span>';
+          setTimeout(() => {
+            closeAddModal();
+            loadEmergencies();
+          }, 1000);
+        }
+      }
+
+      async function updateStatus(id, newStatus) {
+        if (!confirm('Durumu ' + newStatus + ' olarak güncellemek istediğinize emin misiniz?')) return;
+        const { error } = await dbClient.from('emergencies').update({ drill_status: newStatus }).eq('id', id);
+        if (error) alert('Hata: ' + error.message);
+        else loadEmergencies();
+      }
+
+      async function deleteEmergency(id) {
+        if (!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+        const { error } = await dbClient.from('emergencies').delete().eq('id', id);
+        if (error) alert('Silinirken hata oluştu: ' + error.message);
+        else loadEmergencies();
+      }
+    </script>
+  </body>
+</html>

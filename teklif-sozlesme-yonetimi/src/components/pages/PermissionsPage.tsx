@@ -7,6 +7,7 @@ import { initialTenantUsersMap, TenantUser } from '../../data/tenantUsers';
 import { permissionSeeds } from '../../data/workbench';
 import type { SaaSTenant } from '../../types';
 import { sendEmail, buildCustomerInviteTemplate } from '../../lib/email';
+import { fetchCloudTenantUsersMap, saveCloudTenantUsersMap } from '../../lib/cloudDb';
 
 type Props = {
   impersonatedTenant?: SaaSTenant | null;
@@ -22,10 +23,10 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
 
   // Selected active tenant for user management
   const [activeTenantId, setActiveTenantId] = useState<string>(
-    impersonatedTenant ? impersonatedTenant.id : 'tenant-2' // Default to Vip İş Sağlığı (tenant-2)
+    impersonatedTenant ? impersonatedTenant.id : (initialSaaSTenants[0]?.id || 'tnt-test-osgb-3')
   );
 
-  // All Tenants User Database State with localStorage persistence
+  // All Tenants User Database State with Cloud DB persistence
   const [usersMap, setUsersMap] = useState<Record<string, TenantUser[]>>(() => {
     try {
       const saved = localStorage.getItem('crm_tenant_users_map_v2');
@@ -37,11 +38,15 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
   });
 
   useEffect(() => {
-    try {
-      localStorage.setItem('crm_tenant_users_map_v2', JSON.stringify(usersMap));
-    } catch (e) {
-      console.error(e);
+    async function initUsersMap() {
+      const cloudMap = await fetchCloudTenantUsersMap(initialTenantUsersMap);
+      setUsersMap(cloudMap);
     }
+    initUsersMap();
+  }, []);
+
+  useEffect(() => {
+    saveCloudTenantUsersMap(usersMap);
   }, [usersMap]);
 
   // Superadmin Email Store

@@ -27,6 +27,7 @@ import type {
 
 import { sendEmail, buildCustomerInviteTemplate } from '../../lib/email';
 import { supabase } from '../../lib/supabase';
+import { fetchCloudTenants, saveCloudTenants } from '../../lib/cloudDb';
 
 
 type Props = {
@@ -99,7 +100,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
   });
 
   useEffect(() => {
-    try { localStorage.setItem('crm_saas_tenants_v3', JSON.stringify(tenants)); } catch (e) { console.error(e); }
+    saveCloudTenants(tenants);
   }, [tenants]);
 
   useEffect(() => {
@@ -1935,8 +1936,8 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             <div style={{ border: '1px solid #e5e7eb', borderRadius: 16, padding: 28, background: '#f9fafb' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #e5e7eb', paddingBottom: 16, marginBottom: 20 }}>
                 <div>
-                  <h2 style={{ margin: 0, color: '#111827' }}>ESES SOFTWARE SaaS LİSANS TEKLİFİ</h2>
-                  <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '0.9rem' }}>Offer & Contract Yönetim Sistemi</p>
+                  <h2 style={{ margin: 0, color: '#111827' }}>CODENTRA SaaS LİSANS TEKLİFİ</h2>
+                  <p style={{ margin: '4px 0 0', color: '#6b7280', fontSize: '0.9rem' }}>Teklif ve Sözleşme Yazılımı (CRM)</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <strong style={{ fontSize: '1.1rem', color: '#374151', display: 'block' }}>{previewOffer.offerNumber}</strong>
@@ -1949,7 +1950,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24, fontSize: '0.9rem' }}>
                 <div style={{ background: '#fff', padding: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}>
                   <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', fontWeight: 700 }}>TEKLİF VEREN FİRMA</span>
-                  <h4 style={{ margin: '4px 0 2px', color: '#111827' }}>ESES Software & Yazılım A.Ş.</h4>
+                  <h4 style={{ margin: '4px 0 2px', color: '#111827' }}>Codentra Software & Yazılım A.Ş.</h4>
                   <p style={{ margin: 0, color: '#4b5563' }}>Super Admin SaaS Destek Ekibi</p>
                 </div>
 

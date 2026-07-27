@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <link rel="icon" type="image/svg+xml" href="brand/mark.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="brand/assets/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="brand/assets/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="brand/assets/apple-touch-icon.png" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>isgnova - Kimyasal Yönetimi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/theme-ultra-clean.css" />
+    <script defer src="js/supabase-config.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <style>
+      .modal {
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.6); z-index: 1000; justify-content: center; align-items: center;
+        backdrop-filter: blur(4px);
+      }
+      .modal.show { display: flex; }
+      .modal-content {
+        background: #fff; width: 90%; max-width: 600px; padding: 32px; border-radius: 20px;
+        position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+      .modal-close {
+        position: absolute; top: 24px; right: 24px; background: none; border: none; font-size: 24px;
+        cursor: pointer; color: #64748b;
+      }
+      .form-group { margin-bottom: 16px; }
+      .form-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: #334155; }
+      .form-group input, .form-group select, .form-group textarea {
+        width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; font-size: 14px;
+      }
+    </style>
+  </head>
+  <body class="theme-ultra-clean" style="display: none;">
+    <div class="card">
+      <div class="global-header">
+        <div class="top-row">
+          <div class="logo-area">
+            <span id="lbl_osgb_title">isgnova</span> <span class="logo-badge">SaaS</span>
+          </div>
+          <div class="controls-group">
+            <div class="user-info">👤 <span id="current_user_email">...</span></div>
+            <button class="logout-btn" onclick="handleLogout()">Güvenli Çıkış</button>
+          </div>
+        </div>
+        <div class="nav-container">
+          <!-- Navigation will be populated by navigation.js -->
+        </div>
+      </div>
+
+      <div class="crm-page-shell">
+        <div class="page-header-row" style="margin-bottom: 24px;">
+          <div class="page-title-group">
+            <h2 style="font-size: clamp(24px, 2.2vw, 34px); letter-spacing: -0.03em; color: #0f172a; font-weight: 800; margin: 0 0 6px;">🧪 Kimyasal Yönetimi</h2>
+            <p style="font-size: 13px; color: var(--uc-text-muted); margin: 0;">Firma bazlı kimyasal envanteri, MSDS (Güvenlik Bilgi Formu) belgeleri ve depolama limitlerini yönetin.</p>
+          </div>
+        </div>
+
+        <div class="crm-double-stats-grid" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+          <div class="stats-section-premium">
+            <div class="stats-cards-wrapper" style="display: flex; gap: 16px; flex-wrap: wrap;">
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#3b82f6"></div>
+                <span class="number" id="stat_total">0</span>
+                <span class="label">Kayıtlı Kimyasal</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#ef4444"></div>
+                <span class="number" id="stat_high_hazard">0</span>
+                <span class="label">Çok Tehlikeli</span>
+              </div>
+              <div class="stat-card-premium" style="flex: 1; min-width: 200px;">
+                <div class="color-bar" style="background:#f59e0b"></div>
+                <span class="number" id="stat_missing_msds">0</span>
+                <span class="label">MSDS Eksik</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="crm-toolbar-premium" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <select id="filter_company" onchange="renderChemicals()" style="padding: 10px 14px; border: 1px solid var(--uc-line); border-radius: 10px;">
+              <option value="">-- Tüm Firmalar --</option>
+            </select>
+            <input class="search-input" id="search_input" type="text" placeholder="Kimyasal adı veya CAS No..." oninput="renderChemicals()" style="padding: 10px 14px; min-width: 250px; border: 1px solid var(--uc-line); border-radius: 10px;" />
+          </div>
+          <button class="btn-add-lead-btn" onclick="openAddModal()" style="background: var(--uc-primary); border: none; padding: 10px 18px; border-radius: 999px; font-weight: 700; color:#fff; cursor:pointer;">+ Yeni Kimyasal Ekle</button>
+        </div>
+
+        <div class="stat-card-premium" style="padding: 24px;">
+          <div class="table-container-premium" style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+              <thead>
+                <tr>
+                  <th style="padding: 12px 16px;">Firma</th>
+                  <th style="padding: 12px 16px;">Kimyasal Adı</th>
+                  <th style="padding: 12px 16px;">CAS No</th>
+                  <th style="padding: 12px 16px;">Tehlike Sınıfı</th>
+                  <th style="padding: 12px 16px;">Depolama Alanı</th>
+                  <th style="padding: 12px 16px;">Max Miktar</th>
+                  <th style="padding: 12px 16px;">MSDS Belgesi</th>
+                  <th style="padding: 12px 16px;">İşlem</th>
+                </tr>
+              </thead>
+              <tbody id="chemicals_tbody">
+                <tr>
+                  <td colspan="8" style="text-align: center; color: #94a3b8; padding: 24px;">Veriler yükleniyor...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="status-line" id="status_msg" style="margin-top: 12px; font-size: 13px; font-weight: 600;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Add Chemical -->
+    <div class="modal" id="modal_add_chemical">
+      <div class="modal-content">
+        <button class="modal-close" onclick="closeAddModal()">&times;</button>
+        <h3 style="margin-top:0; font-size:20px; font-weight:800; color:#0f172a; margin-bottom: 24px;">Yeni Kimyasal Ekle</h3>
+        
+        <div class="form-group">
+          <label>Firma *</label>
+          <select id="modal_company_id"></select>
+        </div>
+        <div class="form-group">
+          <label>Kimyasal Adı *</label>
+          <input type="text" id="modal_name" placeholder="Örn: Sodyum Hipoklorit">
+        </div>
+        <div class="form-group">
+          <label>CAS Numarası</label>
+          <input type="text" id="modal_cas_no" placeholder="Örn: 7681-52-9">
+        </div>
+        <div class="form-group">
+          <label>Tehlike Sınıfı</label>
+          <select id="modal_hazard_class">
+            <option value="">Seçiniz</option>
+            <option value="Aşındırıcı">Aşındırıcı</option>
+            <option value="Yanıcı">Yanıcı</option>
+            <option value="Zehirli">Zehirli</option>
+            <option value="Tahriş Edici">Tahriş Edici</option>
+            <option value="Oksitleyici">Oksitleyici</option>
+            <option value="Çevreye Zararlı">Çevreye Zararlı</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Depolama Alanı</label>
+          <input type="text" id="modal_storage_area" placeholder="Örn: Ana Depo, Kimyasal Odası 2">
+        </div>
+        <div style="display:flex; gap:16px;">
+          <div class="form-group" style="flex:1">
+            <label>Maksimum Miktar</label>
+            <input type="text" id="modal_max_amount" placeholder="Örn: 500 Litre">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label>Maruziyet Sınırı</label>
+            <input type="text" id="modal_exposure_limit" placeholder="Örn: 10 ppm">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>MSDS Dosya Bağlantısı (URL)</label>
+          <input type="text" id="modal_msds_url" placeholder="https://...">
+        </div>
+        
+        <div style="text-align: right; margin-top: 24px;">
+          <button onclick="saveChemical()" style="background: var(--uc-primary); border: none; padding: 12px 24px; border-radius: 999px; font-weight: 700; color:#fff; cursor:pointer;">Kaydet</button>
+        </div>
+        <div id="modal_status" style="margin-top:12px; font-size:13px; font-weight:600; text-align:right;"></div>
+      </div>
+    </div>
+
+    <script>
+      let userContext = null;
+      let rawChemicals = [];
+      let companies = [];
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        if (!window.dbClient) return;
+        userContext = await window.getCurrentAuthContext();
+        if (!userContext.canLogin) {
+          alert("Erişim izniniz yok. Lütfen giriş yapın.");
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        // Navigation & Menu Check
+        window.applyRoleBasedNavigation(userContext.role);
+        if (!window.canAccessPage(userContext.role, 'chemicals')) {
+          document.body.innerHTML = '<div style="padding:40px;text-align:center;font-size:20px;font-weight:700;">Bu sayfaya erişim yetkiniz bulunmamaktadır.</div>';
+          document.body.style.display = 'block';
+          return;
+        }
+
+        document.getElementById('current_user_email').innerText = userContext.email;
+        if (userContext.tenant && userContext.tenant.name) {
+          document.getElementById('lbl_osgb_title').innerText = userContext.tenant.name;
+        }
+
+        document.body.style.display = 'block';
+        await loadCompanies();
+        await loadChemicals();
+      });
+
+      async function loadCompanies() {
+        const { data, error } = await dbClient
+          .from('customer_companies')
+          .select('id, name')
+          .eq('tenant_id', userContext.tenant_id)
+          .eq('is_active', true)
+          .order('name');
+        
+        if (error) { console.error(error); return; }
+        companies = data || [];
+        
+        const filterSel = document.getElementById('filter_company');
+        const modalSel = document.getElementById('modal_company_id');
+        
+        companies.forEach(c => {
+          filterSel.appendChild(new Option(c.name, c.id));
+          modalSel.appendChild(new Option(c.name, c.id));
+        });
+      }
+
+      async function loadChemicals() {
+        document.getElementById('status_msg').innerHTML = '<span style="color:#0284c7">Veriler yükleniyor...</span>';
+        const { data, error } = await dbClient
+          .from('chemicals')
+          .select('*, customer_companies(name)')
+          .eq('tenant_id', userContext.tenant_id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          document.getElementById('status_msg').innerHTML = '<span style="color:#ef4444">Hata: ' + error.message + '</span>';
+          return;
+        }
+        rawChemicals = data || [];
+        document.getElementById('status_msg').innerHTML = '';
+        renderChemicals();
+      }
+
+      function renderChemicals() {
+        const tbody = document.getElementById('chemicals_tbody');
+        const search = document.getElementById('search_input').value.toLowerCase();
+        const companyFilter = document.getElementById('filter_company').value;
+
+        let filtered = rawChemicals.filter(c => {
+          if (companyFilter && c.company_id !== companyFilter) return false;
+          if (search) {
+            const txt = ((c.name || '') + ' ' + (c.cas_no || '')).toLowerCase();
+            if (!txt.includes(search)) return false;
+          }
+          return true;
+        });
+
+        // Update stats
+        document.getElementById('stat_total').innerText = filtered.length;
+        document.getElementById('stat_high_hazard').innerText = filtered.filter(c => c.hazard_class === 'Zehirli' || c.hazard_class === 'Aşındırıcı' || c.hazard_class === 'Yanıcı').length;
+        document.getElementById('stat_missing_msds').innerText = filtered.filter(c => !c.msds_url || c.msds_url.trim() === '').length;
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #94a3b8; padding: 24px;">Kayıt bulunamadı.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = filtered.map(c => `
+          <tr style="border-bottom: 1px solid var(--uc-line);">
+            <td style="padding: 12px 16px; font-weight:600; color:#0f172a;">${c.customer_companies?.name || 'Bilinmiyor'}</td>
+            <td style="padding: 12px 16px; font-weight:700;">${c.name}</td>
+            <td style="padding: 12px 16px;">${c.cas_no || '-'}</td>
+            <td style="padding: 12px 16px;">
+              ${c.hazard_class ? `<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">${c.hazard_class}</span>` : '-'}
+            </td>
+            <td style="padding: 12px 16px;">${c.storage_area || '-'}</td>
+            <td style="padding: 12px 16px;">${c.max_amount || '-'}</td>
+            <td style="padding: 12px 16px;">
+              ${c.msds_url ? `<a href="${c.msds_url}" target="_blank" style="color:var(--uc-primary);text-decoration:underline;font-size:12px;">Görüntüle ↗</a>` : '<span style="color:#ef4444;font-size:12px;">Eksik</span>'}
+            </td>
+            <td style="padding: 12px 16px;">
+              <button onclick="deleteChemical('${c.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:18px;">🗑</button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      function openAddModal() {
+        document.getElementById('modal_company_id').value = '';
+        document.getElementById('modal_name').value = '';
+        document.getElementById('modal_cas_no').value = '';
+        document.getElementById('modal_hazard_class').value = '';
+        document.getElementById('modal_storage_area').value = '';
+        document.getElementById('modal_max_amount').value = '';
+        document.getElementById('modal_exposure_limit').value = '';
+        document.getElementById('modal_msds_url').value = '';
+        document.getElementById('modal_status').innerHTML = '';
+        document.getElementById('modal_add_chemical').classList.add('show');
+      }
+
+      function closeAddModal() {
+        document.getElementById('modal_add_chemical').classList.remove('show');
+      }
+
+      async function saveChemical() {
+        const companyId = document.getElementById('modal_company_id').value;
+        const name = document.getElementById('modal_name').value.trim();
+        
+        if (!companyId || !name) {
+          document.getElementById('modal_status').innerHTML = '<span style="color:#ef4444">Firma ve Kimyasal Adı zorunludur.</span>';
+          return;
+        }
+        
+        const payload = {
+          tenant_id: userContext.tenant_id,
+          company_id: companyId,
+          name: name,
+          cas_no: document.getElementById('modal_cas_no').value.trim() || null,
+          hazard_class: document.getElementById('modal_hazard_class').value || null,
+          storage_area: document.getElementById('modal_storage_area').value.trim() || null,
+          max_amount: document.getElementById('modal_max_amount').value.trim() || null,
+          exposure_limit: document.getElementById('modal_exposure_limit').value.trim() || null,
+          msds_url: document.getElementById('modal_msds_url').value.trim() || null,
+          created_by: userContext.email
+        };
+
+        document.getElementById('modal_status').innerHTML = '<span style="color:#0284c7">Kaydediliyor...</span>';
+        
+        const { error } = await dbClient.from('chemicals').insert([payload]);
+        if (error) {
+          document.getElementById('modal_status').innerHTML = '<span style="color:#ef4444">Hata: ' + error.message + '</span>';
+        } else {
+          document.getElementById('modal_status').innerHTML = '<span style="color:#10b981">Kaydedildi!</span>';
+          setTimeout(() => {
+            closeAddModal();
+            loadChemicals();
+          }, 1000);
+        }
+      }
+
+      async function deleteChemical(id) {
+        if (!confirm('Bu kimyasal kaydını silmek istediğinize emin misiniz?')) return;
+        const { error } = await dbClient.from('chemicals').delete().eq('id', id);
+        if (error) {
+          alert('Silinirken hata oluştu: ' + error.message);
+        } else {
+          loadChemicals();
+        }
+      }
+    </script>
+  </body>
+</html>

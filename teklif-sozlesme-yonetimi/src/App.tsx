@@ -18,6 +18,7 @@ import type { SectionId, SaaSTenant, ThemeId, ContractRecord, OfferRecord } from
 
 import { LoginPage } from './components/LoginPage';
 import { supabase } from './lib/supabase';
+import { fetchCloudCustomers, saveCloudCustomers, fetchCloudOffers, saveCloudOffers, fetchCloudContracts, saveCloudContracts } from './lib/cloudDb';
 
 function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('dashboard');
@@ -123,52 +124,54 @@ function App() {
 
 
 
+  // Cloud DB Initial Fetch & Real-Time Sync
   useEffect(() => {
-    try {
-      localStorage.setItem('crm_customers_v2', JSON.stringify(customers));
-    } catch (e) {
-      console.error(e);
+    async function initCloudData() {
+      const dbCust = await fetchCloudCustomers(customerSeeds as CustomerRecord[]);
+      setCustomers(dbCust);
+
+      const dbOff = await fetchCloudOffers(offerSeeds);
+      setOffers(dbOff);
+
+      const dbCont = await fetchCloudContracts(contractSeeds);
+      setContracts(dbCont);
     }
+    initCloudData();
+
+    // Supabase Real-Time Channel for cross-browser sync
+    const channel = supabase
+      .channel('realtime-crm-global')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, async () => {
+        const updated = await fetchCloudCustomers();
+        setCustomers(updated);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'offers' }, async () => {
+        const updated = await fetchCloudOffers();
+        setOffers(updated);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contracts' }, async () => {
+        const updated = await fetchCloudContracts();
+        setContracts(updated);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Save changes to Cloud DB & local storage
+  useEffect(() => {
+    saveCloudCustomers(customers);
   }, [customers]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('crm_offers_v3', JSON.stringify(offers));
-    } catch (e) {
-      console.error(e);
-    }
+    saveCloudOffers(offers);
   }, [offers]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('crm_contracts_v3', JSON.stringify(contracts));
-    } catch (e) {
-      console.error(e);
-    }
+    saveCloudContracts(contracts);
   }, [contracts]);
-
-
-  // Re-sync contracts & offers from localStorage when switching pages
-  useEffect(() => {
-    try {
-      const storedContracts = localStorage.getItem('crm_contracts_v3');
-      if (storedContracts) {
-        const parsed = JSON.parse(storedContracts);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setContracts(parsed);
-        }
-      }
-      const storedOffers = localStorage.getItem('crm_offers_v3');
-      if (storedOffers) {
-        const parsedOff = JSON.parse(storedOffers);
-        if (Array.isArray(parsedOff)) {
-          setOffers(parsedOff);
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, [activeSection]);
 
   useEffect(() => {
     const savedTheme = window.localStorage.getItem('offer-contract-theme') as ThemeId | null;

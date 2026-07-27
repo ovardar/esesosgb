@@ -63,13 +63,13 @@ export function Shell({
               <img src={activeTenantLogo} alt={activeTenantName || 'Kiracı Logosu'} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
             </div>
           ) : (
-            <span className="brand-mark">OC</span>
+            <span className="brand-mark" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', color: '#ffffff', fontWeight: 800 }}>CD</span>
           )}
           <div>
-            <p className="eyebrow" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {activeTenantName ? activeTenantName : 'SaaS Workspace'}
+            <p className="eyebrow" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>
+              {activeTenantName ? activeTenantName : 'CODENTRA'}
             </p>
-            <h1 style={{ fontSize: '0.98rem' }}>{activeTenantName ? 'İSG Yönetim Portalı' : 'Offer & Contract'}</h1>
+            <h1 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0f172a' }}>{activeTenantName ? 'Teklif ve Sözleşme Yazılımı' : 'Teklif & Sözleşme CRM'}</h1>
           </div>
         </div>
 
