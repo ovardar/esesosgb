@@ -1,7 +1,6 @@
-import { supabase } from './supabase';
-
 const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || '';
 const DEFAULT_FROM = import.meta.env.VITE_FROM_EMAIL || 'Codentra CRM <davet@codentra.com.tr>';
+
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -11,10 +10,10 @@ export interface SendEmailOptions {
   redirectTo?: string;
 }
 
-export async function sendEmail({ to, subject, html, from = DEFAULT_FROM, redirectTo }: SendEmailOptions) {
-  const targetEmail = Array.isArray(to) ? to[0] : to;
+export async function sendEmail({ to, subject, html, from = DEFAULT_FROM }: SendEmailOptions) {
+  const recipients = Array.isArray(to) ? to : [to];
 
-  // 1. Try Resend API if API Key is configured
+  // 1. Try Resend API with configured from address
   if (RESEND_API_KEY) {
     try {
       const response = await fetch('https://api.resend.com/emails', {
@@ -25,7 +24,7 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM, redire
         },
         body: JSON.stringify({
           from: from,
-          to: Array.isArray(to) ? to : [to],
+          to: recipients,
           subject: subject,
           html: html
         })
@@ -35,29 +34,38 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM, redire
       if (response.ok) {
         return { success: true, provider: 'resend', data };
       }
-      console.warn('[Email] Resend API error response:', data);
+      console.warn('[Email] Resend API attempt 1 warning:', data);
+
+      // 2. Retry with Resend sandbox onboarding address if custom domain is not yet verified
+      if (from !== 'Codentra CRM <onboarding@resend.dev>') {
+        const fallbackResp = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${RESEND_API_KEY}`
+          },
+          body: JSON.stringify({
+            from: 'Codentra CRM <onboarding@resend.dev>',
+            to: recipients,
+            subject: subject,
+            html: html
+          })
+        });
+
+        const fallbackData = await fallbackResp.json();
+        if (fallbackResp.ok) {
+          return { success: true, provider: 'resend-onboarding', data: fallbackData };
+        }
+        console.warn('[Email] Resend API attempt 2 warning:', fallbackData);
+      }
     } catch (err) {
       console.warn('[Email] Resend fetch failed:', err);
     }
   }
 
-  // 2. Fallback: Use Supabase Auth SMTP service if available
-  if (targetEmail) {
-    try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
-        redirectTo: redirectTo || targetEmail
-      });
-      if (!error) {
-        return { success: true, provider: 'supabase', data };
-      }
-      console.warn('[Email] Supabase auth resetPasswordForEmail warning:', error);
-    } catch (err) {
-      console.warn('[Email] Supabase auth resetPasswordForEmail failed:', err);
-    }
-  }
-
-  return { success: false, error: 'Resend API key missing or unverified domain. Direct link fallback available.' };
+  return { success: false, error: 'Resend API key missing or email sending rejected. Direct link modal activated.' };
 }
+
 
 
 /**
