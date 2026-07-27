@@ -127,7 +127,7 @@ export function DashboardPage({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                Hoş Geldiniz, Ayşe Yılmaz
+                {impersonatedTenant ? `Hoş Geldiniz [${impersonatedTenant.companyName}]` : 'Hoş Geldiniz, Orhan Vardar'}
               </h3>
               {impersonatedTenant ? (
                 <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.76rem', fontWeight: 800, background: 'rgba(245, 158, 11, 0.15)', color: '#d97706' }}>
@@ -135,10 +135,11 @@ export function DashboardPage({
                 </span>
               ) : (
                 <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.76rem', fontWeight: 800, background: 'rgba(99, 102, 241, 0.12)', color: '#6366f1' }}>
-                  👔 Müşteri Temsilcisi & İSG Başuzmanı
+                  🛡️ Sistem Yöneticisi (Süper Admin)
                 </span>
               )}
             </div>
+
             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               📅 {todayFormatted} • Günlük operasyonel ajandanız ve finansal durum özeti
             </span>

@@ -108,12 +108,15 @@ function App() {
 
 
 
-  const currentUserEmail = session?.user?.email || '';
+  const currentUserEmail = session?.user?.email || localStorage.getItem('crm_user_session') || '';
 
   const isSuperAdmin = useMemo(() => {
     if (!currentUserEmail) return false;
-    return superAdminEmails.includes(currentUserEmail.toLowerCase());
+    const email = currentUserEmail.toLowerCase().trim();
+    const hardcodedAdmins = ['orhan.vardar@gmail.com', 'ovardar@gmail.com', 'admin@osgbsistem.com'];
+    return hardcodedAdmins.includes(email) || superAdminEmails.includes(email);
   }, [superAdminEmails, currentUserEmail]);
+
 
   // Default initial page routing based on user authority
   useEffect(() => {
@@ -337,7 +340,9 @@ function App() {
       activeTheme={activeTheme}
       onSectionChange={handleSectionChange}
       isSuperAdmin={isSuperAdmin}
+      currentUserEmail={currentUserEmail}
       activeTenantName={impersonatedTenant ? impersonatedTenant.companyName : undefined}
+
       activeTenantLogo={impersonatedTenant ? impersonatedTenant.logoUrl : undefined}
       onClearImpersonation={() => setImpersonatedTenant(null)}
       customers={customers}

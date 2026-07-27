@@ -12,6 +12,7 @@ type ShellProps = {
   activeTheme: ThemeId;
   onSectionChange: (section: SectionId) => void;
   isSuperAdmin?: boolean;
+  currentUserEmail?: string;
   activeTenantName?: string;
   activeTenantLogo?: string;
   onClearImpersonation?: () => void;
@@ -30,6 +31,7 @@ export function Shell({
   activeTheme,
   onSectionChange,
   isSuperAdmin = true,
+  currentUserEmail,
   activeTenantName,
   activeTenantLogo,
   onClearImpersonation,
@@ -38,6 +40,7 @@ export function Shell({
   sidebarNoteTitle,
   sidebarNoteBody,
   customers = [],
+
   onUpdateActivityStatus = () => {},
   onNavigateCustomer = () => {},
   children
@@ -129,12 +132,22 @@ export function Shell({
           ) : null}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {currentUserEmail && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: 'var(--surface-strong)', border: '1px solid var(--border)', fontSize: '0.8rem', color: 'var(--text-main)', boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)' }}>
+                <span style={{ fontSize: '0.88rem' }}>👤</span>
+                <span style={{ fontWeight: 600 }}>{currentUserEmail}</span>
+                <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 10, background: isSuperAdmin ? '#6366f1' : '#10b981', color: '#ffffff', fontWeight: 700 }}>
+                  {isSuperAdmin ? '🛡️ Süper Admin' : '👥 Müşteri / Personel'}
+                </span>
+              </div>
+            )}
             <NotificationBell
               customers={customers}
               onUpdateActivityStatus={onUpdateActivityStatus}
               onNavigateCustomer={onNavigateCustomer}
               onNavigateSection={onSectionChange}
             />
+
             <button
               type="button"
               className="btn-action-secondary"
