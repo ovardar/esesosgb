@@ -25,14 +25,16 @@ import type {
 import { sendEmail, buildCustomerInviteTemplate } from '../../lib/email';
 
 type Props = {
-
   onImpersonateTenant?: (tenant: SaaSTenant) => void;
   onNavigateSection?: (section: SectionId) => void;
+  currentUserEmail?: string;
 };
 
-export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection }: Props) {
+export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentUserEmail }: Props) {
+  const activeUserEmail = currentUserEmail || localStorage.getItem('crm_user_session') || 'orhan.vardar@gmail.com';
   const [sendingEmail, setSendingEmail] = useState(false);
   const [tenants, setTenants] = useState<SaaSTenant[]>(initialSaaSTenants);
+
 
   const [offers, setOffers] = useState<SaaSOffer[]>(initialSaaSOffers);
   const [contracts, setContracts] = useState<SaaSContract[]>(initialSaaSContracts);
@@ -452,7 +454,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection }: Props)
               annualFee: Number(licenseEditForm.annualFee),
               maxUsers: Number(licenseEditForm.maxUsers),
               notes: licenseEditForm.notes || t.notes,
-              updatedBy: 'superadmin@yazilimfirmasi.com',
+              updatedBy: activeUserEmail,
               updatedAt: new Date().toLocaleString('tr-TR')
             }
           : t
@@ -471,12 +473,13 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection }: Props)
               annualFee: Number(licenseEditForm.annualFee),
               maxUsers: Number(licenseEditForm.maxUsers),
               notes: licenseEditForm.notes || prev.notes,
-              updatedBy: 'superadmin@yazilimfirmasi.com',
+              updatedBy: activeUserEmail,
               updatedAt: new Date().toLocaleString('tr-TR')
             }
           : null
       );
     }
+
 
     setOffers((prev) =>
       prev.map((o) =>
@@ -624,11 +627,12 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection }: Props)
         analytics: newForm.package === 'Enterprise'
       },
       lastLoginAt: 'Henüz Giriş Yapılmadı',
-      createdBy: 'superadmin@yazilimfirmasi.com',
+      createdBy: activeUserEmail,
       createdAt: new Date().toLocaleString('tr-TR'),
-      updatedBy: 'superadmin@yazilimfirmasi.com',
+      updatedBy: activeUserEmail,
       updatedAt: new Date().toLocaleString('tr-TR'),
       activationStatus: 'Davet Gönderilmedi'
+
     };
 
     setTenants((prev) => [newTenant, ...prev]);
@@ -2087,7 +2091,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection }: Props)
                   </div>
                   <div>
                     <dt>Kaydı Oluşturan</dt>
-                    <dd>{selectedTenant.createdBy || 'superadmin@yazilimfirmasi.com'}</dd>
+                    <dd>{selectedTenant.createdBy || activeUserEmail}</dd>
                   </div>
                   <div>
                     <dt>Oluşturulma Tarihi</dt>
@@ -2095,8 +2099,9 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection }: Props)
                   </div>
                   <div>
                     <dt>Son Güncelleyen</dt>
-                    <dd>{selectedTenant.updatedBy || 'superadmin@yazilimfirmasi.com'}</dd>
+                    <dd>{selectedTenant.updatedBy || activeUserEmail}</dd>
                   </div>
+
                   <div>
                     <dt>Son İşlem Zamanı</dt>
                     <dd>{selectedTenant.updatedAt || selectedTenant.lastLoginAt}</dd>

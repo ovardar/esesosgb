@@ -229,12 +229,14 @@ function App() {
         }
         return (
           <SaaSAdminPage
+            currentUserEmail={currentUserEmail}
             onImpersonateTenant={(tenant) => {
               setImpersonatedTenant(tenant);
               handleSectionChange('customers');
             }}
             onNavigateSection={handleSectionChange}
           />
+
         );
       case 'customers':
         return (
