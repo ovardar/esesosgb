@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
 import { createPortal } from 'react-dom';
 
 import { initialSaaSTenants } from '../../data/saasWorkbench';
@@ -24,8 +25,24 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
     impersonatedTenant ? impersonatedTenant.id : 'tenant-2' // Default to Vip İş Sağlığı (tenant-2)
   );
 
-  // All Tenants User Database State
-  const [usersMap, setUsersMap] = useState<Record<string, TenantUser[]>>(initialTenantUsersMap);
+  // All Tenants User Database State with localStorage persistence
+  const [usersMap, setUsersMap] = useState<Record<string, TenantUser[]>>(() => {
+    try {
+      const saved = localStorage.getItem('crm_tenant_users_map_v2');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return initialTenantUsersMap;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('crm_tenant_users_map_v2', JSON.stringify(usersMap));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [usersMap]);
 
   // Superadmin Email Store
   const [superAdmins, setSuperAdmins] = useState<Array<{ id: string; email: string; name: string; addedAt: string }>>(() => {
@@ -40,20 +57,20 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
     ];
   });
 
-
   const [newSuperAdminEmail, setNewSuperAdminEmail] = useState('');
   const [newSuperAdminName, setNewSuperAdminName] = useState('');
   const [showSuperAdminSection, setShowSuperAdminSection] = useState(false);
   const [superAdminInviteUser, setSuperAdminInviteUser] = useState<{ name: string; email: string } | null>(null);
 
   // Save superAdmins to localStorage
-  useMemo(() => {
+  useEffect(() => {
     try {
       localStorage.setItem('crm_superadmins_v2', JSON.stringify(superAdmins));
     } catch (e) {
       console.error(e);
     }
   }, [superAdmins]);
+
 
   const handleAddSuperAdmin = (e: React.FormEvent) => {
     e.preventDefault();

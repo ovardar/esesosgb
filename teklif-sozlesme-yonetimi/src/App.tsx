@@ -133,11 +133,20 @@ function App() {
 
   useEffect(() => {
     try {
+      localStorage.setItem('crm_offers_v3', JSON.stringify(offers));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [offers]);
+
+  useEffect(() => {
+    try {
       localStorage.setItem('crm_contracts_v3', JSON.stringify(contracts));
     } catch (e) {
       console.error(e);
     }
   }, [contracts]);
+
 
   // Re-sync contracts & offers from localStorage when switching pages
   useEffect(() => {
