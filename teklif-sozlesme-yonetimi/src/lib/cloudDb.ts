@@ -232,6 +232,9 @@ export async function saveCloudContracts(contracts: ContractRecord[]): Promise<v
 // 4. TENANTS CLOUD SYNC
 // ==========================================
 export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<SaaSTenant[]> {
+  const localList: SaaSTenant[] = getLocalItem('crm_saas_tenants_v3', fallback);
+  const localMap = new Map<string, SaaSTenant>(localList.map(t => [t.id, t]));
+
   try {
     const { data, error } = await supabase.from('tenants').select('*');
     if (!error && data && data.length > 0) {
@@ -243,41 +246,54 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
         if (clean === 'test osgb') return true;
         return keywords.some(kw => clean.includes(kw));
       };
+
       const tenants: SaaSTenant[] = data
         .filter((row: any) => {
           const name = row.name || row.companyName;
           return name && !isDummyTenant(name);
         })
-        .map((row: any) => ({
-        id: row.id,
-        tenantCode: row.tenant_code || `TNT-${row.id.substring(0, 4).toUpperCase()}`,
-        companyName: row.name || row.companyName || 'Test OSGB 3',
-        contactName: row.contact_name || row.contactName || 'Orhan Vardar',
-        email: row.email || 'orhan.vardar@gmail.com',
-        phone: row.phone || '0850 000 00 00',
-        city: row.city || 'İstanbul',
-        package: row.package || 'Enterprise',
-        status: row.status || (row.is_active ? 'Aktif' : 'Pasif'),
-        paymentStatus: row.payment_status || 'Sorunsuz',
-        healthStatus: row.health_status || 'Mükemmel',
-        billingCycle: row.billing_cycle || 'Yıllık',
-        monthlyFee: row.monthly_fee || 28000,
-        annualFee: row.annual_fee || 336000,
-        maxUsers: row.max_users || 50,
-        activeUsers: row.active_users || 1,
-        startDate: row.start_date || '2026-01-01',
-        endDate: row.end_date || '2027-01-01',
-        autoRenew: row.auto_renew ?? true,
-        notes: row.notes || 'Supabase Bulut Veritabanı',
-        modulesEnabled: row.modules_enabled || { crm: true, offers: true, contracts: true, documents: true, analytics: true },
-        lastLoginAt: 'Bugün',
-        createdBy: 'orhan.vardar@gmail.com',
-        createdAt: row.created_at ? new Date(row.created_at).toLocaleString('tr-TR') : new Date().toLocaleString('tr-TR'),
-        updatedBy: 'orhan.vardar@gmail.com',
-        updatedAt: new Date().toLocaleString('tr-TR'),
-        activationStatus: 'Hesap Aktif (Şifre Belirlendi)',
-        logoUrl: row.logo_url || row.logoUrl || undefined
-      }));
+        .map((row: any) => {
+          const existingLocal = localMap.get(row.id);
+          return {
+            id: row.id,
+            tenantCode: row.tenant_code || existingLocal?.tenantCode || `TNT-${row.id.substring(0, 4).toUpperCase()}`,
+            companyName: row.name || row.companyName || existingLocal?.companyName || 'Test OSGB 3',
+            contactName: row.contact_name || row.contactName || existingLocal?.contactName || 'Orhan Vardar',
+            email: row.email || row.contact_email || existingLocal?.email || 'orhan.vardar@gmail.com',
+            phone: row.phone || existingLocal?.phone || '0850 000 00 00',
+            city: row.city || existingLocal?.city || 'İstanbul',
+            package: row.package || existingLocal?.package || 'Enterprise',
+            status: row.status || existingLocal?.status || (row.is_active ? 'Aktif' : 'Pasif'),
+            paymentStatus: row.payment_status || existingLocal?.paymentStatus || 'Sorunsuz',
+            healthStatus: row.health_status || existingLocal?.healthStatus || 'Mükemmel',
+            billingCycle: row.billing_cycle || existingLocal?.billingCycle || 'Yıllık',
+            monthlyFee: row.monthly_fee ?? existingLocal?.monthlyFee ?? 28000,
+            annualFee: row.annual_fee ?? existingLocal?.annualFee ?? 336000,
+            maxUsers: row.max_users ?? existingLocal?.maxUsers ?? 50,
+            activeUsers: row.active_users ?? existingLocal?.activeUsers ?? 1,
+            startDate: row.start_date || existingLocal?.startDate || '2026-01-01',
+            endDate: row.end_date || existingLocal?.endDate || '2027-01-01',
+            autoRenew: row.auto_renew ?? existingLocal?.autoRenew ?? true,
+            notes: row.notes || existingLocal?.notes || 'Supabase Bulut Veritabanı',
+            modulesEnabled: row.modules_enabled || existingLocal?.modulesEnabled || { crm: true, offers: true, contracts: true, documents: true, analytics: true },
+            lastLoginAt: existingLocal?.lastLoginAt || 'Bugün',
+            createdBy: existingLocal?.createdBy || 'orhan.vardar@gmail.com',
+            createdAt: row.created_at ? new Date(row.created_at).toLocaleString('tr-TR') : (existingLocal?.createdAt || new Date().toLocaleString('tr-TR')),
+            updatedBy: existingLocal?.updatedBy || 'orhan.vardar@gmail.com',
+            updatedAt: existingLocal?.updatedAt || new Date().toLocaleString('tr-TR'),
+            activationStatus: existingLocal?.activationStatus || 'Hesap Aktif (Şifre Belirlendi)',
+            logoUrl: row.logo_url || row.logoUrl || existingLocal?.logoUrl || undefined
+          };
+        });
+
+      // Include local tenants not yet present in database
+      const dbIds = new Set(tenants.map(t => t.id));
+      localList.forEach(lt => {
+        if (!dbIds.has(lt.id)) {
+          tenants.push(lt);
+        }
+      });
+
       const cleanList = tenants.length > 0 ? tenants : fallback;
       setLocalItem('crm_saas_tenants_v3', cleanList);
       return cleanList;
@@ -285,15 +301,14 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
   } catch (err) {
     console.warn('[CloudDB] Tenants fetch falling back to local storage', err);
   }
-  return getLocalItem('crm_saas_tenants_v3', fallback);
+  return localList;
 }
 
 export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
   setLocalItem('crm_saas_tenants_v3', tenants);
   try {
-    const validUuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const payload = tenants
-      .filter(t => t.id && validUuidRegex.test(t.id))
+      .filter(t => Boolean(t.id))
       .map(t => ({
         id: t.id,
         name: t.companyName,
@@ -315,15 +330,20 @@ export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
         active_users: t.activeUsers,
         modules_enabled: t.modulesEnabled,
         logo_url: t.logoUrl || null,
+        notes: t.notes || null,
         updated_at: new Date().toISOString()
       }));
     if (payload.length > 0) {
-      await supabase.from('tenants').upsert(payload, { onConflict: 'id' });
+      const { error } = await supabase.from('tenants').upsert(payload, { onConflict: 'id' });
+      if (error) {
+        console.warn('[CloudDB] Tenants cloud upsert warning:', error);
+      }
     }
   } catch (err) {
     console.warn('[CloudDB] Tenants cloud upsert warning', err);
   }
 }
+
 
 export async function deleteCloudTenant(tenantId: string): Promise<void> {
   try {
