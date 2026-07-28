@@ -3,36 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Codentra — OSGB ve İş Sağlığı Güvenliği CRM & Sözleşme Yönetim Sistemi</title>
-  <meta name="description" content="OSGB kurumları için özel geliştirilmiş yeni nesil Teklif, Sözleşme, Müşteri CRM ve NACE Tehlike Sınıfı Yönetim Platformu.">
-  <meta name="keywords" content="OSGB yazılımı, OSGB CRM, teklif hazırlama, iş sağlığı güvenliği sözleşme, NACE tehlike sınıfı">
+  <title>Codentra — OSGB ve İş Sağlığı Güvenliği CRM & Sözleşme Yönetim Platformu</title>
+  <meta name="description" content="Codentra: OSGB kurumları için özel geliştirilmiş yeni nesil Teklif, Sözleşme, Müşteri CRM ve NACE Tehlike Sınıfı Yönetim Platformu. Profesyonel çözümlerin dijital merkezi.">
+  <meta name="keywords" content="Codentra, OSGB yazılımı, OSGB CRM, teklif hazırlama, iş sağlığı güvenliği sözleşme, NACE tehlike sınıfı">
+  
+  <!-- Open Graph -->
   <meta property="og:title" content="Codentra — OSGB ve İSG CRM Platformu">
-  <meta property="og:description" content="OSGB süreçlerinizi, teklif ve sözleşmelerinizi dijitalleştirin.">
+  <meta property="og:description" content="Profesyonel çözümlerin dijital merkezi. OSGB süreçlerinizi tek platformdan yönetin.">
   <meta property="og:type" content="website">
 
-  <!-- Google Fonts -->
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="assets/codentra-amblem-lacivert.svg">
+
+  <!-- Google Fonts: Archivo & IBM Plex Mono (as defined in OKUBENI.txt) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <!-- NAVBAR -->
+  <!-- HEADER / NAVBAR -->
   <header class="navbar-header" id="navbar">
     <div class="container nav-container">
-      <a href="#" class="brand-logo">
-        <div class="logo-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+      <a href="#" class="brand-logo" title="Codentra Ana Sayfa">
+        <div class="brand-emblem-wrapper">
+          <img src="assets/codentra-amblem-lacivert.svg" alt="Codentra Amblem" width="42" height="42">
         </div>
-        <div class="logo-text">
-          <span class="logo-name">codentra</span>
-          <span class="logo-badge">OSGB CRM</span>
+        <div class="brand-text-block">
+          <span class="brand-name">Codentra</span>
+          <span class="brand-slogan-line">Dijital Merkezi</span>
         </div>
       </a>
 
@@ -40,6 +41,7 @@
         <a href="#ozellikler" class="nav-link">Özellikler</a>
         <a href="#nace-sorgulama" class="nav-link">NACE Sorgu</a>
         <a href="#nasil-calisir" class="nav-link">Nasıl Çalışır?</a>
+        <a href="#kurumsal-kimlik" class="nav-link">Kurumsal Kimlik</a>
         <a href="#iletisim" class="nav-link">İletişim</a>
       </nav>
 
@@ -52,7 +54,7 @@
             <line x1="15" y1="12" x2="3" y2="12"></line>
           </svg>
         </a>
-        <button class="mobile-toggle" id="mobileToggle" aria-label="Menü">
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Menüyü Aç/Kapat">
           <span></span><span></span><span></span>
         </button>
       </div>
@@ -63,9 +65,10 @@
   <section class="hero-section">
     <div class="hero-bg-glow"></div>
     <div class="container hero-container">
+      
       <div class="hero-badge">
         <span class="pulse-dot"></span>
-        <span>Yeni Nesil OSGB & İSG CRM Platformu</span>
+        <span>YENİ NESİL OSGB & İSG CRM PLATFORMU</span>
       </div>
 
       <h1 class="hero-title">
@@ -76,6 +79,11 @@
         Codentra ile müşteri yönetimi, NACE kodu tehlike sınıfı analizi, kurumsal teklif hazırlama ve revizyon takipli sözleşme süreçlerini dakikalar içinde dijitalleştirin.
       </p>
 
+      <!-- OFFICIAL BRAND SLOGAN (OKUBENI.txt) -->
+      <div class="hero-official-slogan-bar">
+        <span>PROFESYONEL ÇÖZÜMLERİN DİJİTAL MERKEZİ</span>
+      </div>
+
       <div class="hero-cta-group">
         <a href="https://app.codentra.com.tr" id="btn-hero-login" class="btn btn-lg btn-primary btn-glow" target="_blank" rel="noopener">
           <span>Sisteme Giriş Yap</span>
@@ -83,8 +91,8 @@
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </a>
-        <a href="#ozellikler" class="btn btn-lg btn-secondary">
-          <span>Platformu İnceleyin</span>
+        <a href="#kurumsal-kimlik" class="btn btn-lg btn-secondary">
+          <span>Kurumsal Kimliği İncele</span>
         </a>
       </div>
 
@@ -99,14 +107,14 @@
             </div>
             <div class="window-title">codentra.com.tr / app / crm-dashboard</div>
             <div class="window-status">
-              <span class="status-badge live">● CANLI SISTEM</span>
+              <span class="status-badge live">● CANLI SİSTEM</span>
             </div>
           </div>
 
           <div class="mockup-body">
             <div class="dashboard-stats-grid">
               <div class="stat-mini-card">
-                <div class="stat-icon blue">🏢</div>
+                <div class="stat-icon">🏢</div>
                 <div class="stat-info">
                   <span class="stat-label">Aktif Müşteriler</span>
                   <span class="stat-value">128 Firma</span>
@@ -114,7 +122,7 @@
               </div>
 
               <div class="stat-mini-card">
-                <div class="stat-icon emerald">📄</div>
+                <div class="stat-icon">📄</div>
                 <div class="stat-info">
                   <span class="stat-label">Aylık Teklif Hacmi</span>
                   <span class="stat-value">₺1.450.000</span>
@@ -122,7 +130,7 @@
               </div>
 
               <div class="stat-mini-card">
-                <div class="stat-icon purple">📑</div>
+                <div class="stat-icon">📑</div>
                 <div class="stat-info">
                   <span class="stat-label">Onaylı Sözleşme</span>
                   <span class="stat-value">%94.2 Oran</span>
@@ -130,7 +138,7 @@
               </div>
 
               <div class="stat-mini-card">
-                <div class="stat-icon amber">⚡</div>
+                <div class="stat-icon">⚡</div>
                 <div class="stat-info">
                   <span class="stat-label">Ort. Teklif Süresi</span>
                   <span class="stat-value">3 Dakika</span>
@@ -138,7 +146,7 @@
               </div>
             </div>
 
-            <!-- MOCKUP CONTENT PREVIEW -->
+            <!-- MOCKUP PREVIEW TABLE -->
             <div class="mockup-preview-table">
               <div class="table-head-row">
                 <span>Firma Adı</span>
@@ -180,7 +188,7 @@
 
       <div class="features-grid">
         <div class="feature-card glass-card">
-          <div class="feature-icon bg-indigo">
+          <div class="feature-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
               <polyline points="14 2 14 8 20 8"></polyline>
@@ -193,7 +201,7 @@
         </div>
 
         <div class="feature-card glass-card">
-          <div class="feature-icon bg-emerald">
+          <div class="feature-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
               <circle cx="8.5" cy="7" r="4"></circle>
@@ -205,7 +213,7 @@
         </div>
 
         <div class="feature-card glass-card">
-          <div class="feature-icon bg-purple">
+          <div class="feature-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
@@ -218,7 +226,7 @@
         </div>
 
         <div class="feature-card glass-card">
-          <div class="feature-icon bg-amber">
+          <div class="feature-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -229,7 +237,7 @@
         </div>
 
         <div class="feature-card glass-card">
-          <div class="feature-icon bg-rose">
+          <div class="feature-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
@@ -240,7 +248,7 @@
         </div>
 
         <div class="feature-card glass-card">
-          <div class="feature-icon bg-cyan">
+          <div class="feature-icon">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
               <line x1="8" y1="21" x2="16" y2="21"></line>
@@ -260,19 +268,19 @@
       <div class="glass-card widget-card">
         <div class="widget-header">
           <div>
-            <span class="section-tag">CANLI TEST</span>
+            <span class="section-tag">CANLI TEST MOTORU</span>
             <h2 class="widget-title">NACE Kodundan Tehlike Sınıfı Sorgulayın</h2>
             <p class="widget-desc">Aşağıdaki kutucuğa bir sektör, iş kolu veya NACE kodu yazarak canlı tehlike sınıfını test edin.</p>
           </div>
         </div>
 
         <div class="nace-search-box">
-          <input type="text" id="naceInput" placeholder="Örn: İnşaat, Lojistik, Yazılım, 41.20..." autocomplete="off">
+          <input type="text" id="naceInput" placeholder="Örn: İnşaat, Lojistik, Yazılım, Fırın, 41.20..." autocomplete="off">
           <button class="btn btn-primary" id="btnNaceSearch">Sorgula</button>
         </div>
 
         <div class="nace-results-area" id="naceResults">
-          <!-- Results rendered via JavaScript -->
+          <!-- Rendered via JavaScript -->
         </div>
       </div>
     </div>
@@ -308,6 +316,183 @@
     </div>
   </section>
 
+  <!-- OFFICIAL BRAND IDENTITY SHOWCASE SECTION (OKUBENI.txt STANDARDS) -->
+  <section class="section brand-identity-section" id="kurumsal-kimlik">
+    <div class="container">
+      <div class="section-header text-center">
+        <span class="section-tag">RESMİ SEÇİLEN KİMLİK (7A YATAY)</span>
+        <h2 class="section-title">Codentra <span class="copper-text">Kurumsal Kimlik</span> & Logo Standartları</h2>
+        <p class="section-desc">OKUBENI.txt dosyasında belirlenen 7A Yatay marka kimliği, amblem varyasyonları ve renk standartları.</p>
+      </div>
+
+      <!-- SELECTED IDENTITY HIGHLIGHT CARD -->
+      <div class="selected-identity-card">
+        <div class="selected-header-badge">★ RESMİ SEÇİLEN MARKAVE LOGO YERLEŞİMİ</div>
+        
+        <div class="identity-preview-box">
+          <img src="assets/codentra-7a-yatay.png" alt="Codentra 7A Yatay Logotype" width="600" height="150">
+        </div>
+
+        <div class="identity-card-info">
+          <div class="identity-title-meta">
+            <h3>CODENTRA — 7A YATAY YERLEŞİM</h3>
+            <p>Slogan: Profesyonel çözümlerin dijital merkezi</p>
+          </div>
+          <div class="identity-actions">
+            <a href="assets/codentra-amblem-lacivert.svg" download class="btn btn-secondary btn-sm">SVG Amblem İndir</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOGO VARIATIONS GRID (PNG 4x & SVG) -->
+      <div class="section-header text-center" style="margin-top: 40px; margin-bottom: 30px;">
+        <span class="section-tag">AMBLEM VE KİLİT KULLANIM SEÇENEKLERİ</span>
+        <h3 style="font-size: 1.6rem;">Açık / Koyu Zemin & Tek Renk Versiyonları</h3>
+      </div>
+
+      <div class="logo-variations-grid">
+        <!-- Light Background -->
+        <div class="variation-card light-bg">
+          <div class="variation-preview">
+            <img src="assets/codentra-kilit-acik-zemin.png" alt="Açık Zemin Logo Kullanımı">
+          </div>
+          <div class="variation-footer">
+            <span class="name">Beyaz / Açık Zemin</span>
+            <span class="format-tag">PNG 4x / SVG</span>
+          </div>
+        </div>
+
+        <!-- Dark Background -->
+        <div class="variation-card dark-bg">
+          <div class="variation-preview">
+            <img src="assets/codentra-kilit-koyu-zemin.png" alt="Koyu Zemin Logo Kullanımı">
+          </div>
+          <div class="variation-footer">
+            <span class="name">Lacivert Zemin</span>
+            <span class="format-tag">PNG 4x / SVG</span>
+          </div>
+        </div>
+
+        <!-- Single Color Black -->
+        <div class="variation-card single-color-bg">
+          <div class="variation-preview">
+            <img src="assets/codentra-kilit-tekrenk.png" alt="Tek Renk Siyah Kullanımı">
+          </div>
+          <div class="variation-footer">
+            <span class="name" style="color: #101214;">Tek Renk (Kaşe / Baskı)</span>
+            <span class="format-tag">PNG 4x / SVG</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYOUT COMPARISONS (7A, 7B, 7C) -->
+      <div class="section-header text-center" style="margin-top: 40px; margin-bottom: 30px;">
+        <span class="section-tag">YERLEŞİM KARŞILAŞTIRMA KARTLARI</span>
+        <h3 style="font-size: 1.6rem;">Tipografik Yerleşim Modelleri</h3>
+      </div>
+
+      <div class="layout-cards-grid">
+        <div class="layout-card selected">
+          <div class="layout-card-img-box">
+            <img src="assets/codentra-7a-yatay.png" alt="Codentra 7A Yatay">
+          </div>
+          <div class="layout-card-body">
+            <div class="layout-card-title">
+              <span>7A YATAY</span>
+              <span class="layout-badge">SEÇİLEN</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="layout-card">
+          <div class="layout-card-img-box">
+            <img src="assets/codentra-7b-dikey.png" alt="Codentra 7B Dikey">
+          </div>
+          <div class="layout-card-body">
+            <div class="layout-card-title">
+              <span>7B DİKEY</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="layout-card">
+          <div class="layout-card-img-box">
+            <img src="assets/codentra-7c-iki-satir.png" alt="Codentra 7C İki Satır">
+          </div>
+          <div class="layout-card-body">
+            <div class="layout-card-title">
+              <span>7C İKİ SATIR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COLOR PALETTE GRID (OKUBENI.txt Rules) -->
+      <div class="section-header text-center" style="margin-top: 40px; margin-bottom: 30px;">
+        <span class="section-tag">KURUMSAL RENK PALETİ</span>
+        <h3 style="font-size: 1.6rem;">Tıklayarak Renk Kodunu Kopyalayabilirsiniz</h3>
+      </div>
+
+      <div class="color-palette-grid">
+        <div class="color-card" data-hex="#16243C">
+          <div class="color-swatch lacivert"></div>
+          <div class="color-info">
+            <div class="color-name">Lacivert</div>
+            <div class="color-hex">#16243C</div>
+            <div class="color-usage">Ana Kurumsal Renk</div>
+          </div>
+        </div>
+
+        <div class="color-card" data-hex="#C0714A">
+          <div class="color-swatch bakir"></div>
+          <div class="color-info">
+            <div class="color-name">Bakır</div>
+            <div class="color-hex">#C0714A</div>
+            <div class="color-usage">Vurgu &amp; Çerçeve</div>
+          </div>
+        </div>
+
+        <div class="color-card" data-hex="#F7F5F2">
+          <div class="color-swatch kirik-beyaz"></div>
+          <div class="color-info">
+            <div class="color-name">Kırık Beyaz</div>
+            <div class="color-hex">#F7F5F2</div>
+            <div class="color-usage">Amblem İçi &amp; Zemin</div>
+          </div>
+        </div>
+
+        <div class="color-card" data-hex="#101214">
+          <div class="color-swatch siyah"></div>
+          <div class="color-info">
+            <div class="color-name" style="color: #FFFFFF;">Siyah</div>
+            <div class="color-hex">#101214</div>
+            <div class="color-usage">Tek Renk Versiyon</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USAGE GUIDELINES BOX -->
+      <div class="brand-rules-box">
+        <h3>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#C0714A" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          Marka Kullanım ve Güvenlik Kuralları
+        </h3>
+
+        <ul class="rules-list">
+          <li>Amblemin çevresinde en az amblem yüksekliğinin 1/2'si kadar koruma alanı bırakılmalıdır.</li>
+          <li>24 px altındaki kullanımlarda (favicon, mobil ikon) iç bakır çerçeve kaldırılmalıdır.</li>
+          <li>Amblem hiçbir koşulda gerilmemeli, döndürülmemeli ve renkleri değiştirilmemelidir.</li>
+          <li>Şirketin tam ticari unvanı logonun parçası değildir; fatura ve sözleşmelerde ayrı satırda yazılır.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
   <!-- CTA BANNER SECTION -->
   <section class="cta-banner-section">
     <div class="container">
@@ -333,18 +518,17 @@
     <div class="container footer-container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <div class="brand-logo">
-            <div class="logo-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
-              </svg>
+          <a href="#" class="brand-logo">
+            <div class="brand-emblem-wrapper">
+              <img src="assets/codentra-amblem-lacivert.svg" alt="Codentra Amblem" width="40" height="40">
             </div>
-            <span class="logo-name text-white">codentra</span>
-          </div>
+            <div class="brand-text-block">
+              <span class="brand-name">Codentra</span>
+              <span class="brand-slogan-line">Dijital Merkezi</span>
+            </div>
+          </a>
           <p class="footer-about">
-            Codentra, OSGB ve İş Sağlığı Güvenliği kurumları için özel olarak geliştirilmiş bulut tabanlı CRM, Teklif ve Sözleşme Yönetim Yazılımıdır.
+            Codentra, OSGB ve İş Sağlığı Güvenliği kurumları için özel olarak geliştirilmiş bulut tabanlı CRM, Teklif ve Sözleşme Yönetim Yazılımıdır. Profesyonel çözümlerin dijital merkezi.
           </p>
         </div>
 
@@ -353,8 +537,9 @@
           <ul>
             <li><a href="https://app.codentra.com.tr" target="_blank" rel="noopener">Sisteme Giriş Yap</a></li>
             <li><a href="#ozellikler">Özellikler</a></li>
-            <li><a href="#nace-sorgulama">NACE Sorgu</a></li>
+            <li><a href="#nace-sorgulama">NACE Sorgu Motoru</a></li>
             <li><a href="#nasil-calisir">Nasıl Çalışır?</a></li>
+            <li><a href="#kurumsal-kimlik">Kurumsal Kimlik</a></li>
           </ul>
         </div>
 
@@ -367,10 +552,10 @@
             </li>
             <li>
               <span class="contact-label">Müşteri Destek:</span>
-              <a href="mailto:destek@destek.codentra.com.tr">destek@codentra.com.tr</a>
+              <a href="mailto:destek@codentra.com.tr">destek@codentra.com.tr</a>
             </li>
             <li>
-              <span class="contact-label">Davet & Kayıt:</span>
+              <span class="contact-label">Davet &amp; Kayıt:</span>
               <a href="mailto:davet@codentra.com.tr">davet@codentra.com.tr</a>
             </li>
           </ul>

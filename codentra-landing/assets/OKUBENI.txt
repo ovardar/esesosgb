@@ -1,0 +1,36 @@
+CODENTRA — SEÇİLEN KİMLİK (7A YATAY)
+
+TAM KİLİT — PNG 4x (yüksek çözünürlük)
+  codentra-kilit-acik-zemin.png   Beyaz/açık zeminde ana kullanım
+  codentra-kilit-koyu-zemin.png   Lacivert zeminde
+  codentra-kilit-tekrenk.png      Tek renk siyah (kaşe, faks, tek renkli baskı)
+
+AMBLEM — SVG (vektör, sınırsız büyür; tabela ve baskı için bunu kullanın)
+  codentra-amblem-lacivert.svg
+  codentra-amblem-beyaz.svg
+  codentra-amblem-tekrenk-siyah.svg
+
+YERLEŞİM KARŞILAŞTIRMA KARTLARI — PNG 3x
+  codentra-7a-yatay.png  (seçilen)
+  codentra-7b-dikey.png
+  codentra-7c-iki-satir.png
+
+RENKLER
+  Lacivert    #16243C   ana renk
+  Bakır       #C0714A   vurgu (çerçeve, çizgi, basılı detay)
+  Kırık beyaz #F7F5F2   amblem içi / koyu zeminde metin
+  Siyah       #101214   tek renk versiyon
+
+TİPOGRAFİ
+  Archivo SemiBold 600 — marka adı
+  Archivo Regular 400  — gövde metni
+  IBM Plex Mono 500    — slogan satırı ve etiketler (harf aralığı .13em, büyük harf)
+
+SLOGAN
+  Profesyonel çözümlerin dijital merkezi
+
+KULLANIM NOTLARI
+  - Amblemin çevresinde en az amblem yüksekliğinin 1/2'si kadar boşluk bırakın.
+  - 24 px altındaki kullanımlarda (favicon, uygulama ikonu) iç bakır çerçeveyi kaldırın.
+  - Amblemi germeyin, döndürmeyin, rengini değiştirmeyin.
+  - Şirketin tam ticari unvanı logonun parçası değildir; fatura/sözleşme künyesinde ayrı satır olarak yazılır.
