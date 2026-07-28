@@ -1,7 +1,7 @@
 /* ==========================================================================
    CODENTRA OFFICIAL BRAND IDENTITY & OSGB PLATFORM STYLESHEET
    Based on OKUBENI.txt Brand Standards:
-   - Primary Colors: Lacivert #16243C, Bakır #C0714A, Kırık Beyaz #F7F5F2, Siyah #101214
+   - Primary Colors: Lacivert #16242A, Bakır #C0714A, Kırık Beyaz #F7F5F2, Siyah #101214
    - Selected Identity: 7A YATAY
    - Typography: Archivo (600/400) for Brand & Headings, IBM Plex Mono (500) for Slogans/Badges
    - Official Slogan: "Profesyonel çözümlerin dijital merkezi" (.13em letter-spacing, uppercase)
@@ -9,7 +9,7 @@
 
 :root {
   /* Brand Palette from OKUBENI.txt */
-  --color-lacivert: #16243C;
+  --color-lacivert: #16242A;
   --color-lacivert-dark: #0E1624;
   --color-lacivert-surface: #1E2E4A;
   --color-lacivert-card: #1A2840;
@@ -25,7 +25,7 @@
   /* Text Neutrals */
   --text-main: #F7F5F2;
   --text-muted: #94A3B8;
-  --text-dark-main: #16243C;
+  --text-dark-main: #16242A;
   --text-dark-muted: #5C6B73;
 
   /* Utility Colors */
@@ -1038,7 +1038,7 @@ a {
   width: 100%;
 }
 
-.color-swatch.lacivert { background-color: #16243C; }
+.color-swatch.lacivert { background-color: #16242A; }
 .color-swatch.bakir { background-color: #C0714A; }
 .color-swatch.kirik-beyaz { background-color: #F7F5F2; }
 .color-swatch.siyah { background-color: #101214; }

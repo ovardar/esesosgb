@@ -16,7 +16,7 @@ YERLEŞİM KARŞILAŞTIRMA KARTLARI — PNG 3x
   codentra-7c-iki-satir.png
 
 RENKLER
-  Lacivert    #16243C   ana renk
+  Lacivert    #16242A   ana renk
   Bakır       #C0714A   vurgu (çerçeve, çizgi, basılı detay)
   Kırık beyaz #F7F5F2   amblem içi / koyu zeminde metin
   Siyah       #101214   tek renk versiyon
