@@ -10,9 +10,9 @@
 :root {
   /* Brand Palette from OKUBENI.txt */
   --color-lacivert: #16242A;
-  --color-lacivert-dark: #0E1624;
-  --color-lacivert-surface: #1E2E4A;
-  --color-lacivert-card: #1A2840;
+  --color-lacivert-dark: #16242A;
+  --color-lacivert-surface: #1E2E35;
+  --color-lacivert-card: #24363E;
   
   --color-bakir: #C0714A;
   --color-bakir-hover: #D8835A;
@@ -37,7 +37,7 @@
   --font-mono: 'IBM Plex Mono', monospace;
 
   /* Shadows & Glassmorphism */
-  --glass-bg: rgba(26, 40, 64, 0.75);
+  --glass-bg: rgba(22, 36, 42, 0.85);
   --glass-border: rgba(192, 113, 74, 0.25);
   --glass-shadow: 0 20px 40px rgba(10, 18, 30, 0.5);
   --glow-bakir: 0 0 25px rgba(192, 113, 74, 0.4);
@@ -56,7 +56,7 @@ html {
 }
 
 body {
-  background-color: var(--color-lacivert-dark);
+  background-color: #16242A;
   color: var(--text-main);
   font-family: var(--font-brand);
   font-weight: 400;
@@ -199,14 +199,14 @@ a {
   z-index: 1000;
   padding: 18px 0;
   transition: all 0.3s ease;
-  background: rgba(14, 22, 36, 0.7);
+  background: rgba(22, 36, 42, 0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(192, 113, 74, 0.15);
 }
 
 .navbar-header.scrolled {
   padding: 12px 0;
-  background: rgba(14, 22, 36, 0.94);
+  background: rgba(22, 36, 42, 0.96);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   border-bottom-color: rgba(192, 113, 74, 0.3);
 }
@@ -799,7 +799,7 @@ a {
    OFFICIAL BRAND IDENTITY & LOGO GUIDELINES SHOWCASE (OKUBENI.txt STANDARDS)
    ========================================================================== */
 .brand-identity-section {
-  background: linear-gradient(180deg, var(--color-lacivert-dark) 0%, var(--color-lacivert) 100%);
+  background: linear-gradient(180deg, #16242A 0%, #101B20 100%);
   border-top: 1px solid var(--border-bakir);
   border-bottom: 1px solid var(--border-bakir);
 }
@@ -1142,7 +1142,7 @@ a {
    FOOTER SECTION
    ========================================================================== */
 .footer-section {
-  background-color: var(--color-lacivert-dark);
+  background-color: #101B20;
   border-top: 1px solid rgba(192, 113, 74, 0.2);
   padding: 80px 0 30px;
 }
