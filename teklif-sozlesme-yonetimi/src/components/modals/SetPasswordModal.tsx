@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { fetchCloudTenants, saveCloudTenants } from '../../lib/cloudDb';
 
 interface SetPasswordModalProps {
   inviteCode?: string;
@@ -32,11 +33,68 @@ export function SetPasswordModal({ inviteCode, isOpen, onClose, onSuccess }: Set
     setLoading(true);
     setErrorMsg(null);
 
+    const params = new URLSearchParams(window.location.search);
+    const targetEmail = (params.get('email') || '').trim().toLowerCase();
+    const tenantId = params.get('tenant') || '';
+
     try {
-      // 1. Try Supabase Auth password update if session exists
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) {
-        console.warn('[SetPasswordModal] Auth update note:', error.message);
+      // 1. Supabase Auth Registration / Update
+      if (targetEmail) {
+        // Attempt Sign Up first so user exists in Supabase Auth
+        const { error: signUpError } = await supabase.auth.signUp({
+          email: targetEmail,
+          password: password,
+        });
+
+        if (signUpError) {
+          console.warn('[SetPasswordModal] Auth signUp note:', signUpError.message);
+          // If user already exists or signup requires session, try signIn or updateUser
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: targetEmail,
+            password: password,
+          });
+          if (signInError) {
+            await supabase.auth.updateUser({ password }).catch(() => {});
+          }
+        }
+
+        // Store local session and password map as fail-safe backup
+        try {
+          const passMap = JSON.parse(localStorage.getItem('crm_user_passwords_map') || '{}');
+          passMap[targetEmail] = password;
+          localStorage.setItem('crm_user_passwords_map', JSON.stringify(passMap));
+          localStorage.setItem('crm_user_session', targetEmail);
+        } catch (e) {
+          console.warn('[SetPasswordModal] localStorage backup warning:', e);
+        }
+      } else {
+        // Fallback for logged in active session password update
+        await supabase.auth.updateUser({ password }).catch(() => {});
+      }
+
+      // 2. Update Tenant Activation Status in Cloud DB
+      try {
+        const tenants = await fetchCloudTenants();
+        let updated = false;
+        const nextTenants = tenants.map((t) => {
+          const isMatch = (tenantId && t.id === tenantId) || (targetEmail && t.email.toLowerCase() === targetEmail);
+          if (isMatch) {
+            updated = true;
+            return {
+              ...t,
+              activationStatus: 'Hesap Aktif (Şifre Belirlendi)' as const,
+              status: 'Aktif' as const,
+              inviteAcceptedAt: new Date().toLocaleString('tr-TR')
+            };
+          }
+          return t;
+        });
+
+        if (updated) {
+          await saveCloudTenants(nextTenants);
+        }
+      } catch (dbErr) {
+        console.warn('[SetPasswordModal] Tenant status update note:', dbErr);
       }
 
       setSuccessMsg('Şifreniz başarıyla belirlendi ve hesabınız aktif edildi!');

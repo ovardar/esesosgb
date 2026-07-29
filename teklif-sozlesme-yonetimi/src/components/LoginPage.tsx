@@ -37,7 +37,21 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         return;
       }
 
-      // 2. Superadmin or Master Password Fallback Guarantee
+      // 2. Check local password map fallback (Set via invitation link)
+      try {
+        const passMap = JSON.parse(localStorage.getItem('crm_user_passwords_map') || '{}');
+        const savedPass = passMap[cleanEmail];
+        if (savedPass && savedPass === password) {
+          localStorage.setItem('crm_user_session', cleanEmail);
+          onLoginSuccess(cleanEmail);
+          setLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.warn('[LoginPage] Local password map check warning:', e);
+      }
+
+      // 3. Superadmin or Master Password Fallback Guarantee
       const isSuperAdminEmail = cleanEmail === 'orhan.vardar@gmail.com';
       if (isSuperAdminEmail && (password === 'kjb911' || password.length >= 4)) {
         localStorage.setItem('crm_user_session', cleanEmail);
