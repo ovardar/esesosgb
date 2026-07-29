@@ -86,10 +86,10 @@ export function Shell({
                 src={CODENTRA_LOGO_DATA_URI}
                 alt="Codentra Logo"
                 style={{
-                  height: 65,
+                  height: 75,
                   maxWidth: '100%',
                   objectFit: 'contain',
-                  filter: 'drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2))'
+                  filter: 'drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25))'
                 }}
               />
             </div>
