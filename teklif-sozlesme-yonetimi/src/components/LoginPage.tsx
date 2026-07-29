@@ -99,27 +99,25 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         {/* LOGO & HEADER */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{
-            width: 48,
-            height: 48,
-            borderRadius: 12,
-            background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+            width: 72,
+            height: 72,
+            borderRadius: 16,
+            overflow: 'hidden',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: 16,
-            boxShadow: '0 10px 25px rgba(99, 102, 241, 0.4)'
+            boxShadow: '0 12px 30px rgba(0, 0, 0, 0.4)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            background: '#090d16'
           }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2">
-              <path d="M12 2L2 7L12 12L22 7L12 2Z"/>
-              <path d="M2 17L12 22L22 17"/>
-              <path d="M2 12L12 17L22 12"/>
-            </svg>
+            <img src="/codentra-logo.png" alt="Codentra Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
-          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800 }}>
-            codentra
+          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#ffffff' }}>
+            Codentra
           </h1>
-          <p style={{ margin: '6px 0 0 0', fontSize: '0.9rem', color: '#94a3b8' }}>
-            Teklif ve Sözleşme Yönetimi
+          <p style={{ margin: '6px 0 0 0', fontSize: '0.88rem', color: '#94a3b8' }}>
+            İşinize Uygun Dijital Çözümler
           </p>
         </div>
 

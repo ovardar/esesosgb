@@ -72,7 +72,9 @@ export function Shell({
               <img src={activeTenantLogo} alt={activeTenantName || 'Kiracı Logosu'} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
             </div>
           ) : (
-            <span className="brand-mark" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)', color: '#ffffff', fontWeight: 800 }}>CD</span>
+            <div style={{ width: 40, height: 40, borderRadius: 10, overflow: 'hidden', background: '#090d16', border: '1px solid rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.25)' }}>
+              <img src="/codentra-logo.png" alt="Codentra Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
           )}
           <div>
             <p className="eyebrow" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>
