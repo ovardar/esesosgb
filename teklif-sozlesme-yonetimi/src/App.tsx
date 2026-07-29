@@ -138,6 +138,21 @@ function App() {
     fetchCloudTenants(initialSaaSTenants).then((list) => {
       if (list && list.length > 0) setTenants(list);
     });
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'crm_saas_tenants_v3' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setTenants(parsed);
+          }
+        } catch (err) {
+          console.warn('[App] Storage sync error for tenants:', err);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const [activeTheme, setActiveTheme] = useState<ThemeId>('ivory');
@@ -186,6 +201,9 @@ function App() {
 
       const dbCont = await fetchCloudContracts(contractSeeds);
       setContracts(dbCont);
+
+      const dbTenants = await fetchCloudTenants(initialSaaSTenants);
+      if (dbTenants && dbTenants.length > 0) setTenants(dbTenants);
     }
     initCloudData();
 
@@ -203,6 +221,10 @@ function App() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'contracts' }, async () => {
         const updated = await fetchCloudContracts();
         setContracts(updated);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tenants' }, async () => {
+        const updated = await fetchCloudTenants(initialSaaSTenants);
+        if (updated && updated.length > 0) setTenants(updated);
       })
       .subscribe();
 
@@ -267,14 +289,30 @@ function App() {
     if (impersonatedTenant) return impersonatedTenant;
     if (isSuperAdmin) return null;
 
+    const getFreshLogo = (tenant: SaaSTenant) => {
+      if (tenant.logoUrl) return tenant.logoUrl;
+      try {
+        const saved = localStorage.getItem('crm_saas_tenants_v3');
+        if (saved) {
+          const list: SaaSTenant[] = JSON.parse(saved);
+          const match = list.find((t) => t.id === tenant.id || t.companyName === tenant.companyName);
+          if (match?.logoUrl) return match.logoUrl;
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+      return undefined;
+    };
+
     if (tenants.length > 0) {
       const match = tenants.find(
         (t) =>
           (t.email && t.email.trim().toLowerCase() === currentUserEmail.trim().toLowerCase()) ||
           (t.contactName && t.contactName.trim().toLowerCase() === currentUserEmail.trim().toLowerCase())
       );
-      if (match) return match;
-      return tenants[0];
+      const target = match || tenants[0];
+      const freshLogo = getFreshLogo(target);
+      return freshLogo ? { ...target, logoUrl: freshLogo } : target;
     }
 
     try {
@@ -287,39 +325,16 @@ function App() {
               (t.email && t.email.trim().toLowerCase() === currentUserEmail.trim().toLowerCase()) ||
               (t.contactName && t.contactName.trim().toLowerCase() === currentUserEmail.trim().toLowerCase())
           );
-          if (match) return match;
-          return tenantsList[0];
+          const target = match || tenantsList[0];
+          const freshLogo = getFreshLogo(target);
+          return freshLogo ? { ...target, logoUrl: freshLogo } : target;
         }
       }
     } catch (e) {
       console.warn('[App] Error finding current tenant:', e);
     }
 
-    return {
-      id: 'tenant-test-osgb3',
-      tenantCode: 'TNT-OSGB3',
-      companyName: 'Test OSGB 3',
-      contactName: 'Canan Hisli',
-      email: currentUserEmail || 'canan@testosgb3.com',
-      phone: '0212 333 44 55',
-      city: 'İstanbul',
-      package: 'Enterprise' as const,
-      status: 'Aktif',
-      paymentStatus: 'Sorunsuz',
-      healthStatus: 'Mükemmel',
-      billingCycle: 'Yıllık',
-      monthlyFee: 28000,
-      annualFee: 336000,
-      maxUsers: 50,
-      activeUsers: 1,
-      startDate: '2026-01-01',
-      endDate: '2027-01-01',
-      autoRenew: true,
-      notes: '',
-      modulesEnabled: { crm: true, offers: true, contracts: true, documents: true, analytics: true },
-      activationStatus: 'Hesap Aktif (Şifre Belirlendi)',
-      lastLoginAt: 'Bugün'
-    } as SaaSTenant;
+    return null;
   }, [impersonatedTenant, currentUserEmail, isSuperAdmin, tenants]);
 
   const activeMeta = useMemo(
