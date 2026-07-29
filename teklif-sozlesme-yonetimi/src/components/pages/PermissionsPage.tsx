@@ -219,11 +219,13 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
     });
   }, [filteredUsers, sortDirection, sortKey]);
 
-  // Quota & Sizing calculations
+  // Quota & Sizing calculations (Only System Users count towards system quota)
   const maxUsersLimit = currentTenant.maxUsers || 50;
-  const activeCount = currentUsers.filter((u) => u.status === 'Aktif').length;
-  const isLimitReached = maxUsersLimit > 0 && activeCount >= maxUsersLimit;
-  const usagePercent = maxUsersLimit > 0 ? Math.round((activeCount / maxUsersLimit) * 100) : 0;
+  const systemUsersCount = currentUsers.filter(
+    (u) => u.status === 'Aktif' && u.userType !== 'Saha / Danışman Kadro'
+  ).length;
+  const isLimitReached = maxUsersLimit > 0 && systemUsersCount >= maxUsersLimit;
+  const usagePercent = maxUsersLimit > 0 ? Math.round((systemUsersCount / maxUsersLimit) * 100) : 0;
 
   // Handle Send Invite Email
   const handleSendInvite = async (usr: TenantUser) => {
@@ -268,15 +270,16 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
   // Handle Add User Submit
   const handleAddUserSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLimitReached) {
+    const isFieldStaff = userForm.userType === 'Saha / Danışman Kadro';
+
+    if (!isFieldStaff && isLimitReached) {
       alert(
-        `⛔ KULLANICI LİMİTİ DOLDU!\n\n${currentTenant.companyName} firmanızın abonelik paketi maksimum ${maxUsersLimit} kullanıcıya izin vermektedir.\nYeni kullanıcı ekleyebilmek için Super Admin ile iletişime geçiniz.`
+        `⛔ KULLANICI LİMİTİ DOLDU!\n\n${currentTenant.companyName} firmanızın abonelik paketi maksimum ${maxUsersLimit} sistem kullanıcısına izin vermektedir.\nYeni sistem kullanıcısı ekleyebilmek için Super Admin ile iletişime geçiniz.`
       );
       return;
     }
 
     const cleanDomain = currentTenant.email.split('@')[1] || 'codentra.com.tr';
-
 
     const newUser: TenantUser = {
       id: `usr-${currentTenant.id}-${Date.now()}`,
@@ -293,17 +296,26 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
     const updatedList = [newUser, ...currentUsers];
     setUsersMap((prev) => ({ ...prev, [currentTenant.id]: updatedList }));
 
+    const activeSystemCount = updatedList.filter(
+      (u) => u.status === 'Aktif' && u.userType !== 'Saha / Danışman Kadro'
+    ).length;
+
     if (onUpdateTenantUsersCount) {
-      onUpdateTenantUsersCount(currentTenant.id, updatedList.filter((u) => u.status === 'Aktif').length);
+      onUpdateTenantUsersCount(currentTenant.id, activeSystemCount);
     }
 
     setIsAddModalOpen(false);
     setUserForm({ name: '', email: '', phone: '', role: 'Müşteri Temsilcisi', status: 'Aktif', userType: 'Sistem Kullanıcısı' });
 
-
-    // Open password setup simulation modal immediately for user testing!
-    setPasswordSetupUser(newUser);
-    setPasswordForm({ password: '', confirmPassword: '' });
+    if (isFieldStaff) {
+      alert(
+        `📋 SAHA / DANIŞMAN KADRO PERSONELİ EKLENDİ!\n\n"${newUser.name}" Saha / Danışman Kadro personeli olarak sisteme eklendi.\n\n• Kullanıcı lisans kotasını ETKİLEMEZ.\n• Portala giriş yetkisi olmadığı için şifre belirleme daveti gönderilmez.`
+      );
+    } else {
+      // Open password setup simulation modal immediately ONLY for System Users
+      setPasswordSetupUser(newUser);
+      setPasswordForm({ password: '', confirmPassword: '' });
+    }
   };
 
   // Handle Save Password & Activate Account Simulation
@@ -347,6 +359,15 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
     );
 
     setUsersMap((prev) => ({ ...prev, [currentTenant.id]: updatedList }));
+
+    const activeSystemCount = updatedList.filter(
+      (u) => u.status === 'Aktif' && u.userType !== 'Saha / Danışman Kadro'
+    ).length;
+
+    if (onUpdateTenantUsersCount) {
+      onUpdateTenantUsersCount(currentTenant.id, activeSystemCount);
+    }
+
     setEditingUser(null);
     setUserForm({ name: '', email: '', phone: '', role: 'Müşteri Temsilcisi', status: 'Aktif', userType: 'Sistem Kullanıcısı' });
   };
@@ -359,6 +380,14 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
         : 'Sistem Kullanıcısı';
     const updatedList: TenantUser[] = currentUsers.map((u) => (u.id === usr.id ? { ...u, userType: newType } : u));
     setUsersMap((prev) => ({ ...prev, [currentTenant.id]: updatedList }));
+
+    const activeSystemCount = updatedList.filter(
+      (u) => u.status === 'Aktif' && u.userType !== 'Saha / Danışman Kadro'
+    ).length;
+
+    if (onUpdateTenantUsersCount) {
+      onUpdateTenantUsersCount(currentTenant.id, activeSystemCount);
+    }
   };
 
 
@@ -368,8 +397,12 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
       const updatedList = currentUsers.filter((u) => u.id !== usr.id);
       setUsersMap((prev) => ({ ...prev, [currentTenant.id]: updatedList }));
 
+      const activeSystemCount = updatedList.filter(
+        (u) => u.status === 'Aktif' && u.userType !== 'Saha / Danışman Kadro'
+      ).length;
+
       if (onUpdateTenantUsersCount) {
-        onUpdateTenantUsersCount(currentTenant.id, updatedList.filter((u) => u.status === 'Aktif').length);
+        onUpdateTenantUsersCount(currentTenant.id, activeSystemCount);
       }
 
       alert(`🗑️ Kullanıcı (${usr.name}) başarıyla silindi ve kullanıcı kontenjanı güncellendi.`);
@@ -506,10 +539,10 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1.5px solid rgba(239, 68, 68, 0.3)', padding: '14px 18px', borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <strong style={{ color: '#b91c1c', fontSize: '0.95rem' }}>
-              ⛔ SaaS Kullanıcı Lisans Sınırına Ulaşıldı ({activeCount} / {maxUsersLimit} Kullanıcı - %{usagePercent})
+              ⛔ SaaS Sistem Kullanıcısı Lisans Sınırına Ulaşıldı ({systemUsersCount} / {maxUsersLimit} Kullanıcı - %{usagePercent})
             </strong>
             <p style={{ margin: '4px 0 0', fontSize: '0.84rem', color: '#7f1d1d' }}>
-              {currentTenant.companyName} firmasının paket lisans kotası (%100) dolmiştir. Yeni personel tanımı yapılamaz. Yeni kullanıcı eklemek için paketi yükseltin.
+              {currentTenant.companyName} firmasının sistem kullanıcısı paket lisans kotası (%100) dolmuştur. Yeni sistem kullanıcısı eklenemez. (Saha / Danışman Kadro personeli eklemeye devam edebilirsiniz).
             </p>
           </div>
           <span className="mini-badge" style={{ background: '#ef4444', color: '#fff', border: 'none' }}>
@@ -519,7 +552,7 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
       ) : (
         <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '12px 18px', borderRadius: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ color: '#047857', fontSize: '0.88rem', fontWeight: 600 }}>
-            ✓ {currentTenant.companyName} Kullanıcı Kotası: {activeCount} / {maxUsersLimit} Aktif Kullanıcı (%{usagePercent}) • Kullanılabilir Kontenjan: {maxUsersLimit - activeCount} Kullanıcı
+            ✓ {currentTenant.companyName} Kullanıcı Kotası: {systemUsersCount} / {maxUsersLimit} Aktif Sistem Kullanıcısı (%{usagePercent}) • Kullanılabilir Kontenjan: {maxUsersLimit - systemUsersCount} Kullanıcı
           </span>
           <span className="mini-badge" style={{ background: '#10b981', color: '#fff', border: 'none' }}>
             LİSANS UYGUN (%{usagePercent})
@@ -637,47 +670,65 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
                     <td><span style={{ fontSize: '0.84rem' }}>{usr.phone}</span></td>
                     <td><span style={{ fontSize: '0.8rem' }}>{usr.addedAt}</span></td>
                     <td>
-                      <span
-                        className="mini-badge"
-                        style={{
-                          background: usr.status === 'Aktif' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
-                          color: usr.status === 'Aktif' ? '#047857' : '#b91c1c'
-                        }}
-                      >
-                        ● {usr.status === 'Aktif' ? 'Hesap Aktif' : 'Davet Bekliyor'}
-                      </span>
+                      {usr.userType === 'Saha / Danışman Kadro' ? (
+                        <span
+                          className="mini-badge"
+                          style={{
+                            background: 'rgba(245, 158, 11, 0.12)',
+                            color: '#d97706',
+                            border: '1px solid rgba(245, 158, 11, 0.3)'
+                          }}
+                          title="Saha / Danışman personeli portala giriş yapamaz, şifre daveti gönderilmez ve kotayı etkilemez"
+                        >
+                          📋 Portale Giriş Yapmaz
+                        </span>
+                      ) : (
+                        <span
+                          className="mini-badge"
+                          style={{
+                            background: usr.status === 'Aktif' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                            color: usr.status === 'Aktif' ? '#047857' : '#b91c1c'
+                          }}
+                        >
+                          ● {usr.status === 'Aktif' ? 'Hesap Aktif' : 'Davet Bekliyor'}
+                        </span>
+                      )}
                     </td>
                     <td style={{ textAlign: 'right' }}>
                       <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                        <button
-                          className="btn-action-ghost"
-                          style={{ fontSize: '0.76rem', padding: '5px 10px' }}
-                          onClick={() => handleSendInvite(usr)}
-                          title="E-posta ile aktivasyon davet linki gönder"
-                        >
-                          ✉️ Davet Gönder
-                        </button>
+                        {usr.userType !== 'Saha / Danışman Kadro' && (
+                          <>
+                            <button
+                              className="btn-action-ghost"
+                              style={{ fontSize: '0.76rem', padding: '5px 10px' }}
+                              onClick={() => handleSendInvite(usr)}
+                              title="E-posta ile aktivasyon davet linki gönder"
+                            >
+                              ✉️ Davet Gönder
+                            </button>
 
-                        <button
-                          className="btn-action-ghost"
-                          style={{ fontSize: '0.76rem', padding: '5px 10px' }}
-                          onClick={() => handleCopyInviteLink(usr)}
-                          title="Magic Link kopyala"
-                        >
-                          🔗 Link Kopyala
-                        </button>
+                            <button
+                              className="btn-action-ghost"
+                              style={{ fontSize: '0.76rem', padding: '5px 10px' }}
+                              onClick={() => handleCopyInviteLink(usr)}
+                              title="Magic Link kopyala"
+                            >
+                              🔗 Link Kopyala
+                            </button>
 
-                        <button
-                          className="btn-action-ghost"
-                          style={{ fontSize: '0.76rem', padding: '5px 10px', color: '#047857', borderColor: 'rgba(16, 185, 129, 0.4)' }}
-                          onClick={() => {
-                            setPasswordSetupUser(usr);
-                            setPasswordForm({ password: '', confirmPassword: '' });
-                          }}
-                          title="Kullanıcının e-postaya tıklayıp şifre belirlemesini simüle et"
-                        >
-                          🔑 Şifre Belirle & Giriş Yap
-                        </button>
+                            <button
+                              className="btn-action-ghost"
+                              style={{ fontSize: '0.76rem', padding: '5px 10px', color: '#047857', borderColor: 'rgba(16, 185, 129, 0.4)' }}
+                              onClick={() => {
+                                setPasswordSetupUser(usr);
+                                setPasswordForm({ password: '', confirmPassword: '' });
+                              }}
+                              title="Kullanıcının e-postaya tıklayıp şifre belirlemesini simüle et"
+                            >
+                              🔑 Şifre Belirle & Giriş Yap
+                            </button>
+                          </>
+                        )}
 
                         <button
                           className="btn-action-ghost"
