@@ -304,8 +304,17 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
   return localList;
 }
 
+const tenantSyncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('crm_saas_tenant_sync') : null;
+
 export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
   setLocalItem('crm_saas_tenants_v3', tenants);
+  if (tenantSyncChannel) {
+    try {
+      tenantSyncChannel.postMessage({ type: 'TENANTS_UPDATED', tenants });
+    } catch (e) {
+      console.warn(e);
+    }
+  }
   try {
     const payload = tenants
       .filter(t => Boolean(t.id))

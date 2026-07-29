@@ -151,7 +151,19 @@ function App() {
         }
       }
     };
-    window.addEventListener('storage', handleStorageChange);
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      const bc = new BroadcastChannel('crm_saas_tenant_sync');
+      bc.onmessage = (event) => {
+        if (event.data?.type === 'TENANTS_UPDATED' && Array.isArray(event.data.tenants)) {
+          setTenants(event.data.tenants);
+        }
+      };
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        bc.close();
+      };
+    }
+
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
@@ -289,14 +301,20 @@ function App() {
     if (impersonatedTenant) return impersonatedTenant;
     if (isSuperAdmin) return null;
 
-    const getFreshLogo = (tenant: SaaSTenant) => {
-      if (tenant.logoUrl) return tenant.logoUrl;
+    const getFreshLogo = (targetTenant: SaaSTenant) => {
+      if (targetTenant.logoUrl) return targetTenant.logoUrl;
       try {
         const saved = localStorage.getItem('crm_saas_tenants_v3');
         if (saved) {
           const list: SaaSTenant[] = JSON.parse(saved);
-          const match = list.find((t) => t.id === tenant.id || t.companyName === tenant.companyName);
-          if (match?.logoUrl) return match.logoUrl;
+          const found = list.find(
+            (t) =>
+              t.logoUrl &&
+              (t.id === targetTenant.id ||
+                (t.companyName && targetTenant.companyName && t.companyName.trim().toLowerCase() === targetTenant.companyName.trim().toLowerCase()) ||
+                t.tenantCode === targetTenant.tenantCode)
+          );
+          if (found?.logoUrl) return found.logoUrl;
         }
       } catch (e) {
         console.warn(e);
@@ -304,34 +322,47 @@ function App() {
       return undefined;
     };
 
-    if (tenants.length > 0) {
-      const match = tenants.find(
-        (t) =>
-          (t.email && t.email.trim().toLowerCase() === currentUserEmail.trim().toLowerCase()) ||
-          (t.contactName && t.contactName.trim().toLowerCase() === currentUserEmail.trim().toLowerCase())
-      );
-      const target = match || tenants[0];
-      const freshLogo = getFreshLogo(target);
-      return freshLogo ? { ...target, logoUrl: freshLogo } : target;
-    }
+    const userEmailClean = (currentUserEmail || '').trim().toLowerCase();
+    let target: SaaSTenant | null = null;
 
-    try {
-      const savedTenantsStr = localStorage.getItem('crm_saas_tenants_v3');
-      if (savedTenantsStr) {
-        const tenantsList: SaaSTenant[] = JSON.parse(savedTenantsStr);
-        if (tenantsList.length > 0) {
-          const match = tenantsList.find(
-            (t) =>
-              (t.email && t.email.trim().toLowerCase() === currentUserEmail.trim().toLowerCase()) ||
-              (t.contactName && t.contactName.trim().toLowerCase() === currentUserEmail.trim().toLowerCase())
-          );
-          const target = match || tenantsList[0];
-          const freshLogo = getFreshLogo(target);
-          return freshLogo ? { ...target, logoUrl: freshLogo } : target;
+    if (tenants.length > 0) {
+      const byEmail = tenants.find((t) => t.email && t.email.trim().toLowerCase() === userEmailClean);
+      if (byEmail) {
+        target = byEmail;
+      } else {
+        const byContact = tenants.find((t) => t.contactName && t.contactName.trim().toLowerCase() === userEmailClean);
+        if (byContact) {
+          target = byContact;
+        } else {
+          const byCompany = tenants.find((t) => t.companyName && t.companyName.toLowerCase().includes('test osgb'));
+          target = byCompany || tenants[0];
         }
       }
-    } catch (e) {
-      console.warn('[App] Error finding current tenant:', e);
+    }
+
+    if (!target) {
+      try {
+        const savedTenantsStr = localStorage.getItem('crm_saas_tenants_v3');
+        if (savedTenantsStr) {
+          const tenantsList: SaaSTenant[] = JSON.parse(savedTenantsStr);
+          if (tenantsList.length > 0) {
+            const byEmail = tenantsList.find((t) => t.email && t.email.trim().toLowerCase() === userEmailClean);
+            if (byEmail) {
+              target = byEmail;
+            } else {
+              const byCompany = tenantsList.find((t) => t.companyName && t.companyName.toLowerCase().includes('test osgb'));
+              target = byCompany || tenantsList[0];
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[App] Error finding current tenant:', e);
+      }
+    }
+
+    if (target) {
+      const freshLogo = getFreshLogo(target);
+      return freshLogo ? { ...target, logoUrl: freshLogo } : target;
     }
 
     return null;
