@@ -4,6 +4,7 @@ import type { CustomerRecord } from './CustomersPage';
 
 type DashboardPageProps = {
   impersonatedTenant?: SaaSTenant | null;
+  currentUserEmail?: string;
   customers: CustomerRecord[];
   offers: OfferRecord[];
   contracts: ContractRecord[];
@@ -23,6 +24,7 @@ function calculateDaysLeftLocal(dateStr?: string): number {
 
 export function DashboardPage({
   impersonatedTenant,
+  currentUserEmail,
   customers = [],
   offers = [],
   contracts = [],
@@ -37,6 +39,52 @@ export function DashboardPage({
       day: 'numeric'
     });
   }, []);
+
+  const userInfo = useMemo(() => {
+    if (impersonatedTenant) {
+      return {
+        title: `Hoş Geldiniz [${impersonatedTenant.companyName}]`,
+        badge: `🏢 ${impersonatedTenant.companyName}`,
+        badgeColor: '#d97706',
+        badgeBg: 'rgba(245, 158, 11, 0.15)'
+      };
+    }
+
+    const emailClean = (currentUserEmail || localStorage.getItem('crm_user_session') || '').trim().toLowerCase();
+    if (!emailClean || emailClean === 'orhan.vardar@gmail.com') {
+      return {
+        title: 'Hoş Geldiniz, Orhan Vardar',
+        badge: '🛡️ Sistem Yöneticisi (Süper Admin)',
+        badgeColor: '#6366f1',
+        badgeBg: 'rgba(99, 102, 241, 0.12)'
+      };
+    }
+
+    // Try finding tenant matching email
+    try {
+      const savedTenants: SaaSTenant[] = JSON.parse(localStorage.getItem('crm_saas_tenants_v3') || '[]');
+      const matched = savedTenants.find(t => t.email.toLowerCase() === emailClean);
+      if (matched) {
+        return {
+          title: `Hoş Geldiniz, ${matched.contactName || matched.companyName}`,
+          badge: `👥 Müşteri / Personel`,
+          badgeColor: '#10b981',
+          badgeBg: 'rgba(16, 185, 129, 0.15)'
+        };
+      }
+    } catch (e) {}
+
+    // Capitalize email prefix as fallback name
+    const prefixName = emailClean.split('@')[0].replace(/[._-]/g, ' ');
+    const formattedName = prefixName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+    return {
+      title: `Hoş Geldiniz, ${formattedName}`,
+      badge: '👥 Müşteri / Personel',
+      badgeColor: '#10b981',
+      badgeBg: 'rgba(16, 185, 129, 0.15)'
+    };
+  }, [impersonatedTenant, currentUserEmail]);
 
   // Compute Financial & Operational KPI Stats
   const metrics = useMemo(() => {
@@ -127,17 +175,11 @@ export function DashboardPage({
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                {impersonatedTenant ? `Hoş Geldiniz [${impersonatedTenant.companyName}]` : 'Hoş Geldiniz, Orhan Vardar'}
+                {userInfo.title}
               </h3>
-              {impersonatedTenant ? (
-                <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.76rem', fontWeight: 800, background: 'rgba(245, 158, 11, 0.15)', color: '#d97706' }}>
-                  🏢 {impersonatedTenant.companyName}
-                </span>
-              ) : (
-                <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.76rem', fontWeight: 800, background: 'rgba(99, 102, 241, 0.12)', color: '#6366f1' }}>
-                  🛡️ Sistem Yöneticisi (Süper Admin)
-                </span>
-              )}
+              <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.76rem', fontWeight: 800, background: userInfo.badgeBg, color: userInfo.badgeColor }}>
+                {userInfo.badge}
+              </span>
             </div>
 
             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>

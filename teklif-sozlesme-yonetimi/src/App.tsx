@@ -335,6 +335,7 @@ function App() {
         return (
           <DashboardPage
             impersonatedTenant={impersonatedTenant}
+            currentUserEmail={currentUserEmail}
             customers={customers}
             offers={offers}
             contracts={contracts}
@@ -343,7 +344,7 @@ function App() {
           />
         );
     }
-  }, [activeSection, activeTheme, customers, offers, contracts, selectedCustomerName, isSuperAdmin, impersonatedTenant]);
+  }, [activeSection, activeTheme, customers, offers, contracts, selectedCustomerName, isSuperAdmin, impersonatedTenant, currentUserEmail]);
 
 
   if (authLoading) {

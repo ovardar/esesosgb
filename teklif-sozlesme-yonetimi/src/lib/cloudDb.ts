@@ -281,7 +281,7 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
             createdAt: row.created_at ? new Date(row.created_at).toLocaleString('tr-TR') : (existingLocal?.createdAt || new Date().toLocaleString('tr-TR')),
             updatedBy: existingLocal?.updatedBy || 'orhan.vardar@gmail.com',
             updatedAt: existingLocal?.updatedAt || new Date().toLocaleString('tr-TR'),
-            activationStatus: existingLocal?.activationStatus || 'Hesap Aktif (Şifre Belirlendi)',
+            activationStatus: row.activation_status || row.activationStatus || existingLocal?.activationStatus || 'Davet Gönderildi (Şifre Bekliyor)',
             logoUrl: row.logo_url || row.logoUrl || existingLocal?.logoUrl || undefined
           };
         });
@@ -328,6 +328,7 @@ export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
         annual_fee: t.annualFee,
         max_users: t.maxUsers,
         active_users: t.activeUsers,
+        activation_status: t.activationStatus || 'Hesap Aktif (Şifre Belirlendi)',
         modules_enabled: t.modulesEnabled,
         logo_url: t.logoUrl || null,
         notes: t.notes || null,
