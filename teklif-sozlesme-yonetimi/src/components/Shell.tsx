@@ -75,9 +75,21 @@ export function Shell({
               </div>
               <div>
                 <p className="eyebrow" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', margin: 0, fontWeight: 700 }}>
-                  {activeTenantName ? activeTenantName : 'CODENTRA'}
+                  {activeTenantName}
                 </p>
-                <h1 style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>Teklif ve Sözleşme Yazılımı</h1>
+                <h1 style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>Teklif ve Sözleşme Yazılımı</h1>
+              </div>
+            </div>
+          ) : activeTenantName ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', color: '#ffffff', fontSize: '1.05rem', fontWeight: 800, display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: '0 4px 10px rgba(14, 165, 233, 0.3)' }}>
+                {activeTenantName.substring(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <p className="eyebrow" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#0ea5e9', margin: 0, fontWeight: 800 }}>
+                  {activeTenantName}
+                </p>
+                <h1 style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>Teklif ve Sözleşme Yazılımı</h1>
               </div>
             </div>
           ) : (
