@@ -67,17 +67,17 @@ export function Shell({
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand" style={{ padding: '4px 0', marginBottom: 16 }}>
+        <div className="brand" style={{ padding: '6px 0', marginBottom: 20 }}>
           {activeTenantLogo ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 42, height: 42, borderRadius: 10, overflow: 'hidden', background: '#ffffff', padding: 3, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, overflow: 'hidden', background: '#ffffff', padding: 4, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 10px rgba(0, 0, 0, 0.08)' }}>
                 <img src={activeTenantLogo} alt={activeTenantName || 'Kiracı Logosu'} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
               </div>
               <div>
-                <p className="eyebrow" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', margin: 0 }}>
+                <p className="eyebrow" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', margin: 0, fontWeight: 700 }}>
                   {activeTenantName ? activeTenantName : 'CODENTRA'}
                 </p>
-                <h1 style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>Teklif ve Sözleşme Yazılımı</h1>
+                <h1 style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>Teklif ve Sözleşme Yazılımı</h1>
               </div>
             </div>
           ) : (
@@ -86,10 +86,10 @@ export function Shell({
                 src={CODENTRA_LOGO_DATA_URI}
                 alt="Codentra Logo"
                 style={{
-                  height: 48,
+                  height: 65,
                   maxWidth: '100%',
                   objectFit: 'contain',
-                  borderRadius: 8
+                  filter: 'drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2))'
                 }}
               />
             </div>
@@ -125,20 +125,6 @@ export function Shell({
             </button>
           ))}
         </nav>
-
-        {sidebarNoteTitle && (
-          <div className="sidebar-card">
-            <p className="eyebrow">Bölüm Detayı</p>
-            <strong>{sidebarNoteTitle}</strong>
-            <p>{sidebarNoteBody}</p>
-          </div>
-        )}
-
-        <div className="sidebar-card sidebar-card-small" style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-          <p className="eyebrow" style={{ color: '#047857', fontWeight: 700 }}>● SaaS Cloud Sunucu</p>
-          <strong style={{ color: '#065f46', fontSize: '0.84rem', display: 'block', margin: '2px 0' }}>🟢 Tüm Servisler Çalışıyor</strong>
-          <p style={{ margin: 0, fontSize: '0.74rem', color: '#047857' }}>SSL Güvenli • %99.9 Uptime</p>
-        </div>
       </aside>
 
       <main className="workspace">
