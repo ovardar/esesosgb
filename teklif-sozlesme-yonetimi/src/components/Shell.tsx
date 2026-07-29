@@ -16,6 +16,7 @@ type ShellProps = {
   isSuperAdmin?: boolean;
   currentUserEmail?: string;
   activeTenantName?: string;
+  activeTenantContactName?: string;
   activeTenantLogo?: string;
   onClearImpersonation?: () => void;
   title?: string;
@@ -35,6 +36,7 @@ export function Shell({
   isSuperAdmin = true,
   currentUserEmail,
   activeTenantName,
+  activeTenantContactName,
   activeTenantLogo,
   onClearImpersonation,
   title,
@@ -60,9 +62,9 @@ export function Shell({
     return resolveUserRoleInfo(
       currentUserEmail,
       isSuperAdmin,
-      activeTenantName ? ({ companyName: activeTenantName } as any) : null
+      activeTenantName ? ({ companyName: activeTenantName, contactName: activeTenantContactName, logoUrl: activeTenantLogo } as any) : null
     );
-  }, [currentUserEmail, isSuperAdmin, activeTenantName]);
+  }, [currentUserEmail, isSuperAdmin, activeTenantName, activeTenantContactName, activeTenantLogo]);
 
   return (
     <div className="app-shell">

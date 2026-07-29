@@ -462,7 +462,7 @@ function App() {
       default:
         return (
           <DashboardPage
-            impersonatedTenant={impersonatedTenant}
+            impersonatedTenant={impersonatedTenant || currentTenant}
             currentUserEmail={currentUserEmail}
             customers={customers}
             offers={offers}
@@ -472,7 +472,7 @@ function App() {
           />
         );
     }
-  }, [activeSection, activeTheme, customers, offers, contracts, selectedCustomerName, isSuperAdmin, impersonatedTenant, currentUserEmail]);
+  }, [activeSection, activeTheme, customers, offers, contracts, selectedCustomerName, isSuperAdmin, impersonatedTenant, currentTenant, currentUserEmail]);
 
 
   if (authLoading) {
@@ -535,6 +535,7 @@ function App() {
         isSuperAdmin={isSuperAdmin}
         currentUserEmail={currentUserEmail}
         activeTenantName={currentTenant ? currentTenant.companyName : undefined}
+        activeTenantContactName={currentTenant ? currentTenant.contactName : undefined}
         activeTenantLogo={currentTenant ? currentTenant.logoUrl : undefined}
         onClearImpersonation={impersonatedTenantId ? () => setImpersonatedTenantId(null) : undefined}
         customers={customers}
