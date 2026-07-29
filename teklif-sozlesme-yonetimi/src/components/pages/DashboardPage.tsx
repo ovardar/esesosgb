@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import type { ContractRecord, OfferRecord, SaaSTenant, SectionId } from '../../types';
 import type { CustomerRecord } from './CustomersPage';
+import { resolveUserRoleInfo } from '../../lib/userRoles';
 
 type DashboardPageProps = {
   impersonatedTenant?: SaaSTenant | null;
   currentUserEmail?: string;
+  isSuperAdmin?: boolean;
   customers: CustomerRecord[];
   offers: OfferRecord[];
   contracts: ContractRecord[];
@@ -25,6 +27,7 @@ function calculateDaysLeftLocal(dateStr?: string): number {
 export function DashboardPage({
   impersonatedTenant,
   currentUserEmail,
+  isSuperAdmin = false,
   customers = [],
   offers = [],
   contracts = [],
@@ -41,50 +44,14 @@ export function DashboardPage({
   }, []);
 
   const userInfo = useMemo(() => {
-    if (impersonatedTenant) {
-      return {
-        title: `Hoş Geldiniz [${impersonatedTenant.companyName}]`,
-        badge: `🏢 ${impersonatedTenant.companyName}`,
-        badgeColor: '#d97706',
-        badgeBg: 'rgba(245, 158, 11, 0.15)'
-      };
-    }
-
-    const emailClean = (currentUserEmail || localStorage.getItem('crm_user_session') || '').trim().toLowerCase();
-    if (!emailClean || emailClean === 'orhan.vardar@gmail.com') {
-      return {
-        title: 'Hoş Geldiniz, Orhan Vardar',
-        badge: '🛡️ Sistem Yöneticisi (Süper Admin)',
-        badgeColor: '#6366f1',
-        badgeBg: 'rgba(99, 102, 241, 0.12)'
-      };
-    }
-
-    // Try finding tenant matching email
-    try {
-      const savedTenants: SaaSTenant[] = JSON.parse(localStorage.getItem('crm_saas_tenants_v3') || '[]');
-      const matched = savedTenants.find(t => t.email.toLowerCase() === emailClean);
-      if (matched) {
-        return {
-          title: `Hoş Geldiniz, ${matched.contactName || matched.companyName}`,
-          badge: `👥 Müşteri / Personel`,
-          badgeColor: '#10b981',
-          badgeBg: 'rgba(16, 185, 129, 0.15)'
-        };
-      }
-    } catch (e) {}
-
-    // Capitalize email prefix as fallback name
-    const prefixName = emailClean.split('@')[0].replace(/[._-]/g, ' ');
-    const formattedName = prefixName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-
+    const roleInfo = resolveUserRoleInfo(currentUserEmail, isSuperAdmin, impersonatedTenant);
     return {
-      title: `Hoş Geldiniz, ${formattedName}`,
-      badge: '👥 Müşteri / Personel',
-      badgeColor: '#10b981',
-      badgeBg: 'rgba(16, 185, 129, 0.15)'
+      title: `Hoş Geldiniz, ${roleInfo.name}`,
+      badge: roleInfo.badgeLabel,
+      badgeColor: roleInfo.badgeColor,
+      badgeBg: roleInfo.badgeBg
     };
-  }, [impersonatedTenant, currentUserEmail]);
+  }, [impersonatedTenant, currentUserEmail, isSuperAdmin]);
 
   // Compute Financial & Operational KPI Stats
   const metrics = useMemo(() => {

@@ -1,10 +1,11 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 
 import { NotificationBell } from './NotificationBell';
 import type { CustomerActivity, CustomerRecord } from './pages/CustomersPage';
 import { sections } from '../data/navigation';
 import { supabase } from '../lib/supabase';
 import type { SectionId, ThemeId } from '../types';
+import { resolveUserRoleInfo } from '../lib/userRoles';
 
 
 type ShellProps = {
@@ -53,6 +54,14 @@ export function Shell({
     // Regular customer user or Superadmin in impersonation mode sees OSGB sections
     return sec.id !== 'saas-admin';
   });
+
+  const userRole = useMemo(() => {
+    return resolveUserRoleInfo(
+      currentUserEmail,
+      isSuperAdmin,
+      activeTenantName ? ({ companyName: activeTenantName } as any) : null
+    );
+  }, [currentUserEmail, isSuperAdmin, activeTenantName]);
 
   return (
     <div className="app-shell">
@@ -136,8 +145,8 @@ export function Shell({
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: 'var(--surface-strong)', border: '1px solid var(--border)', fontSize: '0.8rem', color: 'var(--text-main)', boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)' }}>
                 <span style={{ fontSize: '0.88rem' }}>👤</span>
                 <span style={{ fontWeight: 600 }}>{currentUserEmail}</span>
-                <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 10, background: isSuperAdmin ? '#6366f1' : '#10b981', color: '#ffffff', fontWeight: 700 }}>
-                  {isSuperAdmin ? '🛡️ Süper Admin' : '👥 Müşteri / Personel'}
+                <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 10, background: userRole.badgeBg, color: userRole.badgeColor, fontWeight: 700 }}>
+                  {userRole.badgeLabel}
                 </span>
               </div>
             )}
@@ -157,8 +166,6 @@ export function Shell({
                 await supabase.auth.signOut();
                 window.location.reload();
               }}
-
-
               title="Oturumu Kapat"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
