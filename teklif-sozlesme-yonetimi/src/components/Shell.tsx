@@ -82,7 +82,7 @@ export function Shell({
           </div>
         </div>
 
-        {activeTenantName && (
+        {onClearImpersonation && activeTenantName && (
           <div className="impersonation-badge-sidebar" style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: 12, borderRadius: 10, marginBottom: 12 }}>
             <span className="eyebrow text-amber" style={{ color: '#b45309', fontWeight: 700 }}>● Kiracı Modu Aktif</span>
             <strong className="block text-xs truncate" style={{ fontSize: '0.82rem', display: 'block', margin: '2px 0' }}>{activeTenantName}</strong>

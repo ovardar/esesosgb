@@ -242,6 +242,23 @@ function App() {
     setContracts((prev) => [newContract, ...prev]);
   };
 
+  const currentTenant = useMemo(() => {
+    if (impersonatedTenant) return impersonatedTenant;
+    if (!currentUserEmail || isSuperAdmin) return null;
+
+    try {
+      const savedTenantsStr = localStorage.getItem('crm_saas_tenants_v3');
+      if (savedTenantsStr) {
+        const tenants: SaaSTenant[] = JSON.parse(savedTenantsStr);
+        const match = tenants.find(t => t.email.trim().toLowerCase() === currentUserEmail.trim().toLowerCase());
+        if (match) return match;
+      }
+    } catch (e) {
+      console.warn('[App] Error finding current tenant:', e);
+    }
+    return null;
+  }, [impersonatedTenant, currentUserEmail, isSuperAdmin]);
+
   const activeMeta = useMemo(
     () => sections.find((section) => section.id === activeSection) ?? sections[0],
     [activeSection]
@@ -295,7 +312,7 @@ function App() {
             customers={customers}
             onContractCreated={handleAddContractFromOffer}
             onNavigateToContracts={() => handleSectionChange('contracts')}
-            impersonatedTenant={impersonatedTenant}
+            impersonatedTenant={impersonatedTenant || currentTenant}
           />
         );
       case 'contracts':
@@ -305,7 +322,7 @@ function App() {
             setContracts={setContracts}
             customers={customers}
             offers={offers}
-            impersonatedTenant={impersonatedTenant}
+            impersonatedTenant={impersonatedTenant || currentTenant}
           />
         );
 
@@ -314,14 +331,14 @@ function App() {
       case 'price-lists':
         return <PriceListsPage />;
       case 'permissions':
-        return <PermissionsPage impersonatedTenant={impersonatedTenant} isSuperAdmin={isSuperAdmin} />;
+        return <PermissionsPage impersonatedTenant={impersonatedTenant || currentTenant} isSuperAdmin={isSuperAdmin} />;
       case 'settings':
         return (
           <SettingsPage
             activeTheme={activeTheme}
             onThemeChange={setActiveTheme}
             isSuperAdmin={isSuperAdmin}
-            impersonatedTenant={impersonatedTenant}
+            impersonatedTenant={impersonatedTenant || currentTenant}
             customers={customers}
             setCustomers={setCustomers}
             offers={offers}
@@ -406,10 +423,9 @@ function App() {
         onSectionChange={handleSectionChange}
         isSuperAdmin={isSuperAdmin}
         currentUserEmail={currentUserEmail}
-        activeTenantName={impersonatedTenant ? impersonatedTenant.companyName : undefined}
-
-        activeTenantLogo={impersonatedTenant ? impersonatedTenant.logoUrl : undefined}
-        onClearImpersonation={() => setImpersonatedTenant(null)}
+        activeTenantName={currentTenant ? currentTenant.companyName : undefined}
+        activeTenantLogo={currentTenant ? currentTenant.logoUrl : undefined}
+        onClearImpersonation={impersonatedTenant ? () => setImpersonatedTenant(null) : undefined}
         customers={customers}
         onUpdateActivityStatus={handleUpdateActivityStatus}
         onNavigateCustomer={handleNavigateCustomer}
