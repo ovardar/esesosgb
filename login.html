@@ -927,7 +927,7 @@
         try {
           const { data, error } = await dbClient
             .from('tenants')
-            .select('name, slug, logo_url, primary_color, is_active')
+            .select('id, name, slug, logo_url, primary_color, is_active')
             .eq('slug', slug)
             .maybeSingle();
           if (!error && data) {
@@ -948,6 +948,19 @@
               logoImg.style.display = 'none';
             }
             applyPrimaryColor(data.primary_color || currentPrimaryColor);
+            if (data.id) {
+              localStorage.setItem(
+                `tenant_brand_${data.id}`,
+                JSON.stringify({
+                  id: data.id,
+                  name: data.name || '',
+                  slug: data.slug || '',
+                  logo_url: data.logo_url || '',
+                  primary_color: data.primary_color || '',
+                  is_active: data.is_active !== false
+                })
+              );
+            }
           }
         } catch (err) {
           console.warn('Tenant bilgisi okunamadı:', err.message);

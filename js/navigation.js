@@ -79,6 +79,65 @@ window.isStaffAccessActive = function (record) {
   return true;
 };
 
+window.getTenantBrandCache = function (tenantId) {
+  if (!tenantId) return null;
+  try {
+    const raw = localStorage.getItem(`tenant_brand_${tenantId}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return {
+      id: parsed.id || tenantId,
+      name: parsed.name || '',
+      slug: parsed.slug || '',
+      logo_url: parsed.logo_url || '',
+      primary_color: parsed.primary_color || '',
+      is_active: parsed.is_active !== false
+    };
+  } catch (err) {
+    console.warn('Tenant brand cache okunamadi:', err.message || err);
+    return null;
+  }
+};
+
+window.setTenantBrandCache = function (tenant) {
+  if (!tenant || !tenant.id) return;
+  try {
+    localStorage.setItem(
+      `tenant_brand_${tenant.id}`,
+      JSON.stringify({
+        id: tenant.id,
+        name: tenant.name || '',
+        slug: tenant.slug || '',
+        logo_url: tenant.logo_url || '',
+        primary_color: tenant.primary_color || '',
+        is_active: tenant.is_active !== false
+      })
+    );
+  } catch (err) {
+    console.warn('Tenant brand cache yazilamadi:', err.message || err);
+  }
+};
+
+window.loadTenantBrandById = async function (tenantId) {
+  if (!window.dbClient || !tenantId) return null;
+  try {
+    const { data, error } = await window.dbClient
+      .from('tenants')
+      .select('id, name, slug, logo_url, primary_color, is_active')
+      .eq('id', tenantId)
+      .maybeSingle();
+    if (error) {
+      console.warn('Tenant brand dogrudan okunamadi:', error.message || error);
+      return null;
+    }
+    return data || null;
+  } catch (err) {
+    console.warn('Tenant brand fallback sorgusu basarisiz:', err.message || err);
+    return null;
+  }
+};
+
 window.getCurrentAuthContext = async function () {
   if (!window.dbClient) return { session: null, email: '', role: '', canLogin: false, staff: null };
   try {
@@ -87,15 +146,44 @@ window.getCurrentAuthContext = async function () {
     const email = session.user.email || '';
     let staff = null;
     try {
-      const { data } = await window.dbClient
+      const { data, error } = await window.dbClient
         .from('osgb_staff')
         .select('*, tenants(id, name, slug, logo_url, primary_color, is_active)')
         .ilike('email', email)
         .maybeSingle();
-      staff = data || null;
+      if (!error) {
+        staff = data || null;
+      } else if ((error.message || '').toLowerCase().includes('multiple')) {
+        const { data: listData, error: listErr } = await window.dbClient
+          .from('osgb_staff')
+          .select('*, tenants(id, name, slug, logo_url, primary_color, is_active)')
+          .ilike('email', email)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+        if (!listErr && Array.isArray(listData) && listData.length > 0) {
+          staff = listData[0];
+        }
+      } else {
+        throw error;
+      }
     } catch (err) {
       console.warn('Rol kaydı okunamadı, e-posta bazlı geçici role dönülüyor:', err.message);
     }
+
+    let tenant = staff && staff.tenants ? staff.tenants : null;
+    if (staff && staff.tenant_id && (!tenant || (!tenant.logo_url && !tenant.name))) {
+      const directTenant = await window.loadTenantBrandById(staff.tenant_id);
+      if (directTenant) {
+        tenant = directTenant;
+      }
+    }
+    if (!tenant && staff && staff.tenant_id) {
+      tenant = window.getTenantBrandCache(staff.tenant_id);
+    }
+    if (tenant) {
+      window.setTenantBrandCache(tenant);
+    }
+
     const role =
       window.normalizeAccessRole(staff && staff.access_role) ||
       window.normalizeAccessRole(staff && staff.staff_role) ||
@@ -112,7 +200,7 @@ window.getCurrentAuthContext = async function () {
       role,
       canLogin,
       staff,
-      tenant: staff && staff.tenants ? staff.tenants : null,
+      tenant,
       tenant_id: staff ? staff.tenant_id : null
     };
   } catch (err) {
