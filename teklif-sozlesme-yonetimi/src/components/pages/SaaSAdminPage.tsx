@@ -35,12 +35,14 @@ type Props = {
   onImpersonateTenant?: (tenant: SaaSTenant) => void;
   onNavigateSection?: (section: SectionId) => void;
   currentUserEmail?: string;
+  tenants?: SaaSTenant[];
+  setTenants?: React.Dispatch<React.SetStateAction<SaaSTenant[]>>;
 };
 
-export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentUserEmail }: Props) {
+export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentUserEmail, tenants: propTenants, setTenants: propSetTenants }: Props) {
   const activeUserEmail = currentUserEmail || localStorage.getItem('crm_user_session') || 'orhan.vardar@gmail.com';
   const [sendingEmail, setSendingEmail] = useState(false);
-  const [tenants, setTenants] = useState<SaaSTenant[]>(() => {
+  const [internalTenants, setInternalTenants] = useState<SaaSTenant[]>(() => {
     try {
       const saved = localStorage.getItem('crm_saas_tenants_v3');
       if (saved) return JSON.parse(saved);
@@ -49,6 +51,9 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     }
     return initialSaaSTenants;
   });
+
+  const tenants = propTenants || internalTenants;
+  const setTenants = propSetTenants || setInternalTenants;
 
   const [offers, setOffers] = useState<SaaSOffer[]>(() => {
     try {

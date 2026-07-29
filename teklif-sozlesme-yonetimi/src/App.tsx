@@ -24,8 +24,7 @@ import { fetchCloudCustomers, saveCloudCustomers, fetchCloudOffers, saveCloudOff
 
 function App() {
   const [activeSection, setActiveSection] = useState<SectionId>('dashboard');
-  const [activeTheme, setActiveTheme] = useState<ThemeId>('ivory');
-  const [impersonatedTenant, setImpersonatedTenant] = useState<SaaSTenant | null>(null);
+  const [impersonatedTenantId, setImpersonatedTenantId] = useState<string | null>(null);
 
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [activeInviteCode, setActiveInviteCode] = useState<string | undefined>(undefined);
@@ -140,6 +139,13 @@ function App() {
       if (list && list.length > 0) setTenants(list);
     });
   }, []);
+
+  const [activeTheme, setActiveTheme] = useState<ThemeId>('ivory');
+
+  const impersonatedTenant = useMemo(() => {
+    if (!impersonatedTenantId) return null;
+    return tenants.find((t) => t.id === impersonatedTenantId) || null;
+  }, [impersonatedTenantId, tenants]);
 
 
 
@@ -347,10 +353,12 @@ function App() {
           <SaaSAdminPage
             currentUserEmail={currentUserEmail}
             onImpersonateTenant={(tenant) => {
-              setImpersonatedTenant(tenant);
+              setImpersonatedTenantId(tenant.id);
               handleSectionChange('customers');
             }}
             onNavigateSection={handleSectionChange}
+            tenants={tenants}
+            setTenants={setTenants}
           />
 
         );
@@ -482,7 +490,7 @@ function App() {
         currentUserEmail={currentUserEmail}
         activeTenantName={currentTenant ? currentTenant.companyName : undefined}
         activeTenantLogo={currentTenant ? currentTenant.logoUrl : undefined}
-        onClearImpersonation={impersonatedTenant ? () => setImpersonatedTenant(null) : undefined}
+        onClearImpersonation={impersonatedTenantId ? () => setImpersonatedTenantId(null) : undefined}
         customers={customers}
         onUpdateActivityStatus={handleUpdateActivityStatus}
         onNavigateCustomer={handleNavigateCustomer}
