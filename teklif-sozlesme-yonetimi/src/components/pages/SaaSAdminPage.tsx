@@ -269,6 +269,27 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
   const [upsellOnlyFilter, setUpsellOnlyFilter] = useState<boolean>(false);
   const [invoiceMonthFilter, setInvoiceMonthFilter] = useState<string>('all');
 
+  // Table Column Sort States
+  type SortDir = 'asc' | 'desc';
+  const [tenantSort, setTenantSort] = useState<{ field: string; dir: SortDir }>({ field: 'companyName', dir: 'asc' });
+  const [offerSort, setOfferSort] = useState<{ field: string; dir: SortDir }>({ field: 'createdAt', dir: 'desc' });
+  const [contractSort, setContractSort] = useState<{ field: string; dir: SortDir }>({ field: 'contractNumber', dir: 'asc' });
+  const [invoiceSort, setInvoiceSort] = useState<{ field: string; dir: SortDir }>({ field: 'dueDate', dir: 'desc' });
+  const [packageSort, setPackageSort] = useState<{ field: string; dir: SortDir }>({ field: 'name', dir: 'asc' });
+  const [superAdminSort, setSuperAdminSort] = useState<{ field: string; dir: SortDir }>({ field: 'name', dir: 'asc' });
+
+  const toggleSort = (
+    currentSort: { field: string; dir: SortDir },
+    setSort: React.Dispatch<React.SetStateAction<{ field: string; dir: SortDir }>>,
+    field: string
+  ) => {
+    if (currentSort.field === field) {
+      setSort({ field, dir: currentSort.dir === 'asc' ? 'desc' : 'asc' });
+    } else {
+      setSort({ field, dir: 'asc' });
+    }
+  };
+
   // UI Modals & Drawers
   const [selectedTenant, setSelectedTenant] = useState<SaaSTenant | null>(null);
   const [detailTab, setDetailTab] = useState<'info' | 'license' | 'billing' | 'modules' | 'notes'>('info');
@@ -405,9 +426,9 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     };
   }, [tenants]);
 
-  // Filter Tenants
+  // Filter & Sort Tenants
   const filteredTenants = useMemo(() => {
-    return tenants.filter((tenant) => {
+    const list = tenants.filter((tenant) => {
       const query = searchQuery.toLowerCase();
       const matchesSearch =
         tenant.companyName.toLowerCase().includes(query) ||
@@ -425,15 +446,111 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
       return matchesSearch && matchesStatus && matchesPackage && matchesPayment && matchesUpsell;
     });
-  }, [tenants, searchQuery, statusFilter, packageFilter, paymentFilter, upsellOnlyFilter]);
 
-  // Filter Invoices by Period
+    return list.sort((a, b) => {
+      let valA: any = (a as any)[tenantSort.field];
+      let valB: any = (b as any)[tenantSort.field];
+      if (valA === undefined || valA === null) valA = '';
+      if (valB === undefined || valB === null) valB = '';
+
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+
+      if (valA < valB) return tenantSort.dir === 'asc' ? -1 : 1;
+      if (valA > valB) return tenantSort.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [tenants, searchQuery, statusFilter, packageFilter, paymentFilter, upsellOnlyFilter, tenantSort]);
+
+  // Filter & Sort Invoices
   const filteredInvoices = useMemo(() => {
-    return invoices.filter((inv) => {
+    const list = invoices.filter((inv) => {
       if (invoiceMonthFilter === 'all') return true;
       return inv.billingPeriod.toLowerCase().includes(invoiceMonthFilter.toLowerCase());
     });
-  }, [invoices, invoiceMonthFilter]);
+
+    return list.sort((a, b) => {
+      let valA: any = (a as any)[invoiceSort.field];
+      let valB: any = (b as any)[invoiceSort.field];
+      if (valA === undefined || valA === null) valA = '';
+      if (valB === undefined || valB === null) valB = '';
+
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+
+      if (valA < valB) return invoiceSort.dir === 'asc' ? -1 : 1;
+      if (valA > valB) return invoiceSort.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [invoices, invoiceMonthFilter, invoiceSort]);
+
+  // Sorted Offers
+  const sortedOffers = useMemo(() => {
+    return [...offers].sort((a, b) => {
+      let valA: any = (a as any)[offerSort.field];
+      let valB: any = (b as any)[offerSort.field];
+      if (valA === undefined || valA === null) valA = '';
+      if (valB === undefined || valB === null) valB = '';
+
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+
+      if (valA < valB) return offerSort.dir === 'asc' ? -1 : 1;
+      if (valA > valB) return offerSort.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [offers, offerSort]);
+
+  // Sorted Contracts
+  const sortedContracts = useMemo(() => {
+    return [...contracts].sort((a, b) => {
+      let valA: any = (a as any)[contractSort.field];
+      let valB: any = (b as any)[contractSort.field];
+      if (valA === undefined || valA === null) valA = '';
+      if (valB === undefined || valB === null) valB = '';
+
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+
+      if (valA < valB) return contractSort.dir === 'asc' ? -1 : 1;
+      if (valA > valB) return contractSort.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [contracts, contractSort]);
+
+  // Sorted Packages
+  const sortedPackages = useMemo(() => {
+    return [...packages].sort((a, b) => {
+      let valA: any = (a as any)[packageSort.field];
+      let valB: any = (b as any)[packageSort.field];
+      if (valA === undefined || valA === null) valA = '';
+      if (valB === undefined || valB === null) valB = '';
+
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+
+      if (valA < valB) return packageSort.dir === 'asc' ? -1 : 1;
+      if (valA > valB) return packageSort.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [packages, packageSort]);
+
+  // Sorted SuperAdmins
+  const sortedSuperAdmins = useMemo(() => {
+    return [...superAdmins].sort((a, b) => {
+      let valA: any = (a as any)[superAdminSort.field];
+      let valB: any = (b as any)[superAdminSort.field];
+      if (valA === undefined || valA === null) valA = '';
+      if (valB === undefined || valB === null) valB = '';
+
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
+
+      if (valA < valB) return superAdminSort.dir === 'asc' ? -1 : 1;
+      if (valA > valB) return superAdminSort.dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [superAdmins, superAdminSort]);
 
   // Generate Monthly Invoices Batch (Aylık Faturaları Toplu Kesme)
   const handleGenerateMonthlyInvoices = () => {
@@ -1042,54 +1159,8 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           </div>
         </div>
 
-        {/* Main Section Navigation Tabs */}
-        <div className="filter-group" style={{ justifyContent: 'flex-start', marginBottom: 18, flexWrap: 'wrap' }}>
-          <button
-            className={`filter-chip ${mainTab === 'tenants' ? 'filter-chip-active' : ''}`}
-            onClick={() => setMainTab('tenants')}
-          >
-            🏢 Kiracı Müşteriler ({tenants.length})
-          </button>
-
-          <button
-            className={`filter-chip ${mainTab === 'offers-contracts' ? 'filter-chip-active' : ''}`}
-            onClick={() => setMainTab('offers-contracts')}
-          >
-            📄 Teklifler ({offers.length}) & Sözleşmeler ({contracts.length})
-          </button>
-
-          <button
-            className={`filter-chip ${mainTab === 'invoices' ? 'filter-chip-active' : ''}`}
-            onClick={() => setMainTab('invoices')}
-          >
-            💳 Tahsilat & Fatura Logları ({invoices.length})
-          </button>
-
-          <button
-            className={`filter-chip ${mainTab === 'email-templates' ? 'filter-chip-active' : ''}`}
-            onClick={() => setMainTab('email-templates')}
-          >
-            📧 E-posta Şablonları ({emailTemplates.length})
-          </button>
-
-          <button
-            className={`filter-chip ${mainTab === 'packages' ? 'filter-chip-active' : ''}`}
-            onClick={() => setMainTab('packages')}
-          >
-            📦 Abonelik Paketleri ({packages.length})
-          </button>
-
-          <button
-            className={`filter-chip ${mainTab === 'super-admins' ? 'filter-chip-active' : ''}`}
-            style={{ background: mainTab === 'super-admins' ? '#6366f1' : undefined, color: mainTab === 'super-admins' ? '#ffffff' : undefined }}
-            onClick={() => setMainTab('super-admins')}
-          >
-            🛡️ Süper Admin Kadrosu ({superAdmins.length})
-          </button>
-        </div>
-
         {/* Metrics Row */}
-        <section className="metrics-grid metrics-grid-compact" style={{ marginTop: 0 }}>
+        <section className="metrics-grid metrics-grid-compact" style={{ marginTop: 0, marginBottom: 16 }}>
           <article className="panel metric-card metric-card-minimal">
             <p className="eyebrow">Toplam Kiracı</p>
             <strong>{metrics.totalTenants}</strong>
@@ -1102,11 +1173,9 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             <span>Abonelik lisans toplamı</span>
           </article>
 
-          <article className="panel metric-card metric-card-minimal" style={{ borderLeft: '4px solid #f59e0b' }}>
-            <p className="eyebrow">⚠️ Upsell / Limit Uyarısı</p>
-            <strong style={{ color: metrics.upsellCount > 0 ? '#d97706' : 'var(--good)' }}>
-              {metrics.upsellCount} Firma
-            </strong>
+          <article className="panel metric-card metric-card-minimal">
+            <p className="eyebrow">Upsell / Limit Uyarısı</p>
+            <strong>{metrics.upsellCount} Firma</strong>
             <span>%80+ Kapasite kullanımında</span>
           </article>
 
@@ -1116,6 +1185,57 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             <span>{invoices.filter((i) => i.status === 'Gecikmede').length} Geciken Ödeme</span>
           </article>
         </section>
+
+        {/* Main Section Navigation Tabs (Moved Below KPI Cards as Requested) */}
+        <div className="filter-group" style={{ justifyContent: 'flex-start', marginBottom: 0, flexWrap: 'wrap', gap: 8 }}>
+          <button
+            className={`filter-chip ${mainTab === 'tenants' ? 'filter-chip-active' : ''}`}
+            style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '20px', fontWeight: 600 }}
+            onClick={() => setMainTab('tenants')}
+          >
+            🏢 Kiracı Müşteriler ({tenants.length})
+          </button>
+
+          <button
+            className={`filter-chip ${mainTab === 'offers-contracts' ? 'filter-chip-active' : ''}`}
+            style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '20px', fontWeight: 600 }}
+            onClick={() => setMainTab('offers-contracts')}
+          >
+            📄 Teklifler ({offers.length}) & Sözleşmeler ({contracts.length})
+          </button>
+
+          <button
+            className={`filter-chip ${mainTab === 'invoices' ? 'filter-chip-active' : ''}`}
+            style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '20px', fontWeight: 600 }}
+            onClick={() => setMainTab('invoices')}
+          >
+            💳 Tahsilat & Fatura Logları ({invoices.length})
+          </button>
+
+          <button
+            className={`filter-chip ${mainTab === 'email-templates' ? 'filter-chip-active' : ''}`}
+            style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '20px', fontWeight: 600 }}
+            onClick={() => setMainTab('email-templates')}
+          >
+            📧 E-posta Şablonları ({emailTemplates.length})
+          </button>
+
+          <button
+            className={`filter-chip ${mainTab === 'packages' ? 'filter-chip-active' : ''}`}
+            style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '20px', fontWeight: 600 }}
+            onClick={() => setMainTab('packages')}
+          >
+            📦 Abonelik Paketleri ({packages.length})
+          </button>
+
+          <button
+            className={`filter-chip ${mainTab === 'super-admins' ? 'filter-chip-active' : ''}`}
+            style={{ padding: '6px 14px', fontSize: '0.8rem', borderRadius: '20px', fontWeight: 600, background: mainTab === 'super-admins' ? '#6366f1' : undefined, color: mainTab === 'super-admins' ? '#ffffff' : undefined }}
+            onClick={() => setMainTab('super-admins')}
+          >
+            🛡️ Süper Admin Kadrosu ({superAdmins.length})
+          </button>
+        </div>
       </article>
 
       {/* TAB 1: Tenants List */}
@@ -1132,20 +1252,21 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           </div>
 
           {/* Filter Bar */}
-          <div className="customer-filter-grid" style={{ marginBottom: 18 }}>
-            <label className="search-field customer-search-field">
-              <span>Arama</span>
+          <div className="customer-filter-grid" style={{ marginBottom: 14, gap: 12 }}>
+            <label className="search-field customer-search-field" style={{ position: 'relative' }}>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Arama</span>
               <input
                 type="text"
                 placeholder="Firma adı, kod, şehir veya yetkili ara..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ fontSize: '0.82rem', padding: '6px 12px', height: '36px', borderRadius: '8px' }}
               />
             </label>
 
             <label className="select-field">
-              <span>Abonelik Durumu</span>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Abonelik Durumu</span>
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ fontSize: '0.82rem', padding: '6px 12px', height: '36px', borderRadius: '8px' }}>
                 <option value="all">Tüm Durumlar</option>
                 <option value="Aktif">Aktif</option>
                 <option value="Demo">Demo / Deneme</option>
@@ -1156,8 +1277,8 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             </label>
 
             <label className="select-field">
-              <span>Paket Tipi</span>
-              <select value={packageFilter} onChange={(e) => setPackageFilter(e.target.value)}>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Paket Tipi</span>
+              <select value={packageFilter} onChange={(e) => setPackageFilter(e.target.value)} style={{ fontSize: '0.82rem', padding: '6px 12px', height: '36px', borderRadius: '8px' }}>
                 <option value="all">Tüm Paketler</option>
                 {packages.map((pkg) => (
                   <option key={pkg.id} value={pkg.name.split(' ')[0]}>
@@ -1168,10 +1289,11 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             </label>
 
             <label className="select-field">
-              <span>Limit & Upsell Durumu</span>
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Limit & Upsell Durumu</span>
               <select
                 value={upsellOnlyFilter ? 'upsell' : 'all'}
                 onChange={(e) => setUpsellOnlyFilter(e.target.value === 'upsell')}
+                style={{ fontSize: '0.82rem', padding: '6px 12px', height: '36px', borderRadius: '8px' }}
               >
                 <option value="all">Tüm Kullanıcı Seviyeleri</option>
                 <option value="upsell">⚠️ Limit Sınırında (%80+ Kapasite - Upsell)</option>
@@ -1184,12 +1306,24 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             <table className="customer-table">
               <thead>
                 <tr>
-                  <th>Kiracı Firma & Yetkili</th>
-                  <th>Paket & Kullanıcı Kullanımı</th>
-                  <th>Lisans Ücreti</th>
-                  <th>Şifre & Giriş Durumu</th>
-                  <th>Ödeme & Sağlık</th>
-                  <th>Durum</th>
+                  <th onClick={() => toggleSort(tenantSort, setTenantSort, 'companyName')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Kiracı Firma & Yetkili {tenantSort.field === 'companyName' ? (tenantSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
+                  <th onClick={() => toggleSort(tenantSort, setTenantSort, 'package')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Paket & Kullanıcı Kullanımı {tenantSort.field === 'package' ? (tenantSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
+                  <th onClick={() => toggleSort(tenantSort, setTenantSort, 'annualFee')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Lisans Ücreti {tenantSort.field === 'annualFee' ? (tenantSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
+                  <th onClick={() => toggleSort(tenantSort, setTenantSort, 'activationStatus')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Şifre & Giriş Durumu {tenantSort.field === 'activationStatus' ? (tenantSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
+                  <th onClick={() => toggleSort(tenantSort, setTenantSort, 'healthStatus')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Ödeme & Sağlık {tenantSort.field === 'healthStatus' ? (tenantSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
+                  <th onClick={() => toggleSort(tenantSort, setTenantSort, 'status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Durum {tenantSort.field === 'status' ? (tenantSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
                   <th style={{ textAlign: 'right' }}>Aksiyonlar</th>
                 </tr>
               </thead>
@@ -1435,17 +1569,29 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               <table className="customer-table">
                 <thead>
                   <tr>
-                    <th>Teklif No</th>
-                    <th>Kiracı / Aday Firma</th>
-                    <th>Paket & Periyot</th>
-                    <th>Teklif Tutarı</th>
-                    <th>Tarih / Geçerlilik</th>
-                    <th>Durum</th>
+                    <th onClick={() => toggleSort(offerSort, setOfferSort, 'offerNumber')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Teklif No {offerSort.field === 'offerNumber' ? (offerSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(offerSort, setOfferSort, 'tenantName')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Kiracı / Aday Firma {offerSort.field === 'tenantName' ? (offerSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(offerSort, setOfferSort, 'packageName')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Paket & Periyot {offerSort.field === 'packageName' ? (offerSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(offerSort, setOfferSort, 'annualFee')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Teklif Tutarı {offerSort.field === 'annualFee' ? (offerSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(offerSort, setOfferSort, 'createdAt')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Tarih / Geçerlilik {offerSort.field === 'createdAt' ? (offerSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(offerSort, setOfferSort, 'status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Durum {offerSort.field === 'status' ? (offerSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
                     <th style={{ textAlign: 'right' }}>Teklif İşlemleri & Aksiyonlar</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {offers.map((off) => (
+                  {sortedOffers.map((off) => (
                     <tr key={off.id}>
                       <td><strong>{off.offerNumber}</strong></td>
                       <td>
@@ -1590,17 +1736,31 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               <table className="customer-table">
                 <thead>
                   <tr>
-                    <th>Sözleşme No</th>
-                    <th>Kiracı Firma</th>
-                    <th>Paket</th>
-                    <th>Yıllık Lisans Tutarı</th>
-                    <th>Sözleşme Dönemi</th>
-                    <th>İmzalayan / Tarih</th>
-                    <th>Durum</th>
+                    <th onClick={() => toggleSort(contractSort, setContractSort, 'contractNumber')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Sözleşme No {contractSort.field === 'contractNumber' ? (contractSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(contractSort, setContractSort, 'tenantName')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Kiracı Firma {contractSort.field === 'tenantName' ? (contractSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(contractSort, setContractSort, 'packageName')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Paket {contractSort.field === 'packageName' ? (contractSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(contractSort, setContractSort, 'annualFee')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Yıllık Lisans Tutarı {contractSort.field === 'annualFee' ? (contractSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(contractSort, setContractSort, 'startDate')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Sözleşme Dönemi {contractSort.field === 'startDate' ? (contractSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(contractSort, setContractSort, 'signedBy')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      İmzalayan / Tarih {contractSort.field === 'signedBy' ? (contractSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
+                    <th onClick={() => toggleSort(contractSort, setContractSort, 'status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                      Durum {contractSort.field === 'status' ? (contractSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {contracts.map((cnt) => (
+                  {sortedContracts.map((cnt) => (
                     <tr key={cnt.id}>
                       <td><strong>{cnt.contractNumber}</strong></td>
                       <td>{cnt.tenantName}</td>
@@ -1672,12 +1832,24 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             <table className="customer-table">
               <thead>
                 <tr>
-                  <th>Fatura No</th>
-                  <th>Kiracı Firma</th>
-                  <th>Abonelik Periyodu / Ay</th>
-                  <th>Fatura Tutarı</th>
-                  <th>Kesim & Vade Tarihi</th>
-                  <th>Tahsilat Durumu</th>
+                  <th onClick={() => toggleSort(invoiceSort, setInvoiceSort, 'invoiceNumber')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Fatura No {invoiceSort.field === 'invoiceNumber' ? (invoiceSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
+                  <th onClick={() => toggleSort(invoiceSort, setInvoiceSort, 'tenantName')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Kiracı Firma {invoiceSort.field === 'tenantName' ? (invoiceSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
+                  <th onClick={() => toggleSort(invoiceSort, setInvoiceSort, 'billingPeriod')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Abonelik Periyodu / Ay {invoiceSort.field === 'billingPeriod' ? (invoiceSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
+                  <th onClick={() => toggleSort(invoiceSort, setInvoiceSort, 'amount')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Fatura Tutarı {invoiceSort.field === 'amount' ? (invoiceSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
+                  <th onClick={() => toggleSort(invoiceSort, setInvoiceSort, 'dueDate')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Kesim & Vade Tarihi {invoiceSort.field === 'dueDate' ? (invoiceSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
+                  <th onClick={() => toggleSort(invoiceSort, setInvoiceSort, 'status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Tahsilat Durumu {invoiceSort.field === 'status' ? (invoiceSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
                   <th style={{ textAlign: 'right' }}>Aksiyonlar</th>
                 </tr>
               </thead>
