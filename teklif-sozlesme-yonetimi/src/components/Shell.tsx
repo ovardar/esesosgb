@@ -6,6 +6,7 @@ import { sections } from '../data/navigation';
 import { supabase } from '../lib/supabase';
 import type { SectionId, ThemeId } from '../types';
 import { resolveUserRoleInfo } from '../lib/userRoles';
+import codentraLogo from '../assets/codentra-logo.png';
 
 
 type ShellProps = {
@@ -66,22 +67,33 @@ export function Shell({
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">
+        <div className="brand" style={{ padding: '4px 0', marginBottom: 16 }}>
           {activeTenantLogo ? (
-            <div style={{ width: 40, height: 40, borderRadius: 10, overflow: 'hidden', background: '#ffffff', padding: 3, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src={activeTenantLogo} alt={activeTenantName || 'Kiracı Logosu'} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 42, height: 42, borderRadius: 10, overflow: 'hidden', background: '#ffffff', padding: 3, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <img src={activeTenantLogo} alt={activeTenantName || 'Kiracı Logosu'} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+              </div>
+              <div>
+                <p className="eyebrow" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', margin: 0 }}>
+                  {activeTenantName ? activeTenantName : 'CODENTRA'}
+                </p>
+                <h1 style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>Teklif ve Sözleşme Yazılımı</h1>
+              </div>
             </div>
           ) : (
-            <div style={{ width: 40, height: 40, borderRadius: 10, overflow: 'hidden', background: '#090d16', border: '1px solid rgba(255, 255, 255, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(0, 0, 0, 0.25)' }}>
-              <img src="/codentra-logo.png" alt="Codentra Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
+              <img
+                src={codentraLogo}
+                alt="Codentra Logo"
+                style={{
+                  height: 48,
+                  maxWidth: '100%',
+                  objectFit: 'contain',
+                  borderRadius: 8
+                }}
+              />
             </div>
           )}
-          <div>
-            <p className="eyebrow" style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b' }}>
-              {activeTenantName ? activeTenantName : 'CODENTRA'}
-            </p>
-            <h1 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)' }}>Teklif ve Sözleşme Yazılımı (Codentra CRM)</h1>
-          </div>
         </div>
 
         {onClearImpersonation && activeTenantName && (

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import codentraLogo from '../assets/codentra-logo.png';
 
 interface LoginPageProps {
   onLoginSuccess: (email: string) => void;
@@ -97,27 +98,19 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
       }}>
         {/* LOGO & HEADER */}
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{
-            width: 72,
-            height: 72,
-            borderRadius: 16,
-            overflow: 'hidden',
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 16,
-            boxShadow: '0 12px 30px rgba(0, 0, 0, 0.4)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            background: '#090d16'
-          }}>
-            <img src="/codentra-logo.png" alt="Codentra Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-          </div>
-          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#ffffff' }}>
-            Codentra
-          </h1>
-          <p style={{ margin: '6px 0 0 0', fontSize: '0.88rem', color: '#94a3b8' }}>
-            İşinize Uygun Dijital Çözümler
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <img
+            src={codentraLogo}
+            alt="Codentra Logo"
+            style={{
+              height: 60,
+              maxWidth: '100%',
+              objectFit: 'contain',
+              marginBottom: 12
+            }}
+          />
+          <p style={{ margin: 0, fontSize: '0.88rem', color: '#94a3b8' }}>
+            Teklif & Sözleşme Yönetim Paneli
           </p>
         </div>
 
