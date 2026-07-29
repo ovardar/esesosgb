@@ -6,7 +6,7 @@ import { sections } from '../data/navigation';
 import { supabase } from '../lib/supabase';
 import type { SectionId, ThemeId } from '../types';
 import { resolveUserRoleInfo } from '../lib/userRoles';
-import codentraLogo from '../assets/codentra-logo.png';
+import { CODENTRA_LOGO_DATA_URI } from '../assets/logoDataUri';
 
 
 type ShellProps = {
@@ -83,7 +83,7 @@ export function Shell({
           ) : (
             <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
               <img
-                src={codentraLogo}
+                src={CODENTRA_LOGO_DATA_URI}
                 alt="Codentra Logo"
                 style={{
                   height: 48,

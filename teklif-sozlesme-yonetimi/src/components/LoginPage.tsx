@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import codentraLogo from '../assets/codentra-logo.png';
+import { CODENTRA_LOGO_DATA_URI } from '../assets/logoDataUri';
 
 interface LoginPageProps {
   onLoginSuccess: (email: string) => void;
@@ -100,7 +100,7 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         {/* LOGO & HEADER */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <img
-            src={codentraLogo}
+            src={CODENTRA_LOGO_DATA_URI}
             alt="Codentra Logo"
             style={{
               height: 60,
