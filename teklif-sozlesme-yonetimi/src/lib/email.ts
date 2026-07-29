@@ -1,6 +1,7 @@
+import { supabase } from './supabase';
+
 const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || '';
 const DEFAULT_FROM = import.meta.env.VITE_FROM_EMAIL || 'Codentra CRM <davet@codentra.com.tr>';
-
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -13,7 +14,25 @@ export interface SendEmailOptions {
 export async function sendEmail({ to, subject, html, from = DEFAULT_FROM }: SendEmailOptions) {
   const recipients = Array.isArray(to) ? to : [to];
 
-  // 1. Try Resend API with configured from address
+  // 1. Primary: Try Supabase Edge Function (Bypasses Browser CORS restrictions)
+  try {
+    const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('send-email', {
+      body: { to: recipients, subject, html, from }
+    });
+
+    if (!edgeErr && edgeData?.success) {
+      console.log('[Email] Sent successfully via Supabase Edge Function:', edgeData);
+      return { success: true, provider: 'resend-edge', data: edgeData };
+    }
+
+    if (edgeErr || (edgeData && !edgeData.success)) {
+      console.warn('[Email] Edge function returned warning/error, attempting direct client fallback if key present:', edgeErr || edgeData);
+    }
+  } catch (fnErr) {
+    console.warn('[Email] Supabase functions.invoke exception:', fnErr);
+  }
+
+  // 2. Secondary Direct Fallback: Try Resend REST API (Subject to browser CORS)
   if (RESEND_API_KEY) {
     try {
       const response = await fetch('https://api.resend.com/emails', {
@@ -36,7 +55,6 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM }: Send
       }
       let lastError = data?.message || data?.error || JSON.stringify(data);
 
-      // 2. Retry with Resend sandbox onboarding address if custom domain is not yet verified
       if (from !== 'Codentra CRM <onboarding@resend.dev>') {
         const fallbackResp = await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -56,17 +74,16 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM }: Send
         if (fallbackResp.ok) {
           return { success: true, provider: 'resend-onboarding', data: fallbackData };
         }
-        console.warn('[Email] Resend API attempt 2 warning:', fallbackData);
         lastError = fallbackData?.message || fallbackData?.error || lastError;
       }
 
       return { success: false, error: lastError };
     } catch (err) {
-      console.warn('[Email] Resend fetch failed:', err);
+      console.warn('[Email] Resend direct fetch failed:', err);
     }
   }
 
-  return { success: false, error: 'Resend API key missing or domain unverified.' };
+  return { success: false, error: 'Edge function not yet deployed or Resend CORS restriction active.' };
 }
 
 
