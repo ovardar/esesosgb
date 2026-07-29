@@ -289,8 +289,6 @@ function App() {
       console.warn('[App] Error finding current tenant:', e);
     }
 
-    const defaultTestOsgbLogo = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><defs><linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%230f172a"/><stop offset="100%" stop-color="%231e293b"/></linearGradient><linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%2310b981"/><stop offset="100%" stop-color="%23059669"/></linearGradient></defs><rect width="200" height="200" rx="40" fill="url(%23bgGrad)"/><circle cx="100" cy="85" r="45" fill="none" stroke="url(%23iconGrad)" stroke-width="8"/><path d="M100 55 v60 M70 85 h60" stroke="%23ffffff" stroke-width="10" stroke-linecap="round"/><text x="100" y="160" font-family="sans-serif" font-weight="900" font-size="18" fill="%23ffffff" text-anchor="middle" letter-spacing="1">TEST OSGB 3</text></svg>';
-
     return {
       id: 'tenant-test-osgb3',
       tenantCode: 'TNT-OSGB3',
@@ -314,8 +312,7 @@ function App() {
       notes: '',
       modulesEnabled: { crm: true, offers: true, contracts: true, documents: true, analytics: true },
       activationStatus: 'Hesap Aktif (Şifre Belirlendi)',
-      lastLoginAt: 'Bugün',
-      logoUrl: defaultTestOsgbLogo
+      lastLoginAt: 'Bugün'
     } as SaaSTenant;
   }, [impersonatedTenant, currentUserEmail, isSuperAdmin, tenants]);
 
