@@ -5,6 +5,7 @@ import { PriceRule } from './PriceListsPage';
 import { OfferRecord, OfferRevision, OfferServiceLine, AcceptanceChannel, ContractRecord, ContractServiceLine, VatMode, SaaSTenant } from '../../types';
 import { offerSeeds } from '../../data/workbench';
 import { OfferPdfPreviewModal } from '../modals/PdfPreviewModals';
+import { getTenantPersonnelList } from '../../lib/tenantPersonnel';
 
 const LOCAL_STORAGE_KEY_OFFERS = 'crm_offers_v3';
 const LOCAL_STORAGE_KEY_PRICE_RULES = 'crm_price_list_v2';
@@ -34,6 +35,8 @@ export function OffersPage({
   onNavigateToContracts,
   impersonatedTenant
 }: OffersPageProps) {
+
+  const personnelList = useMemo(() => getTenantPersonnelList(impersonatedTenant), [impersonatedTenant]);
 
   // Load offers state from localStorage
   const [offers, setOffers] = useState<OfferRecord[]>(() => {
@@ -1005,16 +1008,10 @@ export function OffersPage({
                         value={newOfferForm.owner}
                         onChange={(e) => setNewOfferForm({ ...newOfferForm, owner: e.target.value })}
                       >
-                        <option value="Ayşe Yılmaz">👔 Ayşe Yılmaz (Portföy Yöneticisi)</option>
-                        <option value="Mehmet Demir">👔 Mehmet Demir (Müşteri Temsilcisi)</option>
-                        <option value="Zeynep Kaya">👔 Zeynep Kaya (Saha Satış Sorumlusu)</option>
-                        <option value="Caner Şahin">👔 Caner Şahin (İSG Uzmanı)</option>
-                        <option value="Dr. Ali Yılmaz">👔 Dr. Ali Yılmaz (İşyeri Hekimi)</option>
-                        <option value="Dr. Ayşe Kara">👔 Dr. Ayşe Kara (İşyeri Hekimi)</option>
-                        <option value="Uzman Ahmet Yıldız">👔 Uzman Ahmet Yıldız (A Sınıfı İSG Uzmanı)</option>
-                        <option value="Uzman Elif Şahin">👔 Uzman Elif Şahin (B Sınıfı İSG Uzmanı)</option>
-                        <option value="Selim Can">👔 Selim Can (Operasyon Müdürü)</option>
-                        {newOfferForm.owner && !['Ayşe Yılmaz','Mehmet Demir','Zeynep Kaya','Caner Şahin','Dr. Ali Yılmaz','Dr. Ayşe Kara','Uzman Ahmet Yıldız','Uzman Elif Şahin','Selim Can'].includes(newOfferForm.owner) && (
+                        {personnelList.map((p) => (
+                          <option key={p.name} value={p.name}>👔 {p.name} ({p.role})</option>
+                        ))}
+                        {newOfferForm.owner && !personnelList.some(p => p.name === newOfferForm.owner) && (
                           <option value={newOfferForm.owner}>👔 {newOfferForm.owner}</option>
                         )}
                       </select>
@@ -1471,16 +1468,10 @@ export function OffersPage({
                         value={editOfferForm.owner}
                         onChange={(e) => setEditOfferForm({ ...editOfferForm, owner: e.target.value })}
                       >
-                        <option value="Ayşe Yılmaz">👔 Ayşe Yılmaz (Portföy Yöneticisi)</option>
-                        <option value="Mehmet Demir">👔 Mehmet Demir (Müşteri Temsilcisi)</option>
-                        <option value="Zeynep Kaya">👔 Zeynep Kaya (Saha Satış Sorumlusu)</option>
-                        <option value="Caner Şahin">👔 Caner Şahin (İSG Uzmanı)</option>
-                        <option value="Dr. Ali Yılmaz">👔 Dr. Ali Yılmaz (İşyeri Hekimi)</option>
-                        <option value="Dr. Ayşe Kara">👔 Dr. Ayşe Kara (İşyeri Hekimi)</option>
-                        <option value="Uzman Ahmet Yıldız">👔 Uzman Ahmet Yıldız (A Sınıfı İSG Uzmanı)</option>
-                        <option value="Uzman Elif Şahin">👔 Uzman Elif Şahin (B Sınıfı İSG Uzmanı)</option>
-                        <option value="Selim Can">👔 Selim Can (Operasyon Müdürü)</option>
-                        {editOfferForm.owner && !['Ayşe Yılmaz','Mehmet Demir','Zeynep Kaya','Caner Şahin','Dr. Ali Yılmaz','Dr. Ayşe Kara','Uzman Ahmet Yıldız','Uzman Elif Şahin','Selim Can'].includes(editOfferForm.owner) && (
+                        {personnelList.map((p) => (
+                          <option key={p.name} value={p.name}>👔 {p.name} ({p.role})</option>
+                        ))}
+                        {editOfferForm.owner && !personnelList.some(p => p.name === editOfferForm.owner) && (
                           <option value={editOfferForm.owner}>👔 {editOfferForm.owner}</option>
                         )}
                       </select>
@@ -1916,16 +1907,10 @@ export function OffersPage({
                       value={revisionForm.preparedBy}
                       onChange={(e) => setRevisionForm({ ...revisionForm, preparedBy: e.target.value })}
                     >
-                      <option value="Ayşe Yılmaz">👔 Ayşe Yılmaz (Portföy Yöneticisi)</option>
-                      <option value="Mehmet Demir">👔 Mehmet Demir (Müşteri Temsilcisi)</option>
-                      <option value="Zeynep Kaya">👔 Zeynep Kaya (Saha Satış Sorumlusu)</option>
-                      <option value="Caner Şahin">👔 Caner Şahin (İSG Uzmanı)</option>
-                      <option value="Dr. Ali Yılmaz">👔 Dr. Ali Yılmaz (İşyeri Hekimi)</option>
-                      <option value="Dr. Ayşe Kara">👔 Dr. Ayşe Kara (İşyeri Hekimi)</option>
-                      <option value="Uzman Ahmet Yıldız">👔 Uzman Ahmet Yıldız (A Sınıfı İSG Uzmanı)</option>
-                      <option value="Uzman Elif Şahin">👔 Uzman Elif Şahin (B Sınıfı İSG Uzmanı)</option>
-                      <option value="Selim Can">👔 Selim Can (Operasyon Müdürü)</option>
-                      {revisionForm.preparedBy && !['Ayşe Yılmaz','Mehmet Demir','Zeynep Kaya','Caner Şahin','Dr. Ali Yılmaz','Dr. Ayşe Kara','Uzman Ahmet Yıldız','Uzman Elif Şahin','Selim Can'].includes(revisionForm.preparedBy) && (
+                      {personnelList.map((p) => (
+                        <option key={p.name} value={p.name}>👔 {p.name} ({p.role})</option>
+                      ))}
+                      {revisionForm.preparedBy && !personnelList.some(p => p.name === revisionForm.preparedBy) && (
                         <option value={revisionForm.preparedBy}>👔 {revisionForm.preparedBy}</option>
                       )}
                     </select>

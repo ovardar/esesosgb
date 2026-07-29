@@ -19,8 +19,10 @@ import { contractSeeds } from '../../data/contractSeeds';
 import { offerSeeds } from '../../data/workbench';
 import { ContractPdfPreviewModal } from '../modals/PdfPreviewModals';
 import { ContractRevisionDiffView } from '../ContractRevisionDiffView';
+import { getTenantExperts, getTenantDoctors, getTenantDsps } from '../../lib/tenantPersonnel';
 
 const LOCAL_STORAGE_KEY_PRICE_RULES = 'crm_price_list_v2';
+const LOCAL_STORAGE_KEY_CONTRACTS = 'crm_contracts_v3';
 
 const stageBadges: Record<ContractStage, { bg: string; color: string; label: string }> = {
   'Taslak': { bg: 'rgba(148, 163, 184, 0.16)', color: '#64748b', label: '📝 Taslak' },
@@ -31,27 +33,6 @@ const stageBadges: Record<ContractStage, { bg: string; color: string; label: str
   'Süresi Doldu': { bg: 'rgba(239, 68, 68, 0.16)', color: '#ef4444', label: '🛑 Süresi Doldu' },
   'Feshedildi': { bg: 'rgba(71, 85, 105, 0.2)', color: '#475569', label: '✕ Feshedildi' }
 };
-
-// Staff Personnel Lists with userType (💻 Sistem Kullanıcısı vs 📋 Saha Kadrosu)
-const isgExpertsList = [
-  { name: 'Ayşe Yılmaz (A Sınıfı İSG Uzmanı)', role: 'A Sınıfı İSG Uzmanı', userType: '💻 Sistem Kullanıcısı' },
-  { name: 'Mert Demir (B Sınıfı İSG Uzmanı)', role: 'B Sınıfı İSG Uzmanı', userType: '💻 Sistem Kullanıcısı' },
-  { name: 'Elif Kaya (A Sınıfı İSG Uzmanı)', role: 'A Sınıfı İSG Uzmanı', userType: '📋 Saha Kadrosu' },
-  { name: 'Ahmet Can (B Sınıfı İSG Uzmanı)', role: 'B Sınıfı İSG Uzmanı', userType: '📋 Saha Kadrosu' },
-  { name: 'Mustafa Şahin (C Sınıfı İSG Uzmanı)', role: 'C Sınıfı İSG Uzmanı', userType: '📋 Saha Kadrosu' }
-];
-
-const workplaceDoctorsList = [
-  { name: 'Dr. Mehmet Öz (İşyeri Hekimi)', role: 'İşyeri Hekimi', userType: '📋 Saha Kadrosu' },
-  { name: 'Dr. Zeynep Erdem (İşyeri Hekimi)', role: 'İşyeri Hekimi', userType: '💻 Sistem Kullanıcısı' },
-  { name: 'Dr. Selim Koç (İşyeri Hekimi)', role: 'İşyeri Hekimi', userType: '📋 Saha Kadrosu' },
-  { name: 'Dr. Canan Taş (İşyeri Hekimi)', role: 'İşyeri Hekimi', userType: '💻 Sistem Kullanıcısı' }
-];
-
-const dspList = [
-  { name: 'Hemşire Fatma Yıldız (DSP)', role: 'DSP', userType: '📋 Saha Kadrosu' },
-  { name: 'Sağlık Memuru Ali Sunal (DSP)', role: 'DSP', userType: '📋 Saha Kadrosu' }
-];
 
 const unitOptions = ['Saat/Ay', 'Aylık', 'Adet', 'Kişi/Ay', 'Kişi/Dönem', 'Paket', 'Yıllık'];
 
@@ -136,6 +117,10 @@ export function ContractsPage({
       setContracts(propsContracts);
     }
   }, [propsContracts]);
+
+  const isgExpertsList = useMemo(() => getTenantExperts(impersonatedTenant), [impersonatedTenant]);
+  const workplaceDoctorsList = useMemo(() => getTenantDoctors(impersonatedTenant), [impersonatedTenant]);
+  const dspList = useMemo(() => getTenantDsps(impersonatedTenant), [impersonatedTenant]);
 
   // Sync back helper
   const updateContractsState = (newContracts: ContractRecord[]) => {
