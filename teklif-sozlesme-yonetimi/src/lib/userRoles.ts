@@ -22,8 +22,8 @@ export function resolveUserRoleInfo(
 ): UserRoleInfo {
   const cleanEmail = (currentUserEmail || localStorage.getItem('crm_user_session') || '').trim().toLowerCase();
 
-  // 1. Superadmin User Check (when NOT in tenant impersonation or tenant mode)
-  if (!activeTenant && (isSuperAdmin || cleanEmail === 'orhan.vardar@gmail.com')) {
+  // 1. Superadmin User Check (when NOT in tenant mode)
+  if (!activeTenant && isSuperAdmin && cleanEmail !== 'orhanvardarusa@gmail.com') {
     return {
       name: 'Orhan Vardar',
       roleName: 'Sistem Yöneticisi (Süper Admin)',

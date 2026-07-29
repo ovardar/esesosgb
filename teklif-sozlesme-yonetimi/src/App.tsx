@@ -365,7 +365,34 @@ function App() {
       return freshLogo ? { ...target, logoUrl: freshLogo } : target;
     }
 
-    return null;
+    const defaultTarget = initialSaaSTenants[0] || {
+      id: 'tenant-test-osgb3',
+      tenantCode: 'TNT-OSGB3',
+      companyName: 'Test OSGB 3',
+      contactName: 'Ahmet Dursun',
+      email: currentUserEmail || 'orhanvardarusa@gmail.com',
+      phone: '0850 000 00 00',
+      city: 'İstanbul',
+      package: 'Enterprise' as const,
+      status: 'Aktif',
+      paymentStatus: 'Sorunsuz',
+      healthStatus: 'Mükemmel',
+      billingCycle: 'Yıllık',
+      monthlyFee: 28000,
+      annualFee: 336000,
+      maxUsers: 50,
+      activeUsers: 1,
+      startDate: '2026-01-01',
+      endDate: '2027-01-01',
+      autoRenew: true,
+      notes: '',
+      modulesEnabled: { crm: true, offers: true, contracts: true, documents: true, analytics: true },
+      activationStatus: 'Hesap Aktif (Şifre Belirlendi)',
+      lastLoginAt: 'Bugün'
+    };
+
+    const freshLogo = getFreshLogo(defaultTarget as SaaSTenant);
+    return freshLogo ? { ...defaultTarget, logoUrl: freshLogo } : defaultTarget;
   }, [impersonatedTenant, currentUserEmail, isSuperAdmin, tenants]);
 
   const activeMeta = useMemo(
