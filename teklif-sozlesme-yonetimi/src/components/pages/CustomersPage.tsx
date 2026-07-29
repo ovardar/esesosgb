@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 import { comprehensiveNaceList, searchNaceCodes } from '../../data/naceCodes';
+import { turkeyCities, getDistrictsForCity } from '../../data/turkeyLocationData';
 import { customerSeeds, offerSeeds, documentSeeds } from '../../data/workbench';
 import { contractSeeds } from '../../data/contractSeeds';
 import { supabase } from '../../lib/supabase';
@@ -6682,10 +6683,8 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
               />
             </label>
 
-            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text-main)', display: 'block' }}>
-                NACE Kodu & Faaliyet Tanımı
-              </label>
+            <label className="select-field" style={{ position: 'relative' }}>
+              <span>NACE Kodu & Faaliyet Tanımı</span>
               <input
                 type="text"
                 placeholder="NACE kodu veya arama terimi (örn: 28.11, depolama, metal)..."
@@ -6766,7 +6765,7 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
                   ))}
                 </div>
               )}
-            </div>
+            </label>
 
             <label className="select-field">
               <span>Tehlike Sınıfı</span>
@@ -6802,23 +6801,38 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
             </label>
 
             <label className="select-field">
-              <span>Şehir</span>
-              <input
-                type="text"
-                placeholder="Örn: İstanbul"
+              <span>Şehir (İl)</span>
+              <select
                 value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
-              />
+                onChange={(e) => {
+                  const selectedCity = e.target.value;
+                  const availableDistricts = getDistrictsForCity(selectedCity);
+                  setForm({
+                    ...form,
+                    city: selectedCity,
+                    district: availableDistricts[0] || ''
+                  });
+                }}
+              >
+                <option value="">Seçiniz</option>
+                {turkeyCities.map((city) => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
             </label>
 
             <label className="select-field">
               <span>İlçe</span>
-              <input
-                type="text"
-                placeholder="Örn: Maltepe"
+              <select
                 value={form.district}
                 onChange={(e) => setForm({ ...form, district: e.target.value })}
-              />
+                disabled={!form.city}
+              >
+                <option value="">{form.city ? 'İlçe Seçiniz' : '-- Önce Şehir Seçiniz --'}</option>
+                {getDistrictsForCity(form.city).map((dist) => (
+                  <option key={dist} value={dist}>{dist}</option>
+                ))}
+              </select>
             </label>
           </div>
 
