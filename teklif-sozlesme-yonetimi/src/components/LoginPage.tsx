@@ -83,19 +83,19 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #090d16 0%, #0f172a 100%)',
+      background: 'radial-gradient(circle at center, #1c2e36 0%, #16242a 60%, #0e171b 100%)',
       color: '#f8fafc',
       padding: 20
     }}>
       <div style={{
         width: '100%',
-        maxWidth: 420,
-        background: 'rgba(18, 26, 43, 0.85)',
-        backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: 20,
-        padding: 40,
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+        maxWidth: 440,
+        background: 'rgba(22, 36, 42, 0.92)',
+        backdropFilter: 'blur(24px)',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        borderRadius: 22,
+        padding: '40px 36px',
+        boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.65)'
       }}>
         {/* LOGO & HEADER */}
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
@@ -103,13 +103,14 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             src={CODENTRA_LOGO_DATA_URI}
             alt="Codentra Logo"
             style={{
-              height: 60,
+              height: 105,
               maxWidth: '100%',
               objectFit: 'contain',
-              marginBottom: 12
+              marginBottom: 10,
+              filter: 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45))'
             }}
           />
-          <p style={{ margin: 0, fontSize: '0.88rem', color: '#94a3b8' }}>
+          <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8', fontWeight: 500, letterSpacing: '0.02em' }}>
             Teklif & Sözleşme Yönetim Paneli
           </p>
         </div>
@@ -117,8 +118,8 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         {/* ERROR MESSAGE */}
         {errorMsg && (
           <div style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
+            background: 'rgba(239, 68, 68, 0.18)',
+            border: '1px solid rgba(239, 68, 68, 0.35)',
             color: '#fca5a5',
             padding: '12px 16px',
             borderRadius: 10,
@@ -144,10 +145,10 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               required
               style={{
                 width: '100%',
-                padding: '12px 16px',
+                padding: '13px 16px',
                 borderRadius: 10,
                 border: '1px solid rgba(255, 255, 255, 0.15)',
-                background: 'rgba(10, 15, 26, 0.8)',
+                background: 'rgba(14, 24, 28, 0.85)',
                 color: '#ffffff',
                 fontSize: '0.95rem',
                 outline: 'none',
@@ -171,10 +172,10 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 required
                 style={{
                   width: '100%',
-                  padding: '12px 46px 12px 16px',
+                  padding: '13px 46px 13px 16px',
                   borderRadius: 10,
                   border: '1px solid rgba(255, 255, 255, 0.15)',
-                  background: 'rgba(10, 15, 26, 0.8)',
+                  background: 'rgba(14, 24, 28, 0.85)',
                   color: '#ffffff',
                   fontSize: '0.95rem',
                   outline: 'none',
@@ -207,7 +208,6 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             </div>
           </div>
 
-
           <button
             type="submit"
             disabled={loading}
@@ -216,12 +216,12 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
               padding: '14px',
               borderRadius: 10,
               border: 'none',
-              background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+              background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
               color: '#ffffff',
               fontSize: '1rem',
               fontWeight: 700,
               cursor: loading ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 20px rgba(99, 102, 241, 0.4)',
+              boxShadow: '0 4px 20px rgba(14, 165, 233, 0.4)',
               transition: 'all 0.2s ease',
               opacity: loading ? 0.7 : 1
             }}
