@@ -15,7 +15,7 @@ import { customerSeeds } from './data/workbench';
 import { sections } from './data/navigation';
 import { offerSeeds } from './data/workbench';
 import type { SectionId, SaaSTenant, ThemeId, ContractRecord, OfferRecord } from './types';
-
+import { initialSaaSTenants } from './data/saasWorkbench';
 import { LoginPage } from './components/LoginPage';
 import { SetPasswordModal } from './components/modals/SetPasswordModal';
 import { supabase } from './lib/supabase';
@@ -125,6 +125,21 @@ function App() {
 
 
   const [superAdminEmails] = useState<string[]>(['orhan.vardar@gmail.com']);
+
+  const [tenants, setTenants] = useState<SaaSTenant[]>(() => {
+    try {
+      const saved = localStorage.getItem('crm_saas_tenants_v3');
+      return saved ? JSON.parse(saved) : initialSaaSTenants;
+    } catch {
+      return initialSaaSTenants;
+    }
+  });
+
+  useEffect(() => {
+    fetchCloudTenants(initialSaaSTenants).then((list) => {
+      if (list && list.length > 0) setTenants(list);
+    });
+  }, []);
 
 
 
@@ -246,6 +261,16 @@ function App() {
     if (impersonatedTenant) return impersonatedTenant;
     if (isSuperAdmin) return null;
 
+    if (tenants.length > 0) {
+      const match = tenants.find(
+        (t) =>
+          (t.email && t.email.trim().toLowerCase() === currentUserEmail.trim().toLowerCase()) ||
+          (t.contactName && t.contactName.trim().toLowerCase() === currentUserEmail.trim().toLowerCase())
+      );
+      if (match) return match;
+      return tenants[0];
+    }
+
     try {
       const savedTenantsStr = localStorage.getItem('crm_saas_tenants_v3');
       if (savedTenantsStr) {
@@ -263,6 +288,8 @@ function App() {
     } catch (e) {
       console.warn('[App] Error finding current tenant:', e);
     }
+
+    const defaultTestOsgbLogo = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200"><defs><linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%230f172a"/><stop offset="100%" stop-color="%231e293b"/></linearGradient><linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="%2310b981"/><stop offset="100%" stop-color="%23059669"/></linearGradient></defs><rect width="200" height="200" rx="40" fill="url(%23bgGrad)"/><circle cx="100" cy="85" r="45" fill="none" stroke="url(%23iconGrad)" stroke-width="8"/><path d="M100 55 v60 M70 85 h60" stroke="%23ffffff" stroke-width="10" stroke-linecap="round"/><text x="100" y="160" font-family="sans-serif" font-weight="900" font-size="18" fill="%23ffffff" text-anchor="middle" letter-spacing="1">TEST OSGB 3</text></svg>';
 
     return {
       id: 'tenant-test-osgb3',
@@ -287,9 +314,10 @@ function App() {
       notes: '',
       modulesEnabled: { crm: true, offers: true, contracts: true, documents: true, analytics: true },
       activationStatus: 'Hesap Aktif (Şifre Belirlendi)',
-      lastLoginAt: 'Bugün'
+      lastLoginAt: 'Bugün',
+      logoUrl: defaultTestOsgbLogo
     } as SaaSTenant;
-  }, [impersonatedTenant, currentUserEmail, isSuperAdmin]);
+  }, [impersonatedTenant, currentUserEmail, isSuperAdmin, tenants]);
 
   const activeMeta = useMemo(
     () => sections.find((section) => section.id === activeSection) ?? sections[0],
