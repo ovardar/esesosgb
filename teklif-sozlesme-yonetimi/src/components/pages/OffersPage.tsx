@@ -115,6 +115,8 @@ export function OffersPage({
     return sortDirection === 'asc' ? <span>↑</span> : <span>↓</span>;
   };
 
+  const defaultOwner = impersonatedTenant?.contactName || personnelList[0]?.name || 'Ahmet Dursun';
+
   // New Offer Form State (Req 1: services starts empty [])
   const [newOfferForm, setNewOfferForm] = useState<{
     customerName: string;
@@ -129,7 +131,7 @@ export function OffersPage({
   }>({
     customerName: '',
     subject: '',
-    owner: 'Ayşe Yılmaz',
+    owner: defaultOwner,
     validUntilDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     vatMode: 'KDV Hariç',
     services: [],
@@ -151,7 +153,7 @@ export function OffersPage({
     notes: string;
   }>({
     subject: '',
-    owner: 'Ayşe Yılmaz',
+    owner: defaultOwner,
     status: 'Gönderildi',
     validUntilDate: '',
     vatMode: 'KDV Hariç',
@@ -170,13 +172,19 @@ export function OffersPage({
     overallDiscountType: 'percent' | 'amount';
     overallDiscountValue: number;
   }>({
-    preparedBy: 'Ayşe Yılmaz',
+    preparedBy: defaultOwner,
     revisionNotes: '',
     vatMode: 'KDV Hariç',
     services: [],
     overallDiscountType: 'percent',
     overallDiscountValue: 0
   });
+
+  useEffect(() => {
+    setNewOfferForm((prev) => (prev.owner === 'Ayşe Yılmaz' || !prev.owner ? { ...prev, owner: defaultOwner } : prev));
+    setEditOfferForm((prev) => (prev.owner === 'Ayşe Yılmaz' || !prev.owner ? { ...prev, owner: defaultOwner } : prev));
+    setRevisionForm((prev) => (prev.preparedBy === 'Ayşe Yılmaz' || !prev.preparedBy ? { ...prev, preparedBy: defaultOwner } : prev));
+  }, [defaultOwner]);
 
   // Price List Dropdown Selector State inside Modals
   const [selectedPriceRuleId, setSelectedPriceRuleId] = useState<string>('');
@@ -649,7 +657,7 @@ export function OffersPage({
             setNewOfferForm({
               customerName: customers.length > 0 ? customers[0].name : '',
               subject: '',
-              owner: 'Ayşe Yılmaz',
+              owner: defaultOwner,
               validUntilDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
               vatMode: 'KDV Hariç',
               services: [], // REQ 1: Kalemler boş başlayacak!
