@@ -224,6 +224,11 @@ a {
   gap: 14px;
 }
 
+.brand-logo img {
+  clip-path: inset(0 0 0 14px);
+  margin-left: -6px;
+}
+
 .brand-emblem-wrapper {
   width: 42px;
   height: 42px;
