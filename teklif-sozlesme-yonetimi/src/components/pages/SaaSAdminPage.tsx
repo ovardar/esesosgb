@@ -1006,6 +1006,19 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       createdAt: new Date().toLocaleString('tr-TR'),
       updatedBy: activeUserEmail,
       updatedAt: new Date().toLocaleString('tr-TR'),
+      activationStatus: 'Davet Gönderilmedi',
+      logoUrl: newForm.logoUrl || undefined
+    };
+
+    setTenants((prev) => {
+      const next = [newTenant, ...prev];
+      saveCloudTenants(next);
+      return next;
+    });
+
+    setIsAddModalOpen(false);
+    setSelectedTenant(newTenant);
+  };
 // Handle Delete Tenant
   const handleDeleteTenant = async (tenant: SaaSTenant) => {
     console.log('handleDeleteTenant triggered for:', tenant);
