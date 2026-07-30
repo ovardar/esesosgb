@@ -366,13 +366,13 @@ const ensureUuid = (id: string) => {
 };
 
 export async function deleteCloudTenant(tenantId: string): Promise<void> {
-  try {
-    const safeId = ensureUuid(tenantId);
-    if (safeId) {
-      await supabase.from('tenants').delete().eq('id', safeId);
+  const safeId = ensureUuid(tenantId);
+  if (safeId) {
+    const { error } = await supabase.from('tenants').delete().eq('id', safeId);
+    if (error) {
+      console.error('[CloudDB] Tenant delete error', error);
+      throw new Error(error.message || 'Veritabanından silinirken hata oluştu.');
     }
-  } catch (err) {
-    console.warn('[CloudDB] Tenant delete warning', err);
   }
 }
 
