@@ -974,7 +974,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     const pkgName = (newForm.package || 'Custom') as SaaSPackage;
 
     const newTenant: SaaSTenant = {
-      id: `tenant-${Date.now()}`,
+      id: crypto.randomUUID ? crypto.randomUUID() : '3b3e7f5a-9d2c-4e8a-b1c4-' + Date.now().toString().substring(0, 12),
       tenantCode: `TNT-${Math.floor(1000 + Math.random() * 9000)}`,
       companyName: newForm.companyName,
       contactName: newForm.contactName || 'Belirtilmedi',
