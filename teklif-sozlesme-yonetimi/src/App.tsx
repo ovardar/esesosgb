@@ -442,6 +442,7 @@ function App() {
             setCustomers={setCustomers}
             selectedCustomerName={selectedCustomerName}
             onSelectCustomerName={setSelectedCustomerName}
+            impersonatedTenant={impersonatedTenant || currentTenant}
           />
         );
       case 'offers':

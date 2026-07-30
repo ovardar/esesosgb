@@ -4014,13 +4014,15 @@ type CustomersPageProps = {
   setCustomers?: React.Dispatch<React.SetStateAction<CustomerRecord[]>>;
   selectedCustomerName?: string | null;
   onSelectCustomerName?: (name: string | null) => void;
+  impersonatedTenant?: SaaSTenant | null;
 };
 
 export function CustomersPage({
   customers: propCustomers,
   setCustomers: propSetCustomers,
   selectedCustomerName: propSelectedCustomerName,
-  onSelectCustomerName: propOnSelectCustomerName
+  onSelectCustomerName: propOnSelectCustomerName,
+  impersonatedTenant
 }: CustomersPageProps = {}) {
   const [internalCustomers, setInternalCustomers] = useState<CustomerRecord[]>(customerSeeds as CustomerRecord[]);
   const customers = propCustomers || internalCustomers;
@@ -4034,10 +4036,15 @@ export function CustomersPage({
     try {
       const currentUserEmail = localStorage.getItem('crm_user_session')?.trim().toLowerCase() || '';
       const tenants = JSON.parse(localStorage.getItem('crm_saas_tenants_v3') || '[]');
-      let target = tenants.find((t: any) => t.email?.trim().toLowerCase() === currentUserEmail) || 
-                   tenants.find((t: any) => t.contactName?.trim().toLowerCase() === currentUserEmail) || 
-                   tenants.find((t: any) => t.companyName?.toLowerCase().includes('test osgb')) || 
-                   tenants[0];
+      
+      let target = impersonatedTenant;
+      
+      if (!target) {
+        target = tenants.find((t: any) => t.email?.trim().toLowerCase() === currentUserEmail) || 
+                 tenants.find((t: any) => t.contactName?.trim().toLowerCase() === currentUserEmail) || 
+                 tenants.find((t: any) => t.companyName?.toLowerCase().includes('test osgb')) || 
+                 tenants[0];
+      }
 
       if (!target) return [];
 
@@ -4048,7 +4055,7 @@ export function CustomersPage({
     } catch(e) {
       return [];
     }
-  }, []);
+  }, [impersonatedTenant]);
 
   const [form, setForm] = useState<NewCustomerForm>(defaultForm);
   const [, setFormErrors] = useState<FormErrors>({});
