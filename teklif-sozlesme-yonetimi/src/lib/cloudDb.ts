@@ -316,13 +316,6 @@ export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
     }
   }
   try {
-    const ensureUuid = (id: string) => {
-      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return id;
-      if (id === 'tenant-test-osgb3' || id === 'tnt-test-osgb-3') return '3b3e7f5a-9d2c-4e8a-b1c4-9a8b7c6d5e4f';
-      const nums = id.replace(/[^0-9a-f]/ig, '').padEnd(12, '0').substring(0, 12);
-      return `3b3e7f5a-9d2c-4e8a-b1c4-${nums.toLowerCase()}`;
-    };
-
     const payload = tenants
       .filter(t => Boolean(t.id))
       .map(t => ({
@@ -364,11 +357,19 @@ export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
 }
 
 
+const ensureUuid = (id: string) => {
+  if (!id) return id;
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return id;
+  if (id === 'tenant-test-osgb3' || id === 'tnt-test-osgb-3') return '3b3e7f5a-9d2c-4e8a-b1c4-9a8b7c6d5e4f';
+  const nums = id.replace(/[^0-9a-f]/ig, '').padEnd(12, '0').substring(0, 12);
+  return `3b3e7f5a-9d2c-4e8a-b1c4-${nums.toLowerCase()}`;
+};
+
 export async function deleteCloudTenant(tenantId: string): Promise<void> {
   try {
-    const validUuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (validUuidRegex.test(tenantId)) {
-      await supabase.from('tenants').delete().eq('id', tenantId);
+    const safeId = ensureUuid(tenantId);
+    if (safeId) {
+      await supabase.from('tenants').delete().eq('id', safeId);
     }
   } catch (err) {
     console.warn('[CloudDB] Tenant delete warning', err);
