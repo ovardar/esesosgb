@@ -297,7 +297,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
   // UI Modals & Drawers
   const [selectedTenant, setSelectedTenant] = useState<SaaSTenant | null>(null);
-  const [detailTab, setDetailTab] = useState<'info' | 'license' | 'billing' | 'modules' | 'notes'>('info');
+  const [detailTab, setDetailTab] = useState<'info' | 'license' | 'billing' | 'modules' | 'notes' | 'users'>('info');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [activeInviteDialogInfo, setActiveInviteDialogInfo] = useState<{
@@ -2608,6 +2608,12 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               >
                 Notlar
               </button>
+              <button
+                className={`filter-chip ${detailTab === 'users' ? 'filter-chip-active' : ''}`}
+                onClick={() => setDetailTab('users')}
+              >
+                Kullanıcılar
+              </button>
             </div>
 
             {/* Tab Contents */}
@@ -2864,6 +2870,67 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                 />
               </label>
             )}
+
+            {detailTab === 'users' && (() => {
+              let usersMap: any = {};
+              try {
+                usersMap = JSON.parse(localStorage.getItem('crm_tenant_users_map_v2') || '{}');
+              } catch(e) {}
+              const tUsers = usersMap[selectedTenant.id] || [];
+
+              const handleDeleteUser = (usr: any) => {
+                if (window.confirm(`"${usr.name}" kullanıcısını silmek istediğinize emin misiniz?`)) {
+                   const updatedList = tUsers.filter((u: any) => u.id !== usr.id);
+                   usersMap[selectedTenant.id] = updatedList;
+                   localStorage.setItem('crm_tenant_users_map_v2', JSON.stringify(usersMap));
+                   // Force re-render
+                   setDetailTab('notes');
+                   setTimeout(() => setDetailTab('users'), 0);
+                   
+                   // Remove from passwords map to instantly revoke login
+                   try {
+                     const passMap = JSON.parse(localStorage.getItem('crm_user_passwords_map') || '{}');
+                     if (passMap[usr.email]) {
+                       delete passMap[usr.email];
+                       localStorage.setItem('crm_user_passwords_map', JSON.stringify(passMap));
+                     }
+                   } catch(e) {}
+                   
+                   alert('Kullanıcı başarıyla silindi ve sisteme giriş yetkisi kaldırıldı.');
+                }
+              };
+
+              return (
+                <div style={{ marginTop: 20 }}>
+                  <h4 style={{ marginBottom: 16 }}>Sistem Kullanıcıları</h4>
+                  {tUsers.length === 0 ? (
+                    <div style={{ background: 'var(--surface-strong)', padding: 16, borderRadius: 10, border: '1px solid var(--border)' }}>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Bu kiracı için tanımlanmış ek kullanıcı bulunmamaktadır. Ana yetkili ({selectedTenant.contactName}) sisteme giriş yapabilir.</p>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gap: 10 }}>
+                      {tUsers.map((usr: any) => (
+                        <div key={usr.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-strong)', padding: '12px 16px', borderRadius: 10, border: '1px solid var(--border)' }}>
+                          <div>
+                            <strong style={{ display: 'block', fontSize: '0.95rem' }}>{usr.name}</strong>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{usr.email} | {usr.role}</span>
+                          </div>
+                          <div>
+                            <button
+                              className="btn-action-ghost"
+                              style={{ fontSize: '0.75rem', padding: '6px 12px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+                              onClick={() => handleDeleteUser(usr)}
+                            >
+                              Sil / Yetkisini Al
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
               <button className="secondary-action" onClick={() => setSelectedTenant(null)}>

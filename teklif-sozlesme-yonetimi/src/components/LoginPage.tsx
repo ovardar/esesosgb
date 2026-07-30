@@ -25,6 +25,34 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setErrorMsg(null);
 
     try {
+      // Check authorization function to verify if the user is a valid tenant/superadmin/user
+      const isAuthorizedUser = (emailToCheck: string) => {
+        const cleanE = emailToCheck.trim().toLowerCase();
+        if (cleanE === 'orhan.vardar@gmail.com') return true;
+
+        try {
+          const superadmins = JSON.parse(localStorage.getItem('crm_superadmins_v2') || '[]');
+          if (superadmins.some((sa: any) => sa.email.toLowerCase() === cleanE)) return true;
+        } catch (e) {}
+
+        try {
+          const tenants = JSON.parse(localStorage.getItem('crm_saas_tenants_v3') || '[]');
+          if (tenants.some((t: any) => t.email && t.email.toLowerCase() === cleanE)) return true;
+        } catch (e) {}
+
+        try {
+          const usersMap = JSON.parse(localStorage.getItem('crm_tenant_users_map_v2') || '{}');
+          for (const tenantId in usersMap) {
+            const users = usersMap[tenantId];
+            if (Array.isArray(users) && users.some((u: any) => u.email && u.email.toLowerCase() === cleanE && u.status === 'Aktif')) {
+              return true;
+            }
+          }
+        } catch (e) {}
+        
+        return false;
+      };
+
       // 1. Try Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
@@ -32,6 +60,11 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
       });
 
       if (!error && data.user?.email) {
+        if (!isAuthorizedUser(cleanEmail)) {
+          setErrorMsg('Hesabınız silinmiş veya sisteme giriş yetkiniz iptal edilmiş.');
+          setLoading(false);
+          return;
+        }
         localStorage.setItem('crm_user_session', data.user.email);
         onLoginSuccess(data.user.email);
         setLoading(false);
@@ -43,6 +76,11 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
         const passMap = JSON.parse(localStorage.getItem('crm_user_passwords_map') || '{}');
         const savedPass = passMap[cleanEmail];
         if (savedPass && savedPass === password) {
+          if (!isAuthorizedUser(cleanEmail)) {
+            setErrorMsg('Hesabınız silinmiş veya sisteme giriş yetkiniz iptal edilmiş.');
+            setLoading(false);
+            return;
+          }
           localStorage.setItem('crm_user_session', cleanEmail);
           onLoginSuccess(cleanEmail);
           setLoading(false);
