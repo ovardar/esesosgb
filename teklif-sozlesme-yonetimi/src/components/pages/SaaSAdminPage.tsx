@@ -1006,31 +1006,30 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       createdAt: new Date().toLocaleString('tr-TR'),
       updatedBy: activeUserEmail,
       updatedAt: new Date().toLocaleString('tr-TR'),
-      activationStatus: 'Davet Gönderilmedi',
-      logoUrl: newForm.logoUrl || undefined
-    };
-
-    setTenants((prev) => {
-      const next = [newTenant, ...prev];
-      saveCloudTenants(next);
-      return next;
-    });
-
-    setIsAddModalOpen(false);
-    setSelectedTenant(newTenant);
-  };
-
-  // Handle Delete Tenant
-  const handleDeleteTenant = (tenant: SaaSTenant) => {
+// Handle Delete Tenant
+  const handleDeleteTenant = async (tenant: SaaSTenant) => {
+    console.log('handleDeleteTenant triggered for:', tenant);
     if (window.confirm(`"${tenant.companyName}" isimli kiracıyı silmek istediğinizden emin misiniz?\nBu işlem geri alınamaz!`)) {
-      setTenants((prev) => {
-        const next = prev.filter((t) => t.id !== tenant.id);
-        saveCloudTenants(next);
-        return next;
-      });
-      deleteCloudTenant(tenant.id);
-      if (selectedTenant?.id === tenant.id) {
-        setSelectedTenant(null);
+      try {
+        console.log('User confirmed deletion. Updating state...');
+        setTenants((prev) => {
+          const next = prev.filter((t) => t.id !== tenant.id);
+          saveCloudTenants(next);
+          return next;
+        });
+        
+        console.log('Calling deleteCloudTenant...');
+        await deleteCloudTenant(tenant.id);
+        console.log('deleteCloudTenant finished.');
+        
+        if (selectedTenant?.id === tenant.id) {
+          setSelectedTenant(null);
+        }
+        
+        alert('Silme işlemi başarıyla tamamlandı!');
+      } catch (err) {
+        console.error('Delete error:', err);
+        alert('Silme işlemi sırasında bir hata oluştu: ' + (err as any).message);
       }
     }
   };
