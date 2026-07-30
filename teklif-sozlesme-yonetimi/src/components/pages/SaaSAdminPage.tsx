@@ -29,7 +29,44 @@ import { sendEmail, buildCustomerInviteTemplate } from '../../lib/email';
 import { supabase } from '../../lib/supabase';
 import { fetchCloudTenants, saveCloudTenants, deleteCloudTenant } from '../../lib/cloudDb';
 
+const resizeImageBase64 = (file: File, maxWidth: number, maxHeight: number): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
 
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        } else {
+          resolve(event.target?.result as string);
+        }
+      };
+      img.onerror = (error) => reject(error);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
 
 type Props = {
   onImpersonateTenant?: (tenant: SaaSTenant) => void;
@@ -3187,16 +3224,15 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                         type="file"
                         accept="image/*"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              if (ev.target?.result) {
-                                setNewForm({ ...newForm, logoUrl: ev.target.result as string });
-                              }
-                            };
-                            reader.readAsDataURL(file);
+                            try {
+                              const resizedDataUrl = await resizeImageBase64(file, 200, 200);
+                              setNewForm({ ...newForm, logoUrl: resizedDataUrl });
+                            } catch (err) {
+                              console.error(err);
+                            }
                           }
                         }}
                       />
@@ -3410,16 +3446,15 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                         type="file"
                         accept="image/*"
                         style={{ display: 'none' }}
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              if (ev.target?.result) {
-                                setEditTenantForm({ ...editTenantForm, logoUrl: ev.target.result as string });
-                              }
-                            };
-                            reader.readAsDataURL(file);
+                            try {
+                              const resizedDataUrl = await resizeImageBase64(file, 200, 200);
+                              setEditTenantForm({ ...editTenantForm, logoUrl: resizedDataUrl });
+                            } catch (err) {
+                              console.error(err);
+                            }
                           }
                         }}
                       />

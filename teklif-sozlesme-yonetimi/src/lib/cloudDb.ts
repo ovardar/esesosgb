@@ -347,6 +347,7 @@ export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
       const { error } = await supabase.from('tenants').upsert(payload, { onConflict: 'id' });
       if (error) {
         console.warn('[CloudDB] Tenants cloud upsert warning:', error);
+        alert('Dikkat: Kiracı bilgileri veritabanına kaydedilirken hata oluştu. Supabase Hatası: ' + error.message);
       }
     }
   } catch (err) {
