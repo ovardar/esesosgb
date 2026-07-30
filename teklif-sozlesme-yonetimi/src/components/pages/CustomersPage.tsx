@@ -4030,6 +4030,26 @@ export function CustomersPage({
   const [isLoadingBackend, setIsLoadingBackend] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
+  const tenantUsers = useMemo(() => {
+    try {
+      const currentUserEmail = localStorage.getItem('crm_user_session')?.trim().toLowerCase() || '';
+      const tenants = JSON.parse(localStorage.getItem('crm_saas_tenants_v3') || '[]');
+      let target = tenants.find((t: any) => t.email?.trim().toLowerCase() === currentUserEmail) || 
+                   tenants.find((t: any) => t.contactName?.trim().toLowerCase() === currentUserEmail) || 
+                   tenants.find((t: any) => t.companyName?.toLowerCase().includes('test osgb')) || 
+                   tenants[0];
+
+      if (!target) return [];
+
+      const usersMap = JSON.parse(localStorage.getItem('crm_tenant_users_map_v2') || '{}');
+      const tUsers = usersMap[target.id] || [];
+      
+      return [{ name: target.contactName || 'Ana Yetkili', role: 'Ana Yetkili' }, ...tUsers];
+    } catch(e) {
+      return [];
+    }
+  }, []);
+
   const [form, setForm] = useState<NewCustomerForm>(defaultForm);
   const [, setFormErrors] = useState<FormErrors>({});
   const [formHint, setFormHint] = useState('');
@@ -4848,6 +4868,18 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
                   />
                 </label>
 
+                <label className="select-field">
+                  <span>Sorumlu</span>
+                  <select
+                    value={editFirmForm.owner || ''}
+                    onChange={(e) => setEditFirmForm({ ...editFirmForm, owner: e.target.value })}
+                  >
+                    <option value="">Atanmadı</option>
+                    {tenantUsers.map((u, i) => (
+                      <option key={i} value={u.name}>{u.name} ({u.role})</option>
+                    ))}
+                  </select>
+                </label>
                 <label className="select-field">
                   <span>Vergi Dairesi</span>
                   <input
@@ -6651,6 +6683,19 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
+            </label>
+
+            <label className="select-field">
+              <span>Sorumlu</span>
+              <select
+                value={form.owner || ''}
+                onChange={(e) => setForm({ ...form, owner: e.target.value })}
+              >
+                <option value="">Atanmadı</option>
+                {tenantUsers.map((u, i) => (
+                  <option key={i} value={u.name}>{u.name} ({u.role})</option>
+                ))}
+              </select>
             </label>
 
             <label className="select-field">
