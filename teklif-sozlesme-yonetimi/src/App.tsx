@@ -238,21 +238,29 @@ function App() {
     // Supabase Real-Time Channel for cross-browser sync
     const channel = supabase
       .channel('realtime-crm-global')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, async () => {
-        const updated = await fetchCloudCustomers();
-        setCustomers(updated);
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => {
+        setTimeout(async () => {
+          const updated = await fetchCloudCustomers();
+          setCustomers(updated);
+        }, 1500);
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'offers' }, async () => {
-        const updated = await fetchCloudOffers();
-        setOffers(updated);
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'offers' }, () => {
+        setTimeout(async () => {
+          const updated = await fetchCloudOffers();
+          setOffers(updated);
+        }, 1500);
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'contracts' }, async () => {
-        const updated = await fetchCloudContracts();
-        setContracts(updated);
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'contracts' }, () => {
+        setTimeout(async () => {
+          const updated = await fetchCloudContracts();
+          setContracts(updated);
+        }, 1500);
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tenants' }, async () => {
-        const updated = await fetchCloudTenants(initialSaaSTenants);
-        if (updated && updated.length > 0) setTenants(updated);
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tenants' }, () => {
+        setTimeout(async () => {
+          const updated = await fetchCloudTenants(initialSaaSTenants);
+          if (updated && updated.length > 0) setTenants(updated);
+        }, 1500);
       })
       .subscribe();
 

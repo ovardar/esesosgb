@@ -307,19 +307,22 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
 const tenantSyncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window ? new BroadcastChannel('crm_saas_tenant_sync') : null;
 
 export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
-  setLocalItem('crm_saas_tenants_v3', tenants);
+  // Normalize IDs to UUIDs to ensure localMap matches Supabase records
+  const normalizedTenants = tenants.map(t => ({ ...t, id: ensureUuid(t.id) }));
+  setLocalItem('crm_saas_tenants_v3', normalizedTenants);
+  
   if (tenantSyncChannel) {
     try {
-      tenantSyncChannel.postMessage({ type: 'TENANTS_UPDATED', tenants });
+      tenantSyncChannel.postMessage({ type: 'TENANTS_UPDATED', tenants: normalizedTenants });
     } catch (e) {
       console.warn(e);
     }
   }
   try {
-    const payload = tenants
+    const payload = normalizedTenants
       .filter(t => Boolean(t.id))
       .map(t => ({
-        id: ensureUuid(t.id),
+        id: t.id,
         name: t.companyName,
         slug: t.companyName.toLowerCase().replace(/[^a-z0-9]/g, '-'),
         tenant_code: t.tenantCode,
@@ -357,13 +360,13 @@ export async function saveCloudTenants(tenants: SaaSTenant[]): Promise<void> {
 }
 
 
-const ensureUuid = (id: string) => {
+function ensureUuid(id: string) {
   if (!id) return id;
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return id;
   if (id === 'tenant-test-osgb3' || id === 'tnt-test-osgb-3') return '3b3e7f5a-9d2c-4e8a-b1c4-9a8b7c6d5e4f';
   const nums = id.replace(/[^0-9a-f]/ig, '').padEnd(12, '0').substring(0, 12);
   return `3b3e7f5a-9d2c-4e8a-b1c4-${nums.toLowerCase()}`;
-};
+}
 
 export async function deleteCloudTenant(tenantId: string): Promise<void> {
   const safeId = ensureUuid(tenantId);
