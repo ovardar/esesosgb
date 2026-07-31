@@ -415,7 +415,14 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
     const mrr = tenants
       .filter((t) => t.status === 'Aktif' || t.status === 'Demo')
-      .reduce((sum, t) => sum + (t.monthlyFee || 0), 0);
+      .reduce((sum, t) => {
+        if (t.monthlyFee) {
+          return sum + t.monthlyFee;
+        } else if (t.billingCycle === 'Yıllık' && t.annualFee) {
+          return sum + Math.round(t.annualFee / 12);
+        }
+        return sum;
+      }, 0);
 
     const overdueCount = tenants.filter((t) => t.paymentStatus === 'Gecikmede').length;
     const overdueAmount = tenants
@@ -974,8 +981,11 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
   // Handle Send Offer Email to Client
   const handleSendOfferEmail = (offer: SaaSOffer) => {
+    if (!window.confirm(`"${offer.offerNumber}" nolu teklifi müşteriye göndermek istediğinize emin misiniz?`)) {
+      return;
+    }
     setOffers((prev) =>
-      prev.map((o) => (o.id === offer.id && o.status === 'Taslak' ? { ...o, status: 'Gönderildi' } : o))
+      prev.map((o) => (o.id === offer.id ? { ...o, status: 'Gönderildi' } : o))
     );
     const tmpl = emailTemplates.find((t) => t.type === 'offer');
     alert(
@@ -2033,7 +2043,14 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedOffers.map((off) => (
+                  {sortedOffers.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="customer-table-empty">
+                        Henüz oluşturulmuş lisans teklifi bulunmamaktadır.
+                      </td>
+                    </tr>
+                  ) : (
+                    sortedOffers.map((off) => (
                     <tr key={off.id}>
                       <td><strong>{off.offerNumber}</strong></td>
                       <td>
@@ -2157,7 +2174,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )))}
                 </tbody>
               </table>
             </div>
@@ -2962,39 +2979,41 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   />
                 </label>
 
-                {licenseEditForm.billingCycle === 'Yıllık' ? (
-                  <label className="select-field">
-                    <span>Pazarlık Edilen Yıllık Ücret (₺)</span>
-                    <input
-                      type="number"
-                      value={licenseEditForm.annualFee}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setLicenseEditForm({
-                          ...licenseEditForm,
-                          annualFee: val,
-                          monthlyFee: Math.round(val / 12)
-                        });
-                      }}
-                    />
-                  </label>
-                ) : (
-                  <label className="select-field">
-                    <span>Pazarlık Edilen Aylık Ücret (₺)</span>
-                    <input
-                      type="number"
-                      value={licenseEditForm.monthlyFee}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setLicenseEditForm({
-                          ...licenseEditForm,
-                          monthlyFee: val,
-                          annualFee: val * 12
-                        });
-                      }}
-                    />
-                  </label>
-                )}
+                <label className="select-field">
+                  <span>Pazarlık Edilen Aylık Ücret (₺)</span>
+                  <input
+                    type="number"
+                    value={licenseEditForm.monthlyFee}
+                    disabled={licenseEditForm.billingCycle === 'Yıllık'}
+                    style={{ backgroundColor: licenseEditForm.billingCycle === 'Yıllık' ? '#1e293b' : undefined }}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setLicenseEditForm({
+                        ...licenseEditForm,
+                        monthlyFee: val,
+                        annualFee: val * 12
+                      });
+                    }}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Pazarlık Edilen Yıllık Ücret (₺)</span>
+                  <input
+                    type="number"
+                    value={licenseEditForm.annualFee}
+                    disabled={licenseEditForm.billingCycle === 'Aylık'}
+                    style={{ backgroundColor: licenseEditForm.billingCycle === 'Aylık' ? '#1e293b' : undefined }}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setLicenseEditForm({
+                        ...licenseEditForm,
+                        annualFee: val,
+                        monthlyFee: Math.round(val / 12)
+                      });
+                    }}
+                  />
+                </label>
 
                 <label className="select-field new-customer-full">
                   <span>Pazarlık & Anlaşma Notları</span>
@@ -3311,31 +3330,93 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             )}
 
             {detailTab === 'modules' && (
-              <div className="theme-picker-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-                <div className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14 }}>
-                  <strong>Müşteri CRM Modülü</strong>
-                  <p style={{ fontSize: '0.8rem', marginTop: 4 }}>
-                    {selectedTenant.modulesEnabled.crm ? '✓ Aktif' : '✗ Pasif'}
-                  </p>
+              <div style={{ display: 'grid', gap: 16 }}>
+                <div className="theme-picker-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                  <label className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedTenant.modulesEnabled.crm}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        const updatedModules = { ...selectedTenant.modulesEnabled, crm: val };
+                        setSelectedTenant({ ...selectedTenant, modulesEnabled: updatedModules });
+                        setTenants((prev) => {
+                          const next = prev.map((t) => t.id === selectedTenant.id ? { ...t, modulesEnabled: updatedModules } : t);
+                          saveCloudTenants(next);
+                          return next;
+                        });
+                      }}
+                    />
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Müşteri CRM Modülü</strong>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Müşteri ilişkileri & kayıtları</span>
+                    </div>
+                  </label>
+
+                  <label className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedTenant.modulesEnabled.offers}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        const updatedModules = { ...selectedTenant.modulesEnabled, offers: val };
+                        setSelectedTenant({ ...selectedTenant, modulesEnabled: updatedModules });
+                        setTenants((prev) => {
+                          const next = prev.map((t) => t.id === selectedTenant.id ? { ...t, modulesEnabled: updatedModules } : t);
+                          saveCloudTenants(next);
+                          return next;
+                        });
+                      }}
+                    />
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Teklif Modülü</strong>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Fiyatlandırma & onay teklifleri</span>
+                    </div>
+                  </label>
+
+                  <label className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedTenant.modulesEnabled.contracts}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        const updatedModules = { ...selectedTenant.modulesEnabled, contracts: val };
+                        setSelectedTenant({ ...selectedTenant, modulesEnabled: updatedModules });
+                        setTenants((prev) => {
+                          const next = prev.map((t) => t.id === selectedTenant.id ? { ...t, modulesEnabled: updatedModules } : t);
+                          saveCloudTenants(next);
+                          return next;
+                        });
+                      }}
+                    />
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Hizmet Sözleşmeleri Modülü</strong>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Resmi sözleşmeler & onaylar</span>
+                    </div>
+                  </label>
+
+                  <label className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedTenant.modulesEnabled.documents}
+                      onChange={(e) => {
+                        const val = e.target.checked;
+                        const updatedModules = { ...selectedTenant.modulesEnabled, documents: val };
+                        setSelectedTenant({ ...selectedTenant, modulesEnabled: updatedModules });
+                        setTenants((prev) => {
+                          const next = prev.map((t) => t.id === selectedTenant.id ? { ...t, modulesEnabled: updatedModules } : t);
+                          saveCloudTenants(next);
+                          return next;
+                        });
+                      }}
+                    />
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Doküman Kütüphanesi</strong>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Arşivleme & PDF kütüphanesi</span>
+                    </div>
+                  </label>
                 </div>
-                <div className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14 }}>
-                  <strong>Teklif Oluşturma & Revizyon</strong>
-                  <p style={{ fontSize: '0.8rem', marginTop: 4 }}>
-                    {selectedTenant.modulesEnabled.offers ? '✓ Aktif' : '✗ Pasif'}
-                  </p>
-                </div>
-                <div className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14 }}>
-                  <strong>Hizmet Sözleşmeleri Modülü</strong>
-                  <p style={{ fontSize: '0.8rem', marginTop: 4 }}>
-                    {selectedTenant.modulesEnabled.contracts ? '✓ Aktif' : '✗ Pasif'}
-                  </p>
-                </div>
-                <div className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14 }}>
-                  <strong>Doküman Kütüphanesi</strong>
-                  <p style={{ fontSize: '0.8rem', marginTop: 4 }}>
-                    {selectedTenant.modulesEnabled.documents ? '✓ Aktif' : '✗ Pasif'}
-                  </p>
-                </div>
+                <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>Modül yetkileri anında buluta kaydedilir.</p>
               </div>
             )}
 
