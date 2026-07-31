@@ -738,7 +738,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               <span style="font-size: 14px; color: #64748b; font-weight: 600;">No: ${inv.invoiceNumber}</span>
             </div>
             <div class="company-details">
-              <div style="font-size: 18px; font-weight: 800; color: #4f46e5; margin-bottom: 4px;">Codentra Software & Yazılım A.Ş.</div>
+              <div style="font-size: 18px; font-weight: 800; color: #4f46e5; margin-bottom: 4px;">Codentra</div>
               <span style="color: #64748b;">SaaS Destek & Faturalama Birimi</span><br/>
               <span style="color: #64748b;">support@codentra.com.tr</span>
             </div>
@@ -793,7 +793,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           </div>
 
           <div class="footer">
-            <p>Codentra Software & Yazılım A.Ş. © 2026 — Keyifli çalışmalar dileriz.</p>
+            <p>Codentra © 2026 — Keyifli çalışmalar dileriz.</p>
           </div>
 
           <script>
@@ -899,7 +899,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               <span style="font-size: 14px; color: #64748b; font-weight: 600;">Sözleşme No: ${cnt.contractNumber}</span>
             </div>
             <div class="company-details">
-              <div style="font-size: 18px; font-weight: 800; color: #4f46e5; margin-bottom: 4px;">Codentra Software</div>
+              <div style="font-size: 18px; font-weight: 800; color: #4f46e5; margin-bottom: 4px;">Codentra</div>
               <span style="color: #64748b;">Abonelik & Lisans Hizmetleri</span>
             </div>
           </div>
@@ -907,7 +907,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           <div class="contract-section">
             <h3>1. Taraflar</h3>
             <p>
-              İşbu sözleşme, bir tarafta <strong>Codentra Software & Yazılım A.Ş.</strong> (SaaS Sağlayıcı) ile diğer tarafta lisans paketi satın alan ve bilgileri aşağıda yer alan kiracı firma (Müşteri) arasında yürürlüğe girmiştir.
+              İşbu sözleşme, bir tarafta <strong>Codentra</strong> (SaaS Sağlayıcı) ile diğer tarafta lisans paketi satın alan ve bilgileri aşağıda yer alan kiracı firma (Müşteri) arasında yürürlüğe girmiştir.
             </p>
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-top: 10px; display: flex; align-items: center; gap: 15px;">
               ${tenantLogo}
@@ -945,7 +945,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           <div class="signatures">
             <div class="signature-box">
               <strong style="color: #64748b; font-size: 12px;">SaaS SAĞLAYICI</strong>
-              <p style="margin-top: 10px; font-weight: 700; color: #4f46e5;">Codentra Software</p>
+              <p style="margin-top: 10px; font-weight: 700; color: #4f46e5;">Codentra</p>
               <div style="margin-top: 30px; font-size: 11px; color: #94a3b8;">[Kaşe / İmza]</div>
             </div>
             <div class="signature-box">
@@ -956,7 +956,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           </div>
 
           <div class="footer">
-            <p>Codentra Software SaaS Sistem Sözleşmesi şablonudur. © 2026</p>
+            <p>Codentra SaaS Sistem Sözleşmesi şablonudur. © 2026</p>
           </div>
 
           <script>
@@ -2798,7 +2798,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24, fontSize: '0.9rem' }}>
                 <div style={{ background: '#fff', padding: 14, borderRadius: 10, border: '1px solid #e5e7eb' }}>
                   <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#6b7280', fontWeight: 700 }}>TEKLİF VEREN FİRMA</span>
-                  <h4 style={{ margin: '4px 0 2px', color: '#111827' }}>Codentra Software & Yazılım A.Ş.</h4>
+                  <h4 style={{ margin: '4px 0 2px', color: '#111827' }}>Codentra</h4>
                   <p style={{ margin: 0, color: '#4b5563' }}>Super Admin SaaS Destek Ekibi</p>
                 </div>
 
