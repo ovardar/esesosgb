@@ -394,6 +394,19 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     notes: ''
   });
 
+  // New SaaS Contract Form State
+  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [contractForm, setContractForm] = useState({
+    tenantId: '',
+    packageName: 'Pro' as SaaSPackage,
+    billingCycle: 'Yıllık' as 'Aylık' | 'Yıllık',
+    monthlyFee: 14500,
+    annualFee: 145000,
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    notes: ''
+  });
+
   // Calculate KPIs
   const metrics = useMemo(() => {
     const totalTenants = tenants.length;
@@ -859,6 +872,69 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     setOffers((prev) => [newOffer, ...prev]);
     setIsOfferModalOpen(false);
     alert(`📄 SaaS Lisans Teklifi (${newOffer.offerNumber}) başarıyla oluşturuldu ve müşteriye gönderildi!`);
+  };
+
+  // Handle Add SaaS Contract Submit
+  const handleAddContractSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const targetTenant = tenants.find((t) => t.id === contractForm.tenantId);
+    if (!targetTenant) {
+      alert('Lütfen geçerli bir kiracı seçin.');
+      return;
+    }
+
+    const newContract: SaaSContract = {
+      id: `saas-cnt-${Date.now()}`,
+      contractNumber: `SAAS-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      tenantId: contractForm.tenantId,
+      tenantName: targetTenant.companyName,
+      packageName: contractForm.packageName,
+      annualFee: Number(contractForm.annualFee),
+      monthlyEquivalent: Number(contractForm.monthlyFee),
+      billingCycle: contractForm.billingCycle,
+      startDate: contractForm.startDate,
+      endDate: contractForm.endDate,
+      status: 'Aktif',
+      signedAt: new Date().toLocaleString('tr-TR'),
+      signedBy: targetTenant.contactName || targetTenant.companyName
+    };
+
+    const newInvoice: SaaSInvoice = {
+      id: `inv-${Date.now()}`,
+      invoiceNumber: `SAAS-INV-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
+      tenantId: contractForm.tenantId,
+      tenantName: targetTenant.companyName,
+      amount: contractForm.billingCycle === 'Yıllık' ? Number(contractForm.annualFee) : Number(contractForm.monthlyFee),
+      billingPeriod: `${contractForm.billingCycle === 'Yıllık' ? 'Yıllık' : 'İlk Ay'} Lisans Ücreti`,
+      status: 'Bekliyor',
+      issueDate: new Date().toISOString().split('T')[0],
+      dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    };
+
+    setContracts((prev) => [newContract, ...prev]);
+    setInvoices((prev) => [newInvoice, ...prev]);
+
+    // Update Tenant Status & Subscription Details
+    setTenants((prev) => {
+      const next = prev.map((t) =>
+        t.id === contractForm.tenantId
+          ? {
+              ...t,
+              status: 'Aktif' as SaaSSubscriptionStatus,
+              package: contractForm.packageName,
+              monthlyFee: Number(contractForm.monthlyFee),
+              annualFee: Number(contractForm.annualFee),
+              billingCycle: contractForm.billingCycle,
+              paymentStatus: 'Sorunsuz' as SaaSPaymentStatus
+            }
+          : t
+      );
+      saveCloudTenants(next);
+      return next;
+    });
+
+    setIsContractModalOpen(false);
+    alert(`🎉 SaaS Sözleşmesi (${newContract.contractNumber}) sıfırdan başarıyla oluşturuldu ve etkinleştirildi!`);
   };
 
   // Handle Add Package Submit
@@ -1725,15 +1801,13 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                             </button>
                           )}
 
-                          {off.status !== 'Kabul Edildi' && (
-                            <button
-                              className="btn-action-good"
-                              onClick={() => handleConvertOfferToContract(off)}
-                              title="Doğrudan sözleşmeye dönüştür"
-                            >
-                              ✍️ Sözleşmeye Dönüştür
-                            </button>
-                          )}
+                          <button
+                            className="btn-action-good"
+                            onClick={() => handleConvertOfferToContract(off)}
+                            title="Doğrudan sözleşmeye dönüştür"
+                          >
+                            {off.status === 'Kabul Edildi' ? '✍️ Sözleşme Yap / Aktifleştir' : '✍️ Sözleşmeye Dönüştür'}
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1750,6 +1824,24 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                 <p className="eyebrow">Resmi Lisans Anlaşmaları</p>
                 <h3>SaaS Lisans Sözleşmeleri</h3>
               </div>
+              <button
+                className="primary-action"
+                onClick={() => {
+                  setContractForm({
+                    tenantId: '',
+                    packageName: 'Pro',
+                    billingCycle: 'Yıllık',
+                    monthlyFee: 14500,
+                    annualFee: 145000,
+                    startDate: new Date().toISOString().split('T')[0],
+                    endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    notes: ''
+                  });
+                  setIsContractModalOpen(true);
+                }}
+              >
+                + Sıfırdan SaaS Sözleşmesi Yap
+              </button>
             </div>
 
             <div className="customer-table-wrap">
@@ -3698,6 +3790,181 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                 </button>
                 <button type="submit" className="primary-action">
                   SaaS Teklifi Oluştur
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* SaaS Contract Modal */}
+      {isContractModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            background: 'rgba(17, 24, 39, 0.45)',
+            backdropFilter: 'blur(6px)',
+            display: 'grid',
+            placeItems: 'center',
+            padding: 20
+          }}
+        >
+          <div
+            className="panel panel-wide panel-elevated"
+            style={{ maxWidth: 600, width: '100%', padding: 28 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Lisans Anlaşması</p>
+                <h3>Sıfırdan SaaS Sözleşmesi Tanımla</h3>
+              </div>
+              <button className="mini-badge" style={{ cursor: 'pointer' }} onClick={() => setIsContractModalOpen(false)}>
+                ✕ Kapat
+              </button>
+            </div>
+
+            <form onSubmit={handleAddContractSubmit} style={{ display: 'grid', gap: 14 }}>
+              <label className="select-field">
+                <span>Hedef Kiracı Firma</span>
+                <select
+                  required
+                  value={contractForm.tenantId}
+                  onChange={(e) => setContractForm({ ...contractForm, tenantId: e.target.value })}
+                >
+                  <option value="">-- Mevcut Kiracı Seçin --</option>
+                  {tenants.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.companyName} ({t.package || 'Aday Müşteri'} - {t.status})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="new-customer-grid">
+                <label className="select-field">
+                  <span>Abonelik Paketi</span>
+                  <select
+                    value={contractForm.packageName}
+                    onChange={(e) => {
+                      const pkgName = e.target.value as SaaSPackage;
+                      const selectedPkg = packages.find((p) => p.name.startsWith(pkgName));
+                      const mFee = selectedPkg ? selectedPkg.monthlyFee : 14500;
+                      const aFee = selectedPkg ? selectedPkg.annualFee : 145000;
+                      setContractForm({
+                        ...contractForm,
+                        packageName: pkgName,
+                        monthlyFee: mFee,
+                        annualFee: aFee
+                      });
+                    }}
+                  >
+                    {packages.map((pkg) => (
+                      <option key={pkg.id} value={pkg.name.split(' ')[0]}>
+                        {pkg.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="select-field">
+                  <span>Faturalama Periyodu</span>
+                  <select
+                    value={contractForm.billingCycle}
+                    onChange={(e) => {
+                      const cycle = e.target.value as 'Aylık' | 'Yıllık';
+                      let mFee = contractForm.monthlyFee;
+                      let aFee = contractForm.annualFee;
+
+                      if (cycle === 'Yıllık' && mFee && !aFee) {
+                        aFee = Number(mFee) * 10;
+                      } else if (cycle === 'Aylık' && aFee && !mFee) {
+                        mFee = Math.round(Number(aFee) / 12);
+                      }
+
+                      setContractForm({ ...contractForm, billingCycle: cycle, monthlyFee: mFee, annualFee: aFee });
+                    }}
+                  >
+                    <option value="Yıllık">Yıllık (İndirimli)</option>
+                    <option value="Aylık">Aylık</option>
+                  </select>
+                </label>
+
+                <label className="select-field">
+                  <span>Aylık Ücret (₺)</span>
+                  <input
+                    type="number"
+                    value={contractForm.monthlyFee}
+                    disabled={contractForm.billingCycle === 'Yıllık'}
+                    style={{ backgroundColor: contractForm.billingCycle === 'Yıllık' ? '#1e293b' : undefined }}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setContractForm({
+                        ...contractForm,
+                        monthlyFee: val,
+                        annualFee: val * 12
+                      });
+                    }}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Yıllık Ücret (₺)</span>
+                  <input
+                    type="number"
+                    value={contractForm.annualFee}
+                    disabled={contractForm.billingCycle === 'Aylık'}
+                    style={{ backgroundColor: contractForm.billingCycle === 'Aylık' ? '#1e293b' : undefined }}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setContractForm({
+                        ...contractForm,
+                        annualFee: val,
+                        monthlyFee: Math.round(val / 12)
+                      });
+                    }}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Sözleşme Başlangıç Tarihi</span>
+                  <input
+                    type="date"
+                    required
+                    value={contractForm.startDate}
+                    onChange={(e) => setContractForm({ ...contractForm, startDate: e.target.value })}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Sözleşme Bitiş Tarihi</span>
+                  <input
+                    type="date"
+                    required
+                    value={contractForm.endDate}
+                    onChange={(e) => setContractForm({ ...contractForm, endDate: e.target.value })}
+                  />
+                </label>
+              </div>
+
+              <label className="select-field">
+                <span>Özel Koşullar & Notlar</span>
+                <textarea
+                  rows={2}
+                  placeholder="Sözleşmeye ait özel notlar veya anlaşma detayları..."
+                  value={contractForm.notes}
+                  onChange={(e) => setContractForm({ ...contractForm, notes: e.target.value })}
+                />
+              </label>
+
+              <div className="new-customer-actions">
+                <button type="button" className="secondary-action" onClick={() => setIsContractModalOpen(false)}>
+                  İptal
+                </button>
+                <button type="submit" className="primary-action">
+                  Sözleşmeyi Kaydet ve Etkinleştir
                 </button>
               </div>
             </form>
