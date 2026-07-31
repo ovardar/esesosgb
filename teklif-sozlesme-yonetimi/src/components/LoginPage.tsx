@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { CODENTRA_LOGO_DATA_URI } from '../assets/logoDataUri';
+import { isAuthorizedUser } from '../lib/userRoles';
 
 interface LoginPageProps {
   onLoginSuccess: (email: string) => void;
@@ -25,38 +26,6 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setErrorMsg(null);
 
     try {
-      // Check authorization function to verify if the user is a valid tenant/superadmin/user
-      const isAuthorizedUser = (emailToCheck: string) => {
-        const cleanE = emailToCheck.trim().toLowerCase();
-        if (cleanE === 'orhan.vardar@gmail.com') return true;
-
-        try {
-          const superadmins = JSON.parse(localStorage.getItem('crm_superadmins_v2') || '[]');
-          if (superadmins.some((sa: any) => sa.email.toLowerCase() === cleanE)) return true;
-        } catch (e) {}
-
-        let allTenants: any[] = [];
-        try {
-          allTenants = JSON.parse(localStorage.getItem('crm_saas_tenants_v3') || '[]');
-          if (allTenants.some((t: any) => t.email && t.email.toLowerCase() === cleanE && t.status === 'Aktif')) return true;
-        } catch (e) {}
-
-        try {
-          const usersMap = JSON.parse(localStorage.getItem('crm_tenant_users_map_v2') || '{}');
-          for (const tenantId in usersMap) {
-            const users = usersMap[tenantId];
-            if (Array.isArray(users) && users.some((u: any) => u.email && u.email.toLowerCase() === cleanE && u.status === 'Aktif')) {
-              const parentTenant = allTenants.find((t: any) => t.id === tenantId || t.tenantCode === tenantId);
-              if (parentTenant && parentTenant.status === 'Aktif') {
-                return true;
-              }
-            }
-          }
-        } catch (e) {}
-        
-        return false;
-      };
-
       // 1. Try Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,

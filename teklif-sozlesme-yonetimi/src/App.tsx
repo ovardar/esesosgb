@@ -20,6 +20,7 @@ import { LoginPage } from './components/LoginPage';
 import { SetPasswordModal } from './components/modals/SetPasswordModal';
 import { supabase } from './lib/supabase';
 import { fetchCloudCustomers, saveCloudCustomers, fetchCloudOffers, saveCloudOffers, fetchCloudContracts, saveCloudContracts, fetchCloudTenants, subscribeToCloudDb } from './lib/cloudDb';
+import { isAuthorizedUser } from './lib/userRoles';
 
 
 function App() {
@@ -49,16 +50,31 @@ function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        setSession(session);
-        localStorage.setItem('crm_user_session', session.user.email || '');
+        if (isAuthorizedUser(session.user.email || '')) {
+          setSession(session);
+          localStorage.setItem('crm_user_session', session.user.email || '');
+        } else {
+          supabase.auth.signOut();
+          setSession(null);
+          localStorage.removeItem('crm_user_session');
+        }
       }
       setAuthLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
-        setSession(session);
-        localStorage.setItem('crm_user_session', session.user.email || '');
+        if (isAuthorizedUser(session.user.email || '')) {
+          setSession(session);
+          localStorage.setItem('crm_user_session', session.user.email || '');
+        } else {
+          supabase.auth.signOut();
+          setSession(null);
+          localStorage.removeItem('crm_user_session');
+        }
+      } else {
+        setSession(null);
+        localStorage.removeItem('crm_user_session');
       }
       setAuthLoading(false);
     });
