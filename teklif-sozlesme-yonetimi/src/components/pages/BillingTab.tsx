@@ -41,16 +41,16 @@ export function BillingTab({ activeTenant, onUpdateTenant }: BillingTabProps) {
     setTimeout(async () => {
       try {
         const tenants = await fetchCloudTenants([]);
-        const nextTenants = tenants.map(t => {
+        const nextTenants = tenants.map((t): SaaSTenant => {
           if (t.id === activeTenant.id) {
             return {
               ...t,
-              status: 'Aktif',
-              paymentStatus: 'Sorunsuz',
-              package: selectedPackage?.name.split(' ')[0] as any, // Starter, Pro, Enterprise
-              monthlyFee: selectedPackage?.monthlyFee,
-              annualFee: selectedPackage?.annualFee,
-              billingCycle,
+              status: 'Aktif' as const,
+              paymentStatus: 'Sorunsuz' as const,
+              package: selectedPackage ? (selectedPackage.name.split(' ')[0] as any) : 'Starter',
+              monthlyFee: selectedPackage?.monthlyFee || 0,
+              annualFee: selectedPackage?.annualFee || 0,
+              billingCycle: billingCycle,
               subscriptionPlanId: selectedPlanId,
               stripeCustomerId: `cus_mock_${Date.now()}` // Mock payment id
             };

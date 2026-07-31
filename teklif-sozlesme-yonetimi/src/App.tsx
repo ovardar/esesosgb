@@ -582,10 +582,8 @@ function App() {
         onSectionChange={handleSectionChange}
         isSuperAdmin={isSuperAdmin}
         currentUserEmail={currentUserEmail}
-        activeTenantName={currentTenant ? currentTenant.companyName : undefined}
-        activeTenantContactName={currentTenant ? currentTenant.contactName : undefined}
-        activeTenantLogo={currentTenant ? currentTenant.logoUrl : undefined}
-        onClearImpersonation={impersonatedTenantId ? () => setImpersonatedTenantId(null) : undefined}
+        activeTenant={currentTenant || undefined}
+        onClearImpersonation={impersonatedTenant ? () => setImpersonatedTenantId(null) : undefined}
         customers={customers}
         onUpdateActivityStatus={handleUpdateActivityStatus}
         onNavigateCustomer={handleNavigateCustomer}
