@@ -30,7 +30,7 @@ function App() {
 
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [activeInviteCode, setActiveInviteCode] = useState<string | undefined>(undefined);
-
+  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
   // Dynamic URL Invite Parameter Detection
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -527,7 +527,6 @@ function App() {
     );
   }
 
-  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
 
   if (!session) {
     return (
