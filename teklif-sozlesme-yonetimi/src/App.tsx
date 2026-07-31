@@ -49,6 +49,7 @@ function App() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
+      const localEmail = localStorage.getItem('crm_user_session');
       if (session) {
         if (isAuthorizedUser(session.user.email || '')) {
           setSession(session);
@@ -58,11 +59,18 @@ function App() {
           setSession(null);
           localStorage.removeItem('crm_user_session');
         }
+      } else if (localEmail && isAuthorizedUser(localEmail)) {
+        // Fallback to local session if valid
+        setSession({ user: { email: localEmail } });
+      } else {
+        setSession(null);
+        localStorage.removeItem('crm_user_session');
       }
       setAuthLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const localEmail = localStorage.getItem('crm_user_session');
       if (session) {
         if (isAuthorizedUser(session.user.email || '')) {
           setSession(session);
@@ -72,6 +80,9 @@ function App() {
           setSession(null);
           localStorage.removeItem('crm_user_session');
         }
+      } else if (localEmail && isAuthorizedUser(localEmail)) {
+        // Fallback to local session if valid
+        setSession({ user: { email: localEmail } });
       } else {
         setSession(null);
         localStorage.removeItem('crm_user_session');

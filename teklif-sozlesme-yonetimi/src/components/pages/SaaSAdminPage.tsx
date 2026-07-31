@@ -3172,43 +3172,45 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   />
                 </label>
 
-                {newForm.billingCycle === 'Yıllık' ? (
-                  <label className="select-field">
-                    <span>Yıllık Lisans Ücreti (₺)</span>
-                    <input
-                      type="number"
-                      placeholder="Boş bırakılabilir"
-                      value={newForm.annualFee}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        const num = Number(val);
-                        setNewForm({
-                          ...newForm,
-                          annualFee: val,
-                          monthlyFee: val ? Math.round(num / 12) : ''
-                        });
-                      }}
-                    />
-                  </label>
-                ) : (
-                  <label className="select-field">
-                    <span>Aylık Ücret (₺)</span>
-                    <input
-                      type="number"
-                      placeholder="Boş bırakılabilir"
-                      value={newForm.monthlyFee}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        const num = Number(val);
-                        setNewForm({
-                          ...newForm,
-                          monthlyFee: val,
-                          annualFee: val ? num * 12 : ''
-                        });
-                      }}
-                    />
-                  </label>
-                )}
+                <label className="select-field">
+                  <span>Aylık Ücret (₺)</span>
+                  <input
+                    type="number"
+                    placeholder="Boş bırakılabilir"
+                    value={newForm.monthlyFee}
+                    disabled={newForm.billingCycle === 'Yıllık'}
+                    style={{ backgroundColor: newForm.billingCycle === 'Yıllık' ? '#1e293b' : undefined }}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const num = Number(val);
+                      setNewForm({
+                        ...newForm,
+                        monthlyFee: val,
+                        annualFee: val ? num * 12 : ''
+                      });
+                    }}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Yıllık Lisans Ücreti (₺)</span>
+                  <input
+                    type="number"
+                    placeholder="Boş bırakılabilir"
+                    value={newForm.annualFee}
+                    disabled={newForm.billingCycle === 'Aylık'}
+                    style={{ backgroundColor: newForm.billingCycle === 'Aylık' ? '#1e293b' : undefined }}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const num = Number(val);
+                      setNewForm({
+                        ...newForm,
+                        annualFee: val,
+                        monthlyFee: val ? Math.round(num / 12) : ''
+                      });
+                    }}
+                  />
+                </label>
 
                 <label className="select-field new-customer-full">
                   <span>Kiracı Logosu (Görsel veya Yükleme)</span>
@@ -3398,7 +3400,19 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   <span>Faturalama Periyodu</span>
                   <select
                     value={editTenantForm.billingCycle}
-                    onChange={(e) => setEditTenantForm({ ...editTenantForm, billingCycle: e.target.value as '' | 'Aylık' | 'Yıllık' })}
+                    onChange={(e) => {
+                      const cycle = e.target.value as '' | 'Aylık' | 'Yıllık';
+                      let mFee = editTenantForm.monthlyFee;
+                      let aFee = editTenantForm.annualFee;
+
+                      if (cycle === 'Yıllık' && mFee && !aFee) {
+                        aFee = Number(mFee) * 10;
+                      } else if (cycle === 'Aylık' && aFee && !mFee) {
+                        mFee = Math.round(Number(aFee) / 12);
+                      }
+
+                      setEditTenantForm({ ...editTenantForm, billingCycle: cycle, monthlyFee: mFee, annualFee: aFee });
+                    }}
                   >
                     <option value="Aylık">Aylık Ödemeli</option>
                     <option value="Yıllık">Yıllık Ödemeli</option>
@@ -3419,7 +3433,16 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   <input
                     type="number"
                     value={editTenantForm.monthlyFee}
-                    onChange={(e) => setEditTenantForm({ ...editTenantForm, monthlyFee: Number(e.target.value) })}
+                    disabled={editTenantForm.billingCycle === 'Yıllık'}
+                    style={{ backgroundColor: editTenantForm.billingCycle === 'Yıllık' ? '#1e293b' : undefined }}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setEditTenantForm({
+                        ...editTenantForm,
+                        monthlyFee: val,
+                        annualFee: val ? val * 12 : 0
+                      });
+                    }}
                   />
                 </label>
 
@@ -3428,7 +3451,16 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   <input
                     type="number"
                     value={editTenantForm.annualFee}
-                    onChange={(e) => setEditTenantForm({ ...editTenantForm, annualFee: Number(e.target.value) })}
+                    disabled={editTenantForm.billingCycle === 'Aylık'}
+                    style={{ backgroundColor: editTenantForm.billingCycle === 'Aylık' ? '#1e293b' : undefined }}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setEditTenantForm({
+                        ...editTenantForm,
+                        annualFee: val,
+                        monthlyFee: val ? Math.round(val / 12) : 0
+                      });
+                    }}
                   />
                 </label>
 
@@ -3572,48 +3604,60 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   <span>Faturalama Periyodu</span>
                   <select
                     value={offerForm.billingCycle}
-                    onChange={(e) =>
-                      setOfferForm({ ...offerForm, billingCycle: e.target.value as 'Aylık' | 'Yıllık' })
-                    }
+                    onChange={(e) => {
+                      const cycle = e.target.value as 'Aylık' | 'Yıllık';
+                      let mFee = offerForm.monthlyFee;
+                      let aFee = offerForm.annualFee;
+
+                      if (cycle === 'Yıllık' && mFee && !aFee) {
+                        aFee = Number(mFee) * 10;
+                      } else if (cycle === 'Aylık' && aFee && !mFee) {
+                        mFee = Math.round(Number(aFee) / 12);
+                      }
+
+                      setOfferForm({ ...offerForm, billingCycle: cycle, monthlyFee: mFee, annualFee: aFee });
+                    }}
                   >
                     <option value="Yıllık">Yıllık (İndirimli)</option>
                     <option value="Aylık">Aylık</option>
                   </select>
                 </label>
 
-                {offerForm.billingCycle === 'Yıllık' ? (
-                  <label className="select-field">
-                    <span>Teklif Edilen Yıllık Ücret (₺)</span>
-                    <input
-                      type="number"
-                      value={offerForm.annualFee}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setOfferForm({
-                          ...offerForm,
-                          annualFee: val,
-                          monthlyFee: Math.round(val / 12)
-                        });
-                      }}
-                    />
-                  </label>
-                ) : (
-                  <label className="select-field">
-                    <span>Teklif Edilen Aylık Ücret (₺)</span>
-                    <input
-                      type="number"
-                      value={offerForm.monthlyFee}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setOfferForm({
-                          ...offerForm,
-                          monthlyFee: val,
-                          annualFee: val * 12
-                        });
-                      }}
-                    />
-                  </label>
-                )}
+                <label className="select-field">
+                  <span>Teklif Edilen Aylık Ücret (₺)</span>
+                  <input
+                    type="number"
+                    value={offerForm.monthlyFee}
+                    disabled={offerForm.billingCycle === 'Yıllık'}
+                    style={{ backgroundColor: offerForm.billingCycle === 'Yıllık' ? '#1e293b' : undefined }}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setOfferForm({
+                        ...offerForm,
+                        monthlyFee: val,
+                        annualFee: val * 12
+                      });
+                    }}
+                  />
+                </label>
+
+                <label className="select-field">
+                  <span>Teklif Edilen Yıllık Ücret (₺)</span>
+                  <input
+                    type="number"
+                    value={offerForm.annualFee}
+                    disabled={offerForm.billingCycle === 'Aylık'}
+                    style={{ backgroundColor: offerForm.billingCycle === 'Aylık' ? '#1e293b' : undefined }}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      setOfferForm({
+                        ...offerForm,
+                        annualFee: val,
+                        monthlyFee: Math.round(val / 12)
+                      });
+                    }}
+                  />
+                </label>
 
                 <label className="select-field">
                   <span>Teklif Geçerlilik Süresi (Gün)</span>
