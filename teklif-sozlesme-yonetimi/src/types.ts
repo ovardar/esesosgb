@@ -100,7 +100,7 @@ export interface SaaSContract {
   billingCycle: 'Aylık' | 'Yıllık';
   startDate: string;
   endDate: string;
-  status: 'Aktif' | 'Onay Bekliyor' | 'Yenilenecek' | 'Süresi Doldu';
+  status: 'Aktif' | 'Onay Bekliyor' | 'Yenilenecek' | 'Süresi Doldu' | 'İptal';
   pdfUrl?: string;
   signedAt?: string;
   signedBy?: string;

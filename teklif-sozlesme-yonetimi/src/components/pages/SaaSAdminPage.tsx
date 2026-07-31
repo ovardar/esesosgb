@@ -168,68 +168,24 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
   // Supabase PostgreSQL Cloud Database & Real-Time Sync Effect
   useEffect(() => {
-    const fetchCloudTenants = async () => {
+    // Use the proper cloudDb.ts fetchCloudTenants which preserves existing contact info
+    const loadTenantsFromCloud = async () => {
       try {
-        const { data, error } = await supabase.from('tenants').select('*');
-        if (data && data.length > 0 && !error) {
-          const isDummyTenant = (name: string) => {
-            if (!name) return false;
-            const clean = name.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').trim();
-            if (clean.includes('test osgb 3')) return false;
-            const keywords = ['girisim', 'mavi liman', 'soyyilmaz', 'oddn'];
-            if (clean === 'test osgb') return true;
-            return keywords.some(kw => clean.includes(kw));
-          };
-          setTenants((prev) => {
-            const dbTenants: SaaSTenant[] = data
-              .filter((row: any) => row.name && !isDummyTenant(row.name))
-              .map((row: any) => ({
-              id: row.id,
-              tenantCode: `TNT-${row.id.substring(0, 4).toUpperCase()}`,
-              companyName: row.name,
-              contactName: 'Sistem Yetkilisi',
-              email: `${row.slug || 'info'}@codentra.com.tr`,
-              phone: '0850 000 00 00',
-              city: 'İstanbul',
-              package: 'Enterprise' as SaaSPackage,
-              status: row.is_active ? ('Aktif' as SaaSSubscriptionStatus) : ('Pasif' as any),
-              paymentStatus: 'Sorunsuz' as SaaSPaymentStatus,
-              healthStatus: 'Mükemmel' as SaaSHealthStatus,
-              billingCycle: 'Aylık',
-              monthlyFee: 28000,
-              annualFee: 336000,
-              maxUsers: 50,
-              activeUsers: 1,
-              startDate: row.created_at ? row.created_at.split('T')[0] : '2026-01-01',
-              endDate: '2027-01-01',
-              autoRenew: true,
-              notes: 'Supabase Bulut Veritabanından Canlı Senkronize Edildi',
-              modulesEnabled: { crm: true, offers: true, contracts: true, documents: true, analytics: true },
-              lastLoginAt: 'Bugün',
-              createdBy: 'orhan.vardar@gmail.com',
-              createdAt: row.created_at ? new Date(row.created_at).toLocaleString('tr-TR') : new Date().toLocaleString('tr-TR'),
-              updatedBy: 'orhan.vardar@gmail.com',
-              updatedAt: new Date().toLocaleString('tr-TR'),
-              activationStatus: 'Hesap Aktif (Şifre Belirlendi)'
-            }));
-
-            const cleanPrev = prev.filter((p) => !isDummyTenant(p.companyName));
-            const existingIds = new Set(dbTenants.map((t) => t.id));
-            const merged = [...dbTenants, ...cleanPrev.filter((p) => !existingIds.has(p.id))];
-            return merged.length > 0 ? merged : initialSaaSTenants;
-          });
+        const cloudTenants = await fetchCloudTenants();
+        if (cloudTenants && cloudTenants.length > 0) {
+          setTenants(cloudTenants);
         }
       } catch (e) {
         console.error('Supabase tenants fetch error:', e);
       }
     };
 
-    fetchCloudTenants();
+    loadTenantsFromCloud();
 
     const channel = supabase
       .channel('realtime-saas-tenants')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tenants' }, () => {
-        fetchCloudTenants();
+        loadTenantsFromCloud();
       })
       .subscribe();
 
@@ -596,7 +552,10 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
   // Generate Monthly Invoices Batch (Aylık Faturaları Toplu Kesme)
   const handleGenerateMonthlyInvoices = () => {
-    const currentMonthName = 'Ağustos 2026';
+    const now = new Date();
+    const monthNames = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    const currentMonthName = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+    const yearStr = String(now.getFullYear());
     const monthlyTenants = tenants.filter((t) => t.status === 'Aktif' && t.billingCycle === 'Aylık');
 
     if (monthlyTenants.length === 0) {
@@ -606,7 +565,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
     const newMonthlyInvoices: SaaSInvoice[] = monthlyTenants.map((t) => ({
       id: `inv-rec-${t.id}-${Date.now()}`,
-      invoiceNumber: `SAAS-INV-2026-${Math.floor(100 + Math.random() * 900)}`,
+      invoiceNumber: `SAAS-INV-${yearStr}-${Math.floor(100 + Math.random() * 900)}`,
       tenantId: t.id,
       tenantName: t.companyName,
       amount: t.monthlyFee,
@@ -1019,8 +978,13 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     setIsAddModalOpen(false);
     setSelectedTenant(newTenant);
   };
-  // Handle Toggle Tenant Status
+  // Handle Toggle Tenant Status — Only toggles between Aktif <-> Askıda
   const handleToggleTenantStatus = async (tenant: SaaSTenant) => {
+    // Only show this action for Active or Suspended tenants
+    if (tenant.status !== 'Aktif' && tenant.status !== 'Askıda') {
+      alert(`"${tenant.companyName}" kiracısı ${tenant.status} durumunda. Durum değiştirmek için "Düzenle" formunu kullanın.`);
+      return;
+    }
     const newStatus: SaaSSubscriptionStatus = tenant.status === 'Aktif' ? 'Askıda' : 'Aktif';
     if (window.confirm(`"${tenant.companyName}" isimli kiracıyı ${newStatus} yapmak istediğinizden emin misiniz?`)) {
       setTenants((prev) => {
@@ -1333,6 +1297,16 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             </label>
 
             <label className="select-field">
+              <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Ödeme Durumu</span>
+              <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)} style={{ fontSize: '0.82rem', padding: '6px 12px', height: '36px', borderRadius: '8px' }}>
+                <option value="all">Tüm Ödeme Durumları</option>
+                <option value="Sorunsuz">✅ Sorunsuz</option>
+                <option value="Bekliyor">⏳ Ödeme Bekliyor</option>
+                <option value="Gecikmede">🔴 Gecikmede</option>
+              </select>
+            </label>
+
+            <label className="select-field">
               <span style={{ fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 4, display: 'block' }}>Limit & Upsell Durumu</span>
               <select
                 value={upsellOnlyFilter ? 'upsell' : 'all'}
@@ -1549,14 +1523,16 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                               ✏️ Düzenle
                             </button>
 
-                            <button
-                              className="btn-action-ghost"
-                              style={{ color: tenant.status === 'Aktif' ? '#ef4444' : '#10b981' }}
-                              onClick={() => handleToggleTenantStatus(tenant)}
-                              title={tenant.status === 'Aktif' ? "Kiracıyı Askıya Al" : "Kiracıyı Aktife Al"}
-                            >
-                              {tenant.status === 'Aktif' ? '⏸ Askıya Al' : '▶ Aktife Al'}
-                            </button>
+                            {(tenant.status === 'Aktif' || tenant.status === 'Askıda') && (
+                              <button
+                                className="btn-action-ghost"
+                                style={{ color: tenant.status === 'Aktif' ? '#ef4444' : '#10b981' }}
+                                onClick={() => handleToggleTenantStatus(tenant)}
+                                title={tenant.status === 'Aktif' ? "Kiracıyı Askıya Al" : "Kiracıyı Aktife Al"}
+                              >
+                                {tenant.status === 'Aktif' ? '⏸ Askıya Al' : '▶ Aktife Al'}
+                              </button>
+                            )}
 
                             <button
                               className="btn-action-primary"
@@ -1801,16 +1777,20 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                     <th onClick={() => toggleSort(contractSort, setContractSort, 'status')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                       Durum {contractSort.field === 'status' ? (contractSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
                     </th>
+                    <th style={{ textAlign: 'right' }}>Aksiyonlar</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sortedContracts.map((cnt) => (
+                  {sortedContracts.length === 0 ? (
+                    <tr><td colSpan={8} className="customer-table-empty">Henüz sözleşme kaydı oluşturulmadı.</td></tr>
+                  ) : (
+                    sortedContracts.map((cnt) => (
                     <tr key={cnt.id}>
                       <td><strong>{cnt.contractNumber}</strong></td>
                       <td>{cnt.tenantName}</td>
                       <td><span className="mini-badge">{cnt.packageName}</span></td>
                       <td><strong>₺{cnt.annualFee.toLocaleString('tr-TR')}</strong> / yıl</td>
-                      <td>{cnt.startDate} - {cnt.endDate}</td>
+                      <td>{cnt.startDate} → {cnt.endDate}</td>
                       <td>
                         <span style={{ fontSize: '0.8rem', display: 'block' }}>{cnt.signedBy || 'Yetkili'}</span>
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{cnt.signedAt || cnt.startDate}</span>
@@ -1826,8 +1806,35 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                           {cnt.status}
                         </span>
                       </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end' }}>
+                          <button
+                            className="btn-action-ghost"
+                            onClick={() => alert(`📄 ${cnt.contractNumber} PDF Sözleşmesi indiriliyor...`)}
+                            title="Sözleşme PDF'ini indir"
+                          >
+                            📄 PDF İndir
+                          </button>
+                          {cnt.status === 'Aktif' && (
+                            <button
+                              className="btn-action-ghost"
+                              style={{ color: '#ef4444', borderColor: 'rgba(239,68,68,0.3)' }}
+                              onClick={() => {
+                                if (window.confirm(`"${cnt.contractNumber}" sözleşmesini iptal etmek istediğinize emin misiniz?`)) {
+                                  setContracts((prev) => prev.map((c) => c.id === cnt.id ? { ...c, status: 'İptal' } : c));
+                                  alert('Sözleşme iptal edildi.');
+                                }
+                              }}
+                              title="Sözleşmeyi iptal et"
+                            >
+                              ❌ İptal Et
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
-                  ))}
+                  ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1863,6 +1870,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                 onChange={(e) => setInvoiceMonthFilter(e.target.value)}
               >
                 <option value="all">Tüm Lisans Dönemleri</option>
+                <option value="Ağustos 2026">Ağustos 2026</option>
                 <option value="Temmuz 2026">Temmuz 2026</option>
                 <option value="Haziran 2026">Haziran 2026</option>
                 <option value="Mayıs 2026">Mayıs 2026</option>
@@ -2449,7 +2457,6 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             paddingBottom: '40px',
             overflowY: 'auto'
           }}
-          onClick={() => setEditingLicenseTenant(null)}
         >
           <div
             className="panel panel-wide panel-elevated"
@@ -2895,19 +2902,26 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             )}
 
             {detailTab === 'notes' && (
-              <label className="select-field">
-                <span>Yazılım Firması Özel İç Notları</span>
-                <textarea
-                  rows={5}
-                  value={selectedTenant.notes || ''}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSelectedTenant((prev) => (prev ? { ...prev, notes: val } : null));
-                    setTenants((prev) => prev.map((t) => (t.id === selectedTenant.id ? { ...t, notes: val } : t)));
-                  }}
-                  placeholder="Müşteri ilişkileri, özel talepler veya ödeme detayları..."
-                />
-              </label>
+              <div style={{ display: 'grid', gap: 12 }}>
+                <label className="select-field">
+                  <span>Yazılım Firması Özel İç Notları</span>
+                  <textarea
+                    rows={5}
+                    value={selectedTenant.notes || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedTenant((prev) => (prev ? { ...prev, notes: val } : null));
+                      setTenants((prev) => {
+                        const next = prev.map((t) => (t.id === selectedTenant.id ? { ...t, notes: val } : t));
+                        saveCloudTenants(next);
+                        return next;
+                      });
+                    }}
+                    placeholder="Müşteri ilişkileri, özel talepler veya ödeme detayları..."
+                  />
+                </label>
+                <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>Notlar siz yazdıkça otomatik olarak buluta kaydedilir.</p>
+              </div>
             )}
 
             {detailTab === 'users' && (() => {
@@ -3002,7 +3016,6 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             placeItems: 'center',
             padding: 20
           }}
-          onClick={() => setIsAddModalOpen(false)}
         >
           <div
             className="panel panel-wide panel-elevated"
