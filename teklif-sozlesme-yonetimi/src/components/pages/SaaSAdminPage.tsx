@@ -1019,30 +1019,20 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     setIsAddModalOpen(false);
     setSelectedTenant(newTenant);
   };
-// Handle Delete Tenant
-  const handleDeleteTenant = async (tenant: SaaSTenant) => {
-    console.log('handleDeleteTenant triggered for:', tenant);
-    if (window.confirm(`"${tenant.companyName}" isimli kiracıyı silmek istediğinizden emin misiniz?\nBu işlem geri alınamaz!`)) {
-      try {
-        console.log('User confirmed deletion. Updating state...');
-        setTenants((prev) => {
-          const next = prev.filter((t) => t.id !== tenant.id);
-          saveCloudTenants(next);
-          return next;
-        });
-        
-        console.log('Calling deleteCloudTenant...');
-        await deleteCloudTenant(tenant.id);
-        console.log('deleteCloudTenant finished.');
-        
-        if (selectedTenant?.id === tenant.id) {
-          setSelectedTenant(null);
-        }
-        
-        alert('Silme işlemi başarıyla tamamlandı!');
-      } catch (err) {
-        console.error('Delete error:', err);
-        alert('Silme işlemi sırasında bir hata oluştu: ' + (err as any).message);
+  // Handle Toggle Tenant Status
+  const handleToggleTenantStatus = async (tenant: SaaSTenant) => {
+    const newStatus: SaaSSubscriptionStatus = tenant.status === 'Aktif' ? 'Askıda' : 'Aktif';
+    if (window.confirm(`"${tenant.companyName}" isimli kiracıyı ${newStatus} yapmak istediğinizden emin misiniz?`)) {
+      setTenants((prev) => {
+        const next = prev.map((t) =>
+          t.id === tenant.id ? { ...t, status: newStatus, paymentStatus: newStatus === 'Aktif' ? 'Sorunsuz' : 'Bekliyor' as SaaSPaymentStatus } : t
+        );
+        saveCloudTenants(next);
+        return next;
+      });
+
+      if (selectedTenant?.id === tenant.id) {
+        setSelectedTenant((prev) => prev ? { ...prev, status: newStatus, paymentStatus: newStatus === 'Aktif' ? 'Sorunsuz' : 'Bekliyor' as SaaSPaymentStatus } : null);
       }
     }
   };
@@ -1563,9 +1553,9 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                               className="btn-action-ghost"
                               style={{ color: tenant.status === 'Aktif' ? '#ef4444' : '#10b981' }}
                               onClick={() => handleToggleTenantStatus(tenant)}
-                              title={tenant.status === 'Aktif' ? "Kiracıyı Pasife Al" : "Kiracıyı Aktife Al"}
+                              title={tenant.status === 'Aktif' ? "Kiracıyı Askıya Al" : "Kiracıyı Aktife Al"}
                             >
-                              {tenant.status === 'Aktif' ? '⏸ Pasife Al' : '▶ Aktife Al'}
+                              {tenant.status === 'Aktif' ? '⏸ Askıya Al' : '▶ Aktife Al'}
                             </button>
 
                             <button
