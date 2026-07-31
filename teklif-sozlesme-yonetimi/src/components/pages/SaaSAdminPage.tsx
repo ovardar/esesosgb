@@ -626,6 +626,352 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     alert('📧 E-posta şablonu başarıyla güncellendi!');
   };
 
+  // Print and Export Invoice to PDF with Tenant Logo
+  const handlePrintInvoice = (inv: SaaSInvoice) => {
+    const tenant = tenants.find((t) => t.id === inv.tenantId);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Pencere açılması engellendi. Lütfen pop-up engelleyicinizi kontrol edin.');
+      return;
+    }
+
+    const tenantLogo = tenant?.logoUrl
+      ? `<img src="${tenant.logoUrl}" style="max-height: 60px; max-width: 180px; object-fit: contain;" />`
+      : `<div style="font-size: 20px; font-weight: 800; color: #4f46e5; border: 2px solid #4f46e5; padding: 6px 12px; border-radius: 8px;">${tenant?.companyName ? tenant.companyName.substring(0, 2).toUpperCase() : 'TN'}</div>`;
+
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Fatura - ${inv.invoiceNumber}</title>
+          <style>
+            body {
+              font-family: 'Inter', system-ui, sans-serif;
+              color: #1e293b;
+              margin: 40px;
+              line-height: 1.6;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #e2e8f0;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .company-details {
+              text-align: right;
+              font-size: 14px;
+            }
+            .title {
+              font-size: 28px;
+              font-weight: 800;
+              color: #0f172a;
+              margin: 0;
+            }
+            .invoice-info {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              margin-bottom: 40px;
+              font-size: 14px;
+            }
+            .box {
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 12px;
+              padding: 20px;
+            }
+            .box h4 {
+              margin: 0 0 10px 0;
+              color: #64748b;
+              font-size: 12px;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+            }
+            .box p {
+              margin: 4px 0;
+              font-weight: 600;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 40px;
+            }
+            th {
+              background: #f1f5f9;
+              color: #475569;
+              font-weight: 700;
+              text-align: left;
+              padding: 12px;
+              border-bottom: 2px solid #cbd5e1;
+              font-size: 13px;
+            }
+            td {
+              padding: 12px;
+              border-bottom: 1px solid #e2e8f0;
+              font-size: 14px;
+            }
+            .total-row td {
+              font-weight: 700;
+              font-size: 16px;
+              background: #f8fafc;
+              border-top: 2px solid #cbd5e1;
+            }
+            .footer {
+              text-align: center;
+              font-size: 12px;
+              color: #94a3b8;
+              border-top: 1px solid #e2e8f0;
+              padding-top: 20px;
+              margin-top: 50px;
+            }
+            @media print {
+              body { margin: 20px; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1 class="title">LİSANS FATURASI</h1>
+              <span style="font-size: 14px; color: #64748b; font-weight: 600;">No: ${inv.invoiceNumber}</span>
+            </div>
+            <div class="company-details">
+              <div style="font-size: 18px; font-weight: 800; color: #4f46e5; margin-bottom: 4px;">Codentra Software & Yazılım A.Ş.</div>
+              <span style="color: #64748b;">SaaS Destek & Faturalama Birimi</span><br/>
+              <span style="color: #64748b;">support@codentra.com.tr</span>
+            </div>
+          </div>
+
+          <div class="invoice-info">
+            <div class="box">
+              <h4>Müşteri Bilgileri (Kiracı)</h4>
+              ${tenantLogo}
+              <p style="font-size: 16px; color: #0f172a; margin-top: 10px;">${inv.tenantName}</p>
+              <span style="color: #64748b;">Yetkili: ${tenant?.contactName || 'Sistem Yetkilisi'}</span><br/>
+              <span style="color: #64748b;">E-posta: ${tenant?.email || ''}</span>
+            </div>
+            <div class="box">
+              <h4>Fatura Detayları</h4>
+              <table style="width: 100%; margin: 0; font-size: 13px;">
+                <tr><td style="padding: 4px 0; border: none; color: #64748b;">Düzenleme Tarihi:</td><td style="padding: 4px 0; border: none; text-align: right; font-weight: 600;">${inv.issueDate}</td></tr>
+                <tr><td style="padding: 4px 0; border: none; color: #64748b;">Son Ödeme Tarihi:</td><td style="padding: 4px 0; border: none; text-align: right; font-weight: 600; color: #ef4444;">${inv.dueDate}</td></tr>
+                <tr><td style="padding: 4px 0; border: none; color: #64748b;">Ödeme Durumu:</td><td style="padding: 4px 0; border: none; text-align: right; font-weight: 700; color: ${inv.status === 'Ödendi' ? '#10b981' : '#f59e0b'}">${inv.status}</td></tr>
+              </table>
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Açıklama / Lisans Detayı</th>
+                <th style="text-align: right;">Birim Fiyat</th>
+                <th style="text-align: right;">Adet</th>
+                <th style="text-align: right;">Toplam Tutar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <strong>Codentra Teklif & Sözleşme Yönetim Sistemi Lisansı</strong><br/>
+                  <span style="font-size: 12px; color: #64748b;">Paket: ${tenant?.package || 'Enterprise'} (${tenant?.maxUsers || 50} Kullanıcı Limiti) • Dönem: ${inv.billingPeriod}</span>
+                </td>
+                <td style="text-align: right;">₺${inv.amount.toLocaleString('tr-TR')}</td>
+                <td style="text-align: right;">1</td>
+                <td style="text-align: right; font-weight: 600;">₺${inv.amount.toLocaleString('tr-TR')}</td>
+              </tr>
+              <tr class="total-row">
+                <td colspan="3" style="text-align: right; border: none;">Ödenecek Toplam:</td>
+                <td style="text-align: right; color: #4f46e5; border: none;">₺${inv.amount.toLocaleString('tr-TR')}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div style="background: #f8fafc; border-left: 4px solid #4f46e5; padding: 15px; border-radius: 0 8px 8px 0; font-size: 13px; color: #475569;">
+            <strong>Bilgilendirme:</strong> Bu fatura elektronik ortamda Codentra SaaS Yönetim modülü tarafından otomatik olarak üretilmiştir. Ödemelerinizi vadeli gününden önce ilgili banka hesabımıza yapmanızı rica ederiz.
+          </div>
+
+          <div class="footer">
+            <p>Codentra Software & Yazılım A.Ş. © 2026 — Keyifli çalışmalar dileriz.</p>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
+  // Print and Export Contract to PDF with Tenant Logo
+  const handlePrintContract = (cnt: SaaSContract) => {
+    const tenant = tenants.find((t) => t.id === cnt.tenantId);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Pencere açılması engellendi. Lütfen pop-up engelleyicinizi kontrol edin.');
+      return;
+    }
+
+    const tenantLogo = tenant?.logoUrl
+      ? `<img src="${tenant.logoUrl}" style="max-height: 60px; max-width: 180px; object-fit: contain;" />`
+      : `<div style="font-size: 20px; font-weight: 800; color: #4f46e5; border: 2px solid #4f46e5; padding: 6px 12px; border-radius: 8px;">${tenant?.companyName ? tenant.companyName.substring(0, 2).toUpperCase() : 'TN'}</div>`;
+
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Sözleşme - ${cnt.contractNumber}</title>
+          <style>
+            body {
+              font-family: 'Inter', system-ui, sans-serif;
+              color: #1e293b;
+              margin: 40px;
+              line-height: 1.6;
+            }
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #e2e8f0;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            .company-details {
+              text-align: right;
+              font-size: 14px;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: 800;
+              color: #0f172a;
+              margin: 0;
+            }
+            .contract-section {
+              margin-bottom: 25px;
+            }
+            .contract-section h3 {
+              color: #0f172a;
+              border-bottom: 1px solid #cbd5e1;
+              padding-bottom: 6px;
+              margin-bottom: 12px;
+              font-size: 16px;
+            }
+            .contract-section p {
+              font-size: 14px;
+              margin: 6px 0;
+              text-align: justify;
+            }
+            .signatures {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 40px;
+              margin-top: 50px;
+            }
+            .signature-box {
+              border: 1px dashed #cbd5e1;
+              border-radius: 12px;
+              padding: 20px;
+              text-align: center;
+              min-height: 120px;
+            }
+            .footer {
+              text-align: center;
+              font-size: 12px;
+              color: #94a3b8;
+              border-top: 1px solid #e2e8f0;
+              padding-top: 20px;
+              margin-top: 50px;
+            }
+            @media print {
+              body { margin: 20px; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1 class="title">SaaS YAZILIM KULLANIM SÖZLEŞMESİ</h1>
+              <span style="font-size: 14px; color: #64748b; font-weight: 600;">Sözleşme No: ${cnt.contractNumber}</span>
+            </div>
+            <div class="company-details">
+              <div style="font-size: 18px; font-weight: 800; color: #4f46e5; margin-bottom: 4px;">Codentra Software</div>
+              <span style="color: #64748b;">Abonelik & Lisans Hizmetleri</span>
+            </div>
+          </div>
+
+          <div class="contract-section">
+            <h3>1. Taraflar</h3>
+            <p>
+              İşbu sözleşme, bir tarafta <strong>Codentra Software & Yazılım A.Ş.</strong> (SaaS Sağlayıcı) ile diğer tarafta lisans paketi satın alan ve bilgileri aşağıda yer alan kiracı firma (Müşteri) arasında yürürlüğe girmiştir.
+            </p>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-top: 10px; display: flex; align-items: center; gap: 15px;">
+              ${tenantLogo}
+              <div>
+                <strong>Müşteri Firma:</strong> ${cnt.tenantName}<br/>
+                <strong>İmzalayan / Yetkili:</strong> ${cnt.signedBy || 'Belirtilmedi'}<br/>
+                <strong>Başlangıç Tarihi:</strong> ${cnt.startDate} • <strong>Bitiş Tarihi:</strong> ${cnt.endDate}
+              </div>
+            </div>
+          </div>
+
+          <div class="contract-section">
+            <h3>2. Sözleşme Konusu, Paket ve Fiyatlandırma</h3>
+            <p>
+              İşbu sözleşmenin konusu, Müşteri'nin Codentra Teklif & Sözleşme Yönetim platformunu SaaS bulut modeliyle kullanmasına yönelik lisans şartları ve kullanım sınırlarının belirlenmesidir.
+            </p>
+            <p>
+              <strong>Lisans Detayları:</strong><br/>
+              • Seçilen Abonelik Paketi: <strong>${cnt.packageName} Paketi</strong><br/>
+              • Faturalama Periyodu: <strong>${cnt.billingCycle} Ödemeli</strong><br/>
+              • Kararlaştırılan Yıllık Tutar: <strong>₺${cnt.annualFee.toLocaleString('tr-TR')}</strong><br/>
+              • Aylık Eşdeğer Bedel: <strong>₺${cnt.monthlyEquivalent.toLocaleString('tr-TR')} / ay</strong>
+            </p>
+          </div>
+
+          <div class="contract-section">
+            <h3>3. Genel Hükümler ve Kullanım Koşulları</h3>
+            <p>
+              3.1 Müşteri, satın aldığı paketin kullanıcı sınırlarına (${tenant?.maxUsers || 15} kullanıcı) uymakla yükümlüdür. Kullanıcı sayısının aşılması durumunda ek paket satın alınması gerekir.<br/>
+              3.2 SaaS Sağlayıcı, sistemin kesintisiz çalışması için gerekli altyapı ve güvenlik önlemlerini (%99.9 Uptime garantisi ile) almakla sorumludur.<br/>
+              3.3 Ödemelerin gecikmesi durumunda, SaaS Sağlayıcı 14 günlük ihtar süresi sonrasında kiracı hesabını geçici olarak askıya alma hakkını saklı tutar.
+            </p>
+          </div>
+
+          <div class="signatures">
+            <div class="signature-box">
+              <strong style="color: #64748b; font-size: 12px;">SaaS SAĞLAYICI</strong>
+              <p style="margin-top: 10px; font-weight: 700; color: #4f46e5;">Codentra Software</p>
+              <div style="margin-top: 30px; font-size: 11px; color: #94a3b8;">[Kaşe / İmza]</div>
+            </div>
+            <div class="signature-box">
+              <strong style="color: #64748b; font-size: 12px;">MÜŞTERİ (KİRACI)</strong>
+              <p style="margin-top: 10px; font-weight: 700;">${cnt.tenantName}</p>
+              <div style="margin-top: 30px; font-size: 11px; color: #94a3b8;">İmza Tarihi: ${cnt.signedAt || cnt.startDate}</div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>Codentra Software SaaS Sistem Sözleşmesi şablonudur. © 2026</p>
+          </div>
+
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
   // Handle Send Offer Email to Client
   const handleSendOfferEmail = (offer: SaaSOffer) => {
     setOffers((prev) =>
@@ -1902,7 +2248,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                         <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end' }}>
                           <button
                             className="btn-action-ghost"
-                            onClick={() => alert(`📄 ${cnt.contractNumber} PDF Sözleşmesi indiriliyor...`)}
+                            onClick={() => handlePrintContract(cnt)}
                             title="Sözleşme PDF'ini indir"
                           >
                             📄 PDF İndir
@@ -2046,7 +2392,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                         )}
                         <button
                           className="btn-action-ghost"
-                          onClick={() => alert(`📄 ${inv.invoiceNumber} PDF Faturası indiriliyor...`)}
+                          onClick={() => handlePrintInvoice(inv)}
                         >
                           📄 PDF Fatura
                         </button>
