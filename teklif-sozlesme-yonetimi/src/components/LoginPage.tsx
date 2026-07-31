@@ -35,9 +35,10 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           if (superadmins.some((sa: any) => sa.email.toLowerCase() === cleanE)) return true;
         } catch (e) {}
 
+        let allTenants: any[] = [];
         try {
-          const tenants = JSON.parse(localStorage.getItem('crm_saas_tenants_v3') || '[]');
-          if (tenants.some((t: any) => t.email && t.email.toLowerCase() === cleanE)) return true;
+          allTenants = JSON.parse(localStorage.getItem('crm_saas_tenants_v3') || '[]');
+          if (allTenants.some((t: any) => t.email && t.email.toLowerCase() === cleanE && t.status === 'Aktif')) return true;
         } catch (e) {}
 
         try {
@@ -45,7 +46,10 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
           for (const tenantId in usersMap) {
             const users = usersMap[tenantId];
             if (Array.isArray(users) && users.some((u: any) => u.email && u.email.toLowerCase() === cleanE && u.status === 'Aktif')) {
-              return true;
+              const parentTenant = allTenants.find((t: any) => t.id === tenantId || t.tenantCode === tenantId);
+              if (parentTenant && parentTenant.status === 'Aktif') {
+                return true;
+              }
             }
           }
         } catch (e) {}

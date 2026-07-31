@@ -1561,11 +1561,11 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
                             <button
                               className="btn-action-ghost"
-                              style={{ color: '#ef4444' }}
-                              onClick={() => handleDeleteTenant(tenant)}
-                              title="Kiracıyı Sil"
+                              style={{ color: tenant.status === 'Aktif' ? '#ef4444' : '#10b981' }}
+                              onClick={() => handleToggleTenantStatus(tenant)}
+                              title={tenant.status === 'Aktif' ? "Kiracıyı Pasife Al" : "Kiracıyı Aktife Al"}
                             >
-                              🗑️ Sil
+                              {tenant.status === 'Aktif' ? '⏸ Pasife Al' : '▶ Aktife Al'}
                             </button>
 
                             <button
