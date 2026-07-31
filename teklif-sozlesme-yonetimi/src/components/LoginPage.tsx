@@ -5,9 +5,10 @@ import { isAuthorizedUser } from '../lib/userRoles';
 
 interface LoginPageProps {
   onLoginSuccess: (email: string) => void;
+  onSwitchToSignup?: () => void;
 }
 
-export function LoginPage({ onLoginSuccess }: LoginPageProps) {
+export function LoginPage({ onLoginSuccess, onSwitchToSignup }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -240,6 +241,26 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps) {
             {loading ? 'Giriş Yapılıyor...' : 'Sisteme Giriş Yap →'}
           </button>
         </form>
+
+        <div style={{ marginTop: 24, textAlign: 'center', fontSize: '0.85rem' }}>
+          <span style={{ color: '#94a3b8' }}>Hesabınız yok mu? </span>
+          {onSwitchToSignup && (
+            <button 
+              onClick={onSwitchToSignup}
+              type="button"
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                color: '#38bdf8', 
+                fontWeight: 600, 
+                cursor: 'pointer',
+                padding: 0
+              }}
+            >
+              Yeni Hesap Oluşturun
+            </button>
+          )}
+        </div>
 
         <div style={{ marginTop: 28, textAlign: 'center', fontSize: '0.8rem', color: '#64748b' }}>
           🔒 %100 KVKK ve Supabase İzole Güvenlik Protokolü

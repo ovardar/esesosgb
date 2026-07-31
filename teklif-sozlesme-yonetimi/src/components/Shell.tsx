@@ -15,9 +15,7 @@ type ShellProps = {
   onSectionChange: (section: SectionId) => void;
   isSuperAdmin?: boolean;
   currentUserEmail?: string;
-  activeTenantName?: string;
-  activeTenantContactName?: string;
-  activeTenantLogo?: string;
+  activeTenant?: import('../types').SaaSTenant;
   onClearImpersonation?: () => void;
   title?: string;
   subtitle?: string;
@@ -35,9 +33,7 @@ export function Shell({
   onSectionChange,
   isSuperAdmin = true,
   currentUserEmail,
-  activeTenantName,
-  activeTenantContactName,
-  activeTenantLogo,
+  activeTenant,
   onClearImpersonation,
   title,
   subtitle,
@@ -49,6 +45,11 @@ export function Shell({
   onNavigateCustomer = () => {},
   children
 }: ShellProps) {
+  const activeTenantName = activeTenant?.companyName;
+  const activeTenantContactName = activeTenant?.contactName;
+  const activeTenantLogo = activeTenant?.logoUrl;
+  const isDemoUser = activeTenant?.status === 'Demo';
+
   const visibleSections = sections.filter((sec) => {
     if (isSuperAdmin && !activeTenantName) {
       // Superadmin in SaaS mode sees ONLY SaaS Yönetimi
@@ -142,6 +143,48 @@ export function Shell({
       </aside>
 
       <main className="workspace">
+        {isDemoUser && (
+          <div style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            color: '#ffffff',
+            padding: '12px 20px',
+            borderRadius: 8,
+            marginBottom: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.25)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: '1.2rem' }}>⏱️</span>
+              <div>
+                <strong style={{ display: 'block', fontSize: '0.95rem' }}>Demo Sürümündesiniz</strong>
+                <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>
+                  Süreniz bitene kadar tüm özellikleri kesintisiz kullanabilirsiniz.
+                </span>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                window.location.hash = 'billing';
+                onSectionChange('settings');
+              }}
+              style={{
+                background: '#ffffff',
+                color: '#d97706',
+                border: 'none',
+                padding: '8px 16px',
+                borderRadius: 6,
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+              }}
+            >
+              🚀 Aboneliği Başlat
+            </button>
+          </div>
+        )}
         <header style={{ display: 'flex', justifyContent: (title || subtitle) ? 'space-between' : 'flex-end', alignItems: 'center', marginBottom: (title || subtitle) ? 20 : 12, flexWrap: 'wrap', gap: 12 }}>
           {(title || subtitle) ? (
             <div>

@@ -17,6 +17,7 @@ import { offerSeeds } from './data/workbench';
 import type { SectionId, SaaSTenant, ThemeId, ContractRecord, OfferRecord } from './types';
 import { initialSaaSTenants } from './data/saasWorkbench';
 import { LoginPage } from './components/LoginPage';
+import { SignupPage } from './components/SignupPage';
 import { SetPasswordModal } from './components/modals/SetPasswordModal';
 import { supabase } from './lib/supabase';
 import { fetchCloudCustomers, saveCloudCustomers, fetchCloudOffers, saveCloudOffers, fetchCloudContracts, saveCloudContracts, fetchCloudTenants, subscribeToCloudDb } from './lib/cloudDb';
@@ -526,6 +527,8 @@ function App() {
     );
   }
 
+  const [authView, setAuthView] = useState<'login' | 'signup'>('login');
+
   if (!session) {
     return (
       <>
@@ -541,7 +544,20 @@ function App() {
             window.history.replaceState({}, document.title, window.location.pathname);
           }}
         />
-        <LoginPage onLoginSuccess={(email) => setSession({ user: { email } })} />
+        {authView === 'login' ? (
+          <LoginPage 
+            onLoginSuccess={(email) => setSession({ user: { email } })} 
+            onSwitchToSignup={() => setAuthView('signup')}
+          />
+        ) : (
+          <SignupPage 
+            onSignupSuccess={(email, isDemo) => {
+              setSession({ user: { email } });
+              // Müşteri 'Sisteme Başla / Demo' dediğinde özel karşılama yapılabilir
+            }}
+            onSwitchToLogin={() => setAuthView('login')}
+          />
+        )}
       </>
     );
   }

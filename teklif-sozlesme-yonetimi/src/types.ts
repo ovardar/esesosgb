@@ -70,6 +70,9 @@ export interface SaaSTenant {
   inviteSentAt?: string;
   passwordSetAt?: string;
   logoUrl?: string;
+  trialEndsAt?: string;
+  stripeCustomerId?: string;
+  subscriptionPlanId?: string;
 }
 
 export interface SaaSOffer {

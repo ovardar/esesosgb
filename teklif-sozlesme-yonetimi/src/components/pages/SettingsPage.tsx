@@ -6,6 +6,7 @@ import type { CustomerRecord } from './CustomersPage';
 import { PermissionsPage } from './PermissionsPage';
 import { TenantTemplatesTab } from './TenantTemplatesTab';
 import { ImportExportTab } from './ImportExportTab';
+import { BillingTab } from './BillingTab';
 
 type SettingsPageProps = {
   activeTheme: ThemeId;
@@ -32,8 +33,19 @@ export function SettingsPage({
   contracts,
   setContracts
 }: SettingsPageProps) {
-  // Sistem Ayarları Ana Sekmesi ('users-permissions' | 'templates' | 'theme' | 'import-export')
-  const [activeTab, setActiveTab] = useState<'users-permissions' | 'templates' | 'theme' | 'import-export'>('users-permissions');
+  // Sistem Ayarları Ana Sekmesi
+  const [activeTab, setActiveTab] = useState<'users-permissions' | 'templates' | 'theme' | 'import-export' | 'billing'>(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (['users-permissions', 'templates', 'theme', 'import-export', 'billing'].includes(hash)) {
+      return hash as any;
+    }
+    return 'users-permissions';
+  });
+
+  const handleTabChange = (tab: 'users-permissions' | 'templates' | 'theme' | 'import-export' | 'billing') => {
+    setActiveTab(tab);
+    window.location.hash = tab;
+  };
 
   const activeThemeMeta = useMemo(() => themes.find((theme) => theme.id === activeTheme) ?? themes[0], [activeTheme]);
 
@@ -114,7 +126,7 @@ export function SettingsPage({
         <div style={{ display: 'flex', gap: 10, borderTop: '1px solid rgba(255, 255, 255, 0.25)', paddingTop: 12, flexWrap: 'wrap' }}>
           <button
             type="button"
-            onClick={() => setActiveTab('users-permissions')}
+            onClick={() => handleTabChange('users-permissions')}
             style={{
               height: 38,
               padding: '0 18px',
@@ -135,9 +147,34 @@ export function SettingsPage({
             👥 Kullanıcılar ve Yetkiler
           </button>
 
+          {impersonatedTenant && (
+            <button
+              type="button"
+              onClick={() => handleTabChange('billing')}
+              style={{
+                height: 38,
+                padding: '0 18px',
+                fontSize: '0.86rem',
+                fontWeight: activeTab === 'billing' ? 800 : 600,
+                color: '#ffffff',
+                background: activeTab === 'billing' ? 'rgba(255, 255, 255, 0.35)' : 'rgba(255, 255, 255, 0.16)',
+                border: activeTab === 'billing' ? '1.5px solid rgba(255, 255, 255, 0.65)' : '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: 10,
+                cursor: 'pointer',
+                boxShadow: activeTab === 'billing' ? '0 2px 8px rgba(0, 0, 0, 0.12)' : 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              💳 Abonelik & Ödeme
+            </button>
+          )}
+
           <button
             type="button"
-            onClick={() => setActiveTab('templates')}
+            onClick={() => handleTabChange('templates')}
             style={{
               height: 38,
               padding: '0 18px',
@@ -160,7 +197,7 @@ export function SettingsPage({
 
           <button
             type="button"
-            onClick={() => setActiveTab('import-export')}
+            onClick={() => handleTabChange('import-export')}
             style={{
               height: 38,
               padding: '0 18px',
@@ -183,7 +220,7 @@ export function SettingsPage({
 
           <button
             type="button"
-            onClick={() => setActiveTab('theme')}
+            onClick={() => handleTabChange('theme')}
             style={{
               height: 38,
               padding: '0 18px',
@@ -228,7 +265,20 @@ export function SettingsPage({
         />
       )}
 
-      {/* TAB 3: THEME SELECTION */}
+      {/* TAB 3: BILLING & SUBSCRIPTION */}
+      {activeTab === 'billing' && impersonatedTenant && (
+        <BillingTab
+          activeTenant={impersonatedTenant}
+          onUpdateTenant={(t) => {
+            // Update local tenant state here if needed, 
+            // since we're using impersonatedTenant, changes will sync via cloudDb observer
+            // but we might want to reload page or refresh session in real app
+            window.location.reload();
+          }}
+        />
+      )}
+
+      {/* TAB 4: THEME SELECTION */}
       {activeTab === 'theme' && (
         <section className="panel panel-wide panel-elevated theme-settings-page">
           <div className="section-heading">
