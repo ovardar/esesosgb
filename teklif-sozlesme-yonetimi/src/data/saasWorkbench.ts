@@ -51,37 +51,7 @@ export const initialSaaSPackages: SaaSPackageDefinition[] = [
   }
 ];
 
-export const initialSaaSTenants: SaaSTenant[] = [
-  {
-    id: '3b3e7f5a-9d2c-4e8a-b1c4-9a8b7c6d5e4f',
-    tenantCode: 'TNT-OSGB3',
-    companyName: 'Test OSGB 3',
-    contactName: 'Ahmet Dursun',
-    email: 'orhanvardarusa@gmail.com',
-    phone: '0850 000 00 00',
-    city: 'İstanbul',
-    package: 'Enterprise',
-    status: 'Aktif',
-    paymentStatus: 'Sorunsuz',
-    healthStatus: 'Mükemmel',
-    billingCycle: 'Yıllık',
-    monthlyFee: 28000,
-    annualFee: 336000,
-    maxUsers: 50,
-    activeUsers: 1,
-    startDate: '2026-01-01',
-    endDate: '2027-01-01',
-    autoRenew: true,
-    notes: 'Codentra canlı doğrulama kiracısı',
-    modulesEnabled: { crm: true, offers: true, contracts: true, documents: true, analytics: true },
-    lastLoginAt: 'Bugün',
-    createdBy: 'orhan.vardar@gmail.com',
-    createdAt: '2026-01-01 10:00',
-    updatedBy: 'orhan.vardar@gmail.com',
-    updatedAt: '2026-01-01 10:00',
-    activationStatus: 'Hesap Aktif (Şifre Belirlendi)'
-  }
-];
+export const initialSaaSTenants: SaaSTenant[] = [];
 
 export const initialSaaSOffers: SaaSOffer[] = [];
 
