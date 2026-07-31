@@ -242,7 +242,7 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
         if (!name) return false;
         const clean = name.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').trim();
         if (clean.includes('test osgb 3')) return false;
-        const keywords = ['girisim', 'mavi liman', 'soyyilmaz', 'oddn'];
+        const keywords = ['girisim', 'mavi liman', 'soyyilmaz', 'oddn', 'eses software'];
         if (clean === 'test osgb') return true;
         return keywords.some(kw => clean.includes(kw));
       };
