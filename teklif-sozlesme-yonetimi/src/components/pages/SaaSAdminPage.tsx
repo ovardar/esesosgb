@@ -1796,6 +1796,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                         className={`customer-table-row ${selectedTenant?.id === tenant.id ? 'customer-table-row-active' : ''}`}
                         onClick={() => {
                           setSelectedTenant(tenant);
+                          setEditableTenant({ ...tenant });
                           setDetailTab('info');
                         }}
                         style={{ cursor: 'pointer' }}
