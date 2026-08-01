@@ -40,6 +40,9 @@ export function SettingsPage({
     if (['users-permissions', 'templates', 'theme', 'import-export', 'billing'].includes(hash)) {
       return hash as any;
     }
+    return 'users-permissions';
+  });
+
   const handleTabChange = (tab: 'users-permissions' | 'templates' | 'theme' | 'import-export' | 'billing') => {
     setActiveTab(tab);
     window.location.hash = tab;
@@ -269,7 +272,7 @@ export function SettingsPage({
       )}
 
       {/* TAB 3: BILLING & SUBSCRIPTION */}
-      {activeTab === 'billing' && showBillingTab && (
+      {activeTab === 'billing' && showBillingTab && impersonatedTenant && (
         <BillingTab
           activeTenant={impersonatedTenant}
           onUpdateTenant={(t) => {
