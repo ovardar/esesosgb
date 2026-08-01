@@ -290,7 +290,8 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
   // UI Modals & Drawers
   const [selectedTenant, setSelectedTenant] = useState<SaaSTenant | null>(null);
-  const [detailTab, setDetailTab] = useState<'info' | 'license' | 'billing' | 'modules' | 'notes' | 'users'>('info');
+  const [editableTenant, setEditableTenant] = useState<SaaSTenant | null>(null);
+  const [detailTab, setDetailTab] = useState<'info' | 'license' | 'offers' | 'contracts' | 'billing' | 'modules' | 'notes' | 'users'>('info');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
   const [activeInviteDialogInfo, setActiveInviteDialogInfo] = useState<{
@@ -1944,17 +1945,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
                         <td style={{ textAlign: 'right' }}>
                           <div style={{ display: 'inline-flex', gap: 4, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
-                            <button
-                              className="btn-action-ghost"
-                              style={{ padding: '4px 8px', fontSize: '0.75rem' }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleOpenEditTenantModal(tenant);
-                              }}
-                              title="Kiracıyı ve Logosunu Düzenle"
-                            >
-                              ✏️ Düzenle
-                            </button>
+                            
 
                             {(tenant.status === 'Aktif' || tenant.status === 'Askıda') && (
                               <button
@@ -3046,14 +3037,12 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       )}
 
       {/* Tenant Detail Modal / Drawer */}
-      {selectedTenant && (
+            {/* Tenant Detail Modal / Drawer */}
+      {selectedTenant && editableTenant && (
         <div
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
+            top: 0, left: 0, right: 0, bottom: 0,
             zIndex: 200,
             background: 'rgba(17, 24, 39, 0.65)',
             backdropFilter: 'blur(8px)',
@@ -3064,469 +3053,411 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             paddingBottom: '40px',
             overflowY: 'auto'
           }}
-          onClick={() => setSelectedTenant(null)}
         >
           <div
             className="panel panel-wide panel-elevated"
-            style={{ maxWidth: 740, width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: 28 }}
-            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 840, width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: 28 }}
           >
             <div className="section-heading">
               <div>
-                <p className="eyebrow">{selectedTenant.tenantCode} • Kiracı Detayı</p>
-                <h3>{selectedTenant.companyName}</h3>
+                <p className="eyebrow">{editableTenant.tenantCode} • Kiracı Yönetimi</p>
+                <h3>{editableTenant.companyName}</h3>
               </div>
-              <button
-                className="mini-badge"
-                style={{ cursor: 'pointer', background: 'transparent' }}
-                onClick={() => setSelectedTenant(null)}
-              >
-                ✕ Kapat
-              </button>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  className="secondary-action"
+                  onClick={() => {
+                    setSelectedTenant(null);
+                    setEditableTenant(null);
+                  }}
+                >
+                  İptal
+                </button>
+                <button
+                  className="primary-action"
+                  onClick={() => {
+                    setTenants(prev => {
+                      const next = prev.map(t => t.id === editableTenant.id ? editableTenant : t);
+                      saveCloudTenants(next);
+                      return next;
+                    });
+                    setSelectedTenant(null);
+                    setEditableTenant(null);
+                  }}
+                >
+                  💾 Değişiklikleri Kaydet
+                </button>
+              </div>
             </div>
 
             {/* Detail Tabs */}
-            <div className="filter-group" style={{ justifyContent: 'flex-start', marginBottom: 20 }}>
-              <button
-                className={`filter-chip ${detailTab === 'info' ? 'filter-chip-active' : ''}`}
-                onClick={() => setDetailTab('info')}
-              >
-                Firma Bilgileri
+            <div className="filter-group" style={{ justifyContent: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 8 }}>
+              <button className={`filter-chip ${detailTab === 'info' ? 'filter-chip-active' : ''}`} onClick={() => setDetailTab('info')}>
+                🏢 Firma Bilgileri
               </button>
-              <button
-                className={`filter-chip ${detailTab === 'license' ? 'filter-chip-active' : ''}`}
-                onClick={() => setDetailTab('license')}
-              >
-                Lisans & Paket
+              <button className={`filter-chip ${detailTab === 'license' ? 'filter-chip-active' : ''}`} onClick={() => setDetailTab('license')}>
+                🔑 Lisans & Paket
               </button>
-              <button
-                className={`filter-chip ${detailTab === 'billing' ? 'filter-chip-active' : ''}`}
-                onClick={() => setDetailTab('billing')}
-              >
-                Sözleşme, Fatura & Teklifler
+              <button className={`filter-chip ${detailTab === 'offers' ? 'filter-chip-active' : ''}`} onClick={() => setDetailTab('offers')}>
+                📄 Teklifler
               </button>
-              <button
-                className={`filter-chip ${detailTab === 'modules' ? 'filter-chip-active' : ''}`}
-                onClick={() => setDetailTab('modules')}
-              >
-                Modül Yetkileri
+              <button className={`filter-chip ${detailTab === 'contracts' ? 'filter-chip-active' : ''}`} onClick={() => setDetailTab('contracts')}>
+                📝 Sözleşmeler
               </button>
-              <button
-                className={`filter-chip ${detailTab === 'notes' ? 'filter-chip-active' : ''}`}
-                onClick={() => setDetailTab('notes')}
-              >
-                Notlar
+              <button className={`filter-chip ${detailTab === 'billing' ? 'filter-chip-active' : ''}`} onClick={() => setDetailTab('billing')}>
+                💳 Faturalar
               </button>
-              <button
-                className={`filter-chip ${detailTab === 'users' ? 'filter-chip-active' : ''}`}
-                onClick={() => setDetailTab('users')}
-              >
-                Kullanıcılar
+              <button className={`filter-chip ${detailTab === 'users' ? 'filter-chip-active' : ''}`} onClick={() => setDetailTab('users')}>
+                👥 Kullanıcılar
               </button>
             </div>
 
             {/* Tab Contents */}
             {detailTab === 'info' && (
-              <div className="customer-firm-layout" style={{ display: 'grid', gap: 16 }}>
-                <dl className="customer-info-grid">
-                  <div>
-                    <dt>Yetkili Ad Soyad</dt>
-                    <dd>{selectedTenant.contactName}</dd>
+              <div className="new-customer-grid" style={{ marginBottom: 20 }}>
+                <label className="select-field">
+                  <span>Firma Ünvanı</span>
+                  <input type="text" value={editableTenant.companyName} onChange={e => setEditableTenant({ ...editableTenant, companyName: e.target.value })} />
+                </label>
+                <label className="select-field">
+                  <span>Yetkili Ad Soyad</span>
+                  <input type="text" value={editableTenant.contactName} onChange={e => setEditableTenant({ ...editableTenant, contactName: e.target.value })} />
+                </label>
+                <label className="select-field">
+                  <span>E-posta Adresi</span>
+                  <input type="email" value={editableTenant.email} onChange={e => setEditableTenant({ ...editableTenant, email: e.target.value })} />
+                </label>
+                <label className="select-field">
+                  <span>Telefon</span>
+                  <input type="text" value={editableTenant.phone} onChange={e => setEditableTenant({ ...editableTenant, phone: e.target.value })} />
+                </label>
+                <label className="select-field">
+                  <span>Şehir</span>
+                  <input type="text" value={editableTenant.city} onChange={e => setEditableTenant({ ...editableTenant, city: e.target.value })} />
+                </label>
+                <label className="select-field">
+                  <span>Logo URL</span>
+                  <input type="text" value={editableTenant.logoUrl || ''} onChange={e => setEditableTenant({ ...editableTenant, logoUrl: e.target.value })} />
+                </label>
+                <label className="select-field">
+                  <span>Abonelik Durumu</span>
+                  <select value={editableTenant.status} onChange={e => setEditableTenant({ ...editableTenant, status: e.target.value as any })}>
+                    <option value="Aday">Aday Müşteri</option>
+                    <option value="Demo">Demo / Deneme</option>
+                    <option value="Aktif">Aktif Abonelik</option>
+                    <option value="Askıda">Askıda / Dondurulmuş</option>
+                    <option value="İptal">İptal Edilmiş</option>
+                  </select>
+                </label>
+                
+                <div style={{ gridColumn: '1 / -1', marginTop: 20 }}>
+                  <div className="module-card module-card-flat" style={{ padding: 18 }}>
+                    <p className="eyebrow">Aktivasyon & Davet Takibi</p>
+                    <h4 style={{ margin: '4px 0 8px' }}>Durum: {editableTenant.activationStatus || 'Davet Gönderilmedi'}</h4>
+                    <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+                      <button className="primary-action" style={{ fontSize: '0.85rem' }} onClick={() => handleSendInvitation(editableTenant.id, editableTenant.email, editableTenant.companyName)}>
+                        ✉️ Davet & Şifre Bağlantısı Gönder
+                      </button>
+                      <button className="secondary-action" style={{ fontSize: '0.85rem' }} onClick={() => handleCopyInviteLink(editableTenant.id)}>
+                        📋 Magic Link Kopyala
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <dt>E-posta</dt>
-                    <dd>{selectedTenant.email}</dd>
-                  </div>
-                  <div>
-                    <dt>Telefon</dt>
-                    <dd>{selectedTenant.phone}</dd>
-                  </div>
-                  <div>
-                    <dt>Şehir</dt>
-                    <dd>{selectedTenant.city}</dd>
-                  </div>
-                  <div>
-                    <dt>Kaydı Oluşturan</dt>
-                    <dd>{selectedTenant.createdBy || activeUserEmail}</dd>
-                  </div>
-                  <div>
-                    <dt>Oluşturulma Tarihi</dt>
-                    <dd>{selectedTenant.createdAt || selectedTenant.startDate}</dd>
-                  </div>
-                  <div>
-                    <dt>Son Güncelleyen</dt>
-                    <dd>{selectedTenant.updatedBy || activeUserEmail}</dd>
-                  </div>
-
-                  <div>
-                    <dt>Son İşlem Zamanı</dt>
-                    <dd>{selectedTenant.updatedAt || selectedTenant.lastLoginAt}</dd>
-                  </div>
-                </dl>
-
-                <div className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 18 }}>
-                  <p className="eyebrow">Aktivasyon & Davet Takibi</p>
-                  <h4 style={{ margin: '4px 0 8px' }}>
-                    Durum: {selectedTenant.activationStatus || 'Davet Gönderilmedi'}
-                  </h4>
-
-                  <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
-                    <button
-                      className="primary-action"
-                      style={{ fontSize: '0.85rem' }}
-                      onClick={() =>
-                        handleSendInvitation(selectedTenant.id, selectedTenant.email, selectedTenant.companyName)
-                      }
-                    >
-                      ✉️ Davet & Şifre Bağlantısı Gönder
-                    </button>
-                    <button
-                      className="secondary-action"
-                      style={{ fontSize: '0.85rem' }}
-                      onClick={() => handleCopyInviteLink(selectedTenant.id)}
-                    >
-                      📋 Magic Link Kopyala
-                    </button>
-                  </div>
-                </div>
-
-                <div className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 18 }}>
-                  <p className="eyebrow">Hızlı Giriş Bağlantısı</p>
-                  <h4 style={{ margin: '4px 0 8px' }}>{selectedTenant.companyName} CRM Modu</h4>
-                  <p className="form-hint" style={{ marginTop: 0, marginBottom: 14 }}>
-                    Bu kiracının kendi müşterilerini yönettiği Offer & Contract alanına geçiş yapmak için aşağıdaki butonu kullanın.
-                  </p>
-                  <button
-                    className="primary-action"
-                    style={{ width: '100%' }}
-                    onClick={() => {
-                      if (onImpersonateTenant) onImpersonateTenant(selectedTenant);
-                      else if (onNavigateSection) onNavigateSection('customers');
-                    }}
-                  >
-                    🚀 {selectedTenant.companyName} CRM Ekranına Geç
-                  </button>
                 </div>
               </div>
             )}
 
             {detailTab === 'license' && (
-              <div style={{ display: 'grid', gap: 16 }}>
-                <dl className="customer-info-grid">
-                  <div>
-                    <dt>Aktif Paket</dt>
-                    <dd>
-                      <strong>{selectedTenant.package ? `${selectedTenant.package} Paketi` : 'Paket Seçilmedi'}</strong>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Faturalama Periyodu</dt>
-                    <dd>{selectedTenant.billingCycle || 'Belirtilmedi'}</dd>
-                  </div>
-                  <div>
-                    <dt>Lisans Ücreti</dt>
-                    <dd>
-                      {selectedTenant.monthlyFee > 0
-                        ? selectedTenant.billingCycle === 'Yıllık' && selectedTenant.annualFee
-                          ? `₺${selectedTenant.annualFee.toLocaleString('tr-TR')} / yıl (₺${selectedTenant.monthlyFee.toLocaleString('tr-TR')}/ay)`
-                          : `₺${selectedTenant.monthlyFee.toLocaleString('tr-TR')} / ay`
-                        : 'Belirtilmedi (Aday Müşteri)'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Kullanıcı Limiti & Kullanım</dt>
-                    <dd>
-                      {selectedTenant.maxUsers > 0
-                        ? `${selectedTenant.activeUsers} aktif / ${selectedTenant.maxUsers} max kullanıcı (%${Math.round((selectedTenant.activeUsers / selectedTenant.maxUsers) * 100)})`
-                        : 'Sınır Tanımlanmadı (Aday)'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Otomatik Yenileme</dt>
-                    <dd>{selectedTenant.autoRenew ? 'Evet (Aktif)' : 'Hayır'}</dd>
-                  </div>
-                </dl>
+              <div className="new-customer-grid" style={{ marginBottom: 20 }}>
+                <label className="select-field">
+                  <span>Paket Seçimi</span>
+                  <select value={editableTenant.package} onChange={e => setEditableTenant({ ...editableTenant, package: e.target.value as any })}>
+                    {packages.map(p => (
+                      <option key={p.id} value={p.name.split(' ')[0]}>{p.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="select-field">
+                  <span>Kullanıcı Limiti</span>
+                  <input type="number" value={editableTenant.maxUsers} onChange={e => setEditableTenant({ ...editableTenant, maxUsers: Number(e.target.value) })} />
+                </label>
+                <label className="select-field">
+                  <span>Ödeme Döngüsü</span>
+                  <select value={editableTenant.billingCycle} onChange={e => {
+                    const cycle = e.target.value as any;
+                    setEditableTenant({ ...editableTenant, billingCycle: cycle });
+                  }}>
+                    <option value="Aylık">Aylık</option>
+                    <option value="Yıllık">Yıllık</option>
+                  </select>
+                </label>
+                <label className="select-field">
+                  <span>Aylık Tutar (₺)</span>
+                  <input type="number" value={editableTenant.monthlyFee} onChange={e => {
+                    const val = Number(e.target.value);
+                    setEditableTenant({ ...editableTenant, monthlyFee: val, annualFee: editableTenant.billingCycle === 'Yıllık' ? val * 12 : editableTenant.annualFee });
+                  }} />
+                </label>
+                <label className="select-field">
+                  <span>Yıllık Tutar (₺)</span>
+                  <input type="number" value={editableTenant.annualFee} disabled={editableTenant.billingCycle === 'Aylık'} style={{ backgroundColor: editableTenant.billingCycle === 'Aylık' ? '#1e293b' : undefined }} onChange={e => setEditableTenant({ ...editableTenant, annualFee: Number(e.target.value) })} />
+                </label>
+                <label className="select-field">
+                  <span>Ödeme Durumu</span>
+                  <select value={editableTenant.paymentStatus} onChange={e => setEditableTenant({ ...editableTenant, paymentStatus: e.target.value as any })}>
+                    <option value="Sorunsuz">Sorunsuz</option>
+                    <option value="Bekliyor">Bekliyor</option>
+                    <option value="Gecikmede">Gecikmede</option>
+                  </select>
+                </label>
+                <label className="select-field">
+                  <span>Sağlık Durumu</span>
+                  <select value={editableTenant.healthStatus} onChange={e => setEditableTenant({ ...editableTenant, healthStatus: e.target.value as any })}>
+                    <option value="Mükemmel">Mükemmel</option>
+                    <option value="İyi">İyi</option>
+                    <option value="Riskli">Riskli</option>
+                  </select>
+                </label>
+                <label className="select-field new-customer-full">
+                  <span>Anlaşma Notları</span>
+                  <textarea rows={3} value={editableTenant.notes} onChange={e => setEditableTenant({ ...editableTenant, notes: e.target.value })} />
+                </label>
+              </div>
+            )}
 
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
-                  <button
-                    className="primary-action"
-                    style={{ width: '100%' }}
-                    onClick={() => {
-                      setEditingLicenseTenant(selectedTenant);
-                      setLicenseEditForm({
-                        package: selectedTenant.package || 'Pro',
-                        status: selectedTenant.status,
-                        billingCycle: selectedTenant.billingCycle || 'Yıllık',
-                        monthlyFee: selectedTenant.monthlyFee || 14500,
-                        annualFee: selectedTenant.annualFee || 145000,
-                        maxUsers: selectedTenant.maxUsers || 15,
-                        notes: selectedTenant.notes || ''
-                      });
-                    }}
-                  >
-                    ✏️ Anlaşma & Paket Bilgilerini Düzenle (Pazarlık Güncelle)
-                  </button>
+            {detailTab === 'offers' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <h4>Kiracıya Ait Teklifler</h4>
+                  <button className="primary-action" onClick={() => {
+                    setOfferForm({
+                      tenantId: editableTenant.id,
+                      packageName: editableTenant.package || 'Pro',
+                      billingCycle: editableTenant.billingCycle === 'Yıllık' ? 'Yıllık' : 'Aylık',
+                      monthlyFee: editableTenant.monthlyFee || 14500,
+                      annualFee: editableTenant.annualFee || 145000,
+                      validDays: 14,
+                      notes: ''
+                    });
+                    setIsOfferModalOpen(true);
+                  }}>+ Yeni Teklif Oluştur</button>
                 </div>
+                {offers.filter(o => o.tenantId === editableTenant.id).length > 0 ? (
+                  <div className="customer-table-wrap">
+                    <table className="customer-table">
+                      <thead>
+                        <tr>
+                          <th>Tarih</th>
+                          <th>Paket</th>
+                          <th>Tutar</th>
+                          <th>Durum</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {offers.filter(o => o.tenantId === editableTenant.id).map(o => (
+                          <tr key={o.id}>
+                            <td>{o.createdAt}</td>
+                            <td>{o.packageName} ({o.billingCycle})</td>
+                            <td>₺{(o.annualFee || o.monthlyFee).toLocaleString('tr-TR')}</td>
+                            <td><span className="mini-badge">{o.status}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="form-hint">Bu kiracıya ait teklif bulunmamaktadır.</p>
+                )}
+              </div>
+            )}
+
+            {detailTab === 'contracts' && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <h4>Abonelik Sözleşmeleri</h4>
+                  <button className="primary-action" onClick={() => {
+                    setContractForm({
+                      tenantId: editableTenant.id,
+                      packageName: editableTenant.package || 'Pro',
+                      billingCycle: editableTenant.billingCycle === 'Yıllık' ? 'Yıllık' : 'Aylık',
+                      monthlyFee: editableTenant.monthlyFee || 14500,
+                      annualFee: editableTenant.annualFee || 145000,
+                      startDate: new Date().toISOString().split('T')[0],
+                      endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                      notes: ''
+                    });
+                    setIsContractModalOpen(true);
+                  }}>+ Yeni Sözleşme Oluştur</button>
+                </div>
+                {contracts.filter(c => c.tenantId === editableTenant.id).length > 0 ? (
+                  <div className="customer-table-wrap">
+                    <table className="customer-table">
+                      <thead>
+                        <tr>
+                          <th>Sözleşme No</th>
+                          <th>Paket</th>
+                          <th>Başlangıç</th>
+                          <th>Bitiş</th>
+                          <th>Durum</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {contracts.filter(c => c.tenantId === editableTenant.id).map(c => (
+                          <tr key={c.id}>
+                            <td>{c.contractNumber}</td>
+                            <td>{c.packageName} ({c.billingCycle})</td>
+                            <td>{c.startDate}</td>
+                            <td>{c.endDate}</td>
+                            <td><span className="mini-badge">{c.status}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="form-hint">Bu kiracıya ait sözleşme bulunmamaktadır.</p>
+                )}
               </div>
             )}
 
             {detailTab === 'billing' && (
-              <div style={{ display: 'grid', gap: 18 }}>
-                <div className="section-heading" style={{ marginBottom: 8 }}>
-                  <div>
-                    <p className="eyebrow">Teklif, Sözleşme & Tahsilatlar</p>
-                    <h4 style={{ margin: 0 }}>Bu Kiracı İçin SaaS Finansal Geçmiş</h4>
-                  </div>
-                  <button
-                    className="primary-action"
-                    style={{ fontSize: '0.85rem' }}
-                    onClick={() => {
-                      setOfferForm({
-                        tenantId: selectedTenant.id,
-                        packageName: selectedTenant.package || 'Pro',
-                        billingCycle: selectedTenant.billingCycle === 'Yıllık' ? 'Yıllık' : 'Aylık',
-                        monthlyFee: selectedTenant.monthlyFee || 14500,
-                        annualFee: selectedTenant.annualFee || 145000,
-                        validDays: 14,
-                        notes: ''
-                      });
-                      setIsOfferModalOpen(true);
-                    }}
-                  >
-                    📄 Bu Kiracıya Özel SaaS Teklifi Hazırla
-                  </button>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <h4>Faturalar</h4>
+                  <button className="primary-action" onClick={() => {
+                    // Logic to open invoice modal (placeholder)
+                    alert('Fatura kesme modülü yakında eklenecek.');
+                  }}>+ Yeni Fatura Kes</button>
                 </div>
-
-                <div className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 16 }}>
-                  <span className="eyebrow" style={{ display: 'block', marginBottom: 8 }}>
-                    SaaS Lisans Faturaları & Tahsilat Logları
-                  </span>
-                  {invoices.filter((i) => i.tenantId === selectedTenant.id).length > 0 ? (
-                    <div className="customer-table-wrap">
-                      <table className="customer-table" style={{ fontSize: '0.84rem' }}>
-                        <thead>
-                          <tr>
-                            <th>Fatura No</th>
-                            <th>Dönem</th>
-                            <th>Tutar</th>
-                            <th>Vade</th>
-                            <th>Durum</th>
+                {invoices.filter(i => i.tenantId === editableTenant.id).length > 0 ? (
+                  <div className="customer-table-wrap">
+                    <table className="customer-table">
+                      <thead>
+                        <tr>
+                          <th>Fatura No</th>
+                          <th>Dönem</th>
+                          <th>Tutar</th>
+                          <th>Vade</th>
+                          <th>Durum</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invoices.filter(i => i.tenantId === editableTenant.id).map(inv => (
+                          <tr key={inv.id}>
+                            <td><strong>{inv.invoiceNumber}</strong></td>
+                            <td>{inv.billingPeriod}</td>
+                            <td>₺{inv.amount.toLocaleString('tr-TR')}</td>
+                            <td>{inv.dueDate}</td>
+                            <td><span className="mini-badge">{inv.status}</span></td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {invoices
-                            .filter((i) => i.tenantId === selectedTenant.id)
-                            .map((inv) => (
-                              <tr key={inv.id}>
-                                <td><strong>{inv.invoiceNumber}</strong></td>
-                                <td>{inv.billingPeriod}</td>
-                                <td>₺{inv.amount.toLocaleString('tr-TR')}</td>
-                                <td>{inv.dueDate}</td>
-                                <td><span className="mini-badge">{inv.status}</span></td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <p className="form-hint" style={{ margin: 0 }}>Henüz bu kiracı için fatura kaydı oluşmadı.</p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {detailTab === 'modules' && (
-              <div style={{ display: 'grid', gap: 16 }}>
-                <div className="theme-picker-grid" style={{ gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
-                  <label className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedTenant.modulesEnabled.crm}
-                      onChange={(e) => {
-                        const val = e.target.checked;
-                        const updatedModules = { ...selectedTenant.modulesEnabled, crm: val };
-                        setSelectedTenant({ ...selectedTenant, modulesEnabled: updatedModules });
-                        setTenants((prev) => {
-                          const next = prev.map((t) => t.id === selectedTenant.id ? { ...t, modulesEnabled: updatedModules } : t);
-                          saveCloudTenants(next);
-                          return next;
-                        });
-                      }}
-                    />
-                    <div>
-                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Müşteri CRM Modülü</strong>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Müşteri ilişkileri & kayıtları</span>
-                    </div>
-                  </label>
-
-                  <label className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedTenant.modulesEnabled.offers}
-                      onChange={(e) => {
-                        const val = e.target.checked;
-                        const updatedModules = { ...selectedTenant.modulesEnabled, offers: val };
-                        setSelectedTenant({ ...selectedTenant, modulesEnabled: updatedModules });
-                        setTenants((prev) => {
-                          const next = prev.map((t) => t.id === selectedTenant.id ? { ...t, modulesEnabled: updatedModules } : t);
-                          saveCloudTenants(next);
-                          return next;
-                        });
-                      }}
-                    />
-                    <div>
-                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Teklif Modülü</strong>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Fiyatlandırma & onay teklifleri</span>
-                    </div>
-                  </label>
-
-                  <label className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedTenant.modulesEnabled.contracts}
-                      onChange={(e) => {
-                        const val = e.target.checked;
-                        const updatedModules = { ...selectedTenant.modulesEnabled, contracts: val };
-                        setSelectedTenant({ ...selectedTenant, modulesEnabled: updatedModules });
-                        setTenants((prev) => {
-                          const next = prev.map((t) => t.id === selectedTenant.id ? { ...t, modulesEnabled: updatedModules } : t);
-                          saveCloudTenants(next);
-                          return next;
-                        });
-                      }}
-                    />
-                    <div>
-                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Hizmet Sözleşmeleri Modülü</strong>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Resmi sözleşmeler & onaylar</span>
-                    </div>
-                  </label>
-
-                  <label className="module-card module-card-flat" style={{ minHeight: 'auto', padding: 14, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', margin: 0 }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedTenant.modulesEnabled.documents}
-                      onChange={(e) => {
-                        const val = e.target.checked;
-                        const updatedModules = { ...selectedTenant.modulesEnabled, documents: val };
-                        setSelectedTenant({ ...selectedTenant, modulesEnabled: updatedModules });
-                        setTenants((prev) => {
-                          const next = prev.map((t) => t.id === selectedTenant.id ? { ...t, modulesEnabled: updatedModules } : t);
-                          saveCloudTenants(next);
-                          return next;
-                        });
-                      }}
-                    />
-                    <div>
-                      <strong style={{ display: 'block', fontSize: '0.9rem' }}>Doküman Kütüphanesi</strong>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Arşivleme & PDF kütüphanesi</span>
-                    </div>
-                  </label>
-                </div>
-                <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>Modül yetkileri anında buluta kaydedilir.</p>
-              </div>
-            )}
-
-            {detailTab === 'notes' && (
-              <div style={{ display: 'grid', gap: 12 }}>
-                <label className="select-field">
-                  <span>Yazılım Firması Özel İç Notları</span>
-                  <textarea
-                    rows={5}
-                    value={selectedTenant.notes || ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSelectedTenant((prev) => (prev ? { ...prev, notes: val } : null));
-                      setTenants((prev) => {
-                        const next = prev.map((t) => (t.id === selectedTenant.id ? { ...t, notes: val } : t));
-                        saveCloudTenants(next);
-                        return next;
-                      });
-                    }}
-                    placeholder="Müşteri ilişkileri, özel talepler veya ödeme detayları..."
-                  />
-                </label>
-                <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>Notlar siz yazdıkça otomatik olarak buluta kaydedilir.</p>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="form-hint">Bu kiracı için fatura kaydı bulunmamaktadır.</p>
+                )}
               </div>
             )}
 
             {detailTab === 'users' && (() => {
               let usersMap: any = {};
-              try {
-                usersMap = JSON.parse(localStorage.getItem('crm_tenant_users_map_v2') || '{}');
-              } catch(e) {}
-              const tUsers = usersMap[selectedTenant.id] || [];
+              try { usersMap = JSON.parse(localStorage.getItem('crm_tenant_users_map_v2') || '{}'); } catch(e) {}
+              const tUsers = usersMap[editableTenant.id] || [];
+              
+              const handleInviteUser = (e: any) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const name = fd.get('name') as string;
+                const email = fd.get('email') as string;
+                const role = fd.get('role') as string;
+                
+                const newUser = { id: `u-${Date.now()}`, name, email, role };
+                usersMap[editableTenant.id] = [...tUsers, newUser];
+                localStorage.setItem('crm_tenant_users_map_v2', JSON.stringify(usersMap));
+                
+                e.target.reset();
+                setDetailTab('notes'); setTimeout(() => setDetailTab('users'), 0);
+                alert(`${email} adresine davet gönderildi.`);
+              };
 
               const handleDeleteUser = (usr: any) => {
                 if (window.confirm(`"${usr.name}" kullanıcısını silmek istediğinize emin misiniz?`)) {
-                   const updatedList = tUsers.filter((u: any) => u.id !== usr.id);
-                   usersMap[selectedTenant.id] = updatedList;
+                   usersMap[editableTenant.id] = tUsers.filter((u: any) => u.id !== usr.id);
                    localStorage.setItem('crm_tenant_users_map_v2', JSON.stringify(usersMap));
-                   // Force re-render
-                   setDetailTab('notes');
-                   setTimeout(() => setDetailTab('users'), 0);
                    
-                   // Remove from passwords map to instantly revoke login
                    try {
                      const passMap = JSON.parse(localStorage.getItem('crm_user_passwords_map') || '{}');
-                     if (passMap[usr.email]) {
-                       delete passMap[usr.email];
-                       localStorage.setItem('crm_user_passwords_map', JSON.stringify(passMap));
-                     }
+                     if (passMap[usr.email]) { delete passMap[usr.email]; localStorage.setItem('crm_user_passwords_map', JSON.stringify(passMap)); }
                    } catch(e) {}
                    
-                   alert('Kullanıcı başarıyla silindi ve sisteme giriş yetkisi kaldırıldı.');
+                   setDetailTab('notes'); setTimeout(() => setDetailTab('users'), 0);
                 }
               };
 
               return (
-                <div style={{ marginTop: 20 }}>
-                  <h4 style={{ marginBottom: 16 }}>Sistem Kullanıcıları</h4>
-                  {tUsers.length === 0 ? (
-                    <div style={{ background: 'var(--surface-strong)', padding: 16, borderRadius: 10, border: '1px solid var(--border)' }}>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>Bu kiracı için tanımlanmış ek kullanıcı bulunmamaktadır. Ana yetkili ({selectedTenant.contactName}) sisteme giriş yapabilir.</p>
-                    </div>
-                  ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                  <div>
+                    <h4 style={{ marginBottom: 16 }}>Sistem Kullanıcıları</h4>
                     <div style={{ display: 'grid', gap: 10 }}>
+                      <div style={{ background: 'var(--surface-strong)', padding: '12px 16px', borderRadius: 10, border: '1px solid var(--border)' }}>
+                        <strong style={{ display: 'block', fontSize: '0.95rem' }}>{editableTenant.contactName} (Ana Yetkili)</strong>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{editableTenant.email} | Admin</span>
+                      </div>
                       {tUsers.map((usr: any) => (
                         <div key={usr.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--surface-strong)', padding: '12px 16px', borderRadius: 10, border: '1px solid var(--border)' }}>
                           <div>
                             <strong style={{ display: 'block', fontSize: '0.95rem' }}>{usr.name}</strong>
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{usr.email} | {usr.role}</span>
                           </div>
-                          <div>
-                            <button
-                              className="btn-action-ghost"
-                              style={{ fontSize: '0.75rem', padding: '6px 12px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)' }}
-                              onClick={() => handleDeleteUser(usr)}
-                            >
-                              Sil / Yetkisini Al
-                            </button>
-                          </div>
+                          <button className="btn-action-ghost" style={{ fontSize: '0.75rem', padding: '6px 12px', color: '#ef4444' }} onClick={() => handleDeleteUser(usr)}>Sil</button>
                         </div>
                       ))}
                     </div>
-                  )}
+                  </div>
+                  <div>
+                    <h4 style={{ marginBottom: 16 }}>Yeni Kullanıcı Davet Et</h4>
+                    <form onSubmit={handleInviteUser} className="new-customer-form" style={{ padding: 16, background: 'var(--surface-strong)', borderRadius: 10 }}>
+                      <div className="new-customer-grid" style={{ gridTemplateColumns: '1fr', gap: 12 }}>
+                        <label className="select-field">
+                          <span>Ad Soyad</span>
+                          <input type="text" name="name" required />
+                        </label>
+                        <label className="select-field">
+                          <span>E-posta Adresi</span>
+                          <input type="email" name="email" required />
+                        </label>
+                        <label className="select-field">
+                          <span>Yetki Rolü</span>
+                          <select name="role" defaultValue="Admin">
+                            <option value="Admin">Admin (Tam Yetki)</option>
+                            <option value="Standart Kullanıcı">Standart Kullanıcı</option>
+                            <option value="Sadece Görüntüleme">Sadece Görüntüleme</option>
+                          </select>
+                        </label>
+                      </div>
+                      <button type="submit" className="primary-action" style={{ width: '100%', marginTop: 12 }}>Davet Gönder</button>
+                    </form>
+                  </div>
                 </div>
               );
             })()}
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 24 }}>
-              <button className="secondary-action" onClick={() => setSelectedTenant(null)}>
-                Kapat
-              </button>
+            <div style={{ marginTop: 24, borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
               <button
-                className="primary-action"
+                className="btn-action-primary"
                 onClick={() => {
-                  if (onImpersonateTenant) onImpersonateTenant(selectedTenant);
+                  if (onImpersonateTenant) onImpersonateTenant(editableTenant);
                   else if (onNavigateSection) onNavigateSection('customers');
                 }}
               >
-                Kiracı CRM'ine Geç →
+                🚀 Kiracı CRM'ine Geç →
               </button>
             </div>
           </div>
         </div>
       )}
+
 
       {/* Add New Tenant Modal */}
       {isAddModalOpen && (
