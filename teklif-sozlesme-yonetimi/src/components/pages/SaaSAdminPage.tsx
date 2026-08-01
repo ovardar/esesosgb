@@ -1793,6 +1793,11 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                       <tr
                         key={tenant.id}
                         className={`customer-table-row ${selectedTenant?.id === tenant.id ? 'customer-table-row-active' : ''}`}
+                        onClick={() => {
+                          setSelectedTenant(tenant);
+                          setDetailTab('info');
+                        }}
+                        style={{ cursor: 'pointer' }}
                       >
                         <td>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1832,7 +1837,10 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                             <div>
                               <strong style={{ fontSize: '0.95rem', display: 'block' }}>{tenant.companyName}</strong>
                               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                                {tenant.tenantCode} • {tenant.city} • {tenant.contactName}
+                                {tenant.tenantCode} • {tenant.city}
+                              </span>
+                              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>
+                                {tenant.contactName} ({tenant.email})
                               </span>
                             </div>
                           </div>
@@ -1935,21 +1943,14 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                         </td>
 
                         <td style={{ textAlign: 'right' }}>
-                          <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
+                          <div style={{ display: 'inline-flex', gap: 4, justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
                             <button
                               className="btn-action-ghost"
-                              onClick={() => {
-                                setSelectedTenant(tenant);
-                                setDetailTab('info');
+                              style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEditTenantModal(tenant);
                               }}
-                              title="Kiracı Detayları"
-                            >
-                              👁️ Detay
-                            </button>
-
-                            <button
-                              className="btn-action-ghost"
-                              onClick={() => handleOpenEditTenantModal(tenant)}
                               title="Kiracıyı ve Logosunu Düzenle"
                             >
                               ✏️ Düzenle
@@ -1958,8 +1959,11 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                             {(tenant.status === 'Aktif' || tenant.status === 'Askıda') && (
                               <button
                                 className="btn-action-ghost"
-                                style={{ color: tenant.status === 'Aktif' ? '#ef4444' : '#10b981' }}
-                                onClick={() => handleToggleTenantStatus(tenant)}
+                                style={{ padding: '4px 8px', fontSize: '0.75rem', color: tenant.status === 'Aktif' ? '#ef4444' : '#10b981' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleToggleTenantStatus(tenant);
+                                }}
                                 title={tenant.status === 'Aktif' ? "Kiracıyı Askıya Al" : "Kiracıyı Aktife Al"}
                               >
                                 {tenant.status === 'Aktif' ? '⏸ Askıya Al' : '▶ Aktife Al'}
@@ -1968,12 +1972,14 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
                             <button
                               className="btn-action-primary"
-                              onClick={() => {
+                              style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 if (onImpersonateTenant) onImpersonateTenant(tenant);
                                 else if (onNavigateSection) onNavigateSection('customers');
                               }}
                             >
-                              🚀 Kiracı CRM'ine Geç →
+                              🚀 CRM'e Geç
                             </button>
                           </div>
                         </td>
