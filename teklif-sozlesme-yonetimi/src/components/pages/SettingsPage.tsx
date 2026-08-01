@@ -7,6 +7,7 @@ import { PermissionsPage } from './PermissionsPage';
 import { TenantTemplatesTab } from './TenantTemplatesTab';
 import { ImportExportTab } from './ImportExportTab';
 import { BillingTab } from './BillingTab';
+import { resolveUserRoleInfo } from '../../lib/userRoles';
 
 type SettingsPageProps = {
   activeTheme: ThemeId;
@@ -39,13 +40,15 @@ export function SettingsPage({
     if (['users-permissions', 'templates', 'theme', 'import-export', 'billing'].includes(hash)) {
       return hash as any;
     }
-    return 'users-permissions';
-  });
-
   const handleTabChange = (tab: 'users-permissions' | 'templates' | 'theme' | 'import-export' | 'billing') => {
     setActiveTab(tab);
     window.location.hash = tab;
   };
+
+  const currentUserEmail = localStorage.getItem('crm_user_session') || '';
+  const userRole = useMemo(() => resolveUserRoleInfo(currentUserEmail, isSuperAdmin, impersonatedTenant), [currentUserEmail, isSuperAdmin, impersonatedTenant]);
+  
+  const showBillingTab = userRole.isTenantAdmin;
 
   const activeThemeMeta = useMemo(() => themes.find((theme) => theme.id === activeTheme) ?? themes[0], [activeTheme]);
 
@@ -147,7 +150,7 @@ export function SettingsPage({
             👥 Kullanıcılar ve Yetkiler
           </button>
 
-          {impersonatedTenant && (
+          {showBillingTab && (
             <button
               type="button"
               onClick={() => handleTabChange('billing')}
@@ -266,14 +269,16 @@ export function SettingsPage({
       )}
 
       {/* TAB 3: BILLING & SUBSCRIPTION */}
-      {activeTab === 'billing' && impersonatedTenant && (
+      {activeTab === 'billing' && showBillingTab && (
         <BillingTab
           activeTenant={impersonatedTenant}
           onUpdateTenant={(t) => {
-            // Update local tenant state here if needed, 
-            // since we're using impersonatedTenant, changes will sync via cloudDb observer
-            // but we might want to reload page or refresh session in real app
-            window.location.reload();
+            // Update local state if needed (or just trigger sync)
+            try {
+              const bc = new BroadcastChannel('crm_saas_tenant_sync');
+              bc.postMessage({ type: 'REFRESH' });
+              bc.close();
+            } catch (e) {}
           }}
         />
       )}

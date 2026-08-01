@@ -370,7 +370,19 @@ function App() {
         if (byContact) {
           target = byContact;
         } else {
-          target = null;
+          try {
+            const usersMap = JSON.parse(localStorage.getItem('crm_tenant_users_map_v2') || '{}');
+            for (const tenantId in usersMap) {
+              const users = usersMap[tenantId];
+              if (Array.isArray(users) && users.some((u: any) => u.email.trim().toLowerCase() === userEmailClean)) {
+                const foundParent = tenants.find((t) => t.id === tenantId || t.tenantCode === tenantId);
+                if (foundParent) {
+                  target = foundParent;
+                  break;
+                }
+              }
+            }
+          } catch (e) {}
         }
       }
     }

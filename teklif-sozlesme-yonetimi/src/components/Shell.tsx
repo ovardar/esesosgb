@@ -48,7 +48,7 @@ export function Shell({
   const activeTenantName = activeTenant?.companyName;
   const activeTenantContactName = activeTenant?.contactName;
   const activeTenantLogo = activeTenant?.logoUrl;
-  const isDemoUser = activeTenant?.status === 'Demo';
+  const isDemoUser = activeTenant?.status?.toLowerCase() === 'demo';
 
   const visibleSections = sections.filter((sec) => {
     if (isSuperAdmin && !activeTenantName) {
@@ -198,6 +198,11 @@ export function Shell({
           ) : null}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {isDemoUser && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.4)', fontSize: '0.8rem', color: '#d97706', fontWeight: 800, boxShadow: '0 2px 6px rgba(245, 158, 11, 0.15)' }}>
+                ⏱️ DEMO SÜRÜMÜ
+              </div>
+            )}
             {currentUserEmail && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', borderRadius: 20, background: 'var(--surface-strong)', border: '1px solid var(--border)', fontSize: '0.8rem', color: 'var(--text-main)', boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)' }}>
                 <span style={{ fontSize: '0.88rem' }}>👤</span>

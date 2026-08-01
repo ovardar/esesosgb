@@ -35,26 +35,14 @@ export function resolveUserRoleInfo(
     };
   }
 
-  // 2. Active Tenant (Impersonation Mode or Active Tenant Session)
-  if (activeTenant) {
-    return {
-      name: activeTenant.contactName || activeTenant.companyName,
-      companyName: activeTenant.companyName,
-      roleName: 'Firma Yöneticisi (Admin)',
-      badgeLabel: '👑 Firma Yöneticisi (Admin)',
-      badgeColor: '#ffffff',
-      badgeBg: '#059669',
-      isSuperAdmin: false,
-      isTenantAdmin: true
-    };
-  }
-
-  // 3. Search in Tenant Users Map (users added in Kullanıcı İzinleri)
+  // 2. Search in Tenant Users Map (users added in Kullanıcı İzinleri)
   try {
     const savedUsersMapStr = localStorage.getItem('crm_tenant_users_map_v2');
     if (savedUsersMapStr) {
       const usersMap: Record<string, TenantUser[]> = JSON.parse(savedUsersMapStr);
-      for (const tenantId in usersMap) {
+      const searchTargetIds = activeTenant ? [activeTenant.id, activeTenant.tenantCode] : Object.keys(usersMap);
+      for (const tenantId of searchTargetIds) {
+        if (!tenantId) continue;
         const userList = usersMap[tenantId] || [];
         const foundUser = userList.find((u) => u.email.trim().toLowerCase() === cleanEmail);
         if (foundUser) {
@@ -73,6 +61,20 @@ export function resolveUserRoleInfo(
     }
   } catch (e) {
     console.warn('[userRoles] Error reading tenant users map:', e);
+  }
+
+  // 3. Active Tenant (Impersonation Mode or Active Tenant Session)
+  if (activeTenant) {
+    return {
+      name: activeTenant.contactName || activeTenant.companyName,
+      companyName: activeTenant.companyName,
+      roleName: 'Firma Yöneticisi (Admin)',
+      badgeLabel: '👑 Firma Yöneticisi (Admin)',
+      badgeColor: '#ffffff',
+      badgeBg: '#059669',
+      isSuperAdmin: false,
+      isTenantAdmin: true
+    };
   }
 
   // 4. Search in SaaS Tenants List by email, contactName, or company fallback
