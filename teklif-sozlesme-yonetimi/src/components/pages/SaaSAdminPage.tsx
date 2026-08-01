@@ -3136,10 +3136,35 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   <span>Şehir</span>
                   <input type="text" value={editableTenant.city} onChange={e => setEditableTenant({ ...editableTenant, city: e.target.value })} />
                 </label>
-                <label className="select-field">
-                  <span>Logo URL</span>
-                  <input type="text" value={editableTenant.logoUrl || ''} onChange={e => setEditableTenant({ ...editableTenant, logoUrl: e.target.value })} />
-                </label>
+                <div className="select-field" style={{ gridColumn: '1 / -1' }}>
+                  <span>Firma Logosu</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    {editableTenant.logoUrl ? (
+                      <div style={{ position: 'relative', width: 64, height: 64, border: '1px solid var(--border)', borderRadius: 8, background: '#fff', padding: 4 }}>
+                        <img src={editableTenant.logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        <button type="button" onClick={() => setEditableTenant({ ...editableTenant, logoUrl: '' })} style={{ position: 'absolute', top: -8, right: -8, background: '#ef4444', color: '#fff', border: 'none', borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 12 }}>✕</button>
+                      </div>
+                    ) : (
+                      <div style={{ width: 64, height: 64, border: '1px dashed var(--border)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 24 }}>
+                        🏢
+                      </div>
+                    )}
+                    <div>
+                      <label className="secondary-action" style={{ display: 'inline-block', cursor: 'pointer', marginBottom: 8 }}>
+                        Logo Yükle
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setEditableTenant({ ...editableTenant, logoUrl: ev.target?.result as string });
+                            reader.readAsDataURL(file);
+                          }
+                        }} />
+                      </label>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>Önerilen: 200x200px (PNG, JPG). Maks 2MB.</p>
+                    </div>
+                  </div>
+                </div>
                 <label className="select-field">
                   <span>Abonelik Durumu</span>
                   <select value={editableTenant.status} onChange={e => setEditableTenant({ ...editableTenant, status: e.target.value as any })}>
@@ -3366,20 +3391,29 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               try { usersMap = JSON.parse(localStorage.getItem('crm_tenant_users_map_v2') || '{}'); } catch(e) {}
               const tUsers = usersMap[editableTenant.id] || [];
               
-              const handleInviteUser = (e: any) => {
+              const handleAddOrInviteUser = (e: any, isInvite: boolean) => {
                 e.preventDefault();
-                const fd = new FormData(e.target);
+                const form = e.currentTarget.closest('form');
+                const fd = new FormData(form);
                 const name = fd.get('name') as string;
                 const email = fd.get('email') as string;
                 const role = fd.get('role') as string;
                 
-                const newUser = { id: `u-${Date.now()}`, name, email, role };
+                const newUser = { id: `u-${Date.now()}`, name, email, role, invited: isInvite };
                 usersMap[editableTenant.id] = [...tUsers, newUser];
                 localStorage.setItem('crm_tenant_users_map_v2', JSON.stringify(usersMap));
                 
-                e.target.reset();
+                form.reset();
                 setDetailTab('notes'); setTimeout(() => setDetailTab('users'), 0);
-                alert(`${email} adresine davet gönderildi.`);
+                if (isInvite) alert(`${email} adresine davet gönderildi.`);
+                else alert(`${name} (${email}) sisteme eklendi.`);
+              };
+
+              const handleSendInviteLater = (usr: any) => {
+                usersMap[editableTenant.id] = tUsers.map((u: any) => u.id === usr.id ? { ...u, invited: true } : u);
+                localStorage.setItem('crm_tenant_users_map_v2', JSON.stringify(usersMap));
+                setDetailTab('notes'); setTimeout(() => setDetailTab('users'), 0);
+                alert(`${usr.email} adresine davet gönderildi.`);
               };
 
               const handleDeleteUser = (usr: any) => {
@@ -3410,15 +3444,21 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                           <div>
                             <strong style={{ display: 'block', fontSize: '0.95rem' }}>{usr.name}</strong>
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{usr.email} | {usr.role}</span>
+                            {usr.invited && <span style={{ fontSize: '0.7rem', color: '#10b981', display: 'block', marginTop: 2 }}>✓ Davet Edildi</span>}
                           </div>
-                          <button className="btn-action-ghost" style={{ fontSize: '0.75rem', padding: '6px 12px', color: '#ef4444' }} onClick={() => handleDeleteUser(usr)}>Sil</button>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            {!usr.invited && (
+                              <button className="btn-action-ghost" style={{ fontSize: '0.75rem', padding: '6px 12px' }} onClick={() => handleSendInviteLater(usr)}>Davet Gönder</button>
+                            )}
+                            <button className="btn-action-ghost" style={{ fontSize: '0.75rem', padding: '6px 12px', color: '#ef4444' }} onClick={() => handleDeleteUser(usr)}>Sil</button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div>
-                    <h4 style={{ marginBottom: 16 }}>Yeni Kullanıcı Davet Et</h4>
-                    <form onSubmit={handleInviteUser} className="new-customer-form" style={{ padding: 16, background: 'var(--surface-strong)', borderRadius: 10 }}>
+                    <h4 style={{ marginBottom: 16 }}>Yeni Kullanıcı Ekle</h4>
+                    <form className="new-customer-form" style={{ padding: 16, background: 'var(--surface-strong)', borderRadius: 10 }}>
                       <div className="new-customer-grid" style={{ gridTemplateColumns: '1fr', gap: 12 }}>
                         <label className="select-field">
                           <span>Ad Soyad</span>
@@ -3437,7 +3477,14 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                           </select>
                         </label>
                       </div>
-                      <button type="submit" className="primary-action" style={{ width: '100%', marginTop: 12 }}>Davet Gönder</button>
+                      <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                        <button type="button" className="secondary-action" style={{ flex: 1 }} onClick={(e) => handleAddOrInviteUser(e, false)}>
+                          Kullanıcı Ekle
+                        </button>
+                        <button type="button" className="primary-action" style={{ flex: 1 }} onClick={(e) => handleAddOrInviteUser(e, true)}>
+                          Ekle ve Davet Gönder
+                        </button>
+                      </div>
                     </form>
                   </div>
                 </div>
@@ -3466,7 +3513,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 100,
+            zIndex: 300,
             background: 'rgba(17, 24, 39, 0.45)',
             backdropFilter: 'blur(6px)',
             display: 'grid',
@@ -3752,7 +3799,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 100,
+            zIndex: 300,
             background: 'rgba(17, 24, 39, 0.45)',
             backdropFilter: 'blur(6px)',
             display: 'grid',
@@ -4004,7 +4051,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 100,
+            zIndex: 300,
             background: 'rgba(17, 24, 39, 0.45)',
             backdropFilter: 'blur(6px)',
             display: 'grid',
@@ -4168,7 +4215,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 100,
+            zIndex: 300,
             background: 'rgba(17, 24, 39, 0.45)',
             backdropFilter: 'blur(6px)',
             display: 'grid',
