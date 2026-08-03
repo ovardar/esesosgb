@@ -92,26 +92,20 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM }: Send
 /**
  * Müşteriye Özel Davet E-Postası Şablonu
  */
-export function buildCustomerInviteTemplate(companyName: string, inviteUrl: string) {
+export function buildCustomerInviteTemplate(bodyHtml: string) {
   return `
     <div style="font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif; background-color: #f8fafc; padding: 40px 20px; color: #1e293b;">
       <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-        <div style="background: linear-gradient(135deg, #4f46e5, #6366f1); padding: 30px; text-align: center; color: #ffffff;">
-          <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.5px;">codentra</h1>
-          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Teklif ve Sözleşme Yazılımı (Codentra CRM)</p>
+        <div style="background: #111827; padding: 30px; text-align: center; color: #ffffff; border-bottom: 4px solid #059669;">
+          <img src="https://app.codentra.com.tr/codentra-logo.png" alt="Codentra" style="height: 40px; margin-bottom: 12px;" />
+          <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9; color: #f6f3ee;">Teklif ve Sözleşme Yazılımı (Codentra CRM)</p>
         </div>
         <div style="padding: 32px 30px;">
-          <h2 style="margin-top: 0; font-size: 20px; color: #0f172a;">Sayın ${companyName} Yetkilisi,</h2>
-          <p style="font-size: 15px; line-height: 1.6; color: #475569;">
-            Codentra Teklif ve Sözleşme Yazılımımız üzerinden teklif, sözleşme ve kurumsal evrak süreçlerinizi takip etmek üzere portalınıza davet edildiniz.
-          </p>
-          <div style="text-align: center; margin: 35px 0;">
-            <a href="${inviteUrl}" style="background-color: #4f46e5; color: #ffffff; padding: 14px 32px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 16px; display: inline-block;">
-              Sisteme Giriş Yapın & Şifrenizi Belirleyin
-            </a>
+          <div style="font-size: 15px; line-height: 1.6; color: #475569; white-space: pre-wrap;">
+            ${bodyHtml}
           </div>
-          <p style="font-size: 13px; color: #94a3b8; line-height: 1.5;">
-            Bu e-posta otomatik olarak gönderilmiştir. Herhangi bir sorunuz için <a href="mailto:destek@codentra.com.tr" style="color: #4f46e5;">destek@codentra.com.tr</a> adresi üzerinden bizimle iletişime geçebilirsiniz.
+          <p style="font-size: 13px; color: #94a3b8; line-height: 1.5; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            Bu e-posta otomatik olarak gönderilmiştir. Herhangi bir sorunuz için <a href="mailto:destek@codentra.com.tr" style="color: #059669; font-weight: 600;">destek@codentra.com.tr</a> adresi üzerinden bizimle iletişime geçebilirsiniz.
           </p>
         </div>
         <div style="background: #f1f5f9; padding: 16px 30px; text-align: center; font-size: 12px; color: #64748b;">

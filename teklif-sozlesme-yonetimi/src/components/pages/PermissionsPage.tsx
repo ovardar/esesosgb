@@ -238,8 +238,13 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
     const inviteLink = `${origin}?invite=${inviteCode}&tenant=${currentTenant.id}&email=${encodeURIComponent(usr.email)}`;
     setSendingEmail(true);
 
-    const subject = `${currentTenant.companyName} — Codentra Teklif ve Sözleşme Yazılımı Kullanıcı Daveti ve Şifre Belirleme`;
-    const htmlContent = buildCustomerInviteTemplate(currentTenant.companyName, inviteLink);
+    const subject = `${currentTenant.companyName} - Codentra Teklif ve Sözleşme Yazılımı Kullanıcı Daveti ve Şifre Belirleme`;
+    let bodyText = `Sayın Yetkili,\n\n${currentTenant.companyName} bünyesinde kullanabileceğiniz Codentra Teklif & Sözleşme Yönetimi bulut sisteminiz aktif edilmiştir.\n\nAşağıdaki bağlantıya tıklayarak şifrenizi belirleyebilir ve hemen kullanmaya başlayabilirsiniz:\n{AKTIVASYON_LINKI}\n\nİyi çalışmalar dileriz,\nCodentra SaaS Ekibi`;
+    const htmlBody = bodyText.replace(/\n/g, '<br/>').replace(
+      '{AKTIVASYON_LINKI}',
+      `<div style="text-align: center; margin: 35px 0;"><a href="${inviteLink}" style="background-color: #059669; color: #ffffff; padding: 14px 32px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 16px; display: inline-block;">Sisteme Giriş Yapın & Şifrenizi Belirleyin</a></div>`
+    );
+    const htmlContent = buildCustomerInviteTemplate(htmlBody);
 
     const res = await sendEmail({
       to: usr.email,
@@ -1151,7 +1156,12 @@ export function PermissionsPage({ impersonatedTenant, onUpdateTenantUsersCount, 
                     onClick={async () => {
                       setSendingEmail(true);
                       const link = `https://app.codentra.com.tr/superadmin-invite?email=${encodeURIComponent(superAdminInviteUser.email)}`;
-                      const html = buildCustomerInviteTemplate(superAdminInviteUser.name, link);
+                      let bodyText2 = `Sayın ${superAdminInviteUser.name},\n\nCodentra Süper Admin paneline erişiminiz tanımlanmıştır.\n\nAşağıdaki bağlantıya tıklayarak giriş yapabilirsiniz:\n{AKTIVASYON_LINKI}\n\nİyi çalışmalar,\nCodentra Ekibi`;
+                      const htmlBody2 = bodyText2.replace(/\n/g, '<br/>').replace(
+                        '{AKTIVASYON_LINKI}',
+                        `<div style="text-align: center; margin: 35px 0;"><a href="${link}" style="background-color: #059669; color: #ffffff; padding: 14px 32px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 16px; display: inline-block;">Süper Admin Paneline Giriş Yap</a></div>`
+                      );
+                      const html = buildCustomerInviteTemplate(htmlBody2);
                       const res = await sendEmail({
                         to: superAdminInviteUser.email,
                         subject: 'Codentra Teklif ve Sözleşme Yönetimi — Süper Admin Davetiniz',

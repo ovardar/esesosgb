@@ -1007,7 +1007,18 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
     const tmpl = emailTemplates.find((t) => t.type === 'invitation');
     const subject = tmpl?.subject ? tmpl.subject.replace('{FIRMA_ADI}', companyName) : `${companyName} — Codentra Teklif ve Sözleşme Yazılımı Aktivasyonu`;
-    const htmlContent = buildCustomerInviteTemplate(companyName, inviteLink);
+    
+    let bodyText = tmpl?.body || `Sayın {YETKILI_ADI},\n\n${companyName} bünyesinde kullanabileceğiniz Codentra Teklif & Sözleşme Yönetimi bulut sisteminiz aktif edilmiştir.\n\nAşağıdaki bağlantıya tıklayarak şifrenizi belirleyebilir ve hemen kullanmaya başlayabilirsiniz:\n{AKTIVASYON_LINKI}\n\nİyi çalışmalar dileriz,\nCodentra SaaS Ekibi`;
+    bodyText = bodyText.replace(/{FIRMA_ADI}/g, companyName).replace(/{YETKILI_ADI}/g, companyName + ' Yetkilisi');
+    
+    const htmlBody = bodyText
+      .replace(/\n/g, '<br/>')
+      .replace(
+        '{AKTIVASYON_LINKI}',
+        `<div style="text-align: center; margin: 35px 0;"><a href="${inviteLink}" style="background-color: #059669; color: #ffffff; padding: 14px 32px; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 16px; display: inline-block;">Sisteme Giriş Yapın & Şifrenizi Belirleyin</a></div>`
+      );
+
+    const htmlContent = buildCustomerInviteTemplate(htmlBody);
 
     const res = await sendEmail({
       to: email,
