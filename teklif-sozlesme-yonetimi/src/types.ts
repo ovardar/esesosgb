@@ -66,7 +66,7 @@ export interface SaaSTenant {
   createdAt?: string;
   updatedBy?: string;
   updatedAt?: string;
-  activationStatus?: 'Davet Gönderilmedi' | 'Davet Gönderildi (Şifre Bekliyor)' | 'Hesap Aktif (Şifre Belirlendi)';
+  activationStatus?: 'Davet Gönderilmedi' | 'Davet Gönderildi (Şifre Bekliyor)' | 'Hesap Aktif (Şifre Belirlendi)' | 'Şifre Belirlendi (Ödeme Bekliyor)';
   inviteSentAt?: string;
   passwordSetAt?: string;
   logoUrl?: string;

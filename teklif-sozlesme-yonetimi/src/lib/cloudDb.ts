@@ -295,6 +295,39 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
       });
 
       const cleanList = tenants.length > 0 ? tenants : fallback;
+
+      // Auto-suspension logic
+      const now = new Date();
+      let needsSave = false;
+
+      cleanList.forEach(t => {
+        if (t.status === 'Aktif' || t.status === 'Demo') {
+          const endDate = new Date(t.endDate);
+          let isExpired = false;
+
+          if (t.status === 'Demo') {
+            if (now > endDate) {
+              isExpired = true;
+            }
+          } else { // Aktif (Paid)
+            const gracePeriod = new Date(endDate);
+            gracePeriod.setDate(gracePeriod.getDate() + 3);
+            if (now > gracePeriod) {
+              isExpired = true;
+            }
+          }
+
+          if (isExpired) {
+            t.status = 'Askıda';
+            needsSave = true;
+          }
+        }
+      });
+
+      if (needsSave) {
+        saveCloudTenants(cleanList).catch(e => console.warn('Auto-suspend save failed', e));
+      }
+
       setLocalItem('crm_saas_tenants_v3', cleanList);
       return cleanList;
     }

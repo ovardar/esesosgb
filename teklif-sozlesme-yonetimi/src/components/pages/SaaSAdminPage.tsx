@@ -1418,7 +1418,6 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
     setTenants((prev) => {
       const next = [newTenant, ...prev];
-      saveCloudTenants(next);
       return next;
     });
 
@@ -1438,7 +1437,6 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
         const next = prev.map((t) =>
           t.id === tenant.id ? { ...t, status: newStatus, paymentStatus: newStatus === 'Aktif' ? 'Sorunsuz' : 'Bekliyor' as SaaSPaymentStatus } : t
         );
-        saveCloudTenants(next);
         return next;
       });
 
@@ -1500,7 +1498,6 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             }
           : t
       );
-      saveCloudTenants(next);
       return next;
     });
 
@@ -1780,6 +1777,9 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   <th onClick={() => toggleSort(tenantSort, setTenantSort, 'annualFee')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                     Lisans Ücreti {tenantSort.field === 'annualFee' ? (tenantSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
                   </th>
+                  <th onClick={() => toggleSort(tenantSort, setTenantSort, 'startDate')} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                    Başlangıç Tarihi {tenantSort.field === 'startDate' ? (tenantSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                  </th>
                   <th onClick={() => toggleSort(tenantSort, setTenantSort, 'activationStatus')} style={{ cursor: 'pointer', userSelect: 'none' }}>
                     Şifre & Giriş Durumu {tenantSort.field === 'activationStatus' ? (tenantSort.dir === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
                   </th>
@@ -1903,6 +1903,15 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                           ) : (
                             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Belirtilmedi (Aday)</span>
                           )}
+                        </td>
+
+                        <td>
+                          <span style={{ fontSize: '0.78rem', display: 'block', fontWeight: 600 }}>
+                            {new Date(tenant.startDate).toLocaleDateString('tr-TR')}
+                          </span>
+                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>
+                            Bitiş: {new Date(tenant.endDate).toLocaleDateString('tr-TR')}
+                          </span>
                         </td>
 
                         <td>
@@ -3093,7 +3102,6 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   onClick={() => {
                     setTenants(prev => {
                       const next = prev.map(t => t.id === editableTenant.id ? editableTenant : t);
-                      saveCloudTenants(next);
                       return next;
                     });
                     setSelectedTenant(null);
