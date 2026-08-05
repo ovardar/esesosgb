@@ -463,6 +463,12 @@ export function OffersPage({
     setRevisionModalOpen(false);
   };
 
+  const handleDeleteOffer = (offerId: string) => {
+    if (window.confirm('Bu teklifi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!')) {
+      setOffers((prev) => prev.filter(o => o.id !== offerId));
+    }
+  };
+
   // Update offer status quick handler
   const handleUpdateStatus = (offerId: string, newStatus: OfferRecord['status']) => {
     if (newStatus === 'Kazanıldı') {
@@ -909,6 +915,16 @@ export function OffersPage({
                           title="Teklifi Düzenle"
                         >
                           ✏️ Düzenle
+                        </button>
+
+                        <button
+                          type="button"
+                          className="btn-action-ghost"
+                          style={{ padding: '4px 8px', fontSize: '0.78rem', color: '#ef4444' }}
+                          onClick={() => handleDeleteOffer(off.id)}
+                          title="Teklifi Sil"
+                        >
+                          🗑️ Sil
                         </button>
 
                         <button

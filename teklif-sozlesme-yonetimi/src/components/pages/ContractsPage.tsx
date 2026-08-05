@@ -559,6 +559,12 @@ export function ContractsPage({
     setCreateModalOpen(false);
   };
 
+  const handleDeleteContract = (contractId: string) => {
+    if (window.confirm('Bu sözleşmeyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!')) {
+      setContracts((prev) => prev.filter(c => c.id !== contractId));
+    }
+  };
+
   // Open Edit Modal (Req e: Prefill ALL fields)
   const handleOpenEditModal = (cnt: ContractRecord) => {
     setSelectedContract(cnt);
@@ -1420,6 +1426,15 @@ export function ContractsPage({
                           style={{ padding: '5px 10px', fontSize: '0.78rem', fontWeight: 700 }}
                         >
                           ✏️ Düzenle
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-action-ghost"
+                          style={{ padding: '5px 10px', fontSize: '0.78rem', fontWeight: 700, color: '#ef4444' }}
+                          onClick={() => handleDeleteContract(cnt.id)}
+                          title="Sözleşmeyi Sil"
+                        >
+                          🗑️ Sil
                         </button>
                         <button
                           type="button"

@@ -1215,6 +1215,19 @@ function CustomerContractsTab({
                         >
                           ✏️ Düzenle
                         </button>
+                        <button
+                          type="button"
+                          className="btn-action-ghost"
+                          style={{ padding: '5px 10px', fontSize: '0.78rem', fontWeight: 700, color: '#ef4444' }}
+                          onClick={() => {
+                            if (window.confirm('Bu sözleşmeyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!')) {
+                              setContracts(prev => prev.filter(c => c.id !== cnt.id));
+                            }
+                          }}
+                          title="Sözleşmeyi Sil"
+                        >
+                          🗑️ Sil
+                        </button>
 
                         <button
                           type="button"
@@ -2603,6 +2616,20 @@ function CustomerOffersTab({
                           title="Teklifi Düzenle"
                         >
                           ✏️ Düzenle
+                        </button>
+
+                        <button
+                          type="button"
+                          className="btn-action-ghost"
+                          style={{ padding: '4px 8px', fontSize: '0.78rem', color: '#ef4444' }}
+                          onClick={() => {
+                            if (window.confirm('Bu teklifi silmek istediğinize emin misiniz? Bu işlem geri alınamaz!')) {
+                              setOffers((prev) => prev.filter(o => o.id !== off.id));
+                            }
+                          }}
+                          title="Teklifi Sil"
+                        >
+                          🗑️ Sil
                         </button>
 
                         <button
@@ -4644,9 +4671,16 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
     setCustomers((prev) =>
       prev.map((c) => (c.name === selectedCustomer.name ? { ...c, ...editFirmForm } : c))
     );
-
     setFirmSavedNotice(true);
     setTimeout(() => setFirmSavedNotice(false), 3000);
+  };
+
+  const handleDeleteCustomer = () => {
+    if (!selectedCustomer) return;
+    if (window.confirm(`"${selectedCustomer.name}" müşterisini ve ona ait tüm verileri tamamen silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`)) {
+      setCustomers((prev) => prev.filter(c => c.name !== selectedCustomer.name));
+      setSelectedCustomerName(null);
+    }
   };
 
   // --- CONTACT CRUD HANDLERS ---
@@ -5885,6 +5919,24 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
 
             {/* RIGHT: BACK BUTTON */}
             <div>
+              <button
+                type="button"
+                onClick={handleDeleteCustomer}
+                style={{
+                  height: 38,
+                  padding: '0 16px',
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
+                  color: '#ef4444',
+                  background: 'rgba(255, 255, 255, 0.28)',
+                  border: '1.5px solid rgba(255, 255, 255, 0.55)',
+                  borderRadius: 10,
+                  cursor: 'pointer',
+                  marginRight: 12
+                }}
+              >
+                🗑️ Müşteriyi Sil
+              </button>
               <button
                 type="button"
                 onClick={() => setSelectedCustomerName(null)}
