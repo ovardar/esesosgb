@@ -75,6 +75,7 @@ type Props = {
   tenants?: SaaSTenant[];
   setTenants?: React.Dispatch<React.SetStateAction<SaaSTenant[]>>;
 };
+let lastLocalUpdate = 0;
 
 export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentUserEmail, tenants: propTenants, setTenants: propSetTenants }: Props) {
   const activeUserEmail = currentUserEmail || localStorage.getItem('crm_user_session') || 'orhan.vardar@gmail.com';
@@ -143,6 +144,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
   });
 
   useEffect(() => {
+    lastLocalUpdate = Date.now();
     saveCloudTenants(tenants);
   }, [tenants]);
 
@@ -169,7 +171,8 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
   // Supabase PostgreSQL Cloud Database & Real-Time Sync Effect
   useEffect(() => {
     // Use the proper cloudDb.ts fetchCloudTenants which preserves existing contact info
-    const loadTenantsFromCloud = async () => {
+    const loadTenantsFromCloud = async (isInitial = false) => {
+      if (!isInitial && Date.now() - lastLocalUpdate < 2000) return;
       try {
         const cloudTenants = await fetchCloudTenants();
         if (cloudTenants && cloudTenants.length > 0) {
@@ -180,12 +183,12 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
       }
     };
 
-    loadTenantsFromCloud();
+    loadTenantsFromCloud(true);
 
     const channel = supabase
       .channel('realtime-saas-tenants')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tenants' }, () => {
-        loadTenantsFromCloud();
+        loadTenantsFromCloud(false);
       })
       .subscribe();
 
