@@ -49,35 +49,29 @@ export function getTenantPersonnelList(activeTenant?: SaaSTenant | null): Tenant
 
 export function getTenantExperts(activeTenant?: SaaSTenant | null): TenantPersonnelOption[] {
   const all = getTenantPersonnelList(activeTenant);
-  const filtered = all.filter(p => 
-    p.role.toLowerCase().includes('uzman') || 
-    p.role.toLowerCase().includes('isg') || 
-    p.role.toLowerCase().includes('admin') ||
-    p.role.toLowerCase().includes('yönetici')
+  return all.filter(p => 
+    p.role.includes('İSG Uzmanı (A Sınıfı)') || 
+    p.role.includes('İSG Uzmanı (B Sınıfı)') || 
+    p.role.includes('İSG Uzmanı (C Sınıfı)') ||
+    p.role.includes('Firma Yöneticisi (Admin)') ||
+    p.role.includes('Firma Yöneticisi (Tenant Admin)')
   );
-  return filtered.length > 0 ? filtered : all;
 }
 
 export function getTenantDoctors(activeTenant?: SaaSTenant | null): TenantPersonnelOption[] {
   const all = getTenantPersonnelList(activeTenant);
-  const filtered = all.filter(p => 
-    p.role.toLowerCase().includes('hekim') || 
-    p.role.toLowerCase().includes('doktor') || 
-    p.role.toLowerCase().includes('dr') ||
-    p.role.toLowerCase().includes('admin') ||
-    p.role.toLowerCase().includes('yönetici')
+  return all.filter(p => 
+    p.role.includes('İşyeri Hekimi') || 
+    p.role.includes('Firma Yöneticisi (Admin)') ||
+    p.role.includes('Firma Yöneticisi (Tenant Admin)')
   );
-  return filtered.length > 0 ? filtered : all;
 }
 
 export function getTenantDsps(activeTenant?: SaaSTenant | null): TenantPersonnelOption[] {
   const all = getTenantPersonnelList(activeTenant);
-  const filtered = all.filter(p => 
-    p.role.toLowerCase().includes('dsp') || 
-    p.role.toLowerCase().includes('hemşire') || 
-    p.role.toLowerCase().includes('sağlık') ||
-    p.role.toLowerCase().includes('admin') ||
-    p.role.toLowerCase().includes('yönetici')
+  return all.filter(p => 
+    p.role.includes('Diğer Sağlık Personeli (DSP)') || 
+    p.role.includes('Firma Yöneticisi (Admin)') ||
+    p.role.includes('Firma Yöneticisi (Tenant Admin)')
   );
-  return filtered.length > 0 ? filtered : all;
 }
