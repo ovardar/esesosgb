@@ -122,7 +122,7 @@ export function findPriceRuleConflicts(rules: PriceRule[]) {
   return { conflictIds, conflictMessages };
 }
 
-const defaultPriceRules: Omit<PriceRule, 'id'>[] = [
+export const defaultPriceRules: Omit<PriceRule, 'id'>[] = [
   // Az Tehlikeli
   { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İSG Uzmanı', price: 120 },
   { danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: 49, service_name: 'İşyeri Hekimi', price: 150 },

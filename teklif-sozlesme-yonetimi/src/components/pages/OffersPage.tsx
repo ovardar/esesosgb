@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { CustomerRecord, calculateIsgStatutoryHours, computeOfferFinancials } from './CustomersPage';
-import { PriceRule } from './PriceListsPage';
+import { PriceRule, defaultPriceRules } from './PriceListsPage';
+import { fetchCloudPriceRules } from '../../lib/cloudDb';
 import { OfferRecord, OfferRevision, OfferServiceLine, AcceptanceChannel, ContractRecord, ContractServiceLine, VatMode, SaaSTenant } from '../../types';
 import { offerSeeds } from '../../data/workbench';
 import { OfferPdfPreviewModal } from '../modals/PdfPreviewModals';
@@ -53,18 +54,27 @@ export function OffersPage({
   });
 
   // Load price rules from localStorage for auto-population
-  const [priceRules] = useState<PriceRule[]>(() => {
-    try {
+  const [priceRules, setPriceRules] = useState<PriceRule[]>([]);
+  useEffect(() => {
+    async function loadPriceRules() {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY_PRICE_RULES);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPriceRules(parsed);
+          }
+        } catch (e) {
+          console.error('Error loading price rules from localStorage', e);
+        }
       }
-    } catch (e) {
-      console.error('Error loading price rules', e);
+      
+      const defaults = defaultPriceRules.map((r, i) => ({ ...r, id: `rule-${i + 1}` }));
+      const dbRules = await fetchCloudPriceRules(defaults);
+      setPriceRules(dbRules);
     }
-    return [];
-  });
+    loadPriceRules();
+  }, []);
 
   // Sync offers to localStorage
   useEffect(() => {

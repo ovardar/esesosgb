@@ -23,7 +23,8 @@ import {
   DocumentRecord,
   DocumentCategory
 } from '../../types';
-import { PriceRule } from './PriceListsPage';
+import { PriceRule, defaultPriceRules } from './PriceListsPage';
+import { fetchCloudPriceRules } from '../../lib/cloudDb';
 import { OfferPdfPreviewModal, ContractPdfPreviewModal } from '../modals/PdfPreviewModals';
 import { ContractRevisionDiffView } from '../ContractRevisionDiffView';
 import { DataImportWizardModal } from '../modals/DataImportWizardModal';
@@ -491,18 +492,26 @@ function CustomerContractsTab({
     return offerSeeds;
   });
 
-  const [priceRules] = useState<PriceRule[]>(() => {
-    try {
+  const [priceRules, setPriceRules] = useState<PriceRule[]>([]);
+  useEffect(() => {
+    async function loadPriceRules() {
       const stored = localStorage.getItem('crm_price_list_v2');
       if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPriceRules(parsed);
+          }
+        } catch (e) {
+          console.error(e);
+        }
       }
-    } catch (e) {
-      console.error(e);
+      const defaults = defaultPriceRules.map((r, i) => ({ ...r, id: `rule-${i + 1}` }));
+      const dbRules = await fetchCloudPriceRules(defaults);
+      setPriceRules(dbRules);
     }
-    return [];
-  });
+    loadPriceRules();
+  }, []);
 
   useEffect(() => {
     try {
@@ -2047,18 +2056,26 @@ function CustomerOffersTab({
     return offerSeeds;
   });
 
-  const [priceRules] = useState<PriceRule[]>(() => {
-    try {
+  const [priceRules, setPriceRules] = useState<PriceRule[]>([]);
+  useEffect(() => {
+    async function loadPriceRules() {
       const stored = localStorage.getItem('crm_price_list_v2');
       if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPriceRules(parsed);
+          }
+        } catch (e) {
+          console.error('Error loading price rules', e);
+        }
       }
-    } catch (e) {
-      console.error('Error loading price rules', e);
+      const defaults = defaultPriceRules.map((r, i) => ({ ...r, id: `rule-${i + 1}` }));
+      const dbRules = await fetchCloudPriceRules(defaults);
+      setPriceRules(dbRules);
     }
-    return [];
-  });
+    loadPriceRules();
+  }, []);
 
   useEffect(() => {
     try {
