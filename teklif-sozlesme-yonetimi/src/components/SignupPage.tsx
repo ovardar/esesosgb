@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { CODENTRA_LOGO_DATA_URI } from '../assets/logoDataUri';
-import { SaaSTenant } from '../types';
-import { initialSaaSTenants } from '../data/saasWorkbench';
+import { SaaSTenant, SaaSPackageDefinition } from '../types';
+import { initialSaaSTenants, initialSaaSPackages } from '../data/saasWorkbench';
 import { fetchCloudTenants, saveCloudTenants } from '../lib/cloudDb';
 
 interface SignupPageProps {
@@ -33,11 +33,18 @@ export function SignupPage({ onSignupSuccess, onSwitchToLogin }: SignupPageProps
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const packages = [
-    { name: 'Starter', mFee: 1450, aFee: 14500, users: 5 },
-    { name: 'Pro', mFee: 2800, aFee: 28000, users: 20 },
-    { name: 'Enterprise', mFee: 5500, aFee: 55000, users: 50 },
-  ];
+  const [packages, setPackages] = useState<SaaSPackageDefinition[]>(initialSaaSPackages);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('crm_saas_packages_v3');
+      if (saved) {
+        setPackages(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn('Could not load packages from local storage', e);
+    }
+  }, []);
 
   const handleSignup = async (isDemo: boolean) => {
     const cleanEmail = email.trim().toLowerCase();
@@ -85,7 +92,7 @@ export function SignupPage({ onSignupSuccess, onSwitchToLogin }: SignupPageProps
       const currentTenants = await fetchCloudTenants(initialSaaSTenants);
       
       const pkg = packages.find(p => p.name === selectedPackage) || packages[1];
-      const selectedMonthlyFee = billingCycle === 'Yıllık' ? Math.round(pkg.aFee / 12) : pkg.mFee;
+      const selectedMonthlyFee = billingCycle === 'Yıllık' ? Math.round(pkg.annualFee / 12) : pkg.monthlyFee;
       
       const startDate = new Date();
       const endDate = new Date();
@@ -112,8 +119,8 @@ export function SignupPage({ onSignupSuccess, onSwitchToLogin }: SignupPageProps
           healthStatus: paymentSuccess ? 'İyi' : 'Riskli',
           billingCycle: isDemo ? 'Aylık' : billingCycle,
           monthlyFee: isDemo ? 1450 : selectedMonthlyFee,
-          annualFee: isDemo ? 14500 : pkg.aFee,
-          maxUsers: pkg.users,
+          annualFee: isDemo ? 14500 : pkg.annualFee,
+          maxUsers: pkg.maxUsers,
           activeUsers: 1,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
@@ -303,9 +310,9 @@ export function SignupPage({ onSignupSuccess, onSwitchToLogin }: SignupPageProps
             >
               <div style={{ fontWeight: 600, color: selectedPackage === pkg.name ? '#10b981' : '#fff' }}>{pkg.name}</div>
               <div style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '8px 0' }}>
-                ₺{(billingCycle === 'Yıllık' ? Math.round(pkg.aFee / 12) : pkg.mFee).toLocaleString('tr-TR')}
+                ₺{(billingCycle === 'Yıllık' ? pkg.annualFee : pkg.monthlyFee).toLocaleString('tr-TR')}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>/ ay</div>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>/ {billingCycle === 'Yıllık' ? 'yıl' : 'ay'}</div>
             </div>
           ))}
         </div>
