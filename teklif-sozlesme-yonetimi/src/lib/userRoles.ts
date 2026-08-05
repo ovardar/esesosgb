@@ -138,7 +138,7 @@ export function isAuthorizedUser(emailToCheck: string): boolean {
   let allTenants: any[] = [];
   try {
     allTenants = JSON.parse(localStorage.getItem('crm_saas_tenants_v3') || '[]');
-    if (allTenants.some((t: any) => t.email && t.email.toLowerCase() === cleanE && t.status === 'Aktif')) return true;
+    if (allTenants.some((t: any) => t.email && t.email.toLowerCase() === cleanE && (t.status === 'Aktif' || t.status === 'Demo'))) return true;
   } catch (e) {}
 
   try {
@@ -147,7 +147,7 @@ export function isAuthorizedUser(emailToCheck: string): boolean {
       const users = usersMap[tenantId];
       if (Array.isArray(users) && users.some((u: any) => u.email && u.email.toLowerCase() === cleanE && u.status === 'Aktif')) {
         const parentTenant = allTenants.find((t: any) => t.id === tenantId || t.tenantCode === tenantId);
-        if (parentTenant && parentTenant.status === 'Aktif') {
+        if (parentTenant && (parentTenant.status === 'Aktif' || parentTenant.status === 'Demo')) {
           return true;
         }
       }
