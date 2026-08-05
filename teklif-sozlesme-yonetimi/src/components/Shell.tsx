@@ -50,6 +50,17 @@ export function Shell({
   const activeTenantLogo = activeTenant?.logoUrl;
   const isDemoUser = activeTenant?.status?.toLowerCase() === 'demo';
 
+  let demoDaysLeft = 0;
+  let demoStartDateStr = '';
+  let demoEndDateStr = '';
+  
+  if (isDemoUser && activeTenant?.startDate && activeTenant?.endDate) {
+    demoStartDateStr = new Date(activeTenant.startDate).toLocaleDateString('tr-TR');
+    demoEndDateStr = new Date(activeTenant.endDate).toLocaleDateString('tr-TR');
+    const diffTime = new Date(activeTenant.endDate).getTime() - new Date().getTime();
+    demoDaysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
   const visibleSections = sections.filter((sec) => {
     if (isSuperAdmin && !activeTenantName) {
       // Superadmin in SaaS mode sees ONLY SaaS Yönetimi
@@ -160,7 +171,11 @@ export function Shell({
               <div>
                 <strong style={{ display: 'block', fontSize: '0.95rem' }}>Demo Sürümündesiniz</strong>
                 <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>
-                  Süreniz bitene kadar tüm özellikleri kesintisiz kullanabilirsiniz.
+                  {activeTenant?.startDate && activeTenant?.endDate ? (
+                    `Demo Süresi: ${demoStartDateStr} - ${demoEndDateStr} (Kalan süre: ${demoDaysLeft > 0 ? demoDaysLeft : 0} gün)`
+                  ) : (
+                    'Süreniz bitene kadar tüm özellikleri kesintisiz kullanabilirsiniz.'
+                  )}
                 </span>
               </div>
             </div>
