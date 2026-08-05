@@ -312,7 +312,16 @@ export function SignupPage({ onSignupSuccess, onSwitchToLogin }: SignupPageProps
               <div style={{ fontSize: '1.2rem', fontWeight: 'bold', margin: '8px 0' }}>
                 ₺{(billingCycle === 'Yıllık' ? pkg.annualFee : pkg.monthlyFee).toLocaleString('tr-TR')}
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>/ {billingCycle === 'Yıllık' ? 'yıl' : 'ay'}</div>
+              <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: 12 }}>/ {billingCycle === 'Yıllık' ? 'yıl' : 'ay'}</div>
+              
+              <ul style={{ paddingLeft: 0, margin: 0, fontSize: '0.75rem', color: '#cbd5e1', display: 'grid', gap: 6, textAlign: 'left', listStyle: 'none' }}>
+                <li style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 4, textAlign: 'center' }}><strong>{pkg.maxUsers} Kullanıcı</strong></li>
+                <li style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 4 }}>{pkg.modulesEnabled?.crm ? '✅ Müşteri CRM' : '❌ Müşteri CRM'}</li>
+                <li style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 4 }}>{pkg.modulesEnabled?.offers ? '✅ Teklif Modülü' : '❌ Teklif Modülü'}</li>
+                <li style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 4 }}>{pkg.modulesEnabled?.contracts ? '✅ Sözleşme Modülü' : '❌ Sözleşme Modülü'}</li>
+                <li style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: 4 }}>{pkg.modulesEnabled?.documents ? '✅ Dokümanlar' : '❌ Dokümanlar'}</li>
+                <li>{pkg.modulesEnabled?.analytics ? '✅ Analitik Raporlar' : '❌ Analitik Raporlar'}</li>
+              </ul>
             </div>
           ))}
         </div>
