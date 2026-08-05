@@ -25,6 +25,7 @@ import {
 } from '../../types';
 import { PriceRule, defaultPriceRules } from './PriceListsPage';
 import { fetchCloudPriceRules } from '../../lib/cloudDb';
+import { getTenantExperts, getTenantDoctors, getTenantDsps } from '../../lib/tenantPersonnel';
 import { OfferPdfPreviewModal, ContractPdfPreviewModal } from '../modals/PdfPreviewModals';
 import { ContractRevisionDiffView } from '../ContractRevisionDiffView';
 import { DataImportWizardModal } from '../modals/DataImportWizardModal';
@@ -50,26 +51,6 @@ export const contactRoleOptions = [
   { value: 'operasyon', label: 'Operasyon Sorumlusu', icon: '⚙️' },
   { value: 'isg', label: 'İSG Sorumlusu', icon: '🛡️' },
   { value: 'saha', label: 'Saha Sorumlusu', icon: '🚜' }
-];
-
-export const CONTRACT_ISG_EXPERTS_LIST = [
-  { name: 'Ayşe Yılmaz (A Sınıfı İSG Uzmanı)', role: 'A Sınıfı İSG Uzmanı', userType: '💻 Sistem Kullanıcısı' },
-  { name: 'Mert Demir (B Sınıfı İSG Uzmanı)', role: 'B Sınıfı İSG Uzmanı', userType: '💻 Sistem Kullanıcısı' },
-  { name: 'Elif Kaya (A Sınıfı İSG Uzmanı)', role: 'A Sınıfı İSG Uzmanı', userType: '📋 Saha Kadrosu' },
-  { name: 'Ahmet Can (B Sınıfı İSG Uzmanı)', role: 'B Sınıfı İSG Uzmanı', userType: '📋 Saha Kadrosu' },
-  { name: 'Mustafa Şahin (C Sınıfı İSG Uzmanı)', role: 'C Sınıfı İSG Uzmanı', userType: '📋 Saha Kadrosu' }
-];
-
-export const CONTRACT_WORKPLACE_DOCTORS_LIST = [
-  { name: 'Dr. Mehmet Öz (İşyeri Hekimi)', role: 'İşyeri Hekimi', userType: '📋 Saha Kadrosu' },
-  { name: 'Dr. Zeynep Erdem (İşyeri Hekimi)', role: 'İşyeri Hekimi', userType: '💻 Sistem Kullanıcısı' },
-  { name: 'Dr. Selim Koç (İşyeri Hekimi)', role: 'İşyeri Hekimi', userType: '📋 Saha Kadrosu' },
-  { name: 'Dr. Canan Taş (İşyeri Hekimi)', role: 'İşyeri Hekimi', userType: '💻 Sistem Kullanıcısı' }
-];
-
-export const CONTRACT_DSP_LIST = [
-  { name: 'Hemşire Fatma Yıldız (DSP)', role: 'DSP', userType: '📋 Saha Kadrosu' },
-  { name: 'Sağlık Memuru Ali Sunal (DSP)', role: 'DSP', userType: '📋 Saha Kadrosu' }
 ];
 
 export type CustomerActivity = {
@@ -458,13 +439,19 @@ function getRevisionTypeBadge(rev?: ContractRevision | null) {
 
 function CustomerContractsTab({
   customer,
-  setCustomers
+  setCustomers,
+  impersonatedTenant
 }: {
   customer: CustomerRecord;
   setCustomers: React.Dispatch<React.SetStateAction<CustomerRecord[]>>;
+  impersonatedTenant?: SaaSTenant | null;
 }) {
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   const initialEndDateStr = useMemo(() => calculateDefaultEndDateLocal(todayStr), [todayStr]);
+
+  const isgExpertsList = useMemo(() => getTenantExperts(impersonatedTenant), [impersonatedTenant]);
+  const workplaceDoctorsList = useMemo(() => getTenantDoctors(impersonatedTenant), [impersonatedTenant]);
+  const dspList = useMemo(() => getTenantDsps(impersonatedTenant), [impersonatedTenant]);
 
   const [contracts, setContracts] = useState<ContractRecord[]>(() => {
     try {
@@ -1542,12 +1529,12 @@ function CustomerContractsTab({
                         style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-strong)', color: 'var(--text-main)', fontSize: '0.88rem' }}
                       >
                         <option value="">-- İSG Uzmanı Seçilmedi (Boş) --</option>
-                        {CONTRACT_ISG_EXPERTS_LIST.map((exp) => (
+                        {isgExpertsList.map((exp) => (
                           <option key={exp.name} value={exp.name}>
                             {exp.name} ({exp.userType})
                           </option>
                         ))}
-                        {contractForm.assignedExpert && !CONTRACT_ISG_EXPERTS_LIST.some((e) => e.name === contractForm.assignedExpert) && (
+                        {contractForm.assignedExpert && !isgExpertsList.some((e) => e.name === contractForm.assignedExpert) && (
                           <option value={contractForm.assignedExpert}>{contractForm.assignedExpert}</option>
                         )}
                       </select>
@@ -1561,12 +1548,12 @@ function CustomerContractsTab({
                         style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-strong)', color: 'var(--text-main)', fontSize: '0.88rem' }}
                       >
                         <option value="">-- İşyeri Hekimi Seçilmedi (Boş) --</option>
-                        {CONTRACT_WORKPLACE_DOCTORS_LIST.map((doc) => (
+                        {workplaceDoctorsList.map((doc) => (
                           <option key={doc.name} value={doc.name}>
                             {doc.name} ({doc.userType})
                           </option>
                         ))}
-                        {contractForm.assignedDoctor && !CONTRACT_WORKPLACE_DOCTORS_LIST.some((d) => d.name === contractForm.assignedDoctor) && (
+                        {contractForm.assignedDoctor && !workplaceDoctorsList.some((d) => d.name === contractForm.assignedDoctor) && (
                           <option value={contractForm.assignedDoctor}>{contractForm.assignedDoctor}</option>
                         )}
                       </select>
@@ -1580,12 +1567,12 @@ function CustomerContractsTab({
                         style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-strong)', color: 'var(--text-main)', fontSize: '0.88rem' }}
                       >
                         <option value="">-- DSP Seçilmedi --</option>
-                        {CONTRACT_DSP_LIST.map((dsp) => (
+                        {dspList.map((dsp) => (
                           <option key={dsp.name} value={dsp.name}>
                             {dsp.name} ({dsp.userType})
                           </option>
                         ))}
-                        {contractForm.assignedDsp && !CONTRACT_DSP_LIST.some((d) => d.name === contractForm.assignedDsp) && (
+                        {contractForm.assignedDsp && !dspList.some((d) => d.name === contractForm.assignedDsp) && (
                           <option value={contractForm.assignedDsp}>{contractForm.assignedDsp}</option>
                         )}
                       </select>
@@ -5714,7 +5701,7 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
         return <CustomerOffersTab customer={customer} setCustomers={setCustomers} />;
 
       case 'sozlesmeler':
-        return <CustomerContractsTab customer={customer} setCustomers={setCustomers} />;
+        return <CustomerContractsTab customer={customer} setCustomers={setCustomers} impersonatedTenant={impersonatedTenant} />;
 
       case 'dokumanlar':
         return <CustomerDocumentsTab customer={customer} />;
