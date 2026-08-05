@@ -4028,7 +4028,7 @@ export function CustomersPage({
   const customers = propCustomers || internalCustomers;
   const setCustomers = propSetCustomers || setInternalCustomers;
 
-  const [, setAuthContext] = useState<AuthContext | null>(null);
+  const [authContext, setAuthContext] = useState<AuthContext | null>(null);
   const [isLoadingBackend, setIsLoadingBackend] = useState(true);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
@@ -4713,18 +4713,7 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
   };
 
   // --- OSGB STAFF OPTIONS FOR ACTIVITIES ---
-  const osgbStaffOptions = [
-    'Ahmet Yılmaz (Müşteri Temsilcisi)',
-    'Ayşe Yılmaz (A Sınıfı İSG Uzmanı)',
-    'Mehmet Demir (İş Yeri Hekimi)',
-    'Zeynep Şahin (B Sınıfı İSG Uzmanı)',
-    'Canan Öztürk (CRM Sorumlusu)',
-    'Ali Yıldız (Saha Operasyon Sorumlusu)',
-    'Selim Kaya (C Sınıfı İSG Uzmanı)',
-    'Fatma Şen (Diğer Sağlık Personeli)'
-  ];
-
-  // --- ACTIVITY CRUD HANDLERS ---
+  // We use tenantUsers instead of a hardcoded array.
   const handleOpenAddActivity = () => {
     setEditingActivity(null);
     const defaultContact = selectedCustomer?.contactsList?.[0]
@@ -4733,7 +4722,7 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
 
     const defaultStaff = selectedCustomer?.owner
       ? `${selectedCustomer.owner} (Müşteri Temsilcisi)`
-      : osgbStaffOptions[0];
+      : tenantUsers.length > 0 ? `${tenantUsers[0].name} (${tenantUsers[0].role})` : '';
 
     setActivityForm({
       type: 'Telefon',
@@ -4761,7 +4750,7 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
       date: activity.date,
       time: activity.time || '10:00',
       contactPerson: activity.contactPerson || '',
-      performedBy: activity.performedBy || activity.owner || osgbStaffOptions[0],
+      performedBy: activity.performedBy || activity.owner || (tenantUsers.length > 0 ? `${tenantUsers[0].name} (${tenantUsers[0].role})` : ''),
       owner: activity.owner,
       subject: activity.subject,
       summary: activity.summary,
@@ -6489,12 +6478,15 @@ function CustomerDocumentsTab({ customer }: { customer: CustomerRecord }) {
                         onChange={(e) => setActivityForm({ ...activityForm, performedBy: e.target.value })}
                       >
                         <option value="">-- Personel / Uzman Seçiniz --</option>
-                        {osgbStaffOptions.map((stf) => (
-                          <option key={stf} value={stf}>
-                            👔 {stf}
-                          </option>
-                        ))}
-                        {selectedCustomer?.owner && !osgbStaffOptions.includes(selectedCustomer.owner) && (
+                        {tenantUsers.map((usr) => {
+                          const optionValue = `${usr.name} (${usr.role})`;
+                          return (
+                            <option key={usr.id || usr.name} value={optionValue}>
+                              👔 {optionValue}
+                            </option>
+                          );
+                        })}
+                        {selectedCustomer?.owner && !tenantUsers.some(u => u.name === selectedCustomer.owner) && (
                           <option value={`${selectedCustomer.owner} (Portföy Yöneticisi)`}>
                             👔 {selectedCustomer.owner} (Portföy Yöneticisi)
                           </option>
