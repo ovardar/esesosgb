@@ -107,7 +107,7 @@ export function SignupPage({ onSignupSuccess, onSwitchToLogin }: SignupPageProps
       if (!currentTenants.some((t: SaaSTenant) => t.email === cleanEmail)) {
         const newTenant: SaaSTenant = {
           id: `t_${Date.now()}`,
-          tenantCode: `CT-${Math.floor(1000 + Math.random() * 9000)}`,
+          tenantCode: `WEB-${Math.floor(1000 + Math.random() * 9000)}`,
           companyName,
           contactName,
           email: cleanEmail,

@@ -256,7 +256,7 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
           const existingLocal = localMap.get(row.id);
           return {
             id: row.id,
-            tenantCode: row.tenant_code || existingLocal?.tenantCode || `TNT-${row.id.substring(0, 4).toUpperCase()}`,
+            tenantCode: row.tenant_code || existingLocal?.tenantCode || `CST-${row.id.substring(0, 4).toUpperCase()}`,
             companyName: row.name || row.companyName || existingLocal?.companyName || 'Test OSGB 3',
             contactName: row.contact_name || row.contactName || existingLocal?.contactName || 'Orhan Vardar',
             email: row.email || row.contact_email || existingLocal?.email || 'orhan.vardar@gmail.com',

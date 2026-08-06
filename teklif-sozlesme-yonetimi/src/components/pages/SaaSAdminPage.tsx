@@ -1385,7 +1385,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
     const newTenant: SaaSTenant = {
       id: crypto.randomUUID ? crypto.randomUUID() : '3b3e7f5a-9d2c-4e8a-b1c4-' + Date.now().toString().substring(0, 12),
-      tenantCode: `TNT-${Math.floor(1000 + Math.random() * 9000)}`,
+      tenantCode: `CST-${Math.floor(1000 + Math.random() * 9000)}`,
       companyName: newForm.companyName,
       contactName: newForm.contactName || 'Belirtilmedi',
       email: newForm.email,
@@ -1858,7 +1858,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                               </div>
                             )}
                             <div>
-                              <strong style={{ fontSize: '0.95rem', display: 'block' }}>{tenant.companyName}</strong>
+                              <strong style={{ fontSize: '0.95rem', display: 'block', color: tenant.tenantCode?.startsWith('CST-') ? 'var(--primary-color)' : 'var(--text-main)' }}>{tenant.companyName}</strong>
                               <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                                 {tenant.tenantCode} • {tenant.city}
                               </span>
