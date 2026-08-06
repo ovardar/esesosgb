@@ -28,7 +28,7 @@ function setLocalItem(key: string, value: any): void {
 export async function fetchCloudCustomers(fallback: CustomerRecord[] = []): Promise<CustomerRecord[]> {
   try {
     const { data, error } = await supabase.from('customers').select('*');
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const customers: CustomerRecord[] = data.map((row: any) => ({
         id: row.id,
         name: row.name || row.company_name || row.companyName || 'Müşteri',
@@ -102,7 +102,7 @@ export async function saveCloudCustomers(customers: CustomerRecord[]): Promise<v
 export async function fetchCloudOffers(fallback: OfferRecord[] = []): Promise<OfferRecord[]> {
   try {
     const { data, error } = await supabase.from('offers').select('*');
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const offers: OfferRecord[] = data.map((row: any) => ({
         id: row.id,
         offerNo: row.offer_no || row.offerNo || 'TKL-2026-001',
@@ -154,7 +154,7 @@ export async function saveCloudOffers(offers: OfferRecord[]): Promise<void> {
 export async function fetchCloudContracts(fallback: ContractRecord[] = []): Promise<ContractRecord[]> {
   try {
     const { data, error } = await supabase.from('contracts').select('*');
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const contracts: ContractRecord[] = data.map((row: any) => ({
         id: row.id,
         contractNo: row.contract_no || row.contractNo || 'SZL-2026-001',
@@ -237,7 +237,7 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
 
   try {
     const { data, error } = await supabase.from('tenants').select('*');
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const isDummyTenant = (name: string) => {
         if (!name) return false;
         const clean = name.toLowerCase().replace(/ı/g, 'i').replace(/ş/g, 's').replace(/ğ/g, 'g').trim();
@@ -288,7 +288,7 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
 
       // Do NOT include local tenants that are missing from the cloud DB, as they may have been deleted.
 
-      const cleanList = tenants.length > 0 ? tenants : fallback;
+      const cleanList = tenants;
 
       // Auto-suspension logic
       const now = new Date();
@@ -413,7 +413,7 @@ export async function deleteCloudTenant(tenantId: string): Promise<void> {
 export async function fetchCloudTenantUsersMap(fallback: Record<string, TenantUser[]> = {}): Promise<Record<string, TenantUser[]>> {
   try {
     const { data, error } = await supabase.from('tenant_users').select('*');
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const map: Record<string, TenantUser[]> = {};
       data.forEach((row: any) => {
         const tId = row.tenant_id || row.tenantId;
@@ -472,7 +472,7 @@ export async function saveCloudTenantUsersMap(map: Record<string, TenantUser[]>)
 export async function fetchCloudPriceRules(fallback: PriceRule[] = []): Promise<PriceRule[]> {
   try {
     const { data, error } = await supabase.from('price_rules').select('*');
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const rules: PriceRule[] = data.map((row: any) => ({
         id: row.id,
         danger_class: row.danger_class || row.dangerClass,
@@ -514,7 +514,7 @@ export async function saveCloudPriceRules(rules: PriceRule[]): Promise<void> {
 export async function fetchCloudTemplates(fallback: SaaSEmailTemplate[] = []): Promise<SaaSEmailTemplate[]> {
   try {
     const { data, error } = await supabase.from('templates').select('*');
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const templates: SaaSEmailTemplate[] = data.map((row: any) => ({
         id: row.id,
         type: row.type || 'general-notice',
@@ -554,7 +554,7 @@ export async function saveCloudTemplates(templates: SaaSEmailTemplate[]): Promis
 export async function fetchCloudSuperAdmins(fallback: SuperAdminUser[] = []): Promise<SuperAdminUser[]> {
   try {
     const { data, error } = await supabase.from('super_admins').select('*');
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const admins: SuperAdminUser[] = data.map((row: any) => ({
         id: row.id,
         email: row.email,

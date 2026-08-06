@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 
 import { ContractsPage } from './components/pages/ContractsPage';
 import { CustomersPage, type CustomerActivity, type CustomerRecord } from './components/pages/CustomersPage';
@@ -282,15 +282,30 @@ function App() {
   }, []);
 
   // Save changes to Cloud DB & local storage
+  const initialCustomersRender = useRef(true);
   useEffect(() => {
+    if (initialCustomersRender.current) {
+      initialCustomersRender.current = false;
+      return;
+    }
     saveCloudCustomers(customers);
   }, [customers]);
 
+  const initialOffersRender = useRef(true);
   useEffect(() => {
+    if (initialOffersRender.current) {
+      initialOffersRender.current = false;
+      return;
+    }
     saveCloudOffers(offers);
   }, [offers]);
 
+  const initialContractsRender = useRef(true);
   useEffect(() => {
+    if (initialContractsRender.current) {
+      initialContractsRender.current = false;
+      return;
+    }
     saveCloudContracts(contracts);
   }, [contracts]);
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 
 import { createPortal } from 'react-dom';
 
@@ -143,12 +143,22 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     return initialSaaSEmailTemplates;
   });
 
+  const initialTenantsRender = useRef(true);
   useEffect(() => {
+    if (initialTenantsRender.current) {
+      initialTenantsRender.current = false;
+      return;
+    }
     lastLocalUpdate = Date.now();
     saveCloudTenants(tenants);
   }, [tenants]);
 
+  const initialOffersRender = useRef(true);
   useEffect(() => {
+    if (initialOffersRender.current) {
+      initialOffersRender.current = false;
+      return;
+    }
     try { localStorage.setItem('crm_saas_offers_v3', JSON.stringify(offers)); } catch (e) { console.error(e); }
   }, [offers]);
 
