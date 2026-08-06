@@ -286,13 +286,7 @@ export async function fetchCloudTenants(fallback: SaaSTenant[] = []): Promise<Sa
           };
         });
 
-      // Include local tenants not yet present in database
-      const dbIds = new Set(tenants.map(t => t.id));
-      localList.forEach(lt => {
-        if (!dbIds.has(lt.id)) {
-          tenants.push(lt);
-        }
-      });
+      // Do NOT include local tenants that are missing from the cloud DB, as they may have been deleted.
 
       const cleanList = tenants.length > 0 ? tenants : fallback;
 
