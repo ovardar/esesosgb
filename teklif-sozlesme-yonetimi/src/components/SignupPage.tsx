@@ -75,6 +75,11 @@ export function SignupPage({ onSignupSuccess, onSwitchToLogin }: SignupPageProps
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password: password,
+        options: {
+          data: {
+            app_name: 'codentra'
+          }
+        }
       });
 
       if (error && !error.message.includes('User already registered')) {

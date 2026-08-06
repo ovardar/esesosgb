@@ -44,6 +44,11 @@ export function SetPasswordModal({ inviteCode, isOpen, onClose, onSuccess }: Set
         const { error: signUpError } = await supabase.auth.signUp({
           email: targetEmail,
           password: password,
+          options: {
+            data: {
+              app_name: 'codentra'
+            }
+          }
         });
 
         if (signUpError) {

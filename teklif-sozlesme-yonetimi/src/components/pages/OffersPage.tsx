@@ -25,6 +25,7 @@ type OfferSortKey = 'offerNo' | 'customerName' | 'revision' | 'amount' | 'validU
 
 interface OffersPageProps {
   customers?: CustomerRecord[];
+  setCustomers?: React.Dispatch<React.SetStateAction<CustomerRecord[]>>;
   onContractCreated?: (contract: ContractRecord) => void;
   onNavigateToContracts?: () => void;
   impersonatedTenant?: SaaSTenant | null;
@@ -32,6 +33,7 @@ interface OffersPageProps {
 
 export function OffersPage({
   customers = [],
+  setCustomers,
   onContractCreated,
   onNavigateToContracts,
   impersonatedTenant
@@ -95,6 +97,9 @@ export function OffersPage({
   // Modals state
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+
+  const [quickAddCustomerName, setQuickAddCustomerName] = useState('');
+  const [quickAddContactName, setQuickAddContactName] = useState('');
   const [revisionModalOpen, setRevisionModalOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
@@ -319,6 +324,32 @@ export function OffersPage({
     e.preventDefault();
     if (!newOfferForm.customerName || !newOfferForm.subject) return;
 
+    let finalCustomerName = newOfferForm.customerName;
+
+    if (newOfferForm.customerName === '+ Yeni Müşteri Hızlı Ekle') {
+      if (!quickAddCustomerName.trim()) {
+        alert('Lütfen eklenecek müşteri firma adını girin.');
+        return;
+      }
+      finalCustomerName = quickAddCustomerName.trim();
+      const newCust: CustomerRecord = {
+        id: crypto.randomUUID(),
+        name: finalCustomerName,
+        contactName: quickAddContactName.trim() || 'Yetkili',
+        contactEmail: '',
+        contactPhone: '',
+        stage: 'Yeni Kayıt',
+        status: 'Aktif',
+        createdAt: new Date().toISOString(),
+        hazardClass: 'Tehlikeli',
+        employeeCount: 1,
+        taxNumber: '',
+        taxOffice: '',
+        address: ''
+      };
+      setCustomers?.(prev => [newCust, ...prev]);
+    }
+
     const offerNo = `TKL-2026-${String(offers.length + 1).padStart(3, '0')}`;
     const totals = computeOfferFinancials(
       newOfferForm.services,
@@ -342,7 +373,7 @@ export function OffersPage({
     const newRecord: OfferRecord = {
       id: `off-${Date.now()}`,
       offerNo,
-      customerName: newOfferForm.customerName,
+      customerName: finalCustomerName,
       subject: newOfferForm.subject,
       status: 'Gönderildi',
       currentRevisionNo: 0,
@@ -355,6 +386,8 @@ export function OffersPage({
 
     setOffers([newRecord, ...offers]);
     setCreateModalOpen(false);
+    setQuickAddCustomerName('');
+    setQuickAddContactName('');
   };
 
   // --- SAVE EDITED OFFER (REQ 4) ---
@@ -1014,16 +1047,30 @@ export function OffersPage({
                           setNewOfferForm((prev) => ({
                             ...prev,
                             customerName: cName,
-                            subject: prev.subject || `${cName} - 2026 Hizmet Teklifi`
+                            subject: prev.subject || (cName === '+ Yeni Müşteri Hızlı Ekle' ? '2026 Hizmet Teklifi' : `${cName} - 2026 Hizmet Teklifi`)
                           }));
                         }}
                       >
-                        <option value="">-- Firma Seçin --</option>
+                        <option value="">-- Müşteri Seçin --</option>
+                        <option value="+ Yeni Müşteri Hızlı Ekle" style={{ fontWeight: 'bold', color: '#10b981' }}>+ Yeni Müşteri Hızlı Ekle</option>
                         {customers.map((c) => (
                           <option key={c.id} value={c.name}>{c.name}</option>
                         ))}
                       </select>
                     </label>
+
+                    {newOfferForm.customerName === '+ Yeni Müşteri Hızlı Ekle' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, gridColumn: '1 / -1', background: 'rgba(16, 185, 129, 0.05)', padding: 12, borderRadius: 8, border: '1px dashed #10b981' }}>
+                        <label className="select-field">
+                          <span>Hızlı Eklenecek Firma Adı *</span>
+                          <input type="text" value={quickAddCustomerName} onChange={e => setQuickAddCustomerName(e.target.value)} required placeholder="Örn: ABC A.Ş." />
+                        </label>
+                        <label className="select-field">
+                          <span>Yetkili Kişi (Opsiyonel)</span>
+                          <input type="text" value={quickAddContactName} onChange={e => setQuickAddContactName(e.target.value)} placeholder="Örn: Ahmet Yılmaz" />
+                        </label>
+                      </div>
+                    )}
 
                     <label className="select-field" style={{ gridColumn: '1 / -1' }}>
                       <span>Teklif Konusu / Başlığı *</span>

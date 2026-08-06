@@ -481,6 +481,7 @@ function App() {
         return (
           <OffersPage
             customers={customers}
+            setCustomers={setCustomers}
             onContractCreated={handleAddContractFromOffer}
             onNavigateToContracts={() => handleSectionChange('contracts')}
             impersonatedTenant={impersonatedTenant || currentTenant}
@@ -492,6 +493,7 @@ function App() {
             contracts={contracts}
             setContracts={setContracts}
             customers={customers}
+            setCustomers={setCustomers}
             offers={offers}
             impersonatedTenant={impersonatedTenant || currentTenant}
           />

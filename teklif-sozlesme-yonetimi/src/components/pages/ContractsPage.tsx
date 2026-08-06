@@ -89,6 +89,7 @@ interface ContractsPageProps {
   contracts?: ContractRecord[];
   setContracts?: React.Dispatch<React.SetStateAction<ContractRecord[]>>;
   customers?: CustomerRecord[];
+  setCustomers?: React.Dispatch<React.SetStateAction<CustomerRecord[]>>;
   offers?: OfferRecord[];
   impersonatedTenant?: SaaSTenant | null;
 }
@@ -97,6 +98,7 @@ export function ContractsPage({
   contracts: propsContracts,
   setContracts: propsSetContracts,
   customers = [],
+  setCustomers,
   offers = offerSeeds,
   impersonatedTenant
 }: ContractsPageProps) {
@@ -277,6 +279,9 @@ export function ContractsPage({
     renewalPeriod: 'Yıllık',
     nextRenewalDate: initialEndDateStr
   });
+
+  const [quickAddCustomerName, setQuickAddCustomerName] = useState('');
+  const [quickAddContactName, setQuickAddContactName] = useState('');
 
   // Helper to reset manual line item state cleanly
   const resetCustomLineInput = () => {
@@ -498,6 +503,32 @@ export function ContractsPage({
   const handleCreateContractSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    let finalCustomerName = newContractForm.customerName;
+
+    if (newContractForm.customerName === '+ Yeni Müşteri Hızlı Ekle') {
+      if (!quickAddCustomerName.trim()) {
+        alert('Lütfen eklenecek müşteri firma adını girin.');
+        return;
+      }
+      finalCustomerName = quickAddCustomerName.trim();
+      const newCust: CustomerRecord = {
+        id: crypto.randomUUID(),
+        name: finalCustomerName,
+        contactName: quickAddContactName.trim() || 'Yetkili',
+        contactEmail: '',
+        contactPhone: '',
+        stage: 'Yeni Kayıt',
+        status: 'Aktif',
+        createdAt: new Date().toISOString(),
+        hazardClass: 'Tehlikeli',
+        employeeCount: 1,
+        taxNumber: '',
+        taxOffice: '',
+        address: ''
+      };
+      setCustomers?.(prev => [newCust, ...prev]);
+    }
+
     if (checkDuplicateTitle(newContractForm.contractTitle)) {
       alert(`⚠️ "${newContractForm.contractTitle}" isimli bir sözleşme zaten mevcut! Lütfen benzersiz bir takip adı belirleyin.`);
       return;
@@ -530,7 +561,7 @@ export function ContractsPage({
       id: `cnt-rec-${Date.now()}`,
       contractNo: `SZL-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
       contractTitle: newContractForm.contractTitle,
-      customerName: newContractForm.customerName,
+      customerName: finalCustomerName,
       stage: newContractForm.stage,
       offerId: linkedOff?.id,
       offerNo: linkedOff?.offerNo,
@@ -557,6 +588,8 @@ export function ContractsPage({
     updateContractsState([newRecord, ...contracts]); // Req d: Immediate reactive update
     resetCustomLineInput();
     setCreateModalOpen(false);
+    setQuickAddCustomerName('');
+    setQuickAddContactName('');
   };
 
   const handleDeleteContract = (contractId: string) => {
@@ -1519,14 +1552,36 @@ export function ContractsPage({
                         <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, marginBottom: 4 }}>Müşteri Firma</label>
                         <select
                           value={newContractForm.customerName}
-                          onChange={(e) => setNewContractForm({ ...newContractForm, customerName: e.target.value })}
+                          onChange={(e) => {
+                            const cName = e.target.value;
+                            setNewContractForm({ 
+                              ...newContractForm, 
+                              customerName: cName, 
+                              contractTitle: newContractForm.contractTitle || (cName === '+ Yeni Müşteri Hızlı Ekle' ? '2026 Yılı İSG Hizmet Sözleşmesi' : `${cName} - 2026 Yılı İSG Hizmet Sözleşmesi`) 
+                            });
+                          }}
                           style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-strong)', color: 'var(--text-main)' }}
                         >
+                          <option value="">-- Müşteri Seçin --</option>
+                          <option value="+ Yeni Müşteri Hızlı Ekle" style={{ fontWeight: 'bold', color: '#10b981' }}>+ Yeni Müşteri Hızlı Ekle</option>
                           {customers.map((c) => (
                             <option key={c.id} value={c.name}>{c.name}</option>
                           ))}
                         </select>
                       </div>
+
+                      {newContractForm.customerName === '+ Yeni Müşteri Hızlı Ekle' && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, gridColumn: '1 / -1', background: 'rgba(16, 185, 129, 0.05)', padding: 12, borderRadius: 8, border: '1px dashed #10b981' }}>
+                          <label style={{ display: 'block' }}>
+                            <span style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, marginBottom: 4 }}>Hızlı Eklenecek Firma Adı *</span>
+                            <input type="text" value={quickAddCustomerName} onChange={e => setQuickAddCustomerName(e.target.value)} required placeholder="Örn: ABC A.Ş." style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-strong)', color: 'var(--text-main)' }} />
+                          </label>
+                          <label style={{ display: 'block' }}>
+                            <span style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, marginBottom: 4 }}>Yetkili Kişi (Opsiyonel)</span>
+                            <input type="text" value={quickAddContactName} onChange={e => setQuickAddContactName(e.target.value)} placeholder="Örn: Ahmet Yılmaz" style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-strong)', color: 'var(--text-main)' }} />
+                          </label>
+                        </div>
+                      )}
 
                       <div>
                         <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: 700, color: 'var(--accent)', marginBottom: 4 }}>
