@@ -335,17 +335,22 @@ export function OffersPage({
       const newCust: CustomerRecord = {
         id: crypto.randomUUID(),
         name: finalCustomerName,
-        contactName: quickAddContactName.trim() || 'Yetkili',
-        contactEmail: '',
-        contactPhone: '',
+        contact: quickAddContactName.trim() || 'Yetkili',
+        email: '',
+        phone: '',
         stage: 'Yeni Kayıt',
         status: 'Aktif',
-        createdAt: new Date().toISOString(),
         hazardClass: 'Tehlikeli',
         employeeCount: 1,
-        taxNumber: '',
+        taxNo: '',
         taxOffice: '',
-        address: ''
+        city: '',
+        district: '',
+        sector: '',
+        owner: '',
+        address: '',
+        offers: [],
+        contracts: []
       };
       setCustomers?.(prev => [newCust, ...prev]);
     }
