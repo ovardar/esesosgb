@@ -143,15 +143,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     return initialSaaSEmailTemplates;
   });
 
-  const initialTenantsRender = useRef(true);
-  useEffect(() => {
-    if (initialTenantsRender.current) {
-      initialTenantsRender.current = false;
-      return;
-    }
-    lastLocalUpdate = Date.now();
-    saveCloudTenants(tenants);
-  }, [tenants]);
+  
 
   const initialOffersRender = useRef(true);
   useEffect(() => {
@@ -1169,8 +1161,8 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
     e.preventDefault();
     if (!editingLicenseTenant) return;
 
-    setTenants((prev) =>
-      prev.map((t) =>
+    setTenants((prev) => {
+      const next = prev.map((t) =>
         t.id === editingLicenseTenant.id
           ? {
               ...t,
@@ -1185,8 +1177,10 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
               updatedAt: new Date().toLocaleString('tr-TR')
             }
           : t
-      )
-    );
+      );
+      saveCloudTenants(next);
+      return next;
+    });
 
     if (selectedTenant && selectedTenant.id === editingLicenseTenant.id) {
       setSelectedTenant((prev) =>
@@ -1428,6 +1422,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
 
     setTenants((prev) => {
       const next = [newTenant, ...prev];
+      saveCloudTenants(next);
       return next;
     });
 
@@ -1447,6 +1442,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
         const next = prev.map((t) =>
           t.id === tenant.id ? { ...t, status: newStatus, paymentStatus: newStatus === 'Aktif' ? 'Sorunsuz' : 'Bekliyor' as SaaSPaymentStatus } : t
         );
+        saveCloudTenants(next);
         return next;
       });
 
@@ -1508,6 +1504,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
             }
           : t
       );
+      saveCloudTenants(next);
       return next;
     });
 
@@ -3112,6 +3109,7 @@ export function SaaSAdminPage({ onImpersonateTenant, onNavigateSection, currentU
                   onClick={() => {
                     setTenants(prev => {
                       const next = prev.map(t => t.id === editableTenant.id ? editableTenant : t);
+                      saveCloudTenants(next);
                       return next;
                     });
                     setSelectedTenant(null);
