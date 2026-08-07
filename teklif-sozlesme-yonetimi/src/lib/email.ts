@@ -1,6 +1,5 @@
 import { supabase } from './supabase';
 
-const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || '';
 const DEFAULT_FROM = import.meta.env.VITE_FROM_EMAIL || 'Codentra CRM <davet@codentra.com.tr>';
 
 export interface SendEmailOptions {
@@ -26,64 +25,15 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM }: Send
     }
 
     if (edgeErr || (edgeData && !edgeData.success)) {
-      console.warn('[Email] Edge function returned warning/error, attempting direct client fallback if key present:', edgeErr || edgeData);
+      console.error('[Email] Edge function failed to send email:', edgeErr || edgeData);
+      return { success: false, error: 'E-posta sunucusu geçici olarak yanıt vermiyor (Edge Function Hatası).' };
     }
   } catch (fnErr) {
-    console.warn('[Email] Supabase functions.invoke exception:', fnErr);
+    console.error('[Email] Supabase functions.invoke exception:', fnErr);
+    return { success: false, error: 'E-posta servisi bağlantı hatası.' };
   }
 
-  // 2. Secondary Direct Fallback: Try Resend REST API (Subject to browser CORS)
-  if (RESEND_API_KEY) {
-    try {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${RESEND_API_KEY}`
-        },
-        body: JSON.stringify({
-          from: from,
-          to: recipients,
-          subject: subject,
-          html: html
-        })
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        return { success: true, provider: 'resend', data };
-      }
-      let lastError = data?.message || data?.error || JSON.stringify(data);
-
-      if (from !== 'Codentra CRM <onboarding@resend.dev>') {
-        const fallbackResp = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${RESEND_API_KEY}`
-          },
-          body: JSON.stringify({
-            from: 'Codentra CRM <onboarding@resend.dev>',
-            to: recipients,
-            subject: subject,
-            html: html
-          })
-        });
-
-        const fallbackData = await fallbackResp.json();
-        if (fallbackResp.ok) {
-          return { success: true, provider: 'resend-onboarding', data: fallbackData };
-        }
-        lastError = fallbackData?.message || fallbackData?.error || lastError;
-      }
-
-      return { success: false, error: lastError };
-    } catch (err) {
-      console.warn('[Email] Resend direct fetch failed:', err);
-    }
-  }
-
-  return { success: false, error: 'Edge function not yet deployed or Resend CORS restriction active.' };
+  return { success: false, error: 'Bilinmeyen bir hata oluştu.' };
 }
 
 
