@@ -182,6 +182,14 @@ const initialHistorySeeds: PriceHistoryLog[] = [
   { id: 'hist-3', changed_at: '2026-05-10 09:15', service_name: 'Risk Analizi ve Değerlendirme', danger_class: 'Az Tehlikeli', min_emp: 1, max_emp: null, old_price: 4500, new_price: 5000, changed_by: 'Ayşe Yılmaz (Sistem Yöneticisi)' }
 ];
 
+const generateUUID = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+};
+
 export function PriceListsPage() {
   const [priceLists, setPriceLists] = useState<PriceList[]>([]);
   const [activeListId, setActiveListId] = useState<string | null>(null);
@@ -245,7 +253,7 @@ export function PriceListsPage() {
       if (lists.length === 0) {
         // Create default list locally if none exists
         const defaultList: PriceList = {
-          id: 'default-list',
+          id: generateUUID(),
           name: 'Genel Fiyat Listesi',
           description: 'Sistemdeki standart fiyat listesi',
           is_default: true,
@@ -1213,7 +1221,7 @@ export function PriceListsPage() {
                   if (!newListForm.name.trim()) return alert('Liste adı giriniz.');
                   
                   const newList: PriceList = {
-                    id: `list-${Date.now()}`,
+                    id: generateUUID(),
                     name: newListForm.name,
                     is_default: priceLists.length === 0,
                     created_at: new Date().toISOString()
