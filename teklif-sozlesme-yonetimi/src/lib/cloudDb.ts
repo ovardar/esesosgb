@@ -478,19 +478,22 @@ export async function fetchCloudPriceRules(fallback: PriceRule[] = []): Promise<
       if (data.length === 0) {
         // Cloud is empty. If we have local rules, migrate them!
         const localRules = getLocalItem('crm_price_list_v2', fallback);
-        if (localRules && localRules.length > 0) {
-          console.log('[CloudDB] Cloud price_rules is empty, migrating local data...');
-          
-          // Generate new UUIDs for existing rules so they don't fail if they had custom format
-          // Also set price_list_id to null initially if not set
-          const migrated = localRules.map((r: any) => ({
-             ...r,
-             id: r.id || `rule-${Date.now()}-${Math.random().toString(36).substring(2,7)}`
-          }));
-
-          await saveCloudPriceRules(migrated);
-          return migrated;
-        }
+          if (localRules && localRules.length > 0) {
+            console.log('[CloudDB] Cloud price_rules is empty, migrating local data...');
+            
+            const defaultFallbackId = fallback.length > 0 ? fallback[0].price_list_id : null;
+            
+            // Generate new UUIDs for existing rules so they don't fail if they had custom format
+            // Fix invalid price_list_id strings (e.g. 'default-list') to the new valid fallback ID
+            const migrated = localRules.map((r: any) => ({
+               ...r,
+               id: r.id || `rule-${Date.now()}-${Math.random().toString(36).substring(2,7)}`,
+               price_list_id: (!r.price_list_id || !isUUID(r.price_list_id)) ? defaultFallbackId : r.price_list_id
+            }));
+  
+            await saveCloudPriceRules(migrated);
+            return migrated;
+          }
       }
 
       const rules: PriceRule[] = data.map((row: any) => ({
@@ -508,7 +511,12 @@ export async function fetchCloudPriceRules(fallback: PriceRule[] = []): Promise<
   } catch (err) {
     console.warn('[CloudDB] Price rules fetch falling back to local storage', err);
   }
-  return getLocalItem('crm_price_list_v2', fallback);
+  const local = getLocalItem('crm_price_list_v2', fallback);
+  const defaultFallbackId = fallback.length > 0 ? fallback[0].price_list_id : null;
+  return local.map(r => ({
+     ...r,
+     price_list_id: (!r.price_list_id || !isUUID(r.price_list_id)) ? defaultFallbackId : r.price_list_id
+  }));
 }
 
 export async function saveCloudPriceRules(rules: PriceRule[]): Promise<void> {
@@ -530,6 +538,8 @@ export async function saveCloudPriceRules(rules: PriceRule[]): Promise<void> {
   }
 }
 
+const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+
 export async function fetchCloudPriceLists(fallback: PriceList[] = []): Promise<PriceList[]> {
   try {
     const { data, error } = await supabase.from('price_lists').select('*');
@@ -547,7 +557,8 @@ export async function fetchCloudPriceLists(fallback: PriceList[] = []): Promise<
   } catch (err) {
     console.warn('[CloudDB] Price lists fetch falling back to local storage', err);
   }
-  return getLocalItem('crm_price_lists_v1', fallback);
+  const local = getLocalItem('crm_price_lists_v1', fallback);
+  return local.filter(l => isUUID(l.id));
 }
 
 export async function saveCloudPriceLists(lists: PriceList[]): Promise<void> {
