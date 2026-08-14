@@ -15,8 +15,17 @@ export async function sendEmail({ to, subject, html, from = DEFAULT_FROM }: Send
 
   // 1. Primary: Try Supabase Edge Function (Bypasses Browser CORS restrictions)
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('send-email', {
-      body: { to: recipients, subject, html, from }
+      body: { to: recipients, subject, html, from },
+      headers
     });
 
     if (!edgeErr && edgeData?.success) {

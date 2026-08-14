@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { OfferRecord, ContractRecord, SaaSTenant, PriceRule, SaaSEmailTemplate, SuperAdminUser } from '../types';
+import type { OfferRecord, ContractRecord, SaaSTenant, PriceList, PriceRule, SaaSEmailTemplate, SuperAdminUser } from '../types';
 import type { CustomerRecord } from '../components/pages/CustomersPage';
 import type { TenantUser } from '../data/tenantUsers';
 
@@ -114,7 +114,8 @@ export async function fetchCloudOffers(fallback: OfferRecord[] = []): Promise<Of
         validUntilDate: row.valid_until_date || row.validUntilDate || new Date().toISOString().split('T')[0],
         owner: row.owner || 'Orhan Vardar',
         vatMode: row.vat_mode || row.vatMode || 'KDV Hariç',
-        revisions: row.revisions || []
+        revisions: row.revisions || [],
+        priceListId: row.price_list_id || row.priceListId
       }));
       setLocalItem('crm_offers_v3', offers);
       return offers;
@@ -140,6 +141,7 @@ export async function saveCloudOffers(offers: OfferRecord[]): Promise<void> {
       owner: o.owner,
       vat_mode: o.vatMode,
       revisions: o.revisions,
+      price_list_id: o.priceListId,
       updated_at: new Date().toISOString()
     }));
     await supabase.from('offers').upsert(payload, { onConflict: 'id' });
@@ -479,7 +481,8 @@ export async function fetchCloudPriceRules(fallback: PriceRule[] = []): Promise<
         min_emp: row.min_emp ?? row.minEmp ?? 1,
         max_emp: row.max_emp ?? row.maxEmp ?? null,
         service_name: row.service_name || row.serviceName,
-        price: row.price || 0
+        price: row.price || 0,
+        price_list_id: row.price_list_id
       }));
       setLocalItem('crm_price_rules_v2', rules);
       return rules;
@@ -500,11 +503,48 @@ export async function saveCloudPriceRules(rules: PriceRule[]): Promise<void> {
       max_emp: r.max_emp,
       service_name: r.service_name,
       price: r.price,
+      price_list_id: r.price_list_id,
       updated_at: new Date().toISOString()
     }));
     await supabase.from('price_rules').upsert(payload, { onConflict: 'id' });
   } catch (err) {
     console.warn('[CloudDB] Price rules cloud upsert warning', err);
+  }
+}
+
+export async function fetchCloudPriceLists(fallback: PriceList[] = []): Promise<PriceList[]> {
+  try {
+    const { data, error } = await supabase.from('price_lists').select('*');
+    if (!error && data) {
+      const lists: PriceList[] = data.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        description: row.description,
+        is_default: row.is_default,
+        created_at: row.created_at
+      }));
+      setLocalItem('crm_price_lists_v1', lists);
+      return lists;
+    }
+  } catch (err) {
+    console.warn('[CloudDB] Price lists fetch falling back to local storage', err);
+  }
+  return getLocalItem('crm_price_lists_v1', fallback);
+}
+
+export async function saveCloudPriceLists(lists: PriceList[]): Promise<void> {
+  setLocalItem('crm_price_lists_v1', lists);
+  try {
+    const payload = lists.map(l => ({
+      id: l.id,
+      name: l.name,
+      description: l.description,
+      is_default: l.is_default,
+      updated_at: new Date().toISOString()
+    }));
+    await supabase.from('price_lists').upsert(payload, { onConflict: 'id' });
+  } catch (err) {
+    console.warn('[CloudDB] Price lists cloud upsert warning', err);
   }
 }
 

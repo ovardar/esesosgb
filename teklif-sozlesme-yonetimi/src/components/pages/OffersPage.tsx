@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { CustomerRecord, calculateIsgStatutoryHours, computeOfferFinancials } from './CustomersPage';
 import { PriceRule, defaultPriceRules } from './PriceListsPage';
-import { fetchCloudPriceRules } from '../../lib/cloudDb';
+import { fetchCloudPriceRules, fetchCloudPriceLists } from '../../lib/cloudDb';
+import { PriceList } from '../../types';
 import { OfferRecord, OfferRevision, OfferServiceLine, AcceptanceChannel, ContractRecord, ContractServiceLine, VatMode, SaaSTenant } from '../../types';
 import { offerSeeds } from '../../data/workbench';
 import { OfferPdfPreviewModal } from '../modals/PdfPreviewModals';
@@ -57,6 +58,7 @@ export function OffersPage({
 
   // Load price rules from localStorage for auto-population
   const [priceRules, setPriceRules] = useState<PriceRule[]>([]);
+  const [priceLists, setPriceLists] = useState<PriceList[]>([]);
   useEffect(() => {
     async function loadPriceRules() {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY_PRICE_RULES);
@@ -71,7 +73,12 @@ export function OffersPage({
         }
       }
       
-      const defaults = defaultPriceRules.map((r, i) => ({ ...r, id: `rule-${i + 1}` }));
+      
+      const lists = await fetchCloudPriceLists();
+      setPriceLists(lists);
+      const defaultId = lists.find(l => l.is_default)?.id || lists[0]?.id;
+
+      const defaults = defaultPriceRules.map((r, i) => ({ ...r, id: `rule-${i + 1}`, price_list_id: defaultId }));
       const dbRules = await fetchCloudPriceRules(defaults);
       setPriceRules(dbRules);
     }
@@ -143,6 +150,7 @@ export function OffersPage({
     overallDiscountType: 'percent' | 'amount';
     overallDiscountValue: number;
     notes: string;
+    priceListId?: string;
   }>({
     customerName: '',
     subject: '',
@@ -166,6 +174,7 @@ export function OffersPage({
     overallDiscountType: 'percent' | 'amount';
     overallDiscountValue: number;
     notes: string;
+    priceListId?: string;
   }>({
     subject: '',
     owner: defaultOwner,
@@ -220,21 +229,26 @@ export function OffersPage({
   });
 
   // Filter price list rules strictly by selected customer's hazard class & employee count
-  const getFilteredPriceRulesForCustomer = (targetCustomerName: string) => {
+  const getFilteredPriceRulesForCustomer = (targetCustomerName: string, targetPriceListId?: string) => {
     const cust = customers.find((c) => c.name === targetCustomerName);
-    if (!cust) return priceRules;
+    
+    // Default to the first list if none selected
+    const activeListId = targetPriceListId || priceLists.find(l => l.is_default)?.id || priceLists[0]?.id;
+    const rulesInList = priceRules.filter(r => r.price_list_id === activeListId);
+
+    if (!cust) return rulesInList;
 
     const empCount = cust.employeeCount || 0;
     const hazard = cust.hazardClass;
 
-    const matched = priceRules.filter((r) => {
+    const matched = rulesInList.filter((r) => {
       const hazardMatch = r.danger_class === hazard;
       const empMatch = empCount >= r.min_emp && (r.max_emp === null || r.max_emp === undefined || empCount <= r.max_emp);
       return hazardMatch && empMatch;
     });
 
     if (matched.length > 0) return matched;
-    return priceRules.filter((r) => r.danger_class === hazard);
+    return rulesInList.filter((r) => r.danger_class === hazard);
   };
 
   // Helper to add item from Price List Dropdown to any services list
@@ -1326,9 +1340,23 @@ export function OffersPage({
                     {/* ADD ITEM DROPDOWN OR CUSTOM */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div style={{ display: 'flex', gap: 10, alignItems: 'center', background: 'var(--surface-subtle)', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0d9488' }}>🏷️ Fiyat Listesinden Hizmet Seçin:</span>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0d9488' }}>📋 Fiyat Listesi Seçin:</span>
+                        <select
+                          value={newOfferForm.priceListId || ''}
+                          onChange={(e) => setNewOfferForm(prev => ({ ...prev, priceListId: e.target.value }))}
+                          style={{ flex: 1, minWidth: 220, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--surface-strong)', color: 'var(--text-main)', fontSize: '0.84rem' }}
+                        >
+                          <option value="">-- Varsayılan (Genel) --</option>
+                          {priceLists.map(list => (
+                            <option key={list.id} value={list.id}>{list.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center', background: 'var(--surface-subtle)', padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border)', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0d9488' }}>🛒 Fiyat Listesinden Hizmet Seçin:</span>
                         {(() => {
-                          const availRules = getFilteredPriceRulesForCustomer(newOfferForm.customerName);
+                          const availRules = getFilteredPriceRulesForCustomer(newOfferForm.customerName, newOfferForm.priceListId);
                           return (
                             <select
                               value={selectedPriceRuleId}

@@ -2,6 +2,7 @@
 // Resend API üzerinden sunucu tarafında CORS engelsiz e-posta gönderimi sağlar.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,6 +23,39 @@ serve(async (req: Request) => {
   }
 
   try {
+    // 1. Kimlik Doğrulama (JWT/Auth Kontrolü)
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing Authorization header.", debug: "No auth header found" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+    const supabaseClient = createClient(supabaseUrl, supabaseKey, { 
+      global: { headers: { Authorization: authHeader } } 
+    });
+
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      console.error("[send-email Edge Function] Auth Error:", authError);
+      return new Response(
+        JSON.stringify({ 
+          error: "Unauthorized request.", 
+          debug: {
+            authError: authError ? authError.message : "No user found",
+            hasUrl: !!supabaseUrl,
+            hasKey: !!supabaseKey
+          }
+        }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 2. Resend API Kontrolü ve İstek İşleme
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       return new Response(

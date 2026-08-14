@@ -174,6 +174,7 @@ export type OfferRecord = {
   owner: string;
   vatMode?: VatMode;
   revisions: OfferRevision[];
+  priceListId?: string;
 };
 
 export type ContractStage =
@@ -294,6 +295,14 @@ export interface DocumentRecord {
   notes?: string;
 }
 
+export interface PriceList {
+  id: string;
+  name: string;
+  description?: string;
+  is_default: boolean;
+  created_at?: string;
+}
+
 export interface PriceRule {
   id: string;
   danger_class: 'Az Tehlikeli' | 'Tehlikeli' | 'Çok Tehlikeli';
@@ -301,6 +310,7 @@ export interface PriceRule {
   max_emp: number | null;
   service_name: string;
   price: number;
+  price_list_id?: string;
 }
 
 export interface SuperAdminUser {

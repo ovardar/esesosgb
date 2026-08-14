@@ -10,9 +10,10 @@ import {
   OfferRecord,
   OfferRevision,
   OfferServiceLine,
-  VatMode
+  VatMode,
+  PriceList
 } from '../../types';
-import { fetchCloudPriceRules, saveCloudPriceRules } from '../../lib/cloudDb';
+import { fetchCloudPriceRules, saveCloudPriceRules, fetchCloudPriceLists, saveCloudPriceLists } from '../../lib/cloudDb';
 import { computeOfferFinancials } from './CustomersPage';
 
 
@@ -66,6 +67,7 @@ export type PriceRule = {
   max_emp: number | null;
   service_name: string;
   price: number;
+  price_list_id?: string;
 };
 
 export type PriceHistoryLog = {
@@ -179,6 +181,17 @@ const initialHistorySeeds: PriceHistoryLog[] = [
 ];
 
 export function PriceListsPage() {
+  const [priceLists, setPriceLists] = useState<PriceList[]>([]);
+  const [activeListId, setActiveListId] = useState<string | null>(null);
+  
+  const [isNewListModalOpen, setIsNewListModalOpen] = useState(false);
+  const [newListForm, setNewListForm] = useState<{
+    name: string;
+    action: 'empty' | 'copy';
+    sourceListId: string;
+    modifier: number;
+  }>({ name: '', action: 'empty', sourceListId: '', modifier: 0 });
+
   const [priceRules, setPriceRules] = useState<PriceRule[]>([]);
   const [lastSavedRules, setLastSavedRules] = useState<PriceRule[]>([]);
   const [priceHistory, setPriceHistory] = useState<PriceHistoryLog[]>([]);
@@ -226,7 +239,24 @@ export function PriceListsPage() {
   // Load Initial Data from Cloud DB
   useEffect(() => {
     async function loadCloudRules() {
-      const defaults = defaultPriceRules.map((r, i) => ({ ...r, id: `rule-${i + 1}` }));
+      const lists = await fetchCloudPriceLists();
+      if (lists.length === 0) {
+        // Create default list locally if none exists
+        const defaultList: PriceList = {
+          id: 'default-list',
+          name: 'Genel Fiyat Listesi',
+          description: 'Sistemdeki standart fiyat listesi',
+          is_default: true,
+          created_at: new Date().toISOString()
+        };
+        lists.push(defaultList);
+        await saveCloudPriceLists(lists);
+      }
+      setPriceLists(lists);
+      const defaultId = lists.find(l => l.is_default)?.id || lists[0].id;
+      setActiveListId(defaultId);
+
+      const defaults = defaultPriceRules.map((r, i) => ({ ...r, id: `rule-${i + 1}`, price_list_id: defaultId }));
       const dbRules = await fetchCloudPriceRules(defaults);
       setPriceRules(dbRules);
       setLastSavedRules(JSON.parse(JSON.stringify(dbRules)));
@@ -323,7 +353,8 @@ export function PriceListsPage() {
       min_emp: 1,
       max_emp: null,
       service_name: '',
-      price: 0
+      price: 0,
+      price_list_id: activeListId || undefined
     };
     setPriceRules((prev) => [newRule, ...prev]);
     setHasUnsavedChanges(true);
@@ -621,7 +652,9 @@ export function PriceListsPage() {
   };
 
   // Filtered & Sorted Rules
-  const filteredRules = priceRules.filter((r) => {
+  const activeRules = priceRules.filter((r) => r.price_list_id === activeListId || (!r.price_list_id && priceLists.find(l=>l.id === activeListId)?.is_default));
+
+  const filteredRules = activeRules.filter((r) => {
     const dangerMatch = filterDanger === 'Tümü' || r.danger_class === filterDanger;
     const serviceMatch = !searchService || r.service_name.toLowerCase().includes(searchService.toLowerCase());
     return dangerMatch && serviceMatch;
@@ -804,6 +837,55 @@ export function PriceListsPage() {
             {getBulkBtnText()}
           </button>
         </div>
+      </div>
+
+      {/* PRICE LISTS TABS */}
+      <div style={{ display: 'flex', borderBottom: '2px solid var(--border)', marginBottom: 20, overflowX: 'auto', gap: 2 }}>
+        {priceLists.map(list => {
+          const isActive = activeListId === list.id;
+          return (
+            <button
+              key={list.id}
+              onClick={() => setActiveListId(list.id)}
+              style={{
+                padding: '12px 20px',
+                border: 'none',
+                background: isActive ? 'var(--bg-main)' : 'transparent',
+                color: isActive ? 'var(--primary)' : 'var(--text-muted)',
+                fontWeight: isActive ? 800 : 600,
+                borderBottom: isActive ? '3px solid var(--primary)' : '3px solid transparent',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                transition: 'all 0.2s',
+                marginBottom: '-2px',
+                borderTopLeftRadius: 8,
+                borderTopRightRadius: 8,
+              }}
+            >
+              {list.name} {list.is_default && <span style={{fontSize: '0.8rem', marginLeft: 4}}>⭐</span>}
+            </button>
+          );
+        })}
+        <button
+          onClick={() => {
+            setNewListForm({ name: '', action: 'empty', sourceListId: priceLists[0]?.id || '', modifier: 0 });
+            setIsNewListModalOpen(true);
+          }}
+          style={{
+            padding: '12px 20px',
+            border: 'none',
+            background: 'transparent',
+            color: 'var(--text-main)',
+            fontWeight: 700,
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6
+          }}
+        >
+          <span style={{ fontSize: '1.1rem' }}>+</span> Yeni Liste Ekle
+        </button>
       </div>
 
       {/* FILTER & TABLE CONTROLS BAR (SINGLE UNIFIED ROW) */}
@@ -1056,6 +1138,113 @@ export function PriceListsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* NEW LIST MODAL */}
+      {isNewListModalOpen &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(6px)', zIndex: 99999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20
+            }}
+          >
+            <div style={{ background: 'var(--surface-strong)', width: '100%', maxWidth: 500, borderRadius: 18, border: '1px solid var(--border)', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>Yeni Fiyat Listesi Oluştur</h3>
+              
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Liste Adı</span>
+                <input 
+                  type="text" 
+                  value={newListForm.name} 
+                  onChange={(e) => setNewListForm({ ...newListForm, name: e.target.value })} 
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '0.9rem' }}
+                  placeholder="Örn: 2025 Kampanyası"
+                />
+              </label>
+
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Oluşturma Yöntemi</span>
+                <select 
+                  value={newListForm.action} 
+                  onChange={(e) => setNewListForm({ ...newListForm, action: e.target.value as any })}
+                  style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '0.9rem' }}
+                >
+                  <option value="empty">Boş Liste Oluştur</option>
+                  <option value="copy">Şuradan Kopyala</option>
+                </select>
+              </label>
+
+              {newListForm.action === 'copy' && (
+                <>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Kopyalanacak Liste</span>
+                    <select 
+                      value={newListForm.sourceListId} 
+                      onChange={(e) => setNewListForm({ ...newListForm, sourceListId: e.target.value })}
+                      style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '0.9rem' }}
+                    >
+                      {priceLists.map(list => (
+                        <option key={list.id} value={list.id}>{list.name}</option>
+                      ))}
+                    </select>
+                  </label>
+                  
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Fiyat Değişimi (%)</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <input 
+                        type="number" 
+                        value={newListForm.modifier} 
+                        onChange={(e) => setNewListForm({ ...newListForm, modifier: Number(e.target.value) })} 
+                        style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-main)', color: 'var(--text-main)', fontSize: '0.9rem' }}
+                      />
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>%0 seçilirse birebir kopyalanır</span>
+                    </div>
+                  </label>
+                </>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
+                <button type="button" className="secondary-action" onClick={() => setIsNewListModalOpen(false)}>İptal</button>
+                <button type="button" className="btn-action-primary" onClick={() => {
+                  if (!newListForm.name.trim()) return alert('Liste adı giriniz.');
+                  
+                  const newList: PriceList = {
+                    id: `list-${Date.now()}`,
+                    name: newListForm.name,
+                    is_default: priceLists.length === 0,
+                    created_at: new Date().toISOString()
+                  };
+
+                  const updatedLists = [...priceLists, newList];
+                  setPriceLists(updatedLists);
+                  saveCloudPriceLists(updatedLists);
+                  setActiveListId(newList.id);
+
+                  if (newListForm.action === 'copy' && newListForm.sourceListId) {
+                    const sourceRules = priceRules.filter(r => r.price_list_id === newListForm.sourceListId || (!r.price_list_id && priceLists.find(l => l.id === newListForm.sourceListId)?.is_default));
+                    const newRules = sourceRules.map(r => ({
+                      ...r,
+                      id: `rule-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                      price_list_id: newList.id,
+                      price: newListForm.modifier !== 0 ? Math.round(r.price * (1 + (newListForm.modifier / 100))) : r.price
+                    }));
+                    
+                    const combinedRules = [...priceRules, ...newRules];
+                    setPriceRules(combinedRules);
+                    saveCloudPriceRules(combinedRules);
+                  }
+
+                  setIsNewListModalOpen(false);
+                }}>
+                  Oluştur
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
 
       {/* PRICE HISTORY MODAL (PORTAL) */}
       {isHistoryModalOpen &&
