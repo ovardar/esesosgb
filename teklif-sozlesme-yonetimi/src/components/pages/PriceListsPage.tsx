@@ -102,6 +102,8 @@ export function findPriceRuleConflicts(rules: PriceRule[]) {
       const nameB = b.service_name.trim().toLowerCase();
       if (!nameB) continue;
 
+      if (a.price_list_id !== b.price_list_id) continue;
+
       if (a.danger_class === b.danger_class && nameA === nameB) {
         const minB = Number(b.min_emp) || 1;
         const maxB = b.max_emp !== null && b.max_emp !== undefined ? Number(b.max_emp) : Infinity;
