@@ -557,10 +557,12 @@ export async function saveCloudPriceLists(lists: PriceList[]): Promise<void> {
       id: l.id,
       name: l.name,
       description: l.description,
-      is_default: l.is_default,
-      updated_at: new Date().toISOString()
+      is_default: l.is_default
     }));
-    await supabase.from('price_lists').upsert(payload, { onConflict: 'id' });
+    const { error } = await supabase.from('price_lists').upsert(payload, { onConflict: 'id' });
+    if (error) {
+       console.error('[CloudDB] Supabase upsert error for price_lists:', error);
+    }
   } catch (err) {
     console.warn('[CloudDB] Price lists cloud upsert warning', err);
   }
