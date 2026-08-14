@@ -475,6 +475,24 @@ export async function fetchCloudPriceRules(fallback: PriceRule[] = []): Promise<
   try {
     const { data, error } = await supabase.from('price_rules').select('*');
     if (!error && data) {
+      if (data.length === 0) {
+        // Cloud is empty. If we have local rules, migrate them!
+        const localRules = getLocalItem('crm_price_list_v2', fallback);
+        if (localRules && localRules.length > 0) {
+          console.log('[CloudDB] Cloud price_rules is empty, migrating local data...');
+          
+          // Generate new UUIDs for existing rules so they don't fail if they had custom format
+          // Also set price_list_id to null initially if not set
+          const migrated = localRules.map((r: any) => ({
+             ...r,
+             id: r.id || `rule-${Date.now()}-${Math.random().toString(36).substring(2,7)}`
+          }));
+
+          await saveCloudPriceRules(migrated);
+          return migrated;
+        }
+      }
+
       const rules: PriceRule[] = data.map((row: any) => ({
         id: row.id,
         danger_class: row.danger_class || row.dangerClass,
@@ -484,17 +502,17 @@ export async function fetchCloudPriceRules(fallback: PriceRule[] = []): Promise<
         price: row.price || 0,
         price_list_id: row.price_list_id
       }));
-      setLocalItem('crm_price_rules_v2', rules);
+      setLocalItem('crm_price_list_v2', rules);
       return rules;
     }
   } catch (err) {
     console.warn('[CloudDB] Price rules fetch falling back to local storage', err);
   }
-  return getLocalItem('crm_price_rules_v2', fallback);
+  return getLocalItem('crm_price_list_v2', fallback);
 }
 
 export async function saveCloudPriceRules(rules: PriceRule[]): Promise<void> {
-  setLocalItem('crm_price_rules_v2', rules);
+  setLocalItem('crm_price_list_v2', rules);
   try {
     const payload = rules.map(r => ({
       id: r.id,
